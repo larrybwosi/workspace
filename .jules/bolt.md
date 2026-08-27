@@ -1,3 +1,9 @@
+## 2026-08-27 - [Prisma/Performance] Pre-fetching Audit Log Actor User Relation to Eliminate Secondary Query
+
+**Learning:** `AuditLogsController`'s `getAuditLogs` and `exportAuditLogs` previously executed a secondary `prisma.user.findMany` query to fetch actor user details for retrieved audit log records. Including the `user` relation (`select: { id: true, name: true, email: true, image: true }`) directly inside the `auditLogs` projection of the primary `prisma.workspace.findUnique` query eliminates the secondary query entirely, reducing database round-trips from 2 to 1 on both endpoints.
+
+**Action:** Include related sub-resource entities (such as actor users or owners) directly in nested relational queries to avoid secondary `findMany` database round-trips when fetching log entries or feeds.
+
 ## 2026-08-25 - [Prisma/Performance] Child Sub-Resource Point Lookup for Workspace Departments
 
 **Learning:** `DepartmentsController.getDepartment` previously executed `prisma.workspace.findUnique({ where: { slug } })` with nested department filters, requiring database index scans across the workspace and department tables. Replacing this query with a direct O(1) primary key point lookup on `prisma.workspaceDepartment.findUnique({ where: { id: departmentId } })` and includes for parent workspace slug and membership verification reduces database query overhead, leverages the primary key B-tree index, and optimizes endpoint latency.

@@ -48,6 +48,22 @@ export class AuditLogsController {
           skip,
           take: limit,
           orderBy: { createdAt: 'desc' },
+          select: {
+            id: true,
+            action: true,
+            resource: true,
+            resourceId: true,
+            metadata: true,
+            createdAt: true,
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                image: true,
+              },
+            },
+          },
         },
         _count: {
           select: { auditLogs: true },
@@ -75,32 +91,13 @@ export class AuditLogsController {
     }));
     const total = workspace._count.auditLogs;
 
-    const userIds = [...new Set(logs.map(log => log.userId))];
-    const users = await prisma.user.findMany({
-      where: { id: { in: userIds } },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        image: true,
-      },
-    });
-
-    const userMap = users.reduce(
-      (acc, u) => {
-        acc[u.id] = u;
-        return acc;
-      },
-      {} as Record<string, (typeof users)[0]>
-    );
-
     const enrichedLogs = logs.map(log => ({
       ...log,
       workspace: {
         name: workspace.name,
         slug: workspace.slug,
       },
-      user: userMap[log.userId] || null,
+      user: log.user || null,
     }));
 
     return {
@@ -135,6 +132,21 @@ export class AuditLogsController {
         auditLogs: {
           orderBy: { createdAt: 'desc' },
           take: 10000,
+          select: {
+            id: true,
+            action: true,
+            resource: true,
+            resourceId: true,
+            metadata: true,
+            createdAt: true,
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+          },
         },
       },
     });
@@ -151,24 +163,10 @@ export class AuditLogsController {
 
     const logs = workspace.auditLogs;
 
-    const userIds = [...new Set(logs.map(log => log.userId))];
-    const users = await prisma.user.findMany({
-      where: { id: { in: userIds } },
-      select: { id: true, name: true, email: true },
-    });
-
-    const userMap = users.reduce(
-      (acc, u) => {
-        acc[u.id] = u;
-        return acc;
-      },
-      {} as Record<string, (typeof users)[0]>
-    );
-
     const csvHeader = 'Timestamp,Action,Actor Name,Actor Email,Resource,Resource ID,Metadata\n';
     const csvRows = logs
       .map(log => {
-        const u = userMap[log.userId];
+        const u = log.user;
         return [
           new Date(log.createdAt).toISOString(),
           log.action,
