@@ -1,5 +1,4 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { validateEnv } from '@repo/shared';
 
 const publicRoutes = [
   '/login',
