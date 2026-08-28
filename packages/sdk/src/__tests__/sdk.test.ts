@@ -328,7 +328,7 @@ describe('ScrymeSDK', () => {
   });
 
   describe('Nested DX Helper Namespaces', () => {
-    it('should support workspace namespace', async () => {
+    it('should support workspace namespace and correctly propagate baseURL and options when provisioning/creating', async () => {
       const sdk = new ScrymeSDK({
         baseURL: 'https://api.test.com',
         token: 'active-token',
@@ -336,9 +336,17 @@ describe('ScrymeSDK', () => {
 
       const listRes = await sdk.workspace.list() as any;
       expect(listRes.success).toBe(true);
+      expect(listRes.options.baseURL).toBe('https://api.test.com');
 
       const getRes = await sdk.workspace.get('acme') as any;
       expect(getRes.data.workspace.slug).toBe('acme');
+      expect(getRes.options.baseURL).toBe('https://api.test.com');
+
+      const provDto = { name: 'Acme', ownerEmail: 'a@acme.com', slug: 'acme' };
+      const createRes = await sdk.workspace.create(provDto) as any;
+      expect(createRes.success).toBe(true);
+      expect(createRes.options.baseURL).toBe('https://api.test.com');
+      expect(createRes.options.headers.Authorization).toBe('Bearer active-token');
     });
 
     it('should support workspace channels namespace', async () => {
@@ -467,6 +475,8 @@ describe('ScrymeSDK', () => {
       // m2m.workspace.provision
       const provRes = await sdk.m2m.workspace.provision({ name: 'Acme', ownerEmail: 'a@acme.com', slug: 'acme' }) as any;
       expect(provRes.data.name).toBe('Acme');
+      expect(provRes.options.baseURL).toBe('https://api.test.com');
+      expect(provRes.options.headers.Authorization).toBe('Bearer active-token');
 
       // m2m.member.add
       const addMem = await sdk.m2m.member.add('acme', { email: 'user@acme.com', role: 'admin' }) as any;
