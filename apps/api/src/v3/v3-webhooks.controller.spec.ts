@@ -278,7 +278,7 @@ describe('V3WebhooksController', () => {
   });
 
   describe('deleteWebhook', () => {
-    it('should delete webhook, write audit log, and invalidate cache', async () => {
+    it('should delete webhook, write audit log in background, and invalidate cache', async () => {
       const context = {
         scopes: ['webhooks:write'],
         workspaceId: 'ws-123',
@@ -286,30 +286,44 @@ describe('V3WebhooksController', () => {
         clientId: 'client-999',
       };
 
-      const existingWebhook = { id: 'wh-1', name: 'Hook to Delete', workspaceId: 'ws-123' };
+      const deletedWebhook = { id: 'wh-1', name: 'Hook to Delete', workspaceId: 'ws-123' };
 
-      (prisma.workspaceWebhook.findUnique as any).mockResolvedValue(existingWebhook);
-      (prisma.workspaceWebhook.delete as any).mockResolvedValue(existingWebhook);
+      (prisma.workspaceWebhook.delete as any).mockResolvedValue(deletedWebhook);
+      (prisma.workspaceAuditLog.create as any).mockReturnValue({ catch: vi.fn() });
 
       const result = await controller.deleteWebhook(context as any, 'acme-slug', 'wh-1');
 
       expect(result.success).toBe(true);
       expect(result.data.success).toBe(true);
       expect(prisma.workspaceWebhook.delete).toHaveBeenCalledWith({
-        where: { id: 'wh-1' },
+        where: { id: 'wh-1', workspaceId: 'ws-123' },
       });
       expect(redisClient.del).toHaveBeenCalledWith('v3:workspace:ws-123:webhooks');
-      expect(prisma.workspaceAuditLog.create).toHaveBeenCalled();
+      expect(prisma.workspaceAuditLog.create).toHaveBeenCalledWith({
+        data: {
+          workspaceId: 'ws-123',
+          userId: 'user-xyz',
+          action: 'webhook.deleted',
+          resource: 'webhook',
+          resourceId: 'wh-1',
+          metadata: {
+            deleter: 'client-999',
+            name: 'Hook to Delete',
+          },
+        },
+      });
     });
 
-    it('should throw NotFoundException if webhook to delete does not exist', async () => {
+    it('should throw NotFoundException if webhook to delete does not exist (P2025)', async () => {
       const context = {
         scopes: ['webhooks:write'],
         workspaceId: 'ws-123',
         userId: 'user-xyz',
       };
 
-      (prisma.workspaceWebhook.findUnique as any).mockResolvedValue(null);
+      const error: any = new Error('Record to delete not found');
+      error.code = 'P2025';
+      (prisma.workspaceWebhook.delete as any).mockRejectedValue(error);
 
       await expect(controller.deleteWebhook(context as any, 'acme-slug', 'non-existent')).rejects.toThrow(
         'Webhook not found'
