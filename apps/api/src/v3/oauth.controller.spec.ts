@@ -13,6 +13,9 @@ vi.mock('@repo/database', () => ({
       create: vi.fn(),
       findUnique: vi.fn(),
     },
+    oAuthClient: {
+      upsert: vi.fn(),
+    },
   },
 }));
 
@@ -50,6 +53,11 @@ describe('V3OAuthController', () => {
       clientSecret: hashedSecret,
       scopes: ['provisioning:workspaces'],
       allowedIps: [],
+    });
+
+    (prisma.oAuthClient.upsert as any).mockResolvedValue({
+      clientId: 'client-id-1',
+      name: 'M2M Test Organization',
     });
 
     (prisma.oAuthAccessToken.create as any).mockResolvedValue({

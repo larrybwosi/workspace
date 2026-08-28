@@ -12,6 +12,10 @@ vi.mock('@repo/database', () => ({
       findUnique: vi.fn(),
       update: vi.fn(),
     },
+    oAuthClient: {
+      upsert: vi.fn(),
+      deleteMany: vi.fn(),
+    },
   },
 }));
 
