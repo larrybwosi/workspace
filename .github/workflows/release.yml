@@ -324,6 +324,7 @@ jobs:
       - name: Update Version
         run: node scripts/update-version.js
       - name: Wait for scryme-sdk on crates.io
+        shell: bash
         run: |
           VERSION="${{ needs.version-main.outputs.version }}"
           echo "Waiting for scryme-sdk version $VERSION to be available on crates.io..."
