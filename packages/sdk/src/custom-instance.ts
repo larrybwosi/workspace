@@ -56,6 +56,10 @@ export const AXIOS_INSTANCE = axios.create({
 });
 
 AXIOS_INSTANCE.interceptors.request.use(config => {
+  if (!config.baseURL) {
+    config.baseURL = getBaseURL();
+  }
+
   if (!config.headers) {
     config.headers = {} as any;
   }
