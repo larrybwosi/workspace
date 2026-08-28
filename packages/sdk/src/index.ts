@@ -26,4 +26,4 @@ export {
   type CreateFormMessageOptions,
   type CreateTaskCardMessageOptions,
   type FormFieldConfig,
-} from '@repo/shared';
+} from './custom-message-schema';
