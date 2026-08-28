@@ -54,8 +54,23 @@ const isTauri = () => {
   );
 };
 
+const getTauriInvoke = () => {
+  if (typeof window === 'undefined') return null;
+  const w = window as any;
+  return (
+    w.__TAURI_INTERNALS__?.invoke ||
+    w.__TAURI__?.core?.invoke ||
+    w.__TAURI__?.tauri?.invoke ||
+    w.__TAURI__?.invoke ||
+    null
+  );
+};
+
 const tauriAdapter = async (config: any) => {
-  const { invoke } = await import('@tauri-apps/api/core');
+  const invoke = getTauriInvoke();
+  if (!invoke) {
+    throw new Error('Tauri invoke function not found on window object');
+  }
 
   let fullUrl = config.url || '';
   if (config.baseURL && !fullUrl.startsWith('http://') && !fullUrl.startsWith('https://')) {
