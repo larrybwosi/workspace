@@ -26,7 +26,7 @@ jobs:
               - '! .changeset/README.md'
 
   # =======================================================================
-  # DEV: minor release, runs when a merge/push to dev is made and changeset files exist
+  # DEV: patch release, runs when a merge/push to dev is made and changeset files exist
   # =======================================================================
   version-dev:
     needs: [detect-changeset]
@@ -49,11 +49,11 @@ jobs:
           cache: 'pnpm'
           registry-url: 'https://registry.npmjs.org'
       - run: pnpm install --no-frozen-lockfile --dangerously-allow-all-builds
-      - name: Bump minor version
+      - name: Bump patch version
         id: bump
         run: |
           git fetch --tags || true
-          npm version minor --no-git-tag-version
+          npm version patch --no-git-tag-version
           node scripts/ensure-unique-version.js
           pnpm install --no-frozen-lockfile
           node scripts/update-version.js android
@@ -64,7 +64,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add .
-          git commit -m "chore: bump minor version to ${{ steps.bump.outputs.version }} (android) [skip ci]" || echo "No changes to commit"
+          git commit -m "chore: bump patch version to ${{ steps.bump.outputs.version }} (android) [skip ci]" || echo "No changes to commit"
           git tag v${{ steps.bump.outputs.version }}
           git pull --rebase origin dev || true
           git push origin dev --tags
