@@ -757,7 +757,7 @@
           {
             "name": "limit",
             "required": true,
-            "in": "path",
+            "in": "query",
             "schema": {
               "type": "number"
             }
@@ -765,7 +765,7 @@
           {
             "name": "after",
             "required": true,
-            "in": "path",
+            "in": "query",
             "schema": {
               "type": "string"
             }

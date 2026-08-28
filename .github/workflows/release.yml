@@ -317,14 +317,27 @@ jobs:
       - run: pnpm install --no-frozen-lockfile --dangerously-allow-all-builds
       - name: Run Prisma Generate
         run: pnpm --filter @repo/database run db:generate
-      - name: Generate Rust SDK
-        run: pnpm --filter @scryme/chat run generate:rust
       - name: Build Shared Packages
         run: |
           pnpm --filter @repo/shared build || true
           pnpm --filter @repo/api-client build || true
       - name: Update Version
         run: node scripts/update-version.js
+      - name: Wait for scryme-sdk on crates.io
+        run: |
+          VERSION="${{ needs.version-main.outputs.version }}"
+          echo "Waiting for scryme-sdk version $VERSION to be available on crates.io..."
+          for i in {1..30}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" -H "User-Agent: github-actions" "https://crates.io/api/v1/crates/scryme-sdk/$VERSION")
+            if [ "$STATUS" = "200" ]; then
+              echo "scryme-sdk $VERSION is available on crates.io!"
+              exit 0
+            fi
+            echo "Attempt $i: Version $VERSION not available yet (HTTP $STATUS). Waiting 10 seconds..."
+            sleep 10
+          done
+          echo "Timed out waiting for scryme-sdk $VERSION on crates.io"
+          exit 1
       - name: Build Release
         uses: tauri-apps/tauri-action@v0
         env:
