@@ -37,6 +37,18 @@ const isTauri = () => {
   );
 };
 
+const getTauriInvoke = () => {
+  if (typeof window === 'undefined') return null;
+  const w = window as any;
+  return (
+    w.__TAURI_INTERNALS__?.invoke ||
+    w.__TAURI__?.core?.invoke ||
+    w.__TAURI__?.tauri?.invoke ||
+    w.__TAURI__?.invoke ||
+    null
+  );
+};
+
 export const customFetch: typeof fetch = async (
   url: string | URL | Request,
   init?: RequestInit
@@ -46,7 +58,11 @@ export const customFetch: typeof fetch = async (
   }
 
   try {
-    const { invoke } = await import('@tauri-apps/api/core');
+    const invoke = getTauriInvoke();
+
+    if (!invoke) {
+      return fetch(url, init);
+    }
 
     let fullUrl = '';
     if (typeof url === 'string') {

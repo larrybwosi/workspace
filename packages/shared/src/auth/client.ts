@@ -82,27 +82,19 @@ const isTauri = () => {
   );
 };
 
-// Safely obtain Tauri's invoke function without causing static build errors in web apps
-const getTauriInvoke = async () => {
+// Safely obtain Tauri's invoke function from window object without importing @tauri-apps/api/core
+const getTauriInvoke = () => {
   if (typeof window === 'undefined') return null;
 
   const w = window as any;
 
-  // 1. Try global window objects injected by Tauri
-  if (w.__TAURI__?.core?.invoke) return w.__TAURI__.core.invoke;
-  if (w.__TAURI_INTERNALS__?.invoke) return w.__TAURI_INTERNALS__.invoke;
-  if (w.__TAURI__?.tauri?.invoke) return w.__TAURI__.tauri.invoke;
-  if (w.__TAURI__?.invoke) return w.__TAURI__.invoke;
-
-  // 2. Fallback: runtime dynamic import bypassed from static bundler scanners
-  try {
-    const dynamicImport = new Function('m', 'return import(m)');
-    const tauriCore = await dynamicImport('@tauri-apps/api/core');
-    return tauriCore?.invoke || null;
-  } catch (err) {
-    console.error('Failed to dynamic import @tauri-apps/api/core:', err);
-    return null;
-  }
+  return (
+    w.__TAURI_INTERNALS__?.invoke ||
+    w.__TAURI__?.core?.invoke ||
+    w.__TAURI__?.tauri?.invoke ||
+    w.__TAURI__?.invoke ||
+    null
+  );
 };
 
 export const customFetch: typeof fetch = async (
@@ -114,7 +106,7 @@ export const customFetch: typeof fetch = async (
   }
 
   try {
-    const invoke = await getTauriInvoke();
+    const invoke = getTauriInvoke();
 
     if (!invoke) {
       return fetch(url, init);
