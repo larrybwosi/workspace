@@ -76,6 +76,15 @@ describe('V3OAuthController', () => {
     expect(prisma.organization.findUnique).toHaveBeenCalledWith({
       where: { clientId: 'client-id-1' },
     });
+    expect(prisma.oAuthAccessToken.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          userId: null,
+          referenceId: 'm2m:org-1',
+          clientId: 'client-id-1',
+        }),
+      })
+    );
   });
 
   it('should support plain secrets if org.clientSecret is the plain secret', async () => {
