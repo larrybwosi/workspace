@@ -20,7 +20,7 @@
 
 ### Minor Changes 
 
-- Automatic minor release for branch dev
+- Automatic minor release for branch dev 
 
 ### Patch Changes
 
