@@ -1,6 +1,6 @@
 {
   "name": "@scryme/chat",
-  "version": "2.81.6",
+  "version": "2.87.0",
   "private": false,
   "publishConfig": {
     "access": "public"
@@ -28,7 +28,7 @@
   ],
   "scripts": {
     "generate:ts": "orval",
-    "generate:rust": "openapi-generator-cli generate -i ../../apps/api/openapi.json -g rust -o rust --skip-validate-spec --additional-properties=packageName=scryme-sdk,packageVersion=2.81.5,useSingleRequestParameter=true",
+    "generate:rust": "node -e \"const pkg=require('./package.json'); require('child_process').execSync('openapi-generator-cli generate -i ../../apps/api/openapi.json -g rust -o rust --skip-validate-spec --additional-properties=packageName=scryme-sdk,packageVersion=' + pkg.version + ',useSingleRequestParameter=true', {stdio: 'inherit'})\"",
     "generate": "pnpm generate:ts && pnpm generate:rust",
     "build": "tsc",
     "type-check": "tsc --noEmit",

@@ -100,6 +100,7 @@ if (fs.existsSync(appsDir)) {
         if (fs.existsSync(cargoPath)) {
             let cargoContent = fs.readFileSync(cargoPath, 'utf8');
             cargoContent = cargoContent.replace(/^version = \".*\"/m, `version = "${semverVersion}"`);
+            cargoContent = cargoContent.replace(/^scryme-sdk = \".*\"/m, `scryme-sdk = "${semverVersion}"`);
             fs.writeFileSync(cargoPath, cargoContent);
             console.log(`Updated ${cargoPath}`);
         }
@@ -119,12 +120,20 @@ if (fs.existsSync(appsDir)) {
     });
 }
 
-// Sync version to packages/sdk/package.json — only in full (non-scoped) sync mode.
+// Sync version to packages/sdk/package.json and packages/sdk/rust/Cargo.toml — only in full (non-scoped) sync mode.
 if (!targetApp) {
   const sdkPackageJsonPath = path.resolve(__dirname, '../packages/sdk/package.json');
   updateJsonFile(sdkPackageJsonPath, (json) => {
     json.version = newVersion;
   });
+
+  const rustCargoPath = path.resolve(__dirname, '../packages/sdk/rust/Cargo.toml');
+  if (fs.existsSync(rustCargoPath)) {
+    let cargoContent = fs.readFileSync(rustCargoPath, 'utf8');
+    cargoContent = cargoContent.replace(/^version = \".*\"/m, `version = "${newVersion}"`);
+    fs.writeFileSync(rustCargoPath, cargoContent);
+    console.log(`Updated ${rustCargoPath}`);
+  }
 }
 
 if (process.env.GITHUB_OUTPUT) {
