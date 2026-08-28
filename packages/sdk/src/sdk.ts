@@ -751,29 +751,37 @@ export class ScrymeSDK {
           return async (...args: unknown[]) => {
             const config = await this.getRequestConfig();
             const arity = originalMethod.length;
-            const newArgs = [...args];
 
-            // Orval generated functions accept `options` as their last parameter.
-            // If the user provided options, we merge them with our default request config.
-            if (args.length >= arity && typeof args[args.length - 1] === 'object') {
-              const userOptions = args[args.length - 1] as AxiosRequestConfig;
-              newArgs[args.length - 1] = {
+            // Strip trailing undefined values to accurately check user-provided parameters
+            const cleanArgs = [...args];
+            while (cleanArgs.length > 0 && cleanArgs[cleanArgs.length - 1] === undefined) {
+              cleanArgs.pop();
+            }
+
+            const lastArg = cleanArgs.length > 0 ? cleanArgs[cleanArgs.length - 1] : undefined;
+            const isLastArgOptions =
+              cleanArgs.length === arity &&
+              typeof lastArg === 'object' &&
+              lastArg !== null;
+
+            if (isLastArgOptions) {
+              const userOptions = lastArg as AxiosRequestConfig;
+              cleanArgs[cleanArgs.length - 1] = {
                 ...userOptions,
                 baseURL: config.baseURL,
                 headers: {
                   ...config.headers,
-                  ...userOptions?.headers,
+                  ...userOptions.headers,
                 },
               };
             } else {
-              // Otherwise, we pad missing parameters with undefined and append our config as the options object.
-              while (newArgs.length < arity - 1) {
-                newArgs.push(undefined);
+              while (cleanArgs.length < arity - 1) {
+                cleanArgs.push(undefined);
               }
-              newArgs.push(config);
+              cleanArgs.push(config);
             }
 
-            return (originalMethod as (...a: unknown[]) => unknown)(...newArgs);
+            return (originalMethod as (...a: unknown[]) => unknown)(...cleanArgs);
           };
         }
         return originalMethod;

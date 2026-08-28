@@ -388,6 +388,11 @@ export type V3OAuthControllerGetToken200 = {
   timestamp?: string;
 };
 
+export type V10GuildsControllerGetMembersParams = {
+limit: number;
+after: string;
+};
+
 export type V10ChannelsControllerGetMessagesParams = {
 limit?: number;
 before?: string;
@@ -1366,9 +1371,11 @@ const v10GuildsControllerGetChannels = (
 
 const v10GuildsControllerGetMembers = (
     guildId: string,
+    params: V10GuildsControllerGetMembersParams,
  options?: SecondParameter<typeof customInstance>,) => {
       return customInstance<void>(
-      {url: `/api/bot/v10/guilds/${guildId}/members`, method: 'GET'
+      {url: `/api/bot/v10/guilds/${guildId}/members`, method: 'GET',
+        params
     },
       options);
     }
