@@ -401,6 +401,11 @@ export type V3OAuthControllerGetToken200 = {
   timestamp?: string;
 };
 
+export type V10GuildsControllerGetMembersParams = {
+limit: number;
+after: string;
+};
+
 export type V10ChannelsControllerGetMessagesParams = {
 limit?: number;
 before?: string;
@@ -2741,32 +2746,36 @@ export const useV10GuildsControllerGetChannels = <TData = Awaited<ReturnType<typ
 
 export const v10GuildsControllerGetMembers = (
     guildId: string,
+    params: V10GuildsControllerGetMembersParams,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
 
 
       return customInstance<void>(
-      {url: `/api/bot/v10/guilds/${guildId}/members`, method: 'GET', signal
+      {url: `/api/bot/v10/guilds/${guildId}/members`, method: 'GET',
+        params, signal
     },
       options);
     }
 
 
-export const getV10GuildsControllerGetMembersQueryKey = (guildId: string,) => {
-    return [`/api/bot/v10/guilds/${guildId}/members`] as const;
+export const getV10GuildsControllerGetMembersQueryKey = (guildId: string,
+    params: V10GuildsControllerGetMembersParams,) => {
+    return [`/api/bot/v10/guilds/${guildId}/members`, ...(params ? [params]: [])] as const;
     }
 
 
-export const getV10GuildsControllerGetMembersQueryOptions = <TData = Awaited<ReturnType<typeof v10GuildsControllerGetMembers>>, TError = ErrorType<unknown>>(guildId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v10GuildsControllerGetMembers>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+export const getV10GuildsControllerGetMembersQueryOptions = <TData = Awaited<ReturnType<typeof v10GuildsControllerGetMembers>>, TError = ErrorType<unknown>>(guildId: string,
+    params: V10GuildsControllerGetMembersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v10GuildsControllerGetMembers>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getV10GuildsControllerGetMembersQueryKey(guildId);
+  const queryKey =  queryOptions?.queryKey ?? getV10GuildsControllerGetMembersQueryKey(guildId,params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof v10GuildsControllerGetMembers>>> = ({ signal }) => v10GuildsControllerGetMembers(guildId, requestOptions, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof v10GuildsControllerGetMembers>>> = ({ signal }) => v10GuildsControllerGetMembers(guildId,params, requestOptions, signal);
 
 
 
@@ -2779,11 +2788,12 @@ export type V10GuildsControllerGetMembersQueryResult = NonNullable<Awaited<Retur
 export type V10GuildsControllerGetMembersQueryError = ErrorType<unknown>
 
 export const useV10GuildsControllerGetMembers = <TData = Awaited<ReturnType<typeof v10GuildsControllerGetMembers>>, TError = ErrorType<unknown>>(
- guildId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v10GuildsControllerGetMembers>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ guildId: string,
+    params: V10GuildsControllerGetMembersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v10GuildsControllerGetMembers>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
 
   ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
 
-  const queryOptions = getV10GuildsControllerGetMembersQueryOptions(guildId,options)
+  const queryOptions = getV10GuildsControllerGetMembersQueryOptions(guildId,params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

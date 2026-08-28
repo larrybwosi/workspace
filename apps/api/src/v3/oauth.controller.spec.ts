@@ -8,16 +8,13 @@ vi.mock('@repo/database', () => ({
   prisma: {
     organization: {
       findUnique: vi.fn(),
-      update: vi.fn(),
-    },
-    oAuthClient: {
-      findUnique: vi.fn(),
-      update: vi.fn(),
-      upsert: vi.fn(),
     },
     oAuthAccessToken: {
       create: vi.fn(),
       findUnique: vi.fn(),
+    },
+    oAuthClient: {
+      upsert: vi.fn(),
     },
   },
 }));
@@ -33,12 +30,6 @@ describe('V3OAuthController', () => {
     controller = module.get<V3OAuthController>(V3OAuthController);
 
     vi.clearAllMocks();
-  });
-
-  it('should generate M2M credentials correctly', () => {
-    const creds = V3OAuthController.generateCredentials();
-    expect(creds.clientId).toMatch(/^m2m_/);
-    expect(creds.clientSecret).toMatch(/^sk_m2m_/);
   });
 
   it('should issue a wrapped token response with valid client credentials for organization M2M', async () => {
@@ -64,7 +55,10 @@ describe('V3OAuthController', () => {
       allowedIps: [],
     });
 
-    (prisma.oAuthClient.upsert as any).mockResolvedValue({});
+    (prisma.oAuthClient.upsert as any).mockResolvedValue({
+      clientId: 'client-id-1',
+      name: 'M2M Test Organization',
+    });
 
     (prisma.oAuthAccessToken.create as any).mockResolvedValue({
       id: 'token-id-1',
@@ -84,65 +78,6 @@ describe('V3OAuthController', () => {
     });
   });
 
-  it('should issue a wrapped token response with valid client credentials for OAuthClient M2M', async () => {
-    const body = {
-      grant_type: 'client_credentials' as const,
-      client_id: 'oauth-client-id-1',
-      client_secret: 'oauth-client-secret-1',
-      scope: 'messages:read',
-    };
-
-    const req = {
-      ip: '127.0.0.1',
-    };
-
-    (prisma.organization.findUnique as any).mockResolvedValue(null);
-    (prisma.oAuthClient.findUnique as any).mockResolvedValue({
-      id: 'oauth-client-db-id',
-      clientId: 'oauth-client-id-1',
-      clientSecret: 'oauth-client-secret-1',
-      scopes: ['messages:read', 'messages:send'],
-      userId: 'user-123',
-    });
-
-    (prisma.oAuthAccessToken.create as any).mockResolvedValue({
-      id: 'token-id-2',
-      scopes: ['messages:read'],
-    });
-
-    const result = await controller.getToken(req, body);
-
-    expect(result.success).toBe(true);
-    expect(result.data.access_token).toBeDefined();
-    expect(result.data.access_token.startsWith('oat_')).toBe(true);
-    expect(result.data.scope).toBe('messages:read');
-    expect(prisma.oAuthClient.findUnique).toHaveBeenCalledWith({
-      where: { clientId: 'oauth-client-id-1' },
-    });
-  });
-
-  it('should throw UnauthorizedException if clientSecret is missing on OAuthClient', async () => {
-    const body = {
-      grant_type: 'client_credentials' as const,
-      client_id: 'oauth-client-id-no-secret',
-      client_secret: 'provided-secret',
-    };
-
-    const req = { ip: '127.0.0.1' };
-
-    (prisma.organization.findUnique as any).mockResolvedValue(null);
-    (prisma.oAuthClient.findUnique as any).mockResolvedValue({
-      id: 'oauth-client-db-id-2',
-      clientId: 'oauth-client-id-no-secret',
-      clientSecret: null,
-      scopes: ['*'],
-    });
-
-    await expect(controller.getToken(req, body)).rejects.toThrow(
-      'Invalid client credentials'
-    );
-  });
-
   it('should support plain secrets if org.clientSecret is the plain secret', async () => {
     const body = {
       grant_type: 'client_credentials' as const,
@@ -160,7 +95,6 @@ describe('V3OAuthController', () => {
       allowedIps: [],
     });
 
-    (prisma.oAuthClient.upsert as any).mockResolvedValue({});
     (prisma.oAuthAccessToken.create as any).mockResolvedValue({
       id: 'token-id-1',
       scopes: ['*'],
@@ -229,11 +163,12 @@ describe('V3OAuthController', () => {
       scopes: ['*'],
     });
 
-    (prisma.oAuthClient.upsert as any).mockResolvedValue({});
-    (prisma.oAuthAccessToken.create as any).mockResolvedValue({
-      id: 'token-id-1',
-      scopes: ['*'],
-    });
+    (prisma as any).oauthAccessToken = {
+      create: vi.fn().mockResolvedValue({
+        id: 'token-id-1',
+        scopes: ['*'],
+      }),
+    };
 
     const result = await controller.getToken(req, body);
     expect(result.success).toBe(true);

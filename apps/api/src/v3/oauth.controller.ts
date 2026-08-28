@@ -59,40 +59,12 @@ export class V3OAuthController {
     };
   }
 
-  /**
-   * Helper utility to generate strong M2M client credentials (clientId and clientSecret)
-   */
-  public static generateCredentials() {
-    return {
-      clientId: `m2m_${crypto.randomBytes(12).toString('hex')}`,
-      clientSecret: `sk_m2m_${crypto.randomBytes(24).toString('hex')}`,
-    };
-  }
-
-  private verifySecret(providedSecret: string, storedSecret: string): boolean {
-    if (!storedSecret) return false;
-    try {
-      const hashedSecret = crypto.createHash('sha256').update(providedSecret).digest('hex');
-      const providedSecretHash = crypto.createHash('sha256').update(providedSecret).digest();
-      const storedSecretHash = crypto.createHash('sha256').update(storedSecret).digest();
-      const providedSecretHashedHash = crypto.createHash('sha256').update(hashedSecret).digest();
-
-      const isPlainValid = storedSecretHash.length === providedSecretHash.length && crypto.timingSafeEqual(providedSecretHash, storedSecretHash);
-      const isHashedValid = storedSecretHash.length === providedSecretHashedHash.length && crypto.timingSafeEqual(providedSecretHashedHash, storedSecretHash);
-
-      return isPlainValid || isHashedValid;
-    } catch (cryptoError) {
-      console.error('[OAuth Token Error] Cryptographic comparison error:', cryptoError);
-      return false;
-    }
-  }
-
   @AllowAnonymous()
   @Post('token')
   @ApiOperation({
     summary: 'Exchange client credentials for a V3 access token',
     description: `
-Generates a bearer token for Machine-to-Machine (M2M) communication. Supports credentials from both Organization M2M applications and OAuthClient M2M connections.
+Generates a bearer token for Machine-to-Machine (M2M) communication.
 
 **Supported Scopes:**
 - \`*\`: Full access
@@ -140,140 +112,76 @@ Generates a bearer token for Machine-to-Machine (M2M) communication. Supports cr
 
       const { client_id, client_secret, scope } = validatedData.data;
 
-      // 2. Fetch Organization or OAuthClient
-      let org: any = null;
-      let oauthClient: any = null;
-
+      // 2. Fetch Organization
+      let org;
       try {
         org = await prisma.organization.findUnique({
           where: { clientId: client_id },
         });
       } catch (dbError) {
-        console.error(`[OAuth Token Error] Database query failed checking Organization for clientId "${client_id}":`, dbError);
+        console.error(`[OAuth Token Error] Database query failed for clientId "${client_id}":`, dbError);
+        throw new InternalServerErrorException('Failed to verify client credentials due to a database error.');
       }
 
       if (!org) {
-        try {
-          oauthClient = await prisma.oAuthClient.findUnique({
-            where: { clientId: client_id },
-          });
-        } catch (dbError) {
-          console.error(`[OAuth Token Error] Database query failed checking OAuthClient for clientId "${client_id}":`, dbError);
-          throw new InternalServerErrorException('Failed to verify client credentials due to a database error.');
-        }
-      }
-
-      if (!org && !oauthClient) {
-        console.warn(`[OAuth Token Error] Client ID not found in Organization or OAuthClient: "${client_id}"`);
+        console.warn(`[OAuth Token Error] Client ID not found: "${client_id}"`);
         throw new UnauthorizedException('Invalid client credentials');
       }
 
-      // Handle Organization M2M Credentials
-      if (org) {
-        const storedSecret = org.clientSecret;
+      // 3. Verify Secret
+      let isValid = false;
+      try {
+        const hashedSecret = crypto.createHash('sha256').update(client_secret).digest('hex');
+        const providedSecretHash = crypto.createHash('sha256').update(client_secret).digest();
+        const orgSecretHash = crypto.createHash('sha256').update(org.clientSecret || '').digest();
+        const providedSecretHashedHash = crypto.createHash('sha256').update(hashedSecret).digest();
 
-        // Verify Secret
-        const isValid = this.verifySecret(client_secret, storedSecret);
-        if (!isValid) {
-          console.warn(`[OAuth Token Error] Invalid client_secret provided for org client_id: "${client_id}"`);
-          throw new UnauthorizedException('Invalid client credentials: The provided client_secret is incorrect.');
-        }
+        const isPlainValid = orgSecretHash.length === providedSecretHash.length && crypto.timingSafeEqual(providedSecretHash, orgSecretHash);
+        const isHashedValid = orgSecretHash.length === providedSecretHashedHash.length && crypto.timingSafeEqual(providedSecretHashedHash, orgSecretHash);
 
-        // IP Allowlist Check
-        if (org.allowedIps && org.allowedIps.length > 0) {
-          const clientIp = req.ip || req.socket?.remoteAddress;
-          let normalizedIp = clientIp || '';
-          if (normalizedIp.startsWith('::ffff:')) {
-            normalizedIp = normalizedIp.substring(7);
-          }
-
-          const isAllowed = org.allowedIps.includes(normalizedIp) || (clientIp && org.allowedIps.includes(clientIp));
-          if (!isAllowed) {
-            console.warn(`[OAuth Token Error] IP restricted: IP "${clientIp}" (normalized: "${normalizedIp}") not in allowed list for client_id "${client_id}"`);
-            throw new ForbiddenException(`Access denied: IP address "${clientIp}" is not in the allowlist.`);
-          }
-        }
-
-        // Scope Validation
-        const requestedScopes = scope ? scope.split(' ') : [];
-        const allowedScopes = org.scopes || [];
-
-        if (allowedScopes.length > 0 && allowedScopes[0] !== '*') {
-          const unauthorizedScopes = requestedScopes.filter(s => !allowedScopes.includes(s));
-          if (unauthorizedScopes.length > 0) {
-            console.warn(`[OAuth Token Error] Forbidden scopes "${unauthorizedScopes.join(', ')}" requested by client_id "${client_id}"`);
-            throw new ForbiddenException(`Unauthorized scopes requested: ${unauthorizedScopes.join(', ')}`);
-          }
-        }
-
-        // Ensure OAuthClient record exists for foreign key constraint on OAuthAccessToken
-        await prisma.oAuthClient.upsert({
-          where: { clientId: client_id },
-          create: {
-            clientId: client_id,
-            name: org.name || `Organization M2M ${client_id}`,
-            clientSecret: storedSecret,
-            scopes: org.scopes || ['*'],
-            grantTypes: ['client_credentials'],
-          },
-          update: {
-            clientSecret: storedSecret,
-            scopes: org.scopes || ['*'],
-          },
-        }).catch(err => {
-          console.warn(`[OAuth Token Warning] Failed to upsert oAuthClient for org client_id "${client_id}":`, err);
-        });
-
-        const scopesToIssue = scope || (allowedScopes.length ? allowedScopes.join(' ') : '*');
-        return await this.issueToken(client_id, client_id, `m2m:${org.id}`, scopesToIssue);
+        isValid = isPlainValid || isHashedValid;
+      } catch (cryptoError) {
+        console.error(`[OAuth Token Error] Cryptographic comparison error for client_id "${client_id}":`, cryptoError);
+        throw new UnauthorizedException('Invalid client credentials');
       }
 
-      // Handle OAuthClient M2M Credentials
-      if (oauthClient) {
-        const storedSecret = oauthClient.clientSecret;
-
-        // Verify Secret
-        const isValid = this.verifySecret(client_secret, storedSecret);
-        if (!isValid) {
-          console.warn(`[OAuth Token Error] Invalid client_secret provided for OAuthClient client_id: "${client_id}"`);
-          throw new UnauthorizedException('Invalid client credentials: The provided client_secret is incorrect.');
-        }
-
-        // IP Allowlist Check (from metadata if configured)
-        const allowedIps = (oauthClient.metadata as any)?.allowedIps || [];
-        if (allowedIps.length > 0) {
-          const clientIp = req.ip || req.socket?.remoteAddress;
-          let normalizedIp = clientIp || '';
-          if (normalizedIp.startsWith('::ffff:')) {
-            normalizedIp = normalizedIp.substring(7);
-          }
-
-          const isAllowed = allowedIps.includes(normalizedIp) || (clientIp && allowedIps.includes(clientIp));
-          if (!isAllowed) {
-            console.warn(`[OAuth Token Error] IP restricted: IP "${clientIp}" (normalized: "${normalizedIp}") not in allowed list for OAuthClient client_id "${client_id}"`);
-            throw new ForbiddenException(`Access denied: IP address "${clientIp}" is not in the allowlist.`);
-          }
-        }
-
-        // Scope Validation
-        const requestedScopes = scope ? scope.split(' ') : [];
-        const allowedScopes = oauthClient.scopes || [];
-
-        if (allowedScopes.length > 0 && allowedScopes[0] !== '*') {
-          const unauthorizedScopes = requestedScopes.filter(s => !allowedScopes.includes(s));
-          if (unauthorizedScopes.length > 0) {
-            console.warn(`[OAuth Token Error] Forbidden scopes "${unauthorizedScopes.join(', ')}" requested by OAuthClient client_id "${client_id}"`);
-            throw new ForbiddenException(`Unauthorized scopes requested: ${unauthorizedScopes.join(', ')}`);
-          }
-        }
-
-        const scopesToIssue = scope || (allowedScopes.length ? allowedScopes.join(' ') : '*');
-        const userId = oauthClient.userId || `m2m:${oauthClient.id}`;
-
-        return await this.issueToken(client_id, client_id, userId, scopesToIssue);
+      if (!isValid) {
+        console.warn(`[OAuth Token Error] Invalid client_secret provided for client_id: "${client_id}"`);
+        throw new UnauthorizedException('Invalid client credentials: The provided client_secret is incorrect.');
       }
 
-      throw new UnauthorizedException('Invalid client credentials');
+      // 4. IP Allowlist Check
+      if (org.allowedIps && org.allowedIps.length > 0) {
+        const clientIp = req.ip || req.socket?.remoteAddress;
+        let normalizedIp = clientIp || '';
+        if (normalizedIp.startsWith('::ffff:')) {
+          normalizedIp = normalizedIp.substring(7);
+        }
+
+        const isAllowed = org.allowedIps.includes(normalizedIp) || (clientIp && org.allowedIps.includes(clientIp));
+        if (!isAllowed) {
+          console.warn(`[OAuth Token Error] IP restricted: IP "${clientIp}" (normalized: "${normalizedIp}") not in allowed list for client_id "${client_id}"`);
+          throw new ForbiddenException(`Access denied: IP address "${clientIp}" is not in the allowlist.`);
+        }
+      }
+
+      // 5. Scope Validation
+      const requestedScopes = scope ? scope.split(' ') : [];
+      const allowedScopes = org.scopes || [];
+
+      if (allowedScopes.length > 0 && allowedScopes[0] !== '*') {
+        const unauthorizedScopes = requestedScopes.filter(s => !allowedScopes.includes(s));
+        if (unauthorizedScopes.length > 0) {
+          console.warn(`[OAuth Token Error] Forbidden scopes "${unauthorizedScopes.join(', ')}" requested by client_id "${client_id}"`);
+          throw new ForbiddenException(`Unauthorized scopes requested: ${unauthorizedScopes.join(', ')}`);
+        }
+      }
+
+        const scopesToIssue = scope || (allowedScopes.length ? allowedScopes.join(' ') : '*');
+
+        // 6. Token Issuance
+        return await this.issueToken(client_id, `m2m:${org.id}`, scopesToIssue, org.name);
+
     } catch (error) {
       // Re-throw NestJS HttpExceptions so filters handle them correctly
       if (error instanceof HttpException) {
@@ -287,21 +195,34 @@ Generates a bearer token for Machine-to-Machine (M2M) communication. Supports cr
   }
 
   private async issueToken(
-    dbClientId: string,
     publicClientId: string,
     userId: string,
-    scope: string
+    scope: string,
+    orgName?: string
   ) {
     try {
       const rawToken = `oat_${crypto.randomBytes(32).toString('hex')}`;
       const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
       const expiresAt = new Date(Date.now() + 3600 * 1000);
 
+      // Ensure OAuthClient record exists to satisfy foreign key constraint on oauth_access_tokens(clientId)
+      await prisma.oAuthClient.upsert({
+        where: { clientId: publicClientId },
+        update: {
+          name: orgName || 'M2M Application',
+        },
+        create: {
+          clientId: publicClientId,
+          name: orgName || 'M2M Application',
+          redirectUris: [],
+        },
+      });
+
       const accessToken = await prisma.oAuthAccessToken.create({
         data: {
           id: crypto.randomBytes(16).toString('hex'),
           token: hashedToken,
-          clientId: dbClientId,
+          clientId: publicClientId,
           userId: userId,
           expiresAt,
           scopes: scope ? scope.split(' ') : ['*'],
@@ -316,7 +237,7 @@ Generates a bearer token for Machine-to-Machine (M2M) communication. Supports cr
         scope: accessToken.scopes.join(' '),
       });
     } catch (error) {
-      console.error(`[OAuth Token Error] Database error creating access token for clientId "${publicClientId}":`, error);
+      console.error(`[OAuth Token Error] Database error creating access token for clientId "${publicClientId}":`, error.message);
       throw new InternalServerErrorException('Failed to generate access token.');
     }
   }

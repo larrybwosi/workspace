@@ -1,4 +1,4 @@
-import { Controller, Get, Put, Delete, Param, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Put, Delete, Param, Query, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiV10Guard } from '../auth/api-v10.guard';
 import { CurrentBot } from '../auth/current-bot.decorator';
 import { V10GuildsService } from './guilds.service';
@@ -22,8 +22,8 @@ export class V10GuildsController {
   async getMembers(
     @CurrentBot() bot: any,
     @Param('guildId') guildId: string,
-    @Param('limit') limit?: number,
-    @Param('after') after?: string
+    @Query('limit') limit?: number,
+    @Query('after') after?: string
   ) {
     return this.guildsService.getMembers(bot, guildId, { limit, after });
   }
