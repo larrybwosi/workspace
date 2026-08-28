@@ -1,3 +1,9 @@
+## 2026-08-27 - [Prisma/Performance] Short-circuiting Empty Secondary Queries and O(1) Map Lookups in Audit Logs
+
+**Learning:** In `AuditLogsController`, `WorkspaceAuditLog` stores `userId` as a plain scalar without a Prisma model relation to `User`. When querying audit log feeds or exporting CSVs, performing `prisma.user.findMany({ where: { id: { in: userIds } } })` unconditionally invokes a database query even when `userIds` is empty (e.g., workspaces with no audit log records). Guarding secondary relation queries with an empty-check short-circuit (`userIds.length > 0 ? await prisma.user.findMany(...) : []`) avoids redundant database calls entirely. Furthermore, using `new Map(users.map(u => [u.id, u]))` instead of object reduction provides cleaner O(1) lookups in Node.js.
+
+**Action:** Always short-circuit secondary `findMany` queries on collection IDs (`userIds.length > 0`) when mapping scalar foreign keys, and construct a `Map` for O(1) in-memory lookups.
+
 ## 2026-08-25 - [Prisma/Performance] Child Sub-Resource Point Lookup for Workspace Departments
 
 **Learning:** `DepartmentsController.getDepartment` previously executed `prisma.workspace.findUnique({ where: { slug } })` with nested department filters, requiring database index scans across the workspace and department tables. Replacing this query with a direct O(1) primary key point lookup on `prisma.workspaceDepartment.findUnique({ where: { id: departmentId } })` and includes for parent workspace slug and membership verification reduces database query overhead, leverages the primary key B-tree index, and optimizes endpoint latency.
