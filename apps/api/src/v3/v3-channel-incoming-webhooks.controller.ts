@@ -118,6 +118,7 @@ const executeWebhookSchema = z.object({
 });
 
 @ApiTags('V3 Channel Incoming Webhooks')
+@AllowAnonymous()
 @Controller()
 @UseFilters(V3ExceptionFilter)
 export class V3ChannelIncomingWebhooksController {
