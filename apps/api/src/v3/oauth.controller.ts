@@ -196,7 +196,7 @@ Generates a bearer token for Machine-to-Machine (M2M) communication.
 
   private async issueToken(
     publicClientId: string,
-    userId: string,
+    subjectId: string,
     scope: string,
     orgName?: string
   ) {
@@ -218,12 +218,17 @@ Generates a bearer token for Machine-to-Machine (M2M) communication.
         },
       });
 
+      const isM2M = subjectId ? subjectId.startsWith('m2m:') : false;
+      const userIdVal = isM2M ? null : subjectId;
+      const referenceIdVal = subjectId;
+
       const accessToken = await prisma.oAuthAccessToken.create({
         data: {
           id: crypto.randomBytes(16).toString('hex'),
           token: hashedToken,
           clientId: publicClientId,
-          userId: userId,
+          userId: userIdVal,
+          referenceId: referenceIdVal,
           expiresAt,
           scopes: scope ? scope.split(' ') : ['*'],
           createdAt: new Date(),
