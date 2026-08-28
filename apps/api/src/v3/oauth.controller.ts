@@ -180,7 +180,7 @@ Generates a bearer token for Machine-to-Machine (M2M) communication.
         const scopesToIssue = scope || (allowedScopes.length ? allowedScopes.join(' ') : '*');
 
         // 6. Token Issuance
-        return await this.issueToken(org.id, client_id, `m2m:${org.id}`, scopesToIssue);
+        return await this.issueToken(client_id, `m2m:${org.id}`, scopesToIssue, org.name);
 
     } catch (error) {
       // Re-throw NestJS HttpExceptions so filters handle them correctly
@@ -195,22 +195,34 @@ Generates a bearer token for Machine-to-Machine (M2M) communication.
   }
 
   private async issueToken(
-    dbClientId: string,
     publicClientId: string,
     userId: string,
-    scope: string
+    scope: string,
+    orgName?: string
   ) {
     try {
       const rawToken = `oat_${crypto.randomBytes(32).toString('hex')}`;
       const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
       const expiresAt = new Date(Date.now() + 3600 * 1000);
 
+      // Ensure OAuthClient record exists to satisfy foreign key constraint on oauth_access_tokens(clientId)
+      await prisma.oAuthClient.upsert({
+        where: { clientId: publicClientId },
+        update: {
+          name: orgName || 'M2M Application',
+        },
+        create: {
+          clientId: publicClientId,
+          name: orgName || 'M2M Application',
+          redirectUris: [],
+        },
+      });
+
       const accessToken = await prisma.oAuthAccessToken.create({
         data: {
           id: crypto.randomBytes(16).toString('hex'),
           token: hashedToken,
-          // Use the internal DB primary key that satisfies the FK constraint
-          clientId: dbClientId,
+          clientId: publicClientId,
           userId: userId,
           expiresAt,
           scopes: scope ? scope.split(' ') : ['*'],

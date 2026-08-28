@@ -325,6 +325,22 @@ export class V3OrganizationsController {
       },
     });
 
+    if (updatedOrg.clientId) {
+      await prisma.oAuthClient.upsert({
+        where: { clientId: updatedOrg.clientId },
+        update: {
+          name: body.name || organization.name,
+          clientSecret,
+        },
+        create: {
+          clientId: updatedOrg.clientId,
+          clientSecret,
+          name: body.name || organization.name,
+          redirectUris: [],
+        },
+      });
+    }
+
     return this.formatResponse({
       id: updatedOrg.id,
       name: body.name || organization.name,
@@ -400,6 +416,20 @@ export class V3OrganizationsController {
       },
     });
 
+    if (updatedOrg.clientId) {
+      await prisma.oAuthClient.upsert({
+        where: { clientId: updatedOrg.clientId },
+        update: {
+          name: updatedOrg.name,
+        },
+        create: {
+          clientId: updatedOrg.clientId,
+          name: updatedOrg.name,
+          redirectUris: [],
+        },
+      });
+    }
+
     return this.formatResponse({
       id: updatedOrg.id,
       name: updatedOrg.name,
@@ -437,6 +467,17 @@ export class V3OrganizationsController {
     const member = organization.members[0];
     if (!member || !['owner', 'admin'].includes(member.role)) {
       throw new ForbiddenException('You do not have permission to manage M2M credentials');
+    }
+
+    const currentOrg = await prisma.organization.findUnique({
+      where: { id: organization.id },
+      select: { clientId: true },
+    });
+
+    if (currentOrg?.clientId) {
+      await prisma.oAuthClient.deleteMany({
+        where: { clientId: currentOrg.clientId },
+      });
     }
 
     await prisma.organization.update({
