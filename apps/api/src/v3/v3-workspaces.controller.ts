@@ -15,6 +15,7 @@ import {
   UseFilters,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiProperty, ApiParam } from '@nestjs/swagger';
+import { AllowAnonymous } from '@thallesp/nestjs-better-auth';
 import { V3ExceptionFilter } from './v3-exception.filter';
 import { ApiV3Guard, ApiV3Context } from '../auth/api-v3.guard';
 import { V3Context } from '../auth/v3-context.decorator';
@@ -161,6 +162,7 @@ const updateMemberSchema = z.object({
 
 @ApiTags('V3 Workspaces')
 @ApiBearerAuth()
+@AllowAnonymous()
 @Controller('v3/workspaces')
 @UseGuards(ApiV3Guard)
 @UseFilters(V3ExceptionFilter)
