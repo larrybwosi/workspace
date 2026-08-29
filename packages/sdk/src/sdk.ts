@@ -933,27 +933,39 @@ export class ScrymeSDK {
        */
       channels: {
         /**
-         * Lists all public channels (and private channels the user has access to) in a workspace.
+         * Lists all public channels (and private channels the user has access to) in a workspace via V3 API.
          * @param slug The unique workspace slug identifier.
          * @param options Optional request config override.
-         * @returns List of channels returned exactly from the endpoint.
+         * @returns List of channels returned from the endpoint.
          */
         list: async (slug: string, options?: AxiosRequestConfig): Promise<WorkspaceChannel[]> => {
-          return this.raw.channelsControllerGetWorkspaceChannels(slug, options) as unknown as WorkspaceChannel[];
+          const res = (await this.raw.v3WorkspacesControllerGetChannels(slug, options)) as unknown as {
+            success: boolean;
+            data: { channels: WorkspaceChannel[] };
+          };
+          return res?.data?.channels ?? (res as unknown as WorkspaceChannel[]);
         },
         /**
-         * Creates a new channel within a workspace.
+         * Creates a new channel within a workspace via V3 API.
          * @param slug The unique workspace slug identifier.
          * @param data Configuration DTO for the new channel.
          * @param options Optional request config override.
-         * @returns Details of the created channel exactly from the endpoint.
+         * @returns Details of the created channel returned from the endpoint.
          */
         create: async (
           slug: string,
-          data: CreateWorkspaceChannelDto,
+          data: V3CreateChannelDto | CreateWorkspaceChannelDto,
           options?: AxiosRequestConfig
         ): Promise<WorkspaceChannel> => {
-          return this.raw.channelsControllerCreateChannel(slug, data, options) as unknown as WorkspaceChannel;
+          const res = (await this.raw.v3WorkspacesControllerCreateChannel(
+            slug,
+            data as V3CreateChannelDto,
+            options
+          )) as unknown as {
+            success: boolean;
+            data: { channel: WorkspaceChannel };
+          };
+          return res?.data?.channel ?? (res as unknown as WorkspaceChannel);
         },
       },
     };
