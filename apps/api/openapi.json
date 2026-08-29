@@ -1746,6 +1746,414 @@
         ]
       }
     },
+    "/api/v3/workspaces/{slug}/channels": {
+      "get": {
+        "description": "Retrieve all public channels and authorized private channels in a workspace. Requires channels:read scope.",
+        "operationId": "V3WorkspacesController_getChannels",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of channels returned successfully."
+          },
+          "403": {
+            "description": "Forbidden: Missing channels:read scope or unauthorized workspace access."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List channels in a workspace (Enterprise M2M)",
+        "tags": [
+          "V3 Workspaces"
+        ]
+      },
+      "post": {
+        "description": "Create a new channel with customizable visibility, icon, metadata, and members. Requires channels:write scope.",
+        "operationId": "V3WorkspacesController_createChannel",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/V3CreateChannelDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Channel created successfully."
+          },
+          "403": {
+            "description": "Forbidden: Missing channels:write scope or unauthorized access."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a channel in a workspace (Enterprise M2M)",
+        "tags": [
+          "V3 Workspaces"
+        ]
+      }
+    },
+    "/api/v3/workspaces/{slug}/channels/{channelId}": {
+      "get": {
+        "description": "Retrieve details of a specific channel in a workspace. Requires channels:read scope.",
+        "operationId": "V3WorkspacesController_getChannel",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Channel details returned successfully."
+          },
+          "404": {
+            "description": "Channel not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get channel details (Enterprise M2M)",
+        "tags": [
+          "V3 Workspaces"
+        ]
+      },
+      "patch": {
+        "description": "Update settings, name, description, icon, metadata, or visibility of a channel. Requires channels:write scope.",
+        "operationId": "V3WorkspacesController_updateChannel",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/V3UpdateChannelDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Channel updated successfully."
+          },
+          "404": {
+            "description": "Channel not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update channel configuration and visibility (Enterprise M2M)",
+        "tags": [
+          "V3 Workspaces"
+        ]
+      },
+      "delete": {
+        "description": "Permanently deletes a channel from a workspace. Requires channels:write scope.",
+        "operationId": "V3WorkspacesController_deleteChannel",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Channel deleted successfully."
+          },
+          "404": {
+            "description": "Channel not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a channel (Enterprise M2M)",
+        "tags": [
+          "V3 Workspaces"
+        ]
+      }
+    },
+    "/api/v3/workspaces/{slug}/channels/{channelId}/members": {
+      "get": {
+        "description": "Retrieve members belonging to a specific channel. Requires channels:read scope.",
+        "operationId": "V3WorkspacesController_getChannelMembers",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of channel members returned successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List channel members (Enterprise M2M)",
+        "tags": [
+          "V3 Workspaces"
+        ]
+      },
+      "post": {
+        "description": "Add user(s) to a channel with customizable role and permissions. Requires channels:write scope.",
+        "operationId": "V3WorkspacesController_addChannelMembers",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/V3AddChannelMemberDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Members added to channel successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Add members to a channel (Enterprise M2M)",
+        "tags": [
+          "V3 Workspaces"
+        ]
+      }
+    },
+    "/api/v3/workspaces/{slug}/channels/{channelId}/members/{userId}": {
+      "patch": {
+        "description": "Update the role or bitwise permissions of a channel member. Requires channels:write scope.",
+        "operationId": "V3WorkspacesController_updateChannelMember",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "description": "The user ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/V3UpdateChannelMemberDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Channel member updated successfully."
+          },
+          "404": {
+            "description": "Member not found in channel."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update channel member role and permissions (Enterprise M2M)",
+        "tags": [
+          "V3 Workspaces"
+        ]
+      },
+      "delete": {
+        "description": "Remove a specific member from a channel. Requires channels:write scope.",
+        "operationId": "V3WorkspacesController_deleteChannelMember",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "description": "The user ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Member removed from channel successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove a member from a channel (Enterprise M2M)",
+        "tags": [
+          "V3 Workspaces"
+        ]
+      }
+    },
     "/api/v3/workspaces/{slug}/webhooks": {
       "get": {
         "description": "Requires webhooks:read scope. Retrieves all webhooks configured for this workspace.",
@@ -5754,6 +6162,16 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddChannelMemberDto"
+              }
+            }
+          }
+        },
         "responses": {
           "201": {
             "description": "Members added to channel"
@@ -5771,6 +6189,62 @@
       }
     },
     "/api/workspaces/{slug}/channels/{channelId}/members/{targetUserId}": {
+      "patch": {
+        "operationId": "ChannelsController_updateChannelMember",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "targetUserId",
+            "required": true,
+            "in": "path",
+            "description": "The user ID to update",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateChannelMemberDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Channel member updated"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update channel member role and permissions",
+        "tags": [
+          "Channels"
+        ]
+      },
       "delete": {
         "operationId": "ChannelsController_removeChannelMember",
         "parameters": [
@@ -8095,6 +8569,155 @@
           "role"
         ]
       },
+      "V3CreateChannelDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "engineering",
+            "description": "Name of the channel"
+          },
+          "description": {
+            "type": "string",
+            "example": "Engineering discussion channel"
+          },
+          "type": {
+            "type": "string",
+            "example": "public",
+            "enum": [
+              "public",
+              "private"
+            ],
+            "default": "public"
+          },
+          "isPrivate": {
+            "type": "boolean",
+            "example": false,
+            "description": "Explicit private status flag"
+          },
+          "icon": {
+            "type": "string",
+            "example": "code",
+            "description": "Icon identifier"
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Custom channel metadata"
+          },
+          "initialMembers": {
+            "type": "array",
+            "description": "Initial members to add to the channel",
+            "items": {
+              "type": "object",
+              "properties": {
+                "userId": {
+                  "type": "string",
+                  "example": "usr_123"
+                },
+                "role": {
+                  "type": "string",
+                  "example": "member",
+                  "enum": [
+                    "admin",
+                    "moderator",
+                    "member"
+                  ]
+                },
+                "permissions": {
+                  "type": "string",
+                  "example": "2048"
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "V3UpdateChannelDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "eng-tech"
+          },
+          "description": {
+            "type": "string",
+            "example": "Updated engineering channel description"
+          },
+          "type": {
+            "type": "string",
+            "example": "private",
+            "enum": [
+              "public",
+              "private"
+            ]
+          },
+          "isPrivate": {
+            "type": "boolean",
+            "example": true
+          },
+          "icon": {
+            "type": "string",
+            "example": "terminal"
+          },
+          "metadata": {
+            "type": "object"
+          }
+        }
+      },
+      "V3AddChannelMemberDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "example": "usr_123",
+            "description": "User ID to add to channel"
+          },
+          "userIds": {
+            "example": [
+              "usr_123",
+              "usr_456"
+            ],
+            "description": "Array of user IDs to add",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "role": {
+            "type": "string",
+            "example": "member",
+            "default": "member",
+            "description": "Channel role"
+          },
+          "permissions": {
+            "type": "object",
+            "example": "2048",
+            "description": "Bitwise permission string or integer value"
+          }
+        }
+      },
+      "V3UpdateChannelMemberDto": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "example": "admin",
+            "enum": [
+              "admin",
+              "moderator",
+              "member"
+            ]
+          },
+          "permissions": {
+            "type": "object",
+            "example": "2048",
+            "description": "Bitwise permission string or integer value"
+          }
+        }
+      },
       "V3CreateWebhookDto": {
         "type": "object",
         "properties": {
@@ -8696,6 +9319,11 @@
             ],
             "default": "public"
           },
+          "isPrivate": {
+            "type": "boolean",
+            "example": false,
+            "description": "Explicit private status flag"
+          },
           "departmentId": {
             "type": "string",
             "example": "dept_123"
@@ -8703,6 +9331,10 @@
           "icon": {
             "type": "string",
             "example": "Hash"
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Custom channel metadata or branding settings"
           }
         },
         "required": [
@@ -8727,9 +9359,68 @@
               "private"
             ]
           },
+          "isPrivate": {
+            "type": "boolean",
+            "example": true,
+            "description": "Explicit private status flag"
+          },
           "icon": {
             "type": "string",
             "example": "MessageSquare"
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Custom channel metadata or branding settings"
+          }
+        }
+      },
+      "AddChannelMemberDto": {
+        "type": "object",
+        "properties": {
+          "userIds": {
+            "example": [
+              "usr_123",
+              "usr_456"
+            ],
+            "description": "Array of user IDs to add",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "userId": {
+            "type": "string",
+            "example": "usr_123",
+            "description": "User ID to add"
+          },
+          "role": {
+            "type": "string",
+            "example": "member",
+            "description": "Channel role"
+          },
+          "permissions": {
+            "type": "object",
+            "example": "2048",
+            "description": "Bitwise permission string or integer value"
+          }
+        }
+      },
+      "UpdateChannelMemberDto": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "example": "admin",
+            "enum": [
+              "admin",
+              "moderator",
+              "member"
+            ]
+          },
+          "permissions": {
+            "type": "object",
+            "example": "2048",
+            "description": "Bitwise permission string or integer value"
           }
         }
       },

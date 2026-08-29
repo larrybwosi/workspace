@@ -8,6 +8,11 @@ import type {
   V3UpdateMemberRoleDto,
   CreateWorkspaceChannelDto,
   UpdateWorkspaceChannelDto,
+  UpdateChannelMemberDto,
+  V3CreateChannelDto,
+  V3UpdateChannelDto,
+  V3AddChannelMemberDto,
+  V3UpdateChannelMemberDto,
   ChannelsControllerGetMessagesParams,
   ChannelsControllerUpdateMessageBody,
   ChannelsControllerAddReactionBody,
@@ -326,6 +331,8 @@ export interface WorkspaceChannel {
   description?: string | null;
   /** True if the channel is private and restricted. */
   isPrivate: boolean;
+  /** Custom channel metadata object. */
+  metadata?: Record<string, unknown> | null;
   /** Unique workspace identifier. */
   workspaceId: string;
   /** Optional parent channel or category identifier. */
@@ -992,6 +999,78 @@ export class ScrymeSDK {
        */
       delete: async (slug: string, channelId: string, options?: AxiosRequestConfig): Promise<{ success: boolean }> => {
         return this.raw.channelsControllerDeleteChannel(slug, channelId, options) as unknown as { success: boolean };
+      },
+      /**
+       * Sub-namespace for managing channel member access and permissions.
+       */
+      members: {
+        /**
+         * Lists members belonging to a specific channel.
+         * @param slug The unique workspace slug.
+         * @param channelId Unique identifier of the channel.
+         * @param options Optional request config override.
+         */
+        list: async (slug: string, channelId: string, options?: AxiosRequestConfig): Promise<any[]> => {
+          return this.raw.channelsControllerGetChannelMembers(slug, channelId, options) as unknown as any[];
+        },
+        /**
+         * Adds member(s) to a channel with optional role and bitwise permissions.
+         * @param slug The unique workspace slug.
+         * @param channelId Unique identifier of the channel.
+         * @param data Object containing userIds or userId, role, and optional permissions.
+         * @param options Optional request config override.
+         */
+        add: async (
+          slug: string,
+          channelId: string,
+          data: { userIds?: string[]; userId?: string; role?: string },
+          options?: AxiosRequestConfig
+        ): Promise<any[]> => {
+          return this.raw.channelsControllerAddChannelMembers(slug, channelId, data, options) as unknown as any[];
+        },
+        /**
+         * Updates a channel member's role or bitwise permissions.
+         * @param slug The unique workspace slug.
+         * @param channelId Unique identifier of the channel.
+         * @param targetUserId Target user ID of the channel member.
+         * @param data Object containing role and/or bitwise permissions.
+         * @param options Optional request config override.
+         */
+        update: async (
+          slug: string,
+          channelId: string,
+          targetUserId: string,
+          data: UpdateChannelMemberDto,
+          options?: AxiosRequestConfig
+        ): Promise<any> => {
+          return this.raw.channelsControllerUpdateChannelMember(
+            slug,
+            channelId,
+            targetUserId,
+            data,
+            options
+          ) as unknown as any;
+        },
+        /**
+         * Removes a member from a channel.
+         * @param slug The unique workspace slug.
+         * @param channelId Unique identifier of the channel.
+         * @param targetUserId Target user ID to remove.
+         * @param options Optional request config override.
+         */
+        remove: async (
+          slug: string,
+          channelId: string,
+          targetUserId: string,
+          options?: AxiosRequestConfig
+        ): Promise<{ success: boolean }> => {
+          return this.raw.channelsControllerRemoveChannelMember(
+            slug,
+            channelId,
+            targetUserId,
+            options
+          ) as unknown as { success: boolean };
+        },
       },
       /**
        * Sub-namespace for managing messages inside a channel.
@@ -1773,6 +1852,181 @@ export class ScrymeSDK {
          */
         delete: async (slug: string, options?: AxiosRequestConfig): Promise<V3DeleteWorkspaceResponse> => {
           return this.raw.v3WorkspacesControllerDeleteWorkspace(slug, options) as unknown as V3DeleteWorkspaceResponse;
+        },
+      },
+
+      /**
+       * M2M Workspace Channel Operations (Listing, Creating, Updating settings/visibility, and Deleting channels).
+       */
+      channel: {
+        /**
+         * Lists all channels in a workspace via Enterprise M2M API V3. Requires channels:read scope.
+         * @param slug The unique workspace slug.
+         * @param options Optional request config override.
+         */
+        list: async (
+          slug: string,
+          options?: AxiosRequestConfig
+        ): Promise<{ success: boolean; data: { channels: WorkspaceChannel[] } }> => {
+          return this.raw.v3WorkspacesControllerGetChannels(slug, options) as unknown as {
+            success: boolean;
+            data: { channels: WorkspaceChannel[] };
+          };
+        },
+        /**
+         * Creates a new channel in a workspace with customizable visibility, icon, metadata, and initial members. Requires channels:write scope.
+         * @param slug The unique workspace slug.
+         * @param data Channel creation DTO.
+         * @param options Optional request config override.
+         */
+        create: async (
+          slug: string,
+          data: V3CreateChannelDto,
+          options?: AxiosRequestConfig
+        ): Promise<{ success: boolean; data: { channel: WorkspaceChannel } }> => {
+          return this.raw.v3WorkspacesControllerCreateChannel(slug, data, options) as unknown as {
+            success: boolean;
+            data: { channel: WorkspaceChannel };
+          };
+        },
+        /**
+         * Retrieves details of a specific channel. Requires channels:read scope.
+         * @param slug The unique workspace slug.
+         * @param channelId Unique identifier of the channel.
+         * @param options Optional request config override.
+         */
+        get: async (
+          slug: string,
+          channelId: string,
+          options?: AxiosRequestConfig
+        ): Promise<{ success: boolean; data: { channel: WorkspaceChannel } }> => {
+          return this.raw.v3WorkspacesControllerGetChannel(slug, channelId, options) as unknown as {
+            success: boolean;
+            data: { channel: WorkspaceChannel };
+          };
+        },
+        /**
+         * Updates channel settings, description, visibility, icon, or custom metadata. Requires channels:write scope.
+         * @param slug The unique workspace slug.
+         * @param channelId Unique identifier of the channel.
+         * @param data Channel update DTO.
+         * @param options Optional request config override.
+         */
+        update: async (
+          slug: string,
+          channelId: string,
+          data: V3UpdateChannelDto,
+          options?: AxiosRequestConfig
+        ): Promise<{ success: boolean; data: { channel: WorkspaceChannel } }> => {
+          return this.raw.v3WorkspacesControllerUpdateChannel(
+            slug,
+            channelId,
+            data,
+            options
+          ) as unknown as { success: boolean; data: { channel: WorkspaceChannel } };
+        },
+        /**
+         * Permanently deletes a channel from a workspace. Requires channels:write scope.
+         * @param slug The unique workspace slug.
+         * @param channelId Unique identifier of the channel.
+         * @param options Optional request config override.
+         */
+        delete: async (
+          slug: string,
+          channelId: string,
+          options?: AxiosRequestConfig
+        ): Promise<{ success: boolean; data: { success: boolean } }> => {
+          return this.raw.v3WorkspacesControllerDeleteChannel(
+            slug,
+            channelId,
+            options
+          ) as unknown as { success: boolean; data: { success: boolean } };
+        },
+
+        /**
+         * Sub-namespace for managing channel member access and bitwise permissions via M2M V3 API.
+         */
+        member: {
+          /**
+           * Lists members belonging to a channel. Requires channels:read scope.
+           * @param slug The unique workspace slug.
+           * @param channelId Unique identifier of the channel.
+           * @param options Optional request config override.
+           */
+          list: async (
+            slug: string,
+            channelId: string,
+            options?: AxiosRequestConfig
+          ): Promise<{ success: boolean; data: { members: any[] } }> => {
+            return this.raw.v3WorkspacesControllerGetChannelMembers(
+              slug,
+              channelId,
+              options
+            ) as unknown as { success: boolean; data: { members: any[] } };
+          },
+          /**
+           * Adds user(s) to a channel with optional role and bitwise permissions. Requires channels:write scope.
+           * @param slug The unique workspace slug.
+           * @param channelId Unique identifier of the channel.
+           * @param data DTO specifying user(s) and permissions.
+           * @param options Optional request config override.
+           */
+          add: async (
+            slug: string,
+            channelId: string,
+            data: V3AddChannelMemberDto,
+            options?: AxiosRequestConfig
+          ): Promise<{ success: boolean; data: { members: any[] } }> => {
+            return this.raw.v3WorkspacesControllerAddChannelMembers(
+              slug,
+              channelId,
+              data,
+              options
+            ) as unknown as { success: boolean; data: { members: any[] } };
+          },
+          /**
+           * Updates role or bitwise permissions of a channel member. Requires channels:write scope.
+           * @param slug The unique workspace slug.
+           * @param channelId Unique identifier of the channel.
+           * @param userId Unique identifier of the user.
+           * @param data DTO containing role and/or bitwise permissions.
+           * @param options Optional request config override.
+           */
+          update: async (
+            slug: string,
+            channelId: string,
+            userId: string,
+            data: V3UpdateChannelMemberDto,
+            options?: AxiosRequestConfig
+          ): Promise<{ success: boolean; data: { member: any } }> => {
+            return this.raw.v3WorkspacesControllerUpdateChannelMember(
+              slug,
+              channelId,
+              userId,
+              data,
+              options
+            ) as unknown as { success: boolean; data: { member: any } };
+          },
+          /**
+           * Removes a member from a channel. Requires channels:write scope.
+           * @param slug The unique workspace slug.
+           * @param channelId Unique identifier of the channel.
+           * @param userId Unique identifier of the user.
+           * @param options Optional request config override.
+           */
+          delete: async (
+            slug: string,
+            channelId: string,
+            userId: string,
+            options?: AxiosRequestConfig
+          ): Promise<{ success: boolean; data: { success: boolean } }> => {
+            return this.raw.v3WorkspacesControllerDeleteChannelMember(
+              slug,
+              channelId,
+              userId,
+              options
+            ) as unknown as { success: boolean; data: { success: boolean } };
+          },
         },
       },
 

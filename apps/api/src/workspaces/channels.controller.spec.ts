@@ -20,6 +20,12 @@ vi.mock('@repo/database', () => ({
       update: vi.fn(),
       delete: vi.fn(),
     },
+    channelMember: {
+      findMany: vi.fn(),
+      createMany: vi.fn(),
+      update: vi.fn(),
+      deleteMany: vi.fn(),
+    },
     message: {
       groupBy: vi.fn(),
     },
@@ -512,6 +518,48 @@ describe('ChannelsController - NestJS module', () => {
 
       const user = { id: 'user-1', name: 'Alice' } as any;
       await expect(controller.getChannel(user, 'my-workspace', 'ch-1')).rejects.toThrow(ForbiddenException);
+    });
+  });
+
+  describe('updateChannelMember', () => {
+    it('should update member role and permissions in channel', async () => {
+      const mockPrisma = prisma as any;
+      mockPrisma.workspace.findUnique.mockResolvedValue({
+        id: 'ws-1',
+        members: [{ role: 'admin' }],
+      });
+      mockPrisma.channelMember.update.mockResolvedValue({
+        id: 'cm-1',
+        channelId: 'ch-1',
+        userId: 'user-2',
+        role: 'moderator',
+        permissions: 2048n,
+        user: { id: 'user-2', name: 'Bob' },
+      });
+
+      const user = { id: 'user-1', name: 'Alice' } as any;
+      const result = await controller.updateChannelMember(user, 'my-workspace', 'ch-1', 'user-2', {
+        role: 'moderator',
+        permissions: '2048',
+      });
+
+      expect(result.role).toBe('moderator');
+      expect(result.permissions).toBe('2048');
+      expect(mockPrisma.channelMember.update).toHaveBeenCalledWith({
+        where: {
+          channelId_userId: {
+            channelId: 'ch-1',
+            userId: 'user-2',
+          },
+        },
+        data: {
+          role: 'moderator',
+          permissions: 2048n,
+        },
+        include: {
+          user: { select: { id: true, name: true, email: true, avatar: true } },
+        },
+      });
     });
   });
 });

@@ -18,7 +18,7 @@ import { prisma } from '@repo/database';
 import type { User } from '@repo/database';
 import { z } from 'zod';
 import { AblyChannels, EVENTS, getAblyServer } from '@repo/shared/server';
-import { IsString, IsOptional, IsEnum } from 'class-validator';
+import { IsString, IsOptional, IsEnum, IsArray } from 'class-validator';
 
 class CreateWorkspaceChannelDto {
   @IsString()
@@ -35,6 +35,10 @@ class CreateWorkspaceChannelDto {
   @ApiProperty({ required: false, enum: ['public', 'private'], default: 'public' })
   type?: 'public' | 'private';
 
+  @IsOptional()
+  @ApiProperty({ required: false, example: false, description: 'Explicit private status flag' })
+  isPrivate?: boolean;
+
   @IsString()
   @IsOptional()
   @ApiProperty({ required: false, example: 'dept_123' })
@@ -44,6 +48,10 @@ class CreateWorkspaceChannelDto {
   @IsOptional()
   @ApiProperty({ required: false, example: 'Hash' })
   icon?: string;
+
+  @IsOptional()
+  @ApiProperty({ required: false, description: 'Custom channel metadata or branding settings' })
+  metadata?: any;
 }
 
 class UpdateWorkspaceChannelDto {
@@ -62,25 +70,75 @@ class UpdateWorkspaceChannelDto {
   @ApiProperty({ required: false, enum: ['public', 'private'] })
   type?: 'public' | 'private';
 
+  @IsOptional()
+  @ApiProperty({ required: false, example: true, description: 'Explicit private status flag' })
+  isPrivate?: boolean;
+
   @IsString()
   @IsOptional()
   @ApiProperty({ required: false, example: 'MessageSquare' })
   icon?: string;
+
+  @IsOptional()
+  @ApiProperty({ required: false, description: 'Custom channel metadata or branding settings' })
+  metadata?: any;
+}
+
+class AddChannelMemberDto {
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  @ApiProperty({ required: false, example: ['usr_123', 'usr_456'], description: 'Array of user IDs to add' })
+  userIds?: string[];
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ required: false, example: 'usr_123', description: 'User ID to add' })
+  userId?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ required: false, example: 'member', description: 'Channel role' })
+  role?: string;
+
+  @IsOptional()
+  @ApiProperty({ required: false, example: '2048', description: 'Bitwise permission string or integer value' })
+  permissions?: string | number;
+}
+
+class UpdateChannelMemberDto {
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ required: false, example: 'admin', enum: ['admin', 'moderator', 'member'] })
+  role?: string;
+
+  @IsOptional()
+  @ApiProperty({ required: false, example: '2048', description: 'Bitwise permission string or integer value' })
+  permissions?: string | number;
 }
 
 const createChannelSchema = z.object({
   name: z.string().min(1).max(100),
   description: z.string().optional(),
-  type: z.enum(['public', 'private']).default('public'),
+  type: z.enum(['public', 'private']).optional(),
+  isPrivate: z.boolean().optional(),
   departmentId: z.string().optional(),
   icon: z.string().optional(),
+  metadata: z.any().optional(),
 });
 
 const updateChannelSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   description: z.string().optional(),
   type: z.enum(['public', 'private']).optional(),
+  isPrivate: z.boolean().optional(),
   icon: z.string().optional(),
+  metadata: z.any().optional(),
+});
+
+const updateChannelMemberSchema = z.object({
+  role: z.string().optional(),
+  permissions: z.union([z.string(), z.number()]).optional(),
 });
 
 @ApiTags('Channels')
@@ -269,13 +327,18 @@ export class ChannelsController {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '');
 
+    const isPrivate = data.isPrivate !== undefined ? data.isPrivate : data.type === 'private';
+    const type = data.type || (isPrivate ? 'private' : 'public');
+
     const channel = await prisma.channel.create({
       data: {
         name: data.name,
         slug: channelSlug,
         description: data.description,
-        type: data.type === 'private' ? 'private' : 'public',
+        type,
+        isPrivate,
         icon: data.icon || '#',
+        metadata: data.metadata ?? undefined,
         workspaceId: workspace.id,
         createdById: user.id,
         members: {
@@ -404,13 +467,18 @@ export class ChannelsController {
     }
     const data = validatedData.data;
 
+    const isPrivate = data.isPrivate !== undefined ? data.isPrivate : (data.type ? data.type === 'private' : undefined);
+    const type = data.type !== undefined ? data.type : (isPrivate !== undefined ? (isPrivate ? 'private' : 'public') : undefined);
+
     const channel = await prisma.channel.update({
       where: { id: channelId, workspaceId: workspace.id },
       data: {
         ...(data.name && { name: data.name }),
         ...(data.description !== undefined && { description: data.description }),
-        ...(data.type && { type: data.type, isPrivate: data.type === 'private' }),
+        ...(type !== undefined && { type }),
+        ...(isPrivate !== undefined && { isPrivate }),
         ...(data.icon && { icon: data.icon }),
+        ...(data.metadata !== undefined && { metadata: data.metadata }),
       },
       include: { members: { include: { user: true } } },
     });
@@ -534,12 +602,13 @@ export class ChannelsController {
   @ApiOperation({ summary: 'Add members to a channel' })
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
   @ApiParam({ name: 'channelId', description: 'The channel ID' })
+  @ApiBody({ type: AddChannelMemberDto })
   @ApiResponse({ status: 201, description: 'Members added to channel' })
   async addChannelMembers(
     @CurrentUser() user: User,
     @Param('slug') slug: string,
     @Param('channelId') channelId: string,
-    @Body() body: { userIds?: string[]; userId?: string; role?: string }
+    @Body() body: AddChannelMemberDto
   ) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
@@ -573,11 +642,21 @@ export class ChannelsController {
       throw new NotFoundException('Channel not found');
     }
 
+    let permissionsBigInt: bigint | null = null;
+    if (body.permissions !== undefined) {
+      try {
+        permissionsBigInt = BigInt(body.permissions);
+      } catch (err) {
+        throw new BadRequestException('Invalid bitwise permissions format');
+      }
+    }
+
     await prisma.channelMember.createMany({
       data: userIdsToAdd.map(uId => ({
         channelId,
         userId: uId,
         role: body.role || 'member',
+        permissions: permissionsBigInt,
       })),
       skipDuplicates: true,
     });
@@ -592,6 +671,85 @@ export class ChannelsController {
     });
 
     return updatedMembers;
+  }
+
+  @Patch(':channelId/members/:targetUserId')
+  @ApiOperation({ summary: 'Update channel member role and permissions' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'channelId', description: 'The channel ID' })
+  @ApiParam({ name: 'targetUserId', description: 'The user ID to update' })
+  @ApiBody({ type: UpdateChannelMemberDto })
+  @ApiResponse({ status: 200, description: 'Channel member updated' })
+  async updateChannelMember(
+    @CurrentUser() user: User,
+    @Param('slug') slug: string,
+    @Param('channelId') channelId: string,
+    @Param('targetUserId') targetUserId: string,
+    @Body() body: UpdateChannelMemberDto
+  ) {
+    const workspace = await prisma.workspace.findUnique({
+      where: { slug },
+      select: {
+        id: true,
+        members: {
+          where: { userId: user.id },
+          select: { role: true },
+        },
+      },
+    });
+
+    if (!workspace) {
+      throw new NotFoundException('Workspace not found');
+    }
+
+    if (workspace.members.length === 0) {
+      throw new ForbiddenException('Forbidden');
+    }
+
+    const validatedData = updateChannelMemberSchema.safeParse(body);
+    if (!validatedData.success) {
+      throw new BadRequestException(validatedData.error.issues);
+    }
+    const data = validatedData.data;
+
+    let permissionsBigInt: bigint | undefined = undefined;
+    if (data.permissions !== undefined) {
+      try {
+        permissionsBigInt = BigInt(data.permissions);
+      } catch (err) {
+        throw new BadRequestException('Invalid bitwise permissions format');
+      }
+    }
+
+    try {
+      const updatedMember = await prisma.channelMember.update({
+        where: {
+          channelId_userId: {
+            channelId,
+            userId: targetUserId,
+          },
+        },
+        data: {
+          ...(data.role && { role: data.role }),
+          ...(permissionsBigInt !== undefined && { permissions: permissionsBigInt }),
+        },
+        include: {
+          user: {
+            select: { id: true, name: true, email: true, avatar: true },
+          },
+        },
+      });
+
+      return {
+        ...updatedMember,
+        permissions: updatedMember.permissions ? updatedMember.permissions.toString() : null,
+      };
+    } catch (error: any) {
+      if (error.code === 'P2025') {
+        throw new NotFoundException('Member not found in this channel');
+      }
+      throw error;
+    }
   }
 
   @Delete(':channelId/members/:targetUserId')

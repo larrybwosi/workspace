@@ -286,11 +286,6 @@ export type V3WorkspacesControllerDeleteWorkspace200 = {
   timestamp?: string;
 };
 
-/**
- * @nullable
- */
-export type V3WorkspacesControllerUpdateWorkspace200DataWorkspaceBrandingConfig = { [key: string]: unknown } | null;
-
 export type V3WorkspacesControllerUpdateWorkspace200DataWorkspace = {
   /** @nullable */
   brandingConfig?: V3WorkspacesControllerUpdateWorkspace200DataWorkspaceBrandingConfig;
@@ -316,11 +311,10 @@ export type V3WorkspacesControllerUpdateWorkspace200 = {
   timestamp?: string;
 };
 
-export type V3WorkspacesControllerGetWorkspaceBySlug200 = {
-  data?: V3WorkspacesControllerGetWorkspaceBySlug200Data;
-  success?: boolean;
-  timestamp?: string;
-};
+/**
+ * @nullable
+ */
+export type V3WorkspacesControllerUpdateWorkspace200DataWorkspaceBrandingConfig = { [key: string]: unknown } | null;
 
 /**
  * @nullable
@@ -346,8 +340,8 @@ export type V3WorkspacesControllerGetWorkspaceBySlug200Data = {
   workspace?: V3WorkspacesControllerGetWorkspaceBySlug200DataWorkspace;
 };
 
-export type V3WorkspacesControllerProvisionWorkspace201 = {
-  data?: V3WorkspacesControllerProvisionWorkspace201Data;
+export type V3WorkspacesControllerGetWorkspaceBySlug200 = {
+  data?: V3WorkspacesControllerGetWorkspaceBySlug200Data;
   success?: boolean;
   timestamp?: string;
 };
@@ -367,6 +361,12 @@ export type V3WorkspacesControllerProvisionWorkspace201DataBot = {
 export type V3WorkspacesControllerProvisionWorkspace201Data = {
   bot?: V3WorkspacesControllerProvisionWorkspace201DataBot;
   workspace?: V3WorkspacesControllerProvisionWorkspace201DataWorkspace;
+};
+
+export type V3WorkspacesControllerProvisionWorkspace201 = {
+  data?: V3WorkspacesControllerProvisionWorkspace201Data;
+  success?: boolean;
+  timestamp?: string;
 };
 
 export type V3WorkspacesControllerGetWorkspaces200DataWorkspacesItem = {
@@ -648,6 +648,43 @@ export interface CreateWorkspaceDepartmentDto {
   slug: string;
 }
 
+export type UpdateChannelMemberDtoRole = typeof UpdateChannelMemberDtoRole[keyof typeof UpdateChannelMemberDtoRole];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UpdateChannelMemberDtoRole = {
+  admin: 'admin',
+  moderator: 'moderator',
+  member: 'member',
+} as const;
+
+/**
+ * Bitwise permission string or integer value
+ */
+export type UpdateChannelMemberDtoPermissions = { [key: string]: unknown };
+
+export interface UpdateChannelMemberDto {
+  /** Bitwise permission string or integer value */
+  permissions?: UpdateChannelMemberDtoPermissions;
+  role?: UpdateChannelMemberDtoRole;
+}
+
+/**
+ * Bitwise permission string or integer value
+ */
+export type AddChannelMemberDtoPermissions = { [key: string]: unknown };
+
+export interface AddChannelMemberDto {
+  /** Bitwise permission string or integer value */
+  permissions?: AddChannelMemberDtoPermissions;
+  /** Channel role */
+  role?: string;
+  /** User ID to add */
+  userId?: string;
+  /** Array of user IDs to add */
+  userIds?: string[];
+}
+
 export type UpdateWorkspaceChannelDtoType = typeof UpdateWorkspaceChannelDtoType[keyof typeof UpdateWorkspaceChannelDtoType];
 
 
@@ -657,9 +694,18 @@ export const UpdateWorkspaceChannelDtoType = {
   private: 'private',
 } as const;
 
+/**
+ * Custom channel metadata or branding settings
+ */
+export type UpdateWorkspaceChannelDtoMetadata = { [key: string]: unknown };
+
 export interface UpdateWorkspaceChannelDto {
   description?: string;
   icon?: string;
+  /** Explicit private status flag */
+  isPrivate?: boolean;
+  /** Custom channel metadata or branding settings */
+  metadata?: UpdateWorkspaceChannelDtoMetadata;
   name?: string;
   type?: UpdateWorkspaceChannelDtoType;
 }
@@ -673,10 +719,19 @@ export const CreateWorkspaceChannelDtoType = {
   private: 'private',
 } as const;
 
+/**
+ * Custom channel metadata or branding settings
+ */
+export type CreateWorkspaceChannelDtoMetadata = { [key: string]: unknown };
+
 export interface CreateWorkspaceChannelDto {
   departmentId?: string;
   description?: string;
   icon?: string;
+  /** Explicit private status flag */
+  isPrivate?: boolean;
+  /** Custom channel metadata or branding settings */
+  metadata?: CreateWorkspaceChannelDtoMetadata;
   name: string;
   type?: CreateWorkspaceChannelDtoType;
 }
@@ -804,13 +859,6 @@ export const CreateIntegrationDtoService = {
   huly: 'huly',
 } as const;
 
-export interface CreateIntegrationDto {
-  config: CreateIntegrationDtoConfig;
-  description?: string;
-  name: string;
-  service: CreateIntegrationDtoService;
-}
-
 export type CreateIntegrationDtoConfigCustomHeaders = { [key: string]: unknown };
 
 export type CreateIntegrationDtoConfig = {
@@ -827,6 +875,13 @@ export type CreateIntegrationDtoConfig = {
   teamId?: string;
   webhookUrl?: string;
 };
+
+export interface CreateIntegrationDto {
+  config: CreateIntegrationDtoConfig;
+  description?: string;
+  name: string;
+  service: CreateIntegrationDtoService;
+}
 
 export interface CreateIntegrationWebhookDto {
   events: string[];
@@ -931,6 +986,108 @@ export interface V3CreateWebhookDto {
   events: string[];
   name: string;
   url: string;
+}
+
+export type V3UpdateChannelMemberDtoRole = typeof V3UpdateChannelMemberDtoRole[keyof typeof V3UpdateChannelMemberDtoRole];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const V3UpdateChannelMemberDtoRole = {
+  admin: 'admin',
+  moderator: 'moderator',
+  member: 'member',
+} as const;
+
+/**
+ * Bitwise permission string or integer value
+ */
+export type V3UpdateChannelMemberDtoPermissions = { [key: string]: unknown };
+
+export interface V3UpdateChannelMemberDto {
+  /** Bitwise permission string or integer value */
+  permissions?: V3UpdateChannelMemberDtoPermissions;
+  role?: V3UpdateChannelMemberDtoRole;
+}
+
+/**
+ * Bitwise permission string or integer value
+ */
+export type V3AddChannelMemberDtoPermissions = { [key: string]: unknown };
+
+export interface V3AddChannelMemberDto {
+  /** Bitwise permission string or integer value */
+  permissions?: V3AddChannelMemberDtoPermissions;
+  /** Channel role */
+  role?: string;
+  /** User ID to add to channel */
+  userId?: string;
+  /** Array of user IDs to add */
+  userIds?: string[];
+}
+
+export type V3UpdateChannelDtoType = typeof V3UpdateChannelDtoType[keyof typeof V3UpdateChannelDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const V3UpdateChannelDtoType = {
+  public: 'public',
+  private: 'private',
+} as const;
+
+export type V3UpdateChannelDtoMetadata = { [key: string]: unknown };
+
+export interface V3UpdateChannelDto {
+  description?: string;
+  icon?: string;
+  isPrivate?: boolean;
+  metadata?: V3UpdateChannelDtoMetadata;
+  name?: string;
+  type?: V3UpdateChannelDtoType;
+}
+
+export type V3CreateChannelDtoType = typeof V3CreateChannelDtoType[keyof typeof V3CreateChannelDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const V3CreateChannelDtoType = {
+  public: 'public',
+  private: 'private',
+} as const;
+
+/**
+ * Custom channel metadata
+ */
+export type V3CreateChannelDtoMetadata = { [key: string]: unknown };
+
+export type V3CreateChannelDtoInitialMembersItemRole = typeof V3CreateChannelDtoInitialMembersItemRole[keyof typeof V3CreateChannelDtoInitialMembersItemRole];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const V3CreateChannelDtoInitialMembersItemRole = {
+  admin: 'admin',
+  moderator: 'moderator',
+  member: 'member',
+} as const;
+
+export type V3CreateChannelDtoInitialMembersItem = {
+  permissions?: string;
+  role?: V3CreateChannelDtoInitialMembersItemRole;
+  userId?: string;
+};
+
+export interface V3CreateChannelDto {
+  description?: string;
+  /** Icon identifier */
+  icon?: string;
+  /** Initial members to add to the channel */
+  initialMembers?: V3CreateChannelDtoInitialMembersItem[];
+  /** Explicit private status flag */
+  isPrivate?: boolean;
+  /** Custom channel metadata */
+  metadata?: V3CreateChannelDtoMetadata;
+  /** Name of the channel */
+  name: string;
+  type?: V3CreateChannelDtoType;
 }
 
 export type V3UpdateMemberRoleDtoRole = typeof V3UpdateMemberRoleDtoRole[keyof typeof V3UpdateMemberRoleDtoRole];
@@ -3967,6 +4124,564 @@ export const useV3WorkspacesControllerDeleteWorkspaceMember = <TError = ErrorTyp
       > => {
 
       const mutationOptions = getV3WorkspacesControllerDeleteWorkspaceMemberMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * Retrieve all public channels and authorized private channels in a workspace. Requires channels:read scope.
+ * @summary List channels in a workspace (Enterprise M2M)
+ */
+export const v3WorkspacesControllerGetChannels = (
+    slug: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/channels`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+export const getV3WorkspacesControllerGetChannelsQueryKey = (slug: string,) => {
+    return [`/api/v3/workspaces/${slug}/channels`] as const;
+    }
+
+
+export const getV3WorkspacesControllerGetChannelsQueryOptions = <TData = Awaited<ReturnType<typeof v3WorkspacesControllerGetChannels>>, TError = ErrorType<void>>(slug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v3WorkspacesControllerGetChannels>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getV3WorkspacesControllerGetChannelsQueryKey(slug);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof v3WorkspacesControllerGetChannels>>> = ({ signal }) => v3WorkspacesControllerGetChannels(slug, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(slug), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof v3WorkspacesControllerGetChannels>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type V3WorkspacesControllerGetChannelsQueryResult = NonNullable<Awaited<ReturnType<typeof v3WorkspacesControllerGetChannels>>>
+export type V3WorkspacesControllerGetChannelsQueryError = ErrorType<void>
+
+/**
+ * @summary List channels in a workspace (Enterprise M2M)
+ */
+export const useV3WorkspacesControllerGetChannels = <TData = Awaited<ReturnType<typeof v3WorkspacesControllerGetChannels>>, TError = ErrorType<void>>(
+ slug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v3WorkspacesControllerGetChannels>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+
+  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+
+  const queryOptions = getV3WorkspacesControllerGetChannelsQueryOptions(slug,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Create a new channel with customizable visibility, icon, metadata, and members. Requires channels:write scope.
+ * @summary Create a channel in a workspace (Enterprise M2M)
+ */
+export const v3WorkspacesControllerCreateChannel = (
+    slug: string,
+    v3CreateChannelDto: BodyType<V3CreateChannelDto>,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/channels`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: v3CreateChannelDto
+    },
+      options);
+    }
+
+
+
+export const getV3WorkspacesControllerCreateChannelMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerCreateChannel>>, TError,{slug: string;data: BodyType<V3CreateChannelDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerCreateChannel>>, TError,{slug: string;data: BodyType<V3CreateChannelDto>}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v3WorkspacesControllerCreateChannel>>, {slug: string;data: BodyType<V3CreateChannelDto>}> = (props) => {
+          const {slug,data} = props ?? {};
+
+          return  v3WorkspacesControllerCreateChannel(slug,data,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type V3WorkspacesControllerCreateChannelMutationResult = NonNullable<Awaited<ReturnType<typeof v3WorkspacesControllerCreateChannel>>>
+    export type V3WorkspacesControllerCreateChannelMutationBody = BodyType<V3CreateChannelDto>
+    export type V3WorkspacesControllerCreateChannelMutationError = ErrorType<void>
+
+    /**
+ * @summary Create a channel in a workspace (Enterprise M2M)
+ */
+export const useV3WorkspacesControllerCreateChannel = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerCreateChannel>>, TError,{slug: string;data: BodyType<V3CreateChannelDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof v3WorkspacesControllerCreateChannel>>,
+        TError,
+        {slug: string;data: BodyType<V3CreateChannelDto>},
+        TContext
+      > => {
+
+      const mutationOptions = getV3WorkspacesControllerCreateChannelMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * Retrieve details of a specific channel in a workspace. Requires channels:read scope.
+ * @summary Get channel details (Enterprise M2M)
+ */
+export const v3WorkspacesControllerGetChannel = (
+    slug: string,
+    channelId: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/channels/${channelId}`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+export const getV3WorkspacesControllerGetChannelQueryKey = (slug: string,
+    channelId: string,) => {
+    return [`/api/v3/workspaces/${slug}/channels/${channelId}`] as const;
+    }
+
+
+export const getV3WorkspacesControllerGetChannelQueryOptions = <TData = Awaited<ReturnType<typeof v3WorkspacesControllerGetChannel>>, TError = ErrorType<void>>(slug: string,
+    channelId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v3WorkspacesControllerGetChannel>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getV3WorkspacesControllerGetChannelQueryKey(slug,channelId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof v3WorkspacesControllerGetChannel>>> = ({ signal }) => v3WorkspacesControllerGetChannel(slug,channelId, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(slug && channelId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof v3WorkspacesControllerGetChannel>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type V3WorkspacesControllerGetChannelQueryResult = NonNullable<Awaited<ReturnType<typeof v3WorkspacesControllerGetChannel>>>
+export type V3WorkspacesControllerGetChannelQueryError = ErrorType<void>
+
+/**
+ * @summary Get channel details (Enterprise M2M)
+ */
+export const useV3WorkspacesControllerGetChannel = <TData = Awaited<ReturnType<typeof v3WorkspacesControllerGetChannel>>, TError = ErrorType<void>>(
+ slug: string,
+    channelId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v3WorkspacesControllerGetChannel>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+
+  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+
+  const queryOptions = getV3WorkspacesControllerGetChannelQueryOptions(slug,channelId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Update settings, name, description, icon, metadata, or visibility of a channel. Requires channels:write scope.
+ * @summary Update channel configuration and visibility (Enterprise M2M)
+ */
+export const v3WorkspacesControllerUpdateChannel = (
+    slug: string,
+    channelId: string,
+    v3UpdateChannelDto: BodyType<V3UpdateChannelDto>,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/channels/${channelId}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: v3UpdateChannelDto
+    },
+      options);
+    }
+
+
+
+export const getV3WorkspacesControllerUpdateChannelMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerUpdateChannel>>, TError,{slug: string;channelId: string;data: BodyType<V3UpdateChannelDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerUpdateChannel>>, TError,{slug: string;channelId: string;data: BodyType<V3UpdateChannelDto>}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v3WorkspacesControllerUpdateChannel>>, {slug: string;channelId: string;data: BodyType<V3UpdateChannelDto>}> = (props) => {
+          const {slug,channelId,data} = props ?? {};
+
+          return  v3WorkspacesControllerUpdateChannel(slug,channelId,data,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type V3WorkspacesControllerUpdateChannelMutationResult = NonNullable<Awaited<ReturnType<typeof v3WorkspacesControllerUpdateChannel>>>
+    export type V3WorkspacesControllerUpdateChannelMutationBody = BodyType<V3UpdateChannelDto>
+    export type V3WorkspacesControllerUpdateChannelMutationError = ErrorType<void>
+
+    /**
+ * @summary Update channel configuration and visibility (Enterprise M2M)
+ */
+export const useV3WorkspacesControllerUpdateChannel = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerUpdateChannel>>, TError,{slug: string;channelId: string;data: BodyType<V3UpdateChannelDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof v3WorkspacesControllerUpdateChannel>>,
+        TError,
+        {slug: string;channelId: string;data: BodyType<V3UpdateChannelDto>},
+        TContext
+      > => {
+
+      const mutationOptions = getV3WorkspacesControllerUpdateChannelMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * Permanently deletes a channel from a workspace. Requires channels:write scope.
+ * @summary Delete a channel (Enterprise M2M)
+ */
+export const v3WorkspacesControllerDeleteChannel = (
+    slug: string,
+    channelId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/channels/${channelId}`, method: 'DELETE'
+    },
+      options);
+    }
+
+
+
+export const getV3WorkspacesControllerDeleteChannelMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerDeleteChannel>>, TError,{slug: string;channelId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerDeleteChannel>>, TError,{slug: string;channelId: string}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v3WorkspacesControllerDeleteChannel>>, {slug: string;channelId: string}> = (props) => {
+          const {slug,channelId} = props ?? {};
+
+          return  v3WorkspacesControllerDeleteChannel(slug,channelId,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type V3WorkspacesControllerDeleteChannelMutationResult = NonNullable<Awaited<ReturnType<typeof v3WorkspacesControllerDeleteChannel>>>
+
+    export type V3WorkspacesControllerDeleteChannelMutationError = ErrorType<void>
+
+    /**
+ * @summary Delete a channel (Enterprise M2M)
+ */
+export const useV3WorkspacesControllerDeleteChannel = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerDeleteChannel>>, TError,{slug: string;channelId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof v3WorkspacesControllerDeleteChannel>>,
+        TError,
+        {slug: string;channelId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getV3WorkspacesControllerDeleteChannelMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * Retrieve members belonging to a specific channel. Requires channels:read scope.
+ * @summary List channel members (Enterprise M2M)
+ */
+export const v3WorkspacesControllerGetChannelMembers = (
+    slug: string,
+    channelId: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/channels/${channelId}/members`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+export const getV3WorkspacesControllerGetChannelMembersQueryKey = (slug: string,
+    channelId: string,) => {
+    return [`/api/v3/workspaces/${slug}/channels/${channelId}/members`] as const;
+    }
+
+
+export const getV3WorkspacesControllerGetChannelMembersQueryOptions = <TData = Awaited<ReturnType<typeof v3WorkspacesControllerGetChannelMembers>>, TError = ErrorType<unknown>>(slug: string,
+    channelId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v3WorkspacesControllerGetChannelMembers>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getV3WorkspacesControllerGetChannelMembersQueryKey(slug,channelId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof v3WorkspacesControllerGetChannelMembers>>> = ({ signal }) => v3WorkspacesControllerGetChannelMembers(slug,channelId, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(slug && channelId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof v3WorkspacesControllerGetChannelMembers>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type V3WorkspacesControllerGetChannelMembersQueryResult = NonNullable<Awaited<ReturnType<typeof v3WorkspacesControllerGetChannelMembers>>>
+export type V3WorkspacesControllerGetChannelMembersQueryError = ErrorType<unknown>
+
+/**
+ * @summary List channel members (Enterprise M2M)
+ */
+export const useV3WorkspacesControllerGetChannelMembers = <TData = Awaited<ReturnType<typeof v3WorkspacesControllerGetChannelMembers>>, TError = ErrorType<unknown>>(
+ slug: string,
+    channelId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v3WorkspacesControllerGetChannelMembers>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+
+  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+
+  const queryOptions = getV3WorkspacesControllerGetChannelMembersQueryOptions(slug,channelId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Add user(s) to a channel with customizable role and permissions. Requires channels:write scope.
+ * @summary Add members to a channel (Enterprise M2M)
+ */
+export const v3WorkspacesControllerAddChannelMembers = (
+    slug: string,
+    channelId: string,
+    v3AddChannelMemberDto: BodyType<V3AddChannelMemberDto>,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/channels/${channelId}/members`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: v3AddChannelMemberDto
+    },
+      options);
+    }
+
+
+
+export const getV3WorkspacesControllerAddChannelMembersMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerAddChannelMembers>>, TError,{slug: string;channelId: string;data: BodyType<V3AddChannelMemberDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerAddChannelMembers>>, TError,{slug: string;channelId: string;data: BodyType<V3AddChannelMemberDto>}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v3WorkspacesControllerAddChannelMembers>>, {slug: string;channelId: string;data: BodyType<V3AddChannelMemberDto>}> = (props) => {
+          const {slug,channelId,data} = props ?? {};
+
+          return  v3WorkspacesControllerAddChannelMembers(slug,channelId,data,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type V3WorkspacesControllerAddChannelMembersMutationResult = NonNullable<Awaited<ReturnType<typeof v3WorkspacesControllerAddChannelMembers>>>
+    export type V3WorkspacesControllerAddChannelMembersMutationBody = BodyType<V3AddChannelMemberDto>
+    export type V3WorkspacesControllerAddChannelMembersMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Add members to a channel (Enterprise M2M)
+ */
+export const useV3WorkspacesControllerAddChannelMembers = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerAddChannelMembers>>, TError,{slug: string;channelId: string;data: BodyType<V3AddChannelMemberDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof v3WorkspacesControllerAddChannelMembers>>,
+        TError,
+        {slug: string;channelId: string;data: BodyType<V3AddChannelMemberDto>},
+        TContext
+      > => {
+
+      const mutationOptions = getV3WorkspacesControllerAddChannelMembersMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * Update the role or bitwise permissions of a channel member. Requires channels:write scope.
+ * @summary Update channel member role and permissions (Enterprise M2M)
+ */
+export const v3WorkspacesControllerUpdateChannelMember = (
+    slug: string,
+    channelId: string,
+    userId: string,
+    v3UpdateChannelMemberDto: BodyType<V3UpdateChannelMemberDto>,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/channels/${channelId}/members/${userId}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: v3UpdateChannelMemberDto
+    },
+      options);
+    }
+
+
+
+export const getV3WorkspacesControllerUpdateChannelMemberMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerUpdateChannelMember>>, TError,{slug: string;channelId: string;userId: string;data: BodyType<V3UpdateChannelMemberDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerUpdateChannelMember>>, TError,{slug: string;channelId: string;userId: string;data: BodyType<V3UpdateChannelMemberDto>}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v3WorkspacesControllerUpdateChannelMember>>, {slug: string;channelId: string;userId: string;data: BodyType<V3UpdateChannelMemberDto>}> = (props) => {
+          const {slug,channelId,userId,data} = props ?? {};
+
+          return  v3WorkspacesControllerUpdateChannelMember(slug,channelId,userId,data,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type V3WorkspacesControllerUpdateChannelMemberMutationResult = NonNullable<Awaited<ReturnType<typeof v3WorkspacesControllerUpdateChannelMember>>>
+    export type V3WorkspacesControllerUpdateChannelMemberMutationBody = BodyType<V3UpdateChannelMemberDto>
+    export type V3WorkspacesControllerUpdateChannelMemberMutationError = ErrorType<void>
+
+    /**
+ * @summary Update channel member role and permissions (Enterprise M2M)
+ */
+export const useV3WorkspacesControllerUpdateChannelMember = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerUpdateChannelMember>>, TError,{slug: string;channelId: string;userId: string;data: BodyType<V3UpdateChannelMemberDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof v3WorkspacesControllerUpdateChannelMember>>,
+        TError,
+        {slug: string;channelId: string;userId: string;data: BodyType<V3UpdateChannelMemberDto>},
+        TContext
+      > => {
+
+      const mutationOptions = getV3WorkspacesControllerUpdateChannelMemberMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * Remove a specific member from a channel. Requires channels:write scope.
+ * @summary Remove a member from a channel (Enterprise M2M)
+ */
+export const v3WorkspacesControllerDeleteChannelMember = (
+    slug: string,
+    channelId: string,
+    userId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/channels/${channelId}/members/${userId}`, method: 'DELETE'
+    },
+      options);
+    }
+
+
+
+export const getV3WorkspacesControllerDeleteChannelMemberMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerDeleteChannelMember>>, TError,{slug: string;channelId: string;userId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerDeleteChannelMember>>, TError,{slug: string;channelId: string;userId: string}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v3WorkspacesControllerDeleteChannelMember>>, {slug: string;channelId: string;userId: string}> = (props) => {
+          const {slug,channelId,userId} = props ?? {};
+
+          return  v3WorkspacesControllerDeleteChannelMember(slug,channelId,userId,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type V3WorkspacesControllerDeleteChannelMemberMutationResult = NonNullable<Awaited<ReturnType<typeof v3WorkspacesControllerDeleteChannelMember>>>
+
+    export type V3WorkspacesControllerDeleteChannelMemberMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Remove a member from a channel (Enterprise M2M)
+ */
+export const useV3WorkspacesControllerDeleteChannelMember = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerDeleteChannelMember>>, TError,{slug: string;channelId: string;userId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof v3WorkspacesControllerDeleteChannelMember>>,
+        TError,
+        {slug: string;channelId: string;userId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getV3WorkspacesControllerDeleteChannelMemberMutationOptions(options);
 
       return useMutation(mutationOptions);
     }
@@ -10926,11 +11641,14 @@ export const useChannelsControllerGetChannelMembers = <TData = Awaited<ReturnTyp
 export const channelsControllerAddChannelMembers = (
     slug: string,
     channelId: string,
+    addChannelMemberDto: BodyType<AddChannelMemberDto>,
  options?: SecondParameter<typeof customInstance>,) => {
 
 
       return customInstance<void>(
-      {url: `/api/workspaces/${slug}/channels/${channelId}/members`, method: 'POST'
+      {url: `/api/workspaces/${slug}/channels/${channelId}/members`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: addChannelMemberDto
     },
       options);
     }
@@ -10938,17 +11656,17 @@ export const channelsControllerAddChannelMembers = (
 
 
 export const getChannelsControllerAddChannelMembersMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof channelsControllerAddChannelMembers>>, TError,{slug: string;channelId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof channelsControllerAddChannelMembers>>, TError,{slug: string;channelId: string}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof channelsControllerAddChannelMembers>>, TError,{slug: string;channelId: string;data: BodyType<AddChannelMemberDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof channelsControllerAddChannelMembers>>, TError,{slug: string;channelId: string;data: BodyType<AddChannelMemberDto>}, TContext> => {
 const {mutation: mutationOptions, request: requestOptions} = options ?? {};
 
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof channelsControllerAddChannelMembers>>, {slug: string;channelId: string}> = (props) => {
-          const {slug,channelId} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof channelsControllerAddChannelMembers>>, {slug: string;channelId: string;data: BodyType<AddChannelMemberDto>}> = (props) => {
+          const {slug,channelId,data} = props ?? {};
 
-          return  channelsControllerAddChannelMembers(slug,channelId,requestOptions)
+          return  channelsControllerAddChannelMembers(slug,channelId,data,requestOptions)
         }
 
 
@@ -10957,22 +11675,83 @@ const {mutation: mutationOptions, request: requestOptions} = options ?? {};
   return  { mutationFn, ...mutationOptions }}
 
     export type ChannelsControllerAddChannelMembersMutationResult = NonNullable<Awaited<ReturnType<typeof channelsControllerAddChannelMembers>>>
-
+    export type ChannelsControllerAddChannelMembersMutationBody = BodyType<AddChannelMemberDto>
     export type ChannelsControllerAddChannelMembersMutationError = ErrorType<unknown>
 
     /**
  * @summary Add members to a channel
  */
 export const useChannelsControllerAddChannelMembers = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof channelsControllerAddChannelMembers>>, TError,{slug: string;channelId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof channelsControllerAddChannelMembers>>, TError,{slug: string;channelId: string;data: BodyType<AddChannelMemberDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
 ): UseMutationResult<
         Awaited<ReturnType<typeof channelsControllerAddChannelMembers>>,
         TError,
-        {slug: string;channelId: string},
+        {slug: string;channelId: string;data: BodyType<AddChannelMemberDto>},
         TContext
       > => {
 
       const mutationOptions = getChannelsControllerAddChannelMembersMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary Update channel member role and permissions
+ */
+export const channelsControllerUpdateChannelMember = (
+    slug: string,
+    channelId: string,
+    targetUserId: string,
+    updateChannelMemberDto: BodyType<UpdateChannelMemberDto>,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/workspaces/${slug}/channels/${channelId}/members/${targetUserId}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateChannelMemberDto
+    },
+      options);
+    }
+
+
+
+export const getChannelsControllerUpdateChannelMemberMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof channelsControllerUpdateChannelMember>>, TError,{slug: string;channelId: string;targetUserId: string;data: BodyType<UpdateChannelMemberDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof channelsControllerUpdateChannelMember>>, TError,{slug: string;channelId: string;targetUserId: string;data: BodyType<UpdateChannelMemberDto>}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof channelsControllerUpdateChannelMember>>, {slug: string;channelId: string;targetUserId: string;data: BodyType<UpdateChannelMemberDto>}> = (props) => {
+          const {slug,channelId,targetUserId,data} = props ?? {};
+
+          return  channelsControllerUpdateChannelMember(slug,channelId,targetUserId,data,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ChannelsControllerUpdateChannelMemberMutationResult = NonNullable<Awaited<ReturnType<typeof channelsControllerUpdateChannelMember>>>
+    export type ChannelsControllerUpdateChannelMemberMutationBody = BodyType<UpdateChannelMemberDto>
+    export type ChannelsControllerUpdateChannelMemberMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update channel member role and permissions
+ */
+export const useChannelsControllerUpdateChannelMember = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof channelsControllerUpdateChannelMember>>, TError,{slug: string;channelId: string;targetUserId: string;data: BodyType<UpdateChannelMemberDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof channelsControllerUpdateChannelMember>>,
+        TError,
+        {slug: string;channelId: string;targetUserId: string;data: BodyType<UpdateChannelMemberDto>},
+        TContext
+      > => {
+
+      const mutationOptions = getChannelsControllerUpdateChannelMemberMutationOptions(options);
 
       return useMutation(mutationOptions);
     }
