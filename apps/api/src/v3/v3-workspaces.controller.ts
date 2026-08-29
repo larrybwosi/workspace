@@ -136,8 +136,19 @@ const provisionSchema = z.object({
 
 export class V3AddMemberDto {
   @IsEmail()
-  @ApiProperty({ example: 'user@example.com', description: 'The email of the user to add' })
-  email: string;
+  @IsOptional()
+  @ApiProperty({ example: 'user@example.com', description: 'The email of the user to add', required: false })
+  email?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ example: 'usr_123', description: 'The user ID of the user to add', required: false })
+  userId?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ example: 'wsm_123', description: 'The workspace member ID of the user to add', required: false })
+  memberId?: string;
 
   @IsString()
   @IsOptional()
@@ -145,10 +156,16 @@ export class V3AddMemberDto {
   role?: string;
 }
 
-const addMemberSchema = z.object({
-  email: z.string().email(),
-  role: z.string().optional().default('member'),
-});
+const addMemberSchema = z
+  .object({
+    email: z.string().email().optional(),
+    userId: z.string().optional(),
+    memberId: z.string().optional(),
+    role: z.string().optional().default('member'),
+  })
+  .refine(data => Boolean(data.email || data.userId || data.memberId), {
+    message: 'At least one of email, userId, or memberId must be provided',
+  });
 
 export class V3UpdateMemberRoleDto {
   @IsEnum(['owner', 'admin', 'moderator', 'member', 'guest'])
@@ -267,14 +284,36 @@ const v3UpdateChannelSchema = z.object({
 export class V3AddChannelMemberDto {
   @IsString()
   @IsOptional()
-  @ApiProperty({ example: 'usr_123', required: false, description: 'User ID to add to channel' })
+  @ApiProperty({ example: 'usr_123', required: false, description: 'User ID, Member ID, or Email to add to channel' })
   userId?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ example: 'wsm_123', required: false, description: 'Workspace member ID to add to channel' })
+  memberId?: string;
+
+  @IsEmail()
+  @IsOptional()
+  @ApiProperty({ example: 'user@example.com', required: false, description: 'Email address of user to add to channel' })
+  email?: string;
 
   @IsArray()
   @IsString({ each: true })
   @IsOptional()
-  @ApiProperty({ example: ['usr_123', 'usr_456'], required: false, description: 'Array of user IDs to add' })
+  @ApiProperty({ example: ['usr_123', 'user@example.com'], required: false, description: 'Array of user IDs, member IDs, or emails to add' })
   userIds?: string[];
+
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  @ApiProperty({ example: ['wsm_123', 'wsm_456'], required: false, description: 'Array of workspace member IDs to add' })
+  memberIds?: string[];
+
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  @ApiProperty({ example: ['user1@example.com', 'user2@example.com'], required: false, description: 'Array of user emails to add' })
+  emails?: string[];
 
   @IsString()
   @IsOptional()
@@ -288,7 +327,11 @@ export class V3AddChannelMemberDto {
 
 const v3AddChannelMemberSchema = z.object({
   userId: z.string().optional(),
+  memberId: z.string().optional(),
+  email: z.string().optional(),
   userIds: z.array(z.string()).optional(),
+  memberIds: z.array(z.string()).optional(),
+  emails: z.array(z.string()).optional(),
   role: z.string().optional().default('member'),
   permissions: z.union([z.string(), z.number()]).optional(),
 });
@@ -727,11 +770,6 @@ When provisioned via M2M:
       this.logger.warn('Redis error in updateWorkspace (del):', err);
     }
 
-    /**
-     * ⚡ Performance Optimization:
-     * Background non-critical audit log creation to prevent I/O latency from blocking the HTTP response.
-     * Expected impact: Saves 1 database RTT on the critical write response path, reducing latency by ~15-30ms.
-     */
     prisma.workspaceAuditLog
       .create({
         data: {
@@ -889,7 +927,7 @@ When provisioned via M2M:
   @Post(':slug/members')
   @ApiOperation({
     summary: 'Add a member to the workspace (Enterprise M2M)',
-    description: 'Add a new member to a specific workspace. Requires members:write scope.',
+    description: 'Add a new member to a specific workspace using user email, user ID, or workspace member ID. Requires members:write scope.',
   })
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
   @ApiBody({ type: V3AddMemberDto })
@@ -914,7 +952,33 @@ When provisioned via M2M:
       throw new BadRequestException(validatedData.error.issues);
     }
 
-    const { email, role } = validatedData.data;
+    const { email, userId, memberId, role } = validatedData.data;
+
+    let targetUserId: string | null = null;
+    let targetEmail: string | null = null;
+
+    if (userId) {
+      targetUserId = userId;
+    } else if (email) {
+      targetEmail = email;
+    } else if (memberId) {
+      const existingWsm = await prisma.workspaceMember.findUnique({
+        where: { id: memberId },
+        select: { userId: true },
+      });
+      if (existingWsm) {
+        targetUserId = existingWsm.userId;
+      } else {
+        const user = await prisma.user.findFirst({
+          where: { OR: [{ id: memberId }, { email: memberId }] },
+          select: { id: true },
+        });
+        if (!user) {
+          throw new NotFoundException('User not found');
+        }
+        targetUserId = user.id;
+      }
+    }
 
     try {
       const membership = await prisma.workspaceMember.create({
@@ -923,9 +987,9 @@ When provisioned via M2M:
             connect: { id: workspaceId },
           },
           role,
-          user: {
-            connect: { email },
-          },
+          user: targetUserId
+            ? { connect: { id: targetUserId } }
+            : { connect: { email: targetEmail! } },
         },
         include: {
           user: {
@@ -954,20 +1018,20 @@ When provisioned via M2M:
     }
   }
 
-  @Get(':slug/members/:userId')
+  @Get(':slug/members/:memberId')
   @ApiOperation({
     summary: 'Get details of a specific workspace member (Enterprise M2M)',
-    description: 'Retrieve details of a specific workspace member by userId. Requires members:read scope.',
+    description: 'Retrieve details of a specific workspace member by member ID, user ID, or user email address. Requires members:read scope.',
   })
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
-  @ApiParam({ name: 'userId', description: 'The user ID' })
+  @ApiParam({ name: 'memberId', description: 'The workspace member ID, user ID, or user email address' })
   @ApiResponse({ status: 200, description: 'Member details returned successfully.' })
   @ApiResponse({ status: 403, description: 'Forbidden: Missing scope or unauthorized.' })
   @ApiResponse({ status: 404, description: 'Member not found.' })
   async getWorkspaceMember(
     @V3Context() context: ApiV3Context,
     @Param('slug') slug: string,
-    @Param('userId') userId: string
+    @Param('memberId') memberIdParam: string
   ) {
     if (!context.scopes.includes('members:read') && !context.scopes.includes('*')) {
       throw new ForbiddenException('Missing members:read scope');
@@ -978,12 +1042,14 @@ When provisioned via M2M:
       throw new BadRequestException('Workspace context is missing');
     }
 
-    const member = await prisma.workspaceMember.findUnique({
+    const member = await prisma.workspaceMember.findFirst({
       where: {
-        workspaceId_userId: {
-          workspaceId,
-          userId,
-        },
+        workspaceId,
+        OR: [
+          { id: memberIdParam },
+          { userId: memberIdParam },
+          { user: { email: memberIdParam } },
+        ],
       },
       select: {
         id: true,
@@ -1015,20 +1081,20 @@ When provisioned via M2M:
     return this.formatResponse({ member });
   }
 
-  @Patch(':slug/members/:userId')
+  @Patch(':slug/members/:memberId')
   @ApiOperation({
     summary: 'Update a workspace member role (Enterprise M2M)',
-    description: 'Update the role of a specific workspace member. Requires members:write scope.',
+    description: 'Update the role of a specific workspace member by member ID, user ID, or user email address. Requires members:write scope.',
   })
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
-  @ApiParam({ name: 'userId', description: 'The user ID' })
+  @ApiParam({ name: 'memberId', description: 'The workspace member ID, user ID, or user email address' })
   @ApiBody({ type: V3UpdateMemberRoleDto })
   @ApiResponse({ status: 200, description: 'Member updated successfully.' })
   @ApiResponse({ status: 403, description: 'Forbidden: Missing scope or unauthorized.' })
   async updateWorkspaceMember(
     @V3Context() context: ApiV3Context,
     @Param('slug') slug: string,
-    @Param('userId') userId: string,
+    @Param('memberId') memberIdParam: string,
     @Body() body: V3UpdateMemberRoleDto
   ) {
     if (!context.scopes.includes('members:write') && !context.scopes.includes('*')) {
@@ -1046,21 +1112,25 @@ When provisioned via M2M:
     }
     const { role } = validatedData.data;
 
+    const existingMember = await prisma.workspaceMember.findFirst({
+      where: {
+        workspaceId,
+        OR: [
+          { id: memberIdParam },
+          { userId: memberIdParam },
+          { user: { email: memberIdParam } },
+        ],
+      },
+      select: { id: true },
+    });
+
+    if (!existingMember) {
+      throw new NotFoundException('Member not found in this workspace');
+    }
+
     try {
-      /**
-       * ⚡ Performance Optimization:
-       * 1. Collapses the sequential 'findUnique' existence check and subsequent 'update' mutation
-       *    into a single atomic 'prisma.workspaceMember.update' call.
-       * 2. Handles the 'P2025' record not found error in the catch block to return NotFoundException.
-       * Expected impact: Reduces database round-trips (RTT) from 2 to 1 and improves role update response times by ~50%.
-       */
       const updatedMember = await prisma.workspaceMember.update({
-        where: {
-          workspaceId_userId: {
-            workspaceId,
-            userId,
-          },
-        },
+        where: { id: existingMember.id },
         data: { role },
         include: {
           user: {
@@ -1091,20 +1161,20 @@ When provisioned via M2M:
     }
   }
 
-  @Delete(':slug/members/:userId')
+  @Delete(':slug/members/:memberId')
   @ApiOperation({
     summary: 'Remove a member from the workspace (Enterprise M2M)',
-    description: 'Remove a workspace member by userId. Requires members:write scope.',
+    description: 'Remove a workspace member by member ID, user ID, or user email address. Requires members:write scope.',
   })
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
-  @ApiParam({ name: 'userId', description: 'The user ID' })
+  @ApiParam({ name: 'memberId', description: 'The workspace member ID, user ID, or user email address' })
   @ApiResponse({ status: 200, description: 'Member removed successfully.' })
   @ApiResponse({ status: 403, description: 'Forbidden: Missing scope or unauthorized.' })
   @ApiResponse({ status: 404, description: 'Member not found.' })
   async deleteWorkspaceMember(
     @V3Context() context: ApiV3Context,
     @Param('slug') slug: string,
-    @Param('userId') userId: string
+    @Param('memberId') memberIdParam: string
   ) {
     if (!context.scopes.includes('members:write') && !context.scopes.includes('*')) {
       throw new ForbiddenException('Missing members:write scope');
@@ -1120,8 +1190,14 @@ When provisioned via M2M:
       select: {
         ownerId: true,
         members: {
-          where: { userId },
-          select: { id: true },
+          where: {
+            OR: [
+              { id: memberIdParam },
+              { userId: memberIdParam },
+              { user: { email: memberIdParam } },
+            ],
+          },
+          select: { id: true, userId: true },
         },
       },
     });
@@ -1134,17 +1210,14 @@ When provisioned via M2M:
       throw new NotFoundException('Member not found in this workspace');
     }
 
-    if (workspace.ownerId === userId) {
+    const memberToDelete = workspace.members[0];
+
+    if (workspace.ownerId === memberToDelete.userId) {
       throw new BadRequestException('Cannot remove workspace owner');
     }
 
     await prisma.workspaceMember.delete({
-      where: {
-        workspaceId_userId: {
-          workspaceId,
-          userId,
-        },
-      },
+      where: { id: memberToDelete.id },
     });
 
     // Invalidate caches
@@ -1570,7 +1643,7 @@ When provisioned via M2M:
   @Post(':slug/channels/:channelId/members')
   @ApiOperation({
     summary: 'Add members to a channel (Enterprise M2M)',
-    description: 'Add user(s) to a channel with customizable role and permissions. Requires channels:write scope.',
+    description: 'Add user(s) to a channel using user IDs, member IDs, or email addresses with customizable role and permissions. Requires channels:write scope.',
   })
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
   @ApiParam({ name: 'channelId', description: 'The channel ID' })
@@ -1594,9 +1667,17 @@ When provisioned via M2M:
     }
     const data = validatedData.data;
 
-    const userIdsToAdd = data.userIds || (data.userId ? [data.userId] : []);
-    if (userIdsToAdd.length === 0) {
-      throw new BadRequestException('userId or userIds required');
+    const inputIdentifiers = [
+      ...(data.userIds || []),
+      ...(data.memberIds || []),
+      ...(data.emails || []),
+      ...(data.userId ? [data.userId] : []),
+      ...(data.memberId ? [data.memberId] : []),
+      ...(data.email ? [data.email] : []),
+    ];
+
+    if (inputIdentifiers.length === 0) {
+      throw new BadRequestException('userId, memberId, email, userIds, memberIds, or emails required');
     }
 
     const channel = await prisma.channel.findUnique({
@@ -1605,6 +1686,23 @@ When provisioned via M2M:
 
     if (!channel) {
       throw new NotFoundException('Channel not found in this workspace');
+    }
+
+    const matchedUsers = await prisma.user.findMany({
+      where: {
+        OR: [
+          { id: { in: inputIdentifiers } },
+          { email: { in: inputIdentifiers } },
+          { workspaceMemberships: { some: { id: { in: inputIdentifiers }, workspaceId: workspace.id } } },
+        ],
+      },
+      select: { id: true },
+    });
+
+    const userIdsToAdd = [...new Set(matchedUsers.map(u => u.id))];
+
+    if (userIdsToAdd.length === 0) {
+      throw new NotFoundException('No valid users found for the provided identifiers');
     }
 
     let permissionsBigInt: bigint | null = null;
@@ -1641,14 +1739,14 @@ When provisioned via M2M:
     return this.formatResponse({ members: formattedMembers });
   }
 
-  @Patch(':slug/channels/:channelId/members/:userId')
+  @Patch(':slug/channels/:channelId/members/:memberId')
   @ApiOperation({
     summary: 'Update channel member role and permissions (Enterprise M2M)',
-    description: 'Update the role or bitwise permissions of a channel member. Requires channels:write scope.',
+    description: 'Update the role or bitwise permissions of a channel member using user ID, member ID, or email address. Requires channels:write scope.',
   })
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
   @ApiParam({ name: 'channelId', description: 'The channel ID' })
-  @ApiParam({ name: 'userId', description: 'The user ID' })
+  @ApiParam({ name: 'memberId', description: 'The user ID, workspace member ID, or user email address' })
   @ApiBody({ type: V3UpdateChannelMemberDto })
   @ApiResponse({ status: 200, description: 'Channel member updated successfully.' })
   @ApiResponse({ status: 404, description: 'Member not found in channel.' })
@@ -1656,7 +1754,7 @@ When provisioned via M2M:
     @V3Context() context: ApiV3Context,
     @Param('slug') slug: string,
     @Param('channelId') channelId: string,
-    @Param('userId') userId: string,
+    @Param('memberId') memberIdParam: string,
     @Body() body: V3UpdateChannelMemberDto
   ) {
     if (!context.scopes.includes('channels:write') && !context.scopes.includes('*')) {
@@ -1680,14 +1778,26 @@ When provisioned via M2M:
       }
     }
 
+    const existingChannelMember = await prisma.channelMember.findFirst({
+      where: {
+        channelId,
+        channel: { workspaceId: workspace.id },
+        OR: [
+          { userId: memberIdParam },
+          { user: { email: memberIdParam } },
+          { user: { workspaceMemberships: { some: { id: memberIdParam, workspaceId: workspace.id } } } },
+        ],
+      },
+      select: { id: true },
+    });
+
+    if (!existingChannelMember) {
+      throw new NotFoundException('Member not found in this channel');
+    }
+
     try {
       const updatedMember = await prisma.channelMember.update({
-        where: {
-          channelId_userId: {
-            channelId,
-            userId,
-          },
-        },
+        where: { id: existingChannelMember.id },
         data: {
           ...(data.role && { role: data.role }),
           ...(permissionsBigInt !== undefined && { permissions: permissionsBigInt }),
@@ -1711,20 +1821,20 @@ When provisioned via M2M:
     }
   }
 
-  @Delete(':slug/channels/:channelId/members/:userId')
+  @Delete(':slug/channels/:channelId/members/:memberId')
   @ApiOperation({
     summary: 'Remove a member from a channel (Enterprise M2M)',
-    description: 'Remove a specific member from a channel. Requires channels:write scope.',
+    description: 'Remove a specific member from a channel using user ID, workspace member ID, or email address. Requires channels:write scope.',
   })
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
   @ApiParam({ name: 'channelId', description: 'The channel ID' })
-  @ApiParam({ name: 'userId', description: 'The user ID' })
+  @ApiParam({ name: 'memberId', description: 'The user ID, workspace member ID, or user email address' })
   @ApiResponse({ status: 200, description: 'Member removed from channel successfully.' })
   async deleteChannelMember(
     @V3Context() context: ApiV3Context,
     @Param('slug') slug: string,
     @Param('channelId') channelId: string,
-    @Param('userId') userId: string
+    @Param('memberId') memberIdParam: string
   ) {
     if (!context.scopes.includes('channels:write') && !context.scopes.includes('*')) {
       throw new ForbiddenException('Missing channels:write scope');
@@ -1732,13 +1842,24 @@ When provisioned via M2M:
 
     const workspace = await this.resolveWorkspaceAndCheckAccess(context, slug);
 
-    await prisma.channelMember.deleteMany({
+    const existingChannelMember = await prisma.channelMember.findFirst({
       where: {
         channelId,
-        userId,
         channel: { workspaceId: workspace.id },
+        OR: [
+          { userId: memberIdParam },
+          { user: { email: memberIdParam } },
+          { user: { workspaceMemberships: { some: { id: memberIdParam, workspaceId: workspace.id } } } },
+        ],
       },
+      select: { id: true },
     });
+
+    if (existingChannelMember) {
+      await prisma.channelMember.delete({
+        where: { id: existingChannelMember.id },
+      });
+    }
 
     return this.formatResponse({ success: true });
   }
