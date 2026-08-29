@@ -327,17 +327,26 @@ export class V3WebhooksController {
       throw new BadRequestException('Workspace ID not resolved');
     }
 
-    const webhook = await prisma.workspaceWebhook.findUnique({
-      where: { id: webhookId, workspaceId: context.workspaceId },
-    });
-
-    if (!webhook) {
-      throw new NotFoundException('Webhook not found');
+    /**
+     * ⚡ Performance Optimization:
+     * Consolidates the separate read existence check (findUnique) and subsequent write (delete)
+     * into a single atomic delete query with a try-catch block for Prisma's P2025 record-not-found error.
+     * This reduces database round-trips (RTT) on the webhook deletion path from 2 down to 1.
+     * Furthermore, non-critical audit logging is backgrounded via `.catch()` so that write latency
+     * on the audit table does not block the HTTP response path.
+     * Expected impact: Cuts DB latency on deletion by ~50% (reduces RTT from 2 to 1).
+     */
+    let deletedWebhook;
+    try {
+      deletedWebhook = await prisma.workspaceWebhook.delete({
+        where: { id: webhookId, workspaceId: context.workspaceId },
+      });
+    } catch (error: any) {
+      if (error.code === 'P2025') {
+        throw new NotFoundException('Webhook not found');
+      }
+      throw error;
     }
-
-    await prisma.workspaceWebhook.delete({
-      where: { id: webhookId },
-    });
 
     // Invalidate Cache
     const cacheKey = `v3:workspace:${context.workspaceId}:webhooks`;
@@ -347,20 +356,22 @@ export class V3WebhooksController {
       this.logger.warn('Redis error in deleteWebhook (del):', err);
     }
 
-    // Write audit log
-    await prisma.workspaceAuditLog.create({
-      data: {
-        workspaceId: context.workspaceId,
-        userId: context.userId,
-        action: 'webhook.deleted',
-        resource: 'webhook',
-        resourceId: webhookId,
-        metadata: {
-          deleter: context.clientId,
-          name: webhook.name,
-        } as any,
-      },
-    });
+    // Background audit log creation
+    prisma.workspaceAuditLog
+      .create({
+        data: {
+          workspaceId: context.workspaceId,
+          userId: context.userId,
+          action: 'webhook.deleted',
+          resource: 'webhook',
+          resourceId: webhookId,
+          metadata: {
+            deleter: context.clientId,
+            name: deletedWebhook.name,
+          } as any,
+        },
+      })
+      .catch(err => this.logger.error('Audit log error in deleteWebhook:', err));
 
     return this.formatResponse({ success: true });
   }
