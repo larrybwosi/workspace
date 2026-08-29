@@ -1,114 +1,152 @@
-# Bot Applications
+# V3 Bot Applications & Workspace Installation
 
-Bot Applications are the foundation for building integrations with Scrymechat. They provide the necessary credentials to authenticate with the API and interact with workspaces.
+Bot Applications allow developers and M2M integrations to build bots and automated tools on Scrymechat.
 
-## Creating an Application
+---
 
-You can manage your bot applications via the Developer Portal in your Scrymechat account or programmatically via the API.
+## Endpoints Summary
 
-**Endpoint:** `POST /v3/applications`
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/v3/applications` | List bot applications owned by user/org |
+| `POST` | `/v3/applications` | Create a new bot application + bot user |
+| `GET` | `/v3/applications/:id` | Get application details & bot token |
+| `PATCH` | `/v3/applications/:id` | Update application configuration |
+| `POST` | `/v3/applications/:id/reset-token` | Regenerate bot token |
+| `DELETE` | `/v3/applications/:id` | Delete application & bot user |
+| `POST` | `/v3/applications/:id/install` | Install bot into target workspace |
+| `GET` | `/v3/workspaces/:slug/bots` | List all bots installed in workspace |
+| `POST` | `/v3/workspaces/:slug/bots` | Add an application bot to workspace |
 
-**Body:**
+---
+
+## 1. Create Application
+
+**Endpoint:** `POST /v3/applications` (or `POST /v2/applications`)
+
+**Request Body:**
 
 ```json
 {
-  "name": "My New Bot",
-  "description": "A helpful assistant bot"
-}
-```
-
----
-
-## Managing Applications
-
-### List Applications
-
-Returns a list of all bot applications owned by the authenticated user.
-
-**Endpoint:** `GET /v3/applications`
-
----
-
-### Get Application Details
-
-Retrieve detailed information about a specific bot application.
-
-**Endpoint:** `GET /v3/applications/:id`
-
----
-
-### Update Application
-
-Update the name, description, or channel definitions for an application.
-
-**Endpoint:** `POST /v3/applications/:id`
-
-**Body:**
-
-```json
-{
-  "name": "Updated Bot Name",
-  "description": "New description"
-}
-```
-
----
-
-### Reset Bot Token
-
-Revokes the current bot token and generates a new one. Use this if your token has been compromised.
-
-**Endpoint:** `POST /v3/applications/:id/reset-token`
-
----
-
-### Delete Application
-
-Permanently deletes the bot application and its associated bot user.
-
-**Endpoint:** `POST /v3/applications/:id/delete`
-
-### Bot Token vs OAuth
-
-- **Bot Token**: A long-lived token used by the bot user itself to authenticate.
-- **Client ID / Secret**: Used in the OAuth2 flow to obtain a short-lived access token.
-
-## Installation
-
-A bot must be "installed" into a workspace before it can access its resources. Installation creates a bot user member within that workspace.
-
-**Endpoint:** `POST /v3/applications/:id/install`
-
-**Body:**
-
-```json
-{
-  "workspaceId": "workspace_id_here"
-}
-```
-
-### Channel Definitions
-
-When defining an application, you can specify `channelDefinitions`. These are infrastructure requirements that Scrymechat will automatically provision when the bot is installed:
-
-```json
-{
+  "name": "Production Support Bot",
+  "description": "Monitors production alerts and manages support tickets",
+  "workspaceSlug": "acme-corp",
   "channelDefinitions": [
     {
-      "teamName": "Operations",
-      "channelName": "alerts",
-      "teamDescription": "Managed by AlertBot",
-      "icon": "bell",
-      "autoPopulateRoles": ["admin"]
+      "teamName": "Support",
+      "channelName": "support-tickets",
+      "teamDescription": "Managed by Production Support Bot",
+      "icon": "life-buoy",
+      "autoPopulateRoles": ["admin", "owner"]
     }
   ]
 }
 ```
 
-- **Provisioning**: Scrymechat will ensure the "Operations" team and "alerts" channel exist.
-- **Membership**: The bot will be added as a lead/owner of these resources.
-- **Auto-populate**: Users with the `admin` role in the workspace will be automatically added to the new team/channel.
+**Response (201 Created):**
 
-## Technical Details
+```json
+{
+  "id": "app_123456",
+  "name": "Production Support Bot",
+  "description": "Monitors production alerts and manages support tickets",
+  "clientId": "app_client_789",
+  "clientSecret": "sec_987654321",
+  "workspaceId": "ws_acme123",
+  "ownerId": "user_owner",
+  "bot": {
+    "id": "bot_998877",
+    "name": "Production Support Bot",
+    "botToken": "Ym90Xzk5ODg3Nw.1740825600000.signatureHash"
+  },
+  "createdAt": "2026-08-29T10:00:00.000Z"
+}
+```
 
-For detailed schema info, see the [API Explorer](/api-reference/explorer#bot-applications).
+---
+
+## 2. Install Bot to Workspace
+
+**Endpoint:** `POST /v3/applications/:id/install` (or `POST /v2/applications/:id/install`)
+
+**Request Body:**
+
+```json
+{
+  "workspaceSlug": "target-workspace-slug"
+}
+```
+
+**Response (200 OK):**
+
+```json
+{
+  "success": true,
+  "workspaceId": "ws_target123",
+  "applicationId": "app_123456",
+  "botId": "bot_998877"
+}
+```
+
+When installed:
+- Bot user is added to `WorkspaceMember` as an administrator.
+- If `channelDefinitions` are set, teams and channels are created automatically.
+- Matching workspace members are auto-populated into the provisioned channels.
+
+---
+
+## 3. List Workspace Installed Bots
+
+**Endpoint:** `GET /v3/workspaces/:slug/bots`
+
+**Response (200 OK):**
+
+```json
+[
+  {
+    "id": "bot_998877",
+    "name": "Production Support Bot",
+    "avatar": null,
+    "role": "admin",
+    "application": {
+      "id": "app_123456",
+      "description": "Monitors production alerts",
+      "clientId": "app_client_789"
+    }
+  }
+]
+```
+
+---
+
+## 4. Reset Bot Token
+
+**Endpoint:** `POST /v3/applications/:id/reset-token`
+
+**Response (200 OK):**
+
+```json
+{
+  "id": "app_123456",
+  "botToken": "Ym90Xzk5ODg3Nw.1740825700000.newSignatureHash",
+  "bot": {
+    "id": "bot_998877",
+    "name": "Production Support Bot",
+    "botToken": "Ym90Xzk5ODg3Nw.1740825700000.newSignatureHash"
+  }
+}
+```
+
+---
+
+## 5. Delete Application
+
+**Endpoint:** `DELETE /v3/applications/:id` (or `POST /v3/applications/:id/delete`)
+
+**Response (200 OK):**
+
+```json
+{
+  "success": true
+}
+```

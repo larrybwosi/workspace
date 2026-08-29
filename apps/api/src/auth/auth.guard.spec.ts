@@ -17,7 +17,7 @@ vi.mock('@repo/database', () => ({
     user: {
       findUnique: vi.fn(),
     },
-    defaultBot: {
+    botApplication: {
       findFirst: vi.fn(),
     },
     workspace: {
@@ -73,8 +73,8 @@ describe('AuthGuard', () => {
       expiresAt: new Date(Date.now() + 3600000),
     });
 
-    (prisma.defaultBot.findFirst as any).mockResolvedValue({
-      user: { id: 'bot-user-1', name: 'Bot User' },
+    (prisma.botApplication.findFirst as any).mockResolvedValue({
+      bot: { id: 'bot-user-1', name: 'Bot User' },
     });
 
     const context = createMockContext({ authorization: `Bearer ${rawToken}` });

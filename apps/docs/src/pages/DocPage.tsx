@@ -467,22 +467,21 @@ export default function DocPage({ type, defaultSlug }: DocPageProps) {
 
     setLoading(true);
 
-    if (type === 'api-reference') {
-      if (SLUG_TO_TAGS_MAP[activeSlug]) {
-        setContent('');
-        setLoading(false);
-      } else {
-        setContent(null);
-        setLoading(false);
-      }
+    if (type === 'api-reference' && SLUG_TO_TAGS_MAP[activeSlug]) {
+      setContent('');
+      setLoading(false);
       return;
     }
 
-    const folder = 'docs';
+    const folder = type === 'user-guide' ? 'docs' : 'api';
 
     // @ts-ignore
-    const modules = import.meta.glob('../content/docs/**/*.md', { query: '?raw', import: 'default' });
-    const path = `../content/docs/${activeSlug}.md`;
+    const docsModules = import.meta.glob('../content/docs/**/*.md', { query: '?raw', import: 'default' });
+    // @ts-ignore
+    const apiModules = import.meta.glob('../content/api/**/*.md', { query: '?raw', import: 'default' });
+
+    const path = `../content/${folder}/${activeSlug}.md`;
+    const modules = type === 'user-guide' ? docsModules : apiModules;
 
     if (modules[path]) {
       // @ts-ignore
