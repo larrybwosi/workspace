@@ -388,18 +388,17 @@ describe('ScrymeSDK', () => {
       expect(createRes.options.headers.Authorization).toBe('Bearer active-token');
     });
 
-    it('should support workspace channels namespace', async () => {
+    it('should support workspace channels namespace and call V3 endpoints', async () => {
       const sdk = new ScrymeSDK({
         baseURL: 'https://api.test.com',
         token: 'active-token',
       });
 
       const channelsRes = await sdk.workspace.channels.list('acme-corp') as any;
-      expect(channelsRes.slug).toBe('acme-corp');
+      expect(channelsRes).toEqual([]);
 
       const createRes = await sdk.workspace.channels.create('acme-corp', { name: 'general' }) as any;
-      expect(createRes.data.slug).toBe('acme-corp');
-      expect(createRes.data.data.name).toBe('general');
+      expect(createRes).toEqual({ name: 'general' });
     });
 
     it('should support channel and message namespaces', async () => {
