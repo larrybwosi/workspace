@@ -1008,8 +1008,16 @@ export interface V3AddChannelMemberDto {
   role?: string;
   /** User ID to add to channel */
   userId?: string;
+  /** Member ID to add to channel */
+  memberId?: string;
+  /** Email address to add to channel */
+  email?: string;
   /** Array of user IDs to add */
   userIds?: string[];
+  /** Array of workspace member IDs to add */
+  memberIds?: string[];
+  /** Array of user emails to add */
+  emails?: string[];
 }
 
 export type V3UpdateChannelDtoType = typeof V3UpdateChannelDtoType[keyof typeof V3UpdateChannelDtoType];
@@ -1095,7 +1103,11 @@ export interface V3UpdateMemberRoleDto {
 
 export interface V3AddMemberDto {
   /** The email of the user to add */
-  email: string;
+  email?: string;
+  /** The user ID of the user to add */
+  userId?: string;
+  /** The workspace member ID of the user to add */
+  memberId?: string;
   /** The role of the member */
   role?: string;
 }

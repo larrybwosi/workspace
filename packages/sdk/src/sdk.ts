@@ -871,8 +871,9 @@ export class ScrymeSDK {
         },
         /**
          * Adds a new member to the workspace.
+         * Accepts member options by email address, userId, or memberId.
          * @param slug The unique workspace slug identifier.
-         * @param data Input DTO containing the user's email and role.
+         * @param data Input DTO containing member email, userId, or memberId and target role.
          * @param options Optional request config override.
          * @returns Newly added member details exactly from the endpoint.
          */
@@ -885,8 +886,9 @@ export class ScrymeSDK {
         },
         /**
          * Retrieves membership details of a specific member in a workspace.
+         * Supports member identifier options allowing workspace member ID, user ID, or user email address.
          * @param slug The unique workspace slug identifier.
-         * @param memberId Unique ID of the workspace member (user ID).
+         * @param memberId Workspace member ID, user ID, or user email address.
          * @param options Optional request config override.
          * @returns Workspace member details exactly from the endpoint.
          */
@@ -899,8 +901,9 @@ export class ScrymeSDK {
         },
         /**
          * Updates the role or configuration of a workspace member.
+         * Supports member identifier options allowing workspace member ID, user ID, or user email address.
          * @param slug The unique workspace slug identifier.
-         * @param memberId Unique ID of the workspace member (user ID).
+         * @param memberId Workspace member ID, user ID, or user email address.
          * @param data Update details containing the target role.
          * @param options Optional request config override.
          * @returns The updated workspace member details exactly from the endpoint.
@@ -915,8 +918,9 @@ export class ScrymeSDK {
         },
         /**
          * Removes a member from the workspace.
+         * Supports member identifier options allowing workspace member ID, user ID, or user email address.
          * @param slug The unique workspace slug identifier.
-         * @param memberId Unique ID of the workspace member (user ID).
+         * @param memberId Workspace member ID, user ID, or user email address.
          * @param options Optional request config override.
          * @returns Workspace member deletion confirmation exactly from the endpoint.
          */
@@ -2056,8 +2060,9 @@ export class ScrymeSDK {
         },
         /**
          * Adds a new member to a workspace.
+         * Accepts member options by email address, userId, or memberId.
          * @param slug The unique workspace slug.
-         * @param data Configuration containing user email and target role.
+         * @param data Configuration containing user email, userId, or memberId and target role.
          * @param options Optional request config override.
          */
         add: async (
@@ -2069,8 +2074,9 @@ export class ScrymeSDK {
         },
         /**
          * Retrieves membership details of a specific workspace member.
+         * Supports member identifier options allowing workspace member ID, user ID, or user email address.
          * @param slug The unique workspace slug.
-         * @param memberId Unique ID of the workspace member (user ID).
+         * @param memberId Workspace member ID, user ID, or user email address.
          * @param options Optional request config override.
          */
         get: async (
@@ -2082,8 +2088,9 @@ export class ScrymeSDK {
         },
         /**
          * Updates the role or settings of an existing member in a workspace.
+         * Supports member identifier options allowing workspace member ID, user ID, or user email address.
          * @param slug The unique workspace slug.
-         * @param memberId Unique ID of the workspace member (user ID).
+         * @param memberId Workspace member ID, user ID, or user email address.
          * @param data Updated role.
          * @param options Optional request config override.
          */
@@ -2097,8 +2104,9 @@ export class ScrymeSDK {
         },
         /**
          * Removes a member from a workspace.
+         * Supports member identifier options allowing workspace member ID, user ID, or user email address.
          * @param slug The unique workspace slug.
-         * @param memberId Unique ID of the workspace member (user ID).
+         * @param memberId Workspace member ID, user ID, or user email address.
          * @param options Optional request config override.
          */
         delete: async (
