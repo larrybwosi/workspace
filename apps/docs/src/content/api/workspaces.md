@@ -344,6 +344,204 @@ Removes a user from the workspace. Note: The workspace owner cannot be removed.
 
 ---
 
+## Workspace Channels & Customization (V3)
+
+Manage workspace channels, customize branding/metadata, enforce visibility (`public` vs `private`), and set channel-level member access and bitwise permissions.
+
+### List Workspace Channels
+
+Retrieve all public channels and private channels accessible in the workspace. Supported on both V3 M2M (`GET /v3/workspaces/:slug/channels`) and Direct API (`GET /workspaces/:slug/channels`).
+
+**Endpoint:** `GET /v3/workspaces/:slug/channels`
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "channels": [
+      {
+        "id": "chan_123",
+        "name": "engineering",
+        "slug": "engineering",
+        "icon": "code",
+        "type": "private",
+        "isPrivate": true,
+        "description": "Engineering discussions",
+        "metadata": {
+          "department": "Engineering",
+          "allowBotWebhooks": true
+        },
+        "workspaceId": "ws_xyz",
+        "createdAt": "2026-07-10T00:00:00.000Z",
+        "updatedAt": "2026-07-10T00:00:00.000Z"
+      }
+    ]
+  },
+  "timestamp": "2026-07-10T07:12:00.000Z"
+}
+```
+
+---
+
+### Create Channel
+
+Create a new workspace channel with customizable visibility (`public`/`private`), icon, description, custom `metadata`, and optional `initialMembers`.
+
+**Endpoint:** `POST /v3/workspaces/:slug/channels`
+
+**Body:**
+```json
+{
+  "name": "security-alerts",
+  "description": "High priority security notifications",
+  "type": "private",
+  "isPrivate": true,
+  "icon": "shield",
+  "metadata": {
+    "notifyOnDuty": true
+  },
+  "initialMembers": [
+    {
+      "userId": "usr_sec_lead",
+      "role": "admin",
+      "permissions": "2048"
+    }
+  ]
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "channel": {
+      "id": "chan_456",
+      "name": "security-alerts",
+      "slug": "security-alerts",
+      "icon": "shield",
+      "type": "private",
+      "isPrivate": true,
+      "description": "High priority security notifications",
+      "metadata": {
+        "notifyOnDuty": true
+      },
+      "workspaceId": "ws_xyz",
+      "members": [
+        {
+          "id": "cm_789",
+          "userId": "usr_sec_lead",
+          "role": "admin",
+          "permissions": "2048"
+        }
+      ]
+    }
+  },
+  "timestamp": "2026-07-10T07:13:00.000Z"
+}
+```
+
+---
+
+### Update Channel Settings & Visibility
+
+Update settings, display name, description, icon, custom `metadata`, or change visibility between `public` and `private`.
+
+**Endpoint:** `PATCH /v3/workspaces/:slug/channels/:channelId`
+
+**Body:**
+```json
+{
+  "name": "sec-ops",
+  "description": "Updated Security Operations channel",
+  "isPrivate": true,
+  "type": "private",
+  "icon": "terminal",
+  "metadata": {
+    "tier": "enterprise"
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "channel": {
+      "id": "chan_456",
+      "name": "sec-ops",
+      "slug": "security-alerts",
+      "type": "private",
+      "isPrivate": true,
+      "icon": "terminal",
+      "description": "Updated Security Operations channel",
+      "metadata": {
+        "tier": "enterprise"
+      }
+    }
+  },
+  "timestamp": "2026-07-10T07:14:00.000Z"
+}
+```
+
+---
+
+### Delete Channel
+
+Permanently remove a channel and its message history.
+
+**Endpoint:** `DELETE /v3/workspaces/:slug/channels/:channelId`
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "success": true
+  },
+  "timestamp": "2026-07-10T07:15:00.000Z"
+}
+```
+
+---
+
+### Channel Member Access & Permissions
+
+Manage user access, roles (`admin`, `moderator`, `member`), and bitwise permissions inside specific channels.
+
+#### List Channel Members
+`GET /v3/workspaces/:slug/channels/:channelId/members`
+
+#### Add Members to Channel
+`POST /v3/workspaces/:slug/channels/:channelId/members`
+
+**Body:**
+```json
+{
+  "userIds": ["usr_123", "usr_456"],
+  "role": "member",
+  "permissions": "2048"
+}
+```
+
+#### Update Member Role & Bitwise Permissions
+`PATCH /v3/workspaces/:slug/channels/:channelId/members/:userId`
+
+**Body:**
+```json
+{
+  "role": "moderator",
+  "permissions": "4096"
+}
+```
+
+#### Remove Member from Channel
+`DELETE /v3/workspaces/:slug/channels/:channelId/members/:userId`
+
+---
+
 ## Organization (V3)
 
 Scrymechat workspaces can be further organized into **Departments** and **Teams** to reflect your company's structure.

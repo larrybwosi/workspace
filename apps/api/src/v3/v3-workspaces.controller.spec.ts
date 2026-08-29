@@ -14,6 +14,20 @@ vi.mock('@repo/database', () => ({
       update: vi.fn(),
       delete: vi.fn(),
     },
+    channel: {
+      findMany: vi.fn(),
+      findFirst: vi.fn(),
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+    },
+    channelMember: {
+      findMany: vi.fn(),
+      createMany: vi.fn(),
+      update: vi.fn(),
+      deleteMany: vi.fn(),
+    },
     workspaceMember: {
       findFirst: vi.fn(),
       findMany: vi.fn(),
@@ -779,6 +793,97 @@ describe('V3WorkspacesController', () => {
         await expect(controller.deleteWorkspaceMember(context as any, 'acme-slug', 'owner-id')).rejects.toThrow(
           'Cannot remove workspace owner'
         );
+      });
+    });
+  });
+
+  describe('workspace channels management (V3 M2M)', () => {
+    const context = {
+      scopes: ['*'],
+      organizationId: 'org-abc',
+      workspaceId: 'ws-123',
+      userId: 'user-xyz',
+    };
+
+    const mockWorkspace = {
+      id: 'ws-123',
+      name: 'Acme Workspace',
+      slug: 'acme-slug',
+      organizationId: 'org-abc',
+      ownerId: 'owner-xyz',
+    };
+
+    describe('getChannels', () => {
+      it('should list channels and cache them', async () => {
+        const mockChannels = [
+          { id: 'ch-1', name: 'general', slug: 'general', type: 'public', isPrivate: false },
+        ];
+
+        (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
+        redisClient.get.mockResolvedValue(null);
+        (prisma.channel.findMany as any).mockResolvedValue(mockChannels);
+
+        const result = await controller.getChannels(context as any, 'acme-slug');
+
+        expect(result.success).toBe(true);
+        expect(result.data.channels).toEqual(mockChannels);
+        expect(redisClient.setex).toHaveBeenCalledWith('v3:ws:ws-123:channels', 600, JSON.stringify(mockChannels));
+      });
+    });
+
+    describe('createChannel', () => {
+      it('should create channel with visibility, metadata and initial members', async () => {
+        const body = {
+          name: 'Engineering',
+          description: 'Engineering team',
+          type: 'private' as const,
+          isPrivate: true,
+          metadata: { dept: 'eng' },
+          initialMembers: [{ userId: 'usr-1', role: 'admin', permissions: '2048' }],
+        };
+
+        const mockCreatedChannel = {
+          id: 'ch-new',
+          name: 'Engineering',
+          slug: 'engineering',
+          type: 'private',
+          isPrivate: true,
+          workspaceId: 'ws-123',
+          members: [{ id: 'cm-1', userId: 'usr-1', role: 'admin', permissions: 2048n }],
+        };
+
+        (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
+        (prisma.channel.create as any).mockResolvedValue(mockCreatedChannel);
+
+        const result = await controller.createChannel(context as any, 'acme-slug', body);
+
+        expect(result.success).toBe(true);
+        expect(result.data.channel.name).toBe('Engineering');
+        expect(result.data.channel.members[0].permissions).toBe('2048');
+        expect(redisClient.del).toHaveBeenCalledWith('v3:ws:ws-123:channels');
+      });
+    });
+
+    describe('updateChannelMember', () => {
+      it('should update channel member role and permissions', async () => {
+        const body = { role: 'admin', permissions: '4096' };
+        const mockUpdatedMember = {
+          id: 'cm-1',
+          channelId: 'ch-1',
+          userId: 'usr-1',
+          role: 'admin',
+          permissions: 4096n,
+          user: { id: 'usr-1', name: 'Dev' },
+        };
+
+        (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
+        (prisma.channelMember.update as any).mockResolvedValue(mockUpdatedMember);
+
+        const result = await controller.updateChannelMember(context as any, 'acme-slug', 'ch-1', 'usr-1', body);
+
+        expect(result.success).toBe(true);
+        expect(result.data.member.role).toBe('admin');
+        expect(result.data.member.permissions).toBe('4096');
       });
     });
   });

@@ -53,6 +53,18 @@ vi.mock('../generated/v3-server', () => {
       channelsControllerRemoveReaction: vi.fn(async (channelId, messageId, emoji, options) => {
         return { success: true, type: 'channel', action: 'removeReaction', channelId, messageId, emoji, options };
       }),
+      channelsControllerGetChannelMembers: vi.fn(async (slug, channelId, options) => {
+        return { success: true, slug, channelId, members: [], options };
+      }),
+      channelsControllerAddChannelMembers: vi.fn(async (slug, channelId, data, options) => {
+        return { success: true, slug, channelId, data, options };
+      }),
+      channelsControllerUpdateChannelMember: vi.fn(async (slug, channelId, targetUserId, data, options) => {
+        return { success: true, slug, channelId, targetUserId, data, options };
+      }),
+      channelsControllerRemoveChannelMember: vi.fn(async (slug, channelId, targetUserId, options) => {
+        return { success: true, slug, channelId, targetUserId, options };
+      }),
 
       // DMs Mock
       dmsControllerGetDms: vi.fn(async (options) => {
@@ -150,6 +162,33 @@ vi.mock('../generated/v3-server', () => {
       }),
       v3WorkspacesControllerDeleteWorkspaceMember: vi.fn(async (slug, memberId, options) => {
         return { success: true, slug, memberId, options };
+      }),
+      v3WorkspacesControllerGetChannels: vi.fn(async (slug, options) => {
+        return { success: true, data: { channels: [] }, slug, options };
+      }),
+      v3WorkspacesControllerCreateChannel: vi.fn(async (slug, data, options) => {
+        return { success: true, data: { channel: { name: data.name } }, slug, options };
+      }),
+      v3WorkspacesControllerGetChannel: vi.fn(async (slug, channelId, options) => {
+        return { success: true, data: { channel: { id: channelId } }, slug, options };
+      }),
+      v3WorkspacesControllerUpdateChannel: vi.fn(async (slug, channelId, data, options) => {
+        return { success: true, data: { channel: { id: channelId } }, slug, data, options };
+      }),
+      v3WorkspacesControllerDeleteChannel: vi.fn(async (slug, channelId, options) => {
+        return { success: true, data: { success: true }, slug, channelId, options };
+      }),
+      v3WorkspacesControllerGetChannelMembers: vi.fn(async (slug, channelId, options) => {
+        return { success: true, data: { members: [] }, slug, channelId, options };
+      }),
+      v3WorkspacesControllerAddChannelMembers: vi.fn(async (slug, channelId, data, options) => {
+        return { success: true, data: { members: [] }, slug, channelId, data, options };
+      }),
+      v3WorkspacesControllerUpdateChannelMember: vi.fn(async (slug, channelId, userId, data, options) => {
+        return { success: true, data: { member: { userId, role: data.role } }, slug, channelId, options };
+      }),
+      v3WorkspacesControllerDeleteChannelMember: vi.fn(async (slug, channelId, userId, options) => {
+        return { success: true, data: { success: true }, slug, channelId, userId, options };
       }),
       v3OAuthControllerGetToken: vi.fn(async (data, options) => {
         return { success: true, data, options };
@@ -486,6 +525,16 @@ describe('ScrymeSDK', () => {
       // m2m.auth.token
       const tokenRes = await sdk.m2m.auth.token('cid', 'sec') as any;
       expect(tokenRes.data.client_id).toBe('cid');
+
+      // m2m.channel
+      const m2mChanList = await sdk.m2m.channel.list('acme') as any;
+      expect(m2mChanList.slug).toBe('acme');
+
+      const m2mChanCreate = await sdk.m2m.channel.create('acme', { name: 'tech', type: 'private' }) as any;
+      expect(m2mChanCreate.data.channel.name).toBe('tech');
+
+      const m2mMemUpdate = await sdk.m2m.channel.member.update('acme', 'ch-1', 'usr-1', { role: 'admin', permissions: '2048' }) as any;
+      expect(m2mMemUpdate.data.member.role).toBe('admin');
     });
 
     it('should support sdk.support ticketing and customer operations', async () => {
