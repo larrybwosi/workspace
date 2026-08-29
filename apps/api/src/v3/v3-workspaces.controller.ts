@@ -160,6 +160,155 @@ const updateMemberSchema = z.object({
   role: z.enum(['owner', 'admin', 'moderator', 'member', 'guest']),
 });
 
+export class V3CreateChannelDto {
+  @IsString()
+  @ApiProperty({ example: 'engineering', description: 'Name of the channel' })
+  name: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ example: 'Engineering discussion channel', required: false })
+  description?: string;
+
+  @IsEnum(['public', 'private'])
+  @IsOptional()
+  @ApiProperty({ example: 'public', enum: ['public', 'private'], required: false, default: 'public' })
+  type?: 'public' | 'private';
+
+  @IsOptional()
+  @ApiProperty({ example: false, required: false, description: 'Explicit private status flag' })
+  isPrivate?: boolean;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ example: 'code', required: false, description: 'Icon identifier' })
+  icon?: string;
+
+  @IsOptional()
+  @ApiProperty({ required: false, description: 'Custom channel metadata' })
+  metadata?: any;
+
+  @IsArray()
+  @IsOptional()
+  @ApiProperty({
+    required: false,
+    description: 'Initial members to add to the channel',
+    type: 'array',
+    items: {
+      type: 'object',
+      properties: {
+        userId: { type: 'string', example: 'usr_123' },
+        role: { type: 'string', example: 'member', enum: ['admin', 'moderator', 'member'] },
+        permissions: { type: 'string', example: '2048' },
+      },
+    },
+  })
+  initialMembers?: { userId: string; role?: string; permissions?: string }[];
+}
+
+const v3CreateChannelSchema = z.object({
+  name: z.string().min(1).max(100),
+  description: z.string().optional(),
+  type: z.enum(['public', 'private']).optional(),
+  isPrivate: z.boolean().optional(),
+  icon: z.string().optional().default('#'),
+  metadata: z.any().optional(),
+  initialMembers: z
+    .array(
+      z.object({
+        userId: z.string().min(1),
+        role: z.string().optional().default('member'),
+        permissions: z.union([z.string(), z.number()]).optional(),
+      })
+    )
+    .optional()
+    .default([]),
+});
+
+export class V3UpdateChannelDto {
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ example: 'eng-tech', required: false })
+  name?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ example: 'Updated engineering channel description', required: false })
+  description?: string;
+
+  @IsEnum(['public', 'private'])
+  @IsOptional()
+  @ApiProperty({ example: 'private', enum: ['public', 'private'], required: false })
+  type?: 'public' | 'private';
+
+  @IsOptional()
+  @ApiProperty({ example: true, required: false })
+  isPrivate?: boolean;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ example: 'terminal', required: false })
+  icon?: string;
+
+  @IsOptional()
+  @ApiProperty({ required: false })
+  metadata?: any;
+}
+
+const v3UpdateChannelSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  description: z.string().optional(),
+  type: z.enum(['public', 'private']).optional(),
+  isPrivate: z.boolean().optional(),
+  icon: z.string().optional(),
+  metadata: z.any().optional(),
+});
+
+export class V3AddChannelMemberDto {
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ example: 'usr_123', required: false, description: 'User ID to add to channel' })
+  userId?: string;
+
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  @ApiProperty({ example: ['usr_123', 'usr_456'], required: false, description: 'Array of user IDs to add' })
+  userIds?: string[];
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ example: 'member', required: false, default: 'member', description: 'Channel role' })
+  role?: string;
+
+  @IsOptional()
+  @ApiProperty({ example: '2048', required: false, description: 'Bitwise permission string or integer value' })
+  permissions?: string | number;
+}
+
+const v3AddChannelMemberSchema = z.object({
+  userId: z.string().optional(),
+  userIds: z.array(z.string()).optional(),
+  role: z.string().optional().default('member'),
+  permissions: z.union([z.string(), z.number()]).optional(),
+});
+
+export class V3UpdateChannelMemberDto {
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ example: 'admin', required: false, enum: ['admin', 'moderator', 'member'] })
+  role?: string;
+
+  @IsOptional()
+  @ApiProperty({ example: '2048', required: false, description: 'Bitwise permission string or integer value' })
+  permissions?: string | number;
+}
+
+const v3UpdateChannelMemberSchema = z.object({
+  role: z.string().optional(),
+  permissions: z.union([z.string(), z.number()]).optional(),
+});
+
 @ApiTags('V3 Workspaces')
 @ApiBearerAuth()
 @AllowAnonymous()
@@ -1005,6 +1154,591 @@ When provisioned via M2M:
     } catch (err) {
       this.logger.warn('Redis error in deleteWorkspaceMember (del):', err);
     }
+
+    return this.formatResponse({ success: true });
+  }
+
+  private async resolveWorkspaceAndCheckAccess(context: ApiV3Context, slug: string) {
+    const workspace = await prisma.workspace.findUnique({
+      where: { slug },
+      select: { id: true, name: true, slug: true, organizationId: true, ownerId: true },
+    });
+
+    if (!workspace) {
+      throw new NotFoundException(`Workspace with slug "${slug}" not found`);
+    }
+
+    if (context.organizationId) {
+      if (workspace.organizationId !== context.organizationId) {
+        throw new ForbiddenException('M2M application is not authorized to access this workspace');
+      }
+    } else if (context.workspaceId) {
+      if (workspace.id !== context.workspaceId) {
+        throw new ForbiddenException('Token is not authorized for this workspace');
+      }
+    } else {
+      const member = await prisma.workspaceMember.findUnique({
+        where: {
+          workspaceId_userId: {
+            workspaceId: workspace.id,
+            userId: context.userId!,
+          },
+        },
+        select: { id: true, role: true },
+      });
+      if (!member) {
+        throw new ForbiddenException('You are not a member of this workspace');
+      }
+    }
+
+    return workspace;
+  }
+
+  @Get(':slug/channels')
+  @ApiOperation({
+    summary: 'List channels in a workspace (Enterprise M2M)',
+    description: 'Retrieve all public channels and authorized private channels in a workspace. Requires channels:read scope.',
+  })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiResponse({ status: 200, description: 'List of channels returned successfully.' })
+  @ApiResponse({ status: 403, description: 'Forbidden: Missing channels:read scope or unauthorized workspace access.' })
+  async getChannels(@V3Context() context: ApiV3Context, @Param('slug') slug: string) {
+    if (!context.scopes.includes('channels:read') && !context.scopes.includes('*')) {
+      throw new ForbiddenException('Missing channels:read scope');
+    }
+
+    const workspace = await this.resolveWorkspaceAndCheckAccess(context, slug);
+
+    const cacheKey = `v3:ws:${workspace.id}:channels`;
+    try {
+      const cached = await this.redis.get(cacheKey);
+      if (cached) {
+        return this.formatResponse({ channels: JSON.parse(cached) });
+      }
+    } catch (err) {
+      this.logger.warn('Redis error in getChannels (get):', err);
+    }
+
+    const channels = await prisma.channel.findMany({
+      where: { workspaceId: workspace.id },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        icon: true,
+        type: true,
+        description: true,
+        isPrivate: true,
+        metadata: true,
+        workspaceId: true,
+        parentId: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+      orderBy: { name: 'asc' },
+    });
+
+    try {
+      await this.redis.setex(cacheKey, 600, JSON.stringify(channels));
+    } catch (err) {
+      this.logger.warn('Redis error in getChannels (setex):', err);
+    }
+
+    return this.formatResponse({ channels });
+  }
+
+  @Post(':slug/channels')
+  @ApiOperation({
+    summary: 'Create a channel in a workspace (Enterprise M2M)',
+    description: 'Create a new channel with customizable visibility, icon, metadata, and members. Requires channels:write scope.',
+  })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiBody({ type: V3CreateChannelDto })
+  @ApiResponse({ status: 201, description: 'Channel created successfully.' })
+  @ApiResponse({ status: 403, description: 'Forbidden: Missing channels:write scope or unauthorized access.' })
+  async createChannel(
+    @V3Context() context: ApiV3Context,
+    @Param('slug') slug: string,
+    @Body() body: V3CreateChannelDto
+  ) {
+    if (!context.scopes.includes('channels:write') && !context.scopes.includes('*')) {
+      throw new ForbiddenException('Missing channels:write scope');
+    }
+
+    const workspace = await this.resolveWorkspaceAndCheckAccess(context, slug);
+
+    const validatedData = v3CreateChannelSchema.safeParse(body);
+    if (!validatedData.success) {
+      throw new BadRequestException(validatedData.error.issues);
+    }
+    const data = validatedData.data;
+
+    const channelSlug = data.name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+
+    const isPrivate = data.isPrivate !== undefined ? data.isPrivate : data.type === 'private';
+    const type = data.type || (isPrivate ? 'private' : 'public');
+
+    const createdById = context.userId || workspace.ownerId;
+
+    const initialMembersToCreate = (data.initialMembers || []).map(m => ({
+      userId: m.userId,
+      role: m.role || 'member',
+      permissions: m.permissions ? BigInt(m.permissions) : null,
+    }));
+
+    if (createdById && !initialMembersToCreate.some(m => m.userId === createdById)) {
+      initialMembersToCreate.push({ userId: createdById, role: 'admin', permissions: null });
+    }
+
+    const channel = await prisma.channel.create({
+      data: {
+        name: data.name,
+        slug: channelSlug,
+        description: data.description,
+        type,
+        isPrivate,
+        icon: data.icon || '#',
+        metadata: data.metadata ?? undefined,
+        workspaceId: workspace.id,
+        createdById,
+        members: {
+          create: initialMembersToCreate,
+        },
+      },
+      include: {
+        members: {
+          include: {
+            user: { select: { id: true, name: true, email: true, avatar: true } },
+          },
+        },
+      },
+    });
+
+    try {
+      await this.redis.del(`v3:ws:${workspace.id}:channels`);
+    } catch (err) {
+      this.logger.warn('Redis error in createChannel (del):', err);
+    }
+
+    prisma.workspaceAuditLog
+      .create({
+        data: {
+          workspaceId: workspace.id,
+          userId: context.userId,
+          action: 'channel.created',
+          resource: 'channel',
+          resourceId: channel.id,
+          metadata: { name: data.name, type, isPrivate } as any,
+        },
+      })
+      .catch(err => this.logger.error('Audit log error in createChannel:', err));
+
+    const formattedChannel = {
+      ...channel,
+      members: channel.members.map(m => ({
+        ...m,
+        permissions: m.permissions ? m.permissions.toString() : null,
+      })),
+    };
+
+    return this.formatResponse({ channel: formattedChannel });
+  }
+
+  @Get(':slug/channels/:channelId')
+  @ApiOperation({
+    summary: 'Get channel details (Enterprise M2M)',
+    description: 'Retrieve details of a specific channel in a workspace. Requires channels:read scope.',
+  })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'channelId', description: 'The channel ID' })
+  @ApiResponse({ status: 200, description: 'Channel details returned successfully.' })
+  @ApiResponse({ status: 404, description: 'Channel not found.' })
+  async getChannel(
+    @V3Context() context: ApiV3Context,
+    @Param('slug') slug: string,
+    @Param('channelId') channelId: string
+  ) {
+    if (!context.scopes.includes('channels:read') && !context.scopes.includes('*')) {
+      throw new ForbiddenException('Missing channels:read scope');
+    }
+
+    const workspace = await this.resolveWorkspaceAndCheckAccess(context, slug);
+
+    const channel = await prisma.channel.findFirst({
+      where: { id: channelId, workspaceId: workspace.id },
+      include: {
+        members: {
+          include: {
+            user: { select: { id: true, name: true, email: true, avatar: true } },
+          },
+        },
+        _count: { select: { members: true, messages: true } },
+      },
+    });
+
+    if (!channel) {
+      throw new NotFoundException('Channel not found in this workspace');
+    }
+
+    const formattedChannel = {
+      ...channel,
+      members: channel.members.map(m => ({
+        ...m,
+        permissions: m.permissions ? m.permissions.toString() : null,
+      })),
+    };
+
+    return this.formatResponse({ channel: formattedChannel });
+  }
+
+  @Patch(':slug/channels/:channelId')
+  @ApiOperation({
+    summary: 'Update channel configuration and visibility (Enterprise M2M)',
+    description: 'Update settings, name, description, icon, metadata, or visibility of a channel. Requires channels:write scope.',
+  })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'channelId', description: 'The channel ID' })
+  @ApiBody({ type: V3UpdateChannelDto })
+  @ApiResponse({ status: 200, description: 'Channel updated successfully.' })
+  @ApiResponse({ status: 404, description: 'Channel not found.' })
+  async updateChannel(
+    @V3Context() context: ApiV3Context,
+    @Param('slug') slug: string,
+    @Param('channelId') channelId: string,
+    @Body() body: V3UpdateChannelDto
+  ) {
+    if (!context.scopes.includes('channels:write') && !context.scopes.includes('*')) {
+      throw new ForbiddenException('Missing channels:write scope');
+    }
+
+    const workspace = await this.resolveWorkspaceAndCheckAccess(context, slug);
+
+    const validatedData = v3UpdateChannelSchema.safeParse(body);
+    if (!validatedData.success) {
+      throw new BadRequestException(validatedData.error.issues);
+    }
+    const data = validatedData.data;
+
+    const isPrivate = data.isPrivate !== undefined ? data.isPrivate : (data.type ? data.type === 'private' : undefined);
+    const type = data.type !== undefined ? data.type : (isPrivate !== undefined ? (isPrivate ? 'private' : 'public') : undefined);
+
+    try {
+      const updatedChannel = await prisma.channel.update({
+        where: { id: channelId, workspaceId: workspace.id },
+        data: {
+          ...(data.name && { name: data.name }),
+          ...(data.description !== undefined && { description: data.description }),
+          ...(type !== undefined && { type }),
+          ...(isPrivate !== undefined && { isPrivate }),
+          ...(data.icon && { icon: data.icon }),
+          ...(data.metadata !== undefined && { metadata: data.metadata }),
+        },
+        include: {
+          members: {
+            include: {
+              user: { select: { id: true, name: true, email: true, avatar: true } },
+            },
+          },
+        },
+      });
+
+      try {
+        await this.redis.del(`v3:ws:${workspace.id}:channels`);
+      } catch (err) {
+        this.logger.warn('Redis error in updateChannel (del):', err);
+      }
+
+      prisma.workspaceAuditLog
+        .create({
+          data: {
+            workspaceId: workspace.id,
+            userId: context.userId,
+            action: 'channel.updated',
+            resource: 'channel',
+            resourceId: channelId,
+            metadata: data as any,
+          },
+        })
+        .catch(err => this.logger.error('Audit log error in updateChannel:', err));
+
+      const formattedChannel = {
+        ...updatedChannel,
+        members: updatedChannel.members.map(m => ({
+          ...m,
+          permissions: m.permissions ? m.permissions.toString() : null,
+        })),
+      };
+
+      return this.formatResponse({ channel: formattedChannel });
+    } catch (error: any) {
+      if (error.code === 'P2025') {
+        throw new NotFoundException('Channel not found in this workspace');
+      }
+      throw error;
+    }
+  }
+
+  @Delete(':slug/channels/:channelId')
+  @ApiOperation({
+    summary: 'Delete a channel (Enterprise M2M)',
+    description: 'Permanently deletes a channel from a workspace. Requires channels:write scope.',
+  })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'channelId', description: 'The channel ID' })
+  @ApiResponse({ status: 200, description: 'Channel deleted successfully.' })
+  @ApiResponse({ status: 404, description: 'Channel not found.' })
+  async deleteChannel(
+    @V3Context() context: ApiV3Context,
+    @Param('slug') slug: string,
+    @Param('channelId') channelId: string
+  ) {
+    if (!context.scopes.includes('channels:write') && !context.scopes.includes('*')) {
+      throw new ForbiddenException('Missing channels:write scope');
+    }
+
+    const workspace = await this.resolveWorkspaceAndCheckAccess(context, slug);
+
+    try {
+      await prisma.channel.delete({
+        where: { id: channelId, workspaceId: workspace.id },
+      });
+
+      try {
+        await this.redis.del(`v3:ws:${workspace.id}:channels`);
+      } catch (err) {
+        this.logger.warn('Redis error in deleteChannel (del):', err);
+      }
+
+      prisma.workspaceAuditLog
+        .create({
+          data: {
+            workspaceId: workspace.id,
+            userId: context.userId,
+            action: 'channel.deleted',
+            resource: 'channel',
+            resourceId: channelId,
+          },
+        })
+        .catch(err => this.logger.error('Audit log error in deleteChannel:', err));
+
+      return this.formatResponse({ success: true });
+    } catch (error: any) {
+      if (error.code === 'P2025') {
+        throw new NotFoundException('Channel not found in this workspace');
+      }
+      throw error;
+    }
+  }
+
+  @Get(':slug/channels/:channelId/members')
+  @ApiOperation({
+    summary: 'List channel members (Enterprise M2M)',
+    description: 'Retrieve members belonging to a specific channel. Requires channels:read scope.',
+  })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'channelId', description: 'The channel ID' })
+  @ApiResponse({ status: 200, description: 'List of channel members returned successfully.' })
+  async getChannelMembers(
+    @V3Context() context: ApiV3Context,
+    @Param('slug') slug: string,
+    @Param('channelId') channelId: string
+  ) {
+    if (!context.scopes.includes('channels:read') && !context.scopes.includes('*')) {
+      throw new ForbiddenException('Missing channels:read scope');
+    }
+
+    const workspace = await this.resolveWorkspaceAndCheckAccess(context, slug);
+
+    const members = await prisma.channelMember.findMany({
+      where: { channelId, channel: { workspaceId: workspace.id } },
+      include: {
+        user: { select: { id: true, name: true, email: true, avatar: true, status: true } },
+      },
+    });
+
+    const formattedMembers = members.map(m => ({
+      ...m,
+      permissions: m.permissions ? m.permissions.toString() : null,
+    }));
+
+    return this.formatResponse({ members: formattedMembers });
+  }
+
+  @Post(':slug/channels/:channelId/members')
+  @ApiOperation({
+    summary: 'Add members to a channel (Enterprise M2M)',
+    description: 'Add user(s) to a channel with customizable role and permissions. Requires channels:write scope.',
+  })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'channelId', description: 'The channel ID' })
+  @ApiBody({ type: V3AddChannelMemberDto })
+  @ApiResponse({ status: 201, description: 'Members added to channel successfully.' })
+  async addChannelMembers(
+    @V3Context() context: ApiV3Context,
+    @Param('slug') slug: string,
+    @Param('channelId') channelId: string,
+    @Body() body: V3AddChannelMemberDto
+  ) {
+    if (!context.scopes.includes('channels:write') && !context.scopes.includes('*')) {
+      throw new ForbiddenException('Missing channels:write scope');
+    }
+
+    const workspace = await this.resolveWorkspaceAndCheckAccess(context, slug);
+
+    const validatedData = v3AddChannelMemberSchema.safeParse(body);
+    if (!validatedData.success) {
+      throw new BadRequestException(validatedData.error.issues);
+    }
+    const data = validatedData.data;
+
+    const userIdsToAdd = data.userIds || (data.userId ? [data.userId] : []);
+    if (userIdsToAdd.length === 0) {
+      throw new BadRequestException('userId or userIds required');
+    }
+
+    const channel = await prisma.channel.findUnique({
+      where: { id: channelId, workspaceId: workspace.id },
+    });
+
+    if (!channel) {
+      throw new NotFoundException('Channel not found in this workspace');
+    }
+
+    let permissionsBigInt: bigint | null = null;
+    if (data.permissions !== undefined) {
+      try {
+        permissionsBigInt = BigInt(data.permissions);
+      } catch (err) {
+        throw new BadRequestException('Invalid bitwise permissions format');
+      }
+    }
+
+    await prisma.channelMember.createMany({
+      data: userIdsToAdd.map(uId => ({
+        channelId,
+        userId: uId,
+        role: data.role || 'member',
+        permissions: permissionsBigInt,
+      })),
+      skipDuplicates: true,
+    });
+
+    const members = await prisma.channelMember.findMany({
+      where: { channelId },
+      include: {
+        user: { select: { id: true, name: true, email: true, avatar: true } },
+      },
+    });
+
+    const formattedMembers = members.map(m => ({
+      ...m,
+      permissions: m.permissions ? m.permissions.toString() : null,
+    }));
+
+    return this.formatResponse({ members: formattedMembers });
+  }
+
+  @Patch(':slug/channels/:channelId/members/:userId')
+  @ApiOperation({
+    summary: 'Update channel member role and permissions (Enterprise M2M)',
+    description: 'Update the role or bitwise permissions of a channel member. Requires channels:write scope.',
+  })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'channelId', description: 'The channel ID' })
+  @ApiParam({ name: 'userId', description: 'The user ID' })
+  @ApiBody({ type: V3UpdateChannelMemberDto })
+  @ApiResponse({ status: 200, description: 'Channel member updated successfully.' })
+  @ApiResponse({ status: 404, description: 'Member not found in channel.' })
+  async updateChannelMember(
+    @V3Context() context: ApiV3Context,
+    @Param('slug') slug: string,
+    @Param('channelId') channelId: string,
+    @Param('userId') userId: string,
+    @Body() body: V3UpdateChannelMemberDto
+  ) {
+    if (!context.scopes.includes('channels:write') && !context.scopes.includes('*')) {
+      throw new ForbiddenException('Missing channels:write scope');
+    }
+
+    const workspace = await this.resolveWorkspaceAndCheckAccess(context, slug);
+
+    const validatedData = v3UpdateChannelMemberSchema.safeParse(body);
+    if (!validatedData.success) {
+      throw new BadRequestException(validatedData.error.issues);
+    }
+    const data = validatedData.data;
+
+    let permissionsBigInt: bigint | undefined = undefined;
+    if (data.permissions !== undefined) {
+      try {
+        permissionsBigInt = BigInt(data.permissions);
+      } catch (err) {
+        throw new BadRequestException('Invalid bitwise permissions format');
+      }
+    }
+
+    try {
+      const updatedMember = await prisma.channelMember.update({
+        where: {
+          channelId_userId: {
+            channelId,
+            userId,
+          },
+        },
+        data: {
+          ...(data.role && { role: data.role }),
+          ...(permissionsBigInt !== undefined && { permissions: permissionsBigInt }),
+        },
+        include: {
+          user: { select: { id: true, name: true, email: true, avatar: true } },
+        },
+      });
+
+      return this.formatResponse({
+        member: {
+          ...updatedMember,
+          permissions: updatedMember.permissions ? updatedMember.permissions.toString() : null,
+        },
+      });
+    } catch (error: any) {
+      if (error.code === 'P2025') {
+        throw new NotFoundException('Member not found in this channel');
+      }
+      throw error;
+    }
+  }
+
+  @Delete(':slug/channels/:channelId/members/:userId')
+  @ApiOperation({
+    summary: 'Remove a member from a channel (Enterprise M2M)',
+    description: 'Remove a specific member from a channel. Requires channels:write scope.',
+  })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'channelId', description: 'The channel ID' })
+  @ApiParam({ name: 'userId', description: 'The user ID' })
+  @ApiResponse({ status: 200, description: 'Member removed from channel successfully.' })
+  async deleteChannelMember(
+    @V3Context() context: ApiV3Context,
+    @Param('slug') slug: string,
+    @Param('channelId') channelId: string,
+    @Param('userId') userId: string
+  ) {
+    if (!context.scopes.includes('channels:write') && !context.scopes.includes('*')) {
+      throw new ForbiddenException('Missing channels:write scope');
+    }
+
+    const workspace = await this.resolveWorkspaceAndCheckAccess(context, slug);
+
+    await prisma.channelMember.deleteMany({
+      where: {
+        channelId,
+        userId,
+        channel: { workspaceId: workspace.id },
+      },
+    });
 
     return this.formatResponse({ success: true });
   }

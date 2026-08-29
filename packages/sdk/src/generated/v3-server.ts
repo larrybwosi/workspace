@@ -273,11 +273,6 @@ export type V3WorkspacesControllerDeleteWorkspace200 = {
   timestamp?: string;
 };
 
-/**
- * @nullable
- */
-export type V3WorkspacesControllerUpdateWorkspace200DataWorkspaceBrandingConfig = { [key: string]: unknown } | null;
-
 export type V3WorkspacesControllerUpdateWorkspace200DataWorkspace = {
   /** @nullable */
   brandingConfig?: V3WorkspacesControllerUpdateWorkspace200DataWorkspaceBrandingConfig;
@@ -303,11 +298,10 @@ export type V3WorkspacesControllerUpdateWorkspace200 = {
   timestamp?: string;
 };
 
-export type V3WorkspacesControllerGetWorkspaceBySlug200 = {
-  data?: V3WorkspacesControllerGetWorkspaceBySlug200Data;
-  success?: boolean;
-  timestamp?: string;
-};
+/**
+ * @nullable
+ */
+export type V3WorkspacesControllerUpdateWorkspace200DataWorkspaceBrandingConfig = { [key: string]: unknown } | null;
 
 /**
  * @nullable
@@ -333,8 +327,8 @@ export type V3WorkspacesControllerGetWorkspaceBySlug200Data = {
   workspace?: V3WorkspacesControllerGetWorkspaceBySlug200DataWorkspace;
 };
 
-export type V3WorkspacesControllerProvisionWorkspace201 = {
-  data?: V3WorkspacesControllerProvisionWorkspace201Data;
+export type V3WorkspacesControllerGetWorkspaceBySlug200 = {
+  data?: V3WorkspacesControllerGetWorkspaceBySlug200Data;
   success?: boolean;
   timestamp?: string;
 };
@@ -354,6 +348,12 @@ export type V3WorkspacesControllerProvisionWorkspace201DataBot = {
 export type V3WorkspacesControllerProvisionWorkspace201Data = {
   bot?: V3WorkspacesControllerProvisionWorkspace201DataBot;
   workspace?: V3WorkspacesControllerProvisionWorkspace201DataWorkspace;
+};
+
+export type V3WorkspacesControllerProvisionWorkspace201 = {
+  data?: V3WorkspacesControllerProvisionWorkspace201Data;
+  success?: boolean;
+  timestamp?: string;
 };
 
 export type V3WorkspacesControllerGetWorkspaces200DataWorkspacesItem = {
@@ -635,6 +635,43 @@ export interface CreateWorkspaceDepartmentDto {
   slug: string;
 }
 
+export type UpdateChannelMemberDtoRole = typeof UpdateChannelMemberDtoRole[keyof typeof UpdateChannelMemberDtoRole];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UpdateChannelMemberDtoRole = {
+  admin: 'admin',
+  moderator: 'moderator',
+  member: 'member',
+} as const;
+
+/**
+ * Bitwise permission string or integer value
+ */
+export type UpdateChannelMemberDtoPermissions = { [key: string]: unknown };
+
+export interface UpdateChannelMemberDto {
+  /** Bitwise permission string or integer value */
+  permissions?: UpdateChannelMemberDtoPermissions;
+  role?: UpdateChannelMemberDtoRole;
+}
+
+/**
+ * Bitwise permission string or integer value
+ */
+export type AddChannelMemberDtoPermissions = { [key: string]: unknown };
+
+export interface AddChannelMemberDto {
+  /** Bitwise permission string or integer value */
+  permissions?: AddChannelMemberDtoPermissions;
+  /** Channel role */
+  role?: string;
+  /** User ID to add */
+  userId?: string;
+  /** Array of user IDs to add */
+  userIds?: string[];
+}
+
 export type UpdateWorkspaceChannelDtoType = typeof UpdateWorkspaceChannelDtoType[keyof typeof UpdateWorkspaceChannelDtoType];
 
 
@@ -644,9 +681,18 @@ export const UpdateWorkspaceChannelDtoType = {
   private: 'private',
 } as const;
 
+/**
+ * Custom channel metadata or branding settings
+ */
+export type UpdateWorkspaceChannelDtoMetadata = { [key: string]: unknown };
+
 export interface UpdateWorkspaceChannelDto {
   description?: string;
   icon?: string;
+  /** Explicit private status flag */
+  isPrivate?: boolean;
+  /** Custom channel metadata or branding settings */
+  metadata?: UpdateWorkspaceChannelDtoMetadata;
   name?: string;
   type?: UpdateWorkspaceChannelDtoType;
 }
@@ -660,10 +706,19 @@ export const CreateWorkspaceChannelDtoType = {
   private: 'private',
 } as const;
 
+/**
+ * Custom channel metadata or branding settings
+ */
+export type CreateWorkspaceChannelDtoMetadata = { [key: string]: unknown };
+
 export interface CreateWorkspaceChannelDto {
   departmentId?: string;
   description?: string;
   icon?: string;
+  /** Explicit private status flag */
+  isPrivate?: boolean;
+  /** Custom channel metadata or branding settings */
+  metadata?: CreateWorkspaceChannelDtoMetadata;
   name: string;
   type?: CreateWorkspaceChannelDtoType;
 }
@@ -791,13 +846,6 @@ export const CreateIntegrationDtoService = {
   huly: 'huly',
 } as const;
 
-export interface CreateIntegrationDto {
-  config: CreateIntegrationDtoConfig;
-  description?: string;
-  name: string;
-  service: CreateIntegrationDtoService;
-}
-
 export type CreateIntegrationDtoConfigCustomHeaders = { [key: string]: unknown };
 
 export type CreateIntegrationDtoConfig = {
@@ -814,6 +862,13 @@ export type CreateIntegrationDtoConfig = {
   teamId?: string;
   webhookUrl?: string;
 };
+
+export interface CreateIntegrationDto {
+  config: CreateIntegrationDtoConfig;
+  description?: string;
+  name: string;
+  service: CreateIntegrationDtoService;
+}
 
 export interface CreateIntegrationWebhookDto {
   events: string[];
@@ -918,6 +973,108 @@ export interface V3CreateWebhookDto {
   events: string[];
   name: string;
   url: string;
+}
+
+export type V3UpdateChannelMemberDtoRole = typeof V3UpdateChannelMemberDtoRole[keyof typeof V3UpdateChannelMemberDtoRole];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const V3UpdateChannelMemberDtoRole = {
+  admin: 'admin',
+  moderator: 'moderator',
+  member: 'member',
+} as const;
+
+/**
+ * Bitwise permission string or integer value
+ */
+export type V3UpdateChannelMemberDtoPermissions = { [key: string]: unknown };
+
+export interface V3UpdateChannelMemberDto {
+  /** Bitwise permission string or integer value */
+  permissions?: V3UpdateChannelMemberDtoPermissions;
+  role?: V3UpdateChannelMemberDtoRole;
+}
+
+/**
+ * Bitwise permission string or integer value
+ */
+export type V3AddChannelMemberDtoPermissions = { [key: string]: unknown };
+
+export interface V3AddChannelMemberDto {
+  /** Bitwise permission string or integer value */
+  permissions?: V3AddChannelMemberDtoPermissions;
+  /** Channel role */
+  role?: string;
+  /** User ID to add to channel */
+  userId?: string;
+  /** Array of user IDs to add */
+  userIds?: string[];
+}
+
+export type V3UpdateChannelDtoType = typeof V3UpdateChannelDtoType[keyof typeof V3UpdateChannelDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const V3UpdateChannelDtoType = {
+  public: 'public',
+  private: 'private',
+} as const;
+
+export type V3UpdateChannelDtoMetadata = { [key: string]: unknown };
+
+export interface V3UpdateChannelDto {
+  description?: string;
+  icon?: string;
+  isPrivate?: boolean;
+  metadata?: V3UpdateChannelDtoMetadata;
+  name?: string;
+  type?: V3UpdateChannelDtoType;
+}
+
+export type V3CreateChannelDtoType = typeof V3CreateChannelDtoType[keyof typeof V3CreateChannelDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const V3CreateChannelDtoType = {
+  public: 'public',
+  private: 'private',
+} as const;
+
+/**
+ * Custom channel metadata
+ */
+export type V3CreateChannelDtoMetadata = { [key: string]: unknown };
+
+export type V3CreateChannelDtoInitialMembersItemRole = typeof V3CreateChannelDtoInitialMembersItemRole[keyof typeof V3CreateChannelDtoInitialMembersItemRole];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const V3CreateChannelDtoInitialMembersItemRole = {
+  admin: 'admin',
+  moderator: 'moderator',
+  member: 'member',
+} as const;
+
+export type V3CreateChannelDtoInitialMembersItem = {
+  permissions?: string;
+  role?: V3CreateChannelDtoInitialMembersItemRole;
+  userId?: string;
+};
+
+export interface V3CreateChannelDto {
+  description?: string;
+  /** Icon identifier */
+  icon?: string;
+  /** Initial members to add to the channel */
+  initialMembers?: V3CreateChannelDtoInitialMembersItem[];
+  /** Explicit private status flag */
+  isPrivate?: boolean;
+  /** Custom channel metadata */
+  metadata?: V3CreateChannelDtoMetadata;
+  /** Name of the channel */
+  name: string;
+  type?: V3CreateChannelDtoType;
 }
 
 export type V3UpdateMemberRoleDtoRole = typeof V3UpdateMemberRoleDtoRole[keyof typeof V3UpdateMemberRoleDtoRole];
@@ -1641,6 +1798,144 @@ const v3WorkspacesControllerDeleteWorkspaceMember = (
  options?: SecondParameter<typeof customInstance>,) => {
       return customInstance<void>(
       {url: `/api/v3/workspaces/${slug}/members/${userId}`, method: 'DELETE'
+    },
+      options);
+    }
+
+/**
+ * Retrieve all public channels and authorized private channels in a workspace. Requires channels:read scope.
+ * @summary List channels in a workspace (Enterprise M2M)
+ */
+const v3WorkspacesControllerGetChannels = (
+    slug: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/channels`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * Create a new channel with customizable visibility, icon, metadata, and members. Requires channels:write scope.
+ * @summary Create a channel in a workspace (Enterprise M2M)
+ */
+const v3WorkspacesControllerCreateChannel = (
+    slug: string,
+    v3CreateChannelDto: BodyType<V3CreateChannelDto>,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/channels`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: v3CreateChannelDto
+    },
+      options);
+    }
+
+/**
+ * Retrieve details of a specific channel in a workspace. Requires channels:read scope.
+ * @summary Get channel details (Enterprise M2M)
+ */
+const v3WorkspacesControllerGetChannel = (
+    slug: string,
+    channelId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/channels/${channelId}`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * Update settings, name, description, icon, metadata, or visibility of a channel. Requires channels:write scope.
+ * @summary Update channel configuration and visibility (Enterprise M2M)
+ */
+const v3WorkspacesControllerUpdateChannel = (
+    slug: string,
+    channelId: string,
+    v3UpdateChannelDto: BodyType<V3UpdateChannelDto>,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/channels/${channelId}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: v3UpdateChannelDto
+    },
+      options);
+    }
+
+/**
+ * Permanently deletes a channel from a workspace. Requires channels:write scope.
+ * @summary Delete a channel (Enterprise M2M)
+ */
+const v3WorkspacesControllerDeleteChannel = (
+    slug: string,
+    channelId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/channels/${channelId}`, method: 'DELETE'
+    },
+      options);
+    }
+
+/**
+ * Retrieve members belonging to a specific channel. Requires channels:read scope.
+ * @summary List channel members (Enterprise M2M)
+ */
+const v3WorkspacesControllerGetChannelMembers = (
+    slug: string,
+    channelId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/channels/${channelId}/members`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * Add user(s) to a channel with customizable role and permissions. Requires channels:write scope.
+ * @summary Add members to a channel (Enterprise M2M)
+ */
+const v3WorkspacesControllerAddChannelMembers = (
+    slug: string,
+    channelId: string,
+    v3AddChannelMemberDto: BodyType<V3AddChannelMemberDto>,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/channels/${channelId}/members`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: v3AddChannelMemberDto
+    },
+      options);
+    }
+
+/**
+ * Update the role or bitwise permissions of a channel member. Requires channels:write scope.
+ * @summary Update channel member role and permissions (Enterprise M2M)
+ */
+const v3WorkspacesControllerUpdateChannelMember = (
+    slug: string,
+    channelId: string,
+    userId: string,
+    v3UpdateChannelMemberDto: BodyType<V3UpdateChannelMemberDto>,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/channels/${channelId}/members/${userId}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: v3UpdateChannelMemberDto
+    },
+      options);
+    }
+
+/**
+ * Remove a specific member from a channel. Requires channels:write scope.
+ * @summary Remove a member from a channel (Enterprise M2M)
+ */
+const v3WorkspacesControllerDeleteChannelMember = (
+    slug: string,
+    channelId: string,
+    userId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/channels/${channelId}/members/${userId}`, method: 'DELETE'
     },
       options);
     }
@@ -3208,9 +3503,29 @@ const channelsControllerGetChannelMembers = (
 const channelsControllerAddChannelMembers = (
     slug: string,
     channelId: string,
+    addChannelMemberDto: BodyType<AddChannelMemberDto>,
  options?: SecondParameter<typeof customInstance>,) => {
       return customInstance<void>(
-      {url: `/api/workspaces/${slug}/channels/${channelId}/members`, method: 'POST'
+      {url: `/api/workspaces/${slug}/channels/${channelId}/members`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: addChannelMemberDto
+    },
+      options);
+    }
+
+/**
+ * @summary Update channel member role and permissions
+ */
+const channelsControllerUpdateChannelMember = (
+    slug: string,
+    channelId: string,
+    targetUserId: string,
+    updateChannelMemberDto: BodyType<UpdateChannelMemberDto>,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/workspaces/${slug}/channels/${channelId}/members/${targetUserId}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateChannelMemberDto
     },
       options);
     }
@@ -3990,7 +4305,7 @@ const supportControllerGetCustomerProfiles = (
       options);
     }
 
-return {appControllerGetHealth,appControllerGetHello,appControllerGetRealtimeConfig,appControllerGetLinkPreview,usersControllerGetUsers,usersControllerSearchUsers,usersControllerGetMe,usersControllerPatchMe,usersControllerUpdateMe,usersControllerGetUser,usersControllerPatchUser,usersControllerGetSocialProfile,usersControllerBlockUser,usersControllerUnblockUser,usersControllerUpdateMyStatus,usersControllerRegisterDeviceToken,usersControllerGetDeviceTokens,usersControllerDeleteDeviceToken,v10UsersControllerGetUser,v10UsersControllerGetMe,v10GatewayControllerGetBotGateway,v10GatewayControllerBotAuth,v10ChannelsControllerGetChannel,v10ChannelsControllerCreateMessage,v10ChannelsControllerGetMessages,v10ChannelsControllerUpdateMessage,v10ChannelsControllerDeleteMessage,v10GuildsControllerGetGuild,v10GuildsControllerGetChannels,v10GuildsControllerGetMembers,v10GuildsControllerGetRoles,v10GuildsControllerAddMemberRole,v10GuildsControllerRemoveMemberRole,v10ApplicationsControllerGetCommands,v10ApplicationsControllerCreateCommand,v10ApplicationsControllerGetGuildCommands,v10ApplicationsControllerCreateGuildCommand,v10InteractionsControllerHandleCallback,v10EnterpriseControllerCreateAnnouncement,v3OAuthControllerGetToken,v3WorkspacesControllerGetWorkspaces,v3WorkspacesControllerProvisionWorkspace,v3WorkspacesControllerGetWorkspaceBySlug,v3WorkspacesControllerUpdateWorkspace,v3WorkspacesControllerDeleteWorkspace,v3WorkspacesControllerGetWorkspaceMembers,v3WorkspacesControllerAddWorkspaceMember,v3WorkspacesControllerGetWorkspaceMember,v3WorkspacesControllerUpdateWorkspaceMember,v3WorkspacesControllerDeleteWorkspaceMember,v3WebhooksControllerGetWebhooks,v3WebhooksControllerCreateWebhook,v3WebhooksControllerGetWebhook,v3WebhooksControllerUpdateWebhook,v3WebhooksControllerDeleteWebhook,v3ChannelIncomingWebhooksControllerGetChannelWebhooks,v3ChannelIncomingWebhooksControllerCreateChannelWebhook,v3ChannelIncomingWebhooksControllerGetChannelWebhook,v3ChannelIncomingWebhooksControllerUpdateChannelWebhook,v3ChannelIncomingWebhooksControllerDeleteChannelWebhook,v3ChannelIncomingWebhooksControllerExecuteWebhookByUrlToken,v3ChannelIncomingWebhooksControllerExecuteWebhookByChannelId,v3OrganizationsControllerGetOrganizationWorkspaces,v3OrganizationsControllerGetOrganization,v3OrganizationsControllerUpdateOrganization,v3OrganizationsControllerGetM2mApplications,v3OrganizationsControllerCreateM2mApplication,v3OrganizationsControllerUpdateM2mApplication,v3OrganizationsControllerDeleteM2mApplication,notificationsControllerGetNotifications,notificationsControllerGetNotificationById,notificationsControllerUpdateNotification,notificationsControllerDeleteNotification,notificationsControllerMarkAllRead,notificationsControllerGetWorkspaceSettings,notificationsControllerUpdateWorkspaceSettings,notificationsControllerGetChannelSettings,notificationsControllerUpdateChannelSettings,invitationsControllerGetInvitations,invitationsControllerCreateInvitation,invitationsControllerGetInvitationByToken,invitationsControllerAcceptInvitation,integrationsControllerHandlePlaneWebhook,integrationsControllerHandleHulyWebhook,integrationsControllerGetStats,integrationsControllerGetWebhooks,integrationsControllerCreateWebhook,integrationsControllerUpdateWebhook,integrationsControllerDeleteWebhook,integrationsControllerGetWebhookLogs,integrationsControllerGetApiKeys,integrationsControllerUpdateApiKey,integrationsControllerDeleteApiKey,workspaceIntegrationsControllerGetWorkspaceIntegrations,workspaceIntegrationsControllerCreateWorkspaceIntegration,workspaceIntegrationsControllerGetWorkspaceIntegration,workspaceIntegrationsControllerUpdateWorkspaceIntegration,workspaceIntegrationsControllerDeleteWorkspaceIntegration,workspaceIntegrationsControllerTestWorkspaceIntegration,workspaceIntegrationsControllerGetWorkspaceWebhooks,workspaceIntegrationsControllerCreateWorkspaceWebhook,ablyControllerGetToken,storageControllerUploadFile,shortUrlControllerRedirect,callsControllerStartCall,callsControllerUpdateCall,callsControllerInviteToCall,callsControllerGetParticipants,callsControllerGetScheduledCalls,callsControllerScheduleCall,callsControllerPlaySoundboardSound,channelsControllerGetGlobalChannels,channelsControllerCreateChannel,channelsControllerGetMessages,channelsControllerCreateMessage,channelsControllerUpdateMessage,channelsControllerDeleteMessage,channelsControllerMarkAsRead,channelsControllerAddReaction,channelsControllerRemoveReaction,channelsControllerShareChannel,channelsControllerCreateReply,adminControllerGetStats,adminControllerGetMembers,adminControllerUpdateMemberRole,adminControllerGetAssets,adminControllerCreateAsset,adminControllerUpdateAsset,adminControllerDeleteAsset,adminControllerGetProfileAssets,adminControllerCreateProfileAsset,adminControllerGetAssetStats,adminControllerUploadFile,dmsControllerGetDms,dmsControllerCreateDm,dmsControllerGetDm,dmsControllerDeleteDm,dmsControllerGetMessages,dmsControllerCreateMessage,dmsControllerUpdateMessage,dmsControllerDeleteMessage,dmsControllerMarkAsRead,dmsControllerAddReaction,dmsControllerRemoveReaction,friendsControllerGetFriends,friendsControllerGetFriendRequests,friendsControllerSendFriendRequest,friendsControllerUpdateFriendRequest,friendsControllerDeleteFriendRequest,workspacesControllerGetWorkspaces,workspacesControllerCreateWorkspace,workspacesControllerGetWorkspaceRoles,workspacesControllerGetWorkspaceSlugRoles,workspacesControllerDiscoverWorkspaces,workspacesControllerJoinWorkspace,workspacesControllerGetWorkspaceBySlug,workspacesControllerUpdateWorkspaceBySlug,workspacesControllerDeleteWorkspaceBySlug,membersControllerGetWorkspaceMembers,membersControllerUpdateMember,membersControllerRemoveMember,channelsControllerGetWorkspaceChannels,channelsControllerGetChannel,channelsControllerUpdateChannel,channelsControllerDeleteChannel,channelsControllerGetChannelMembers,channelsControllerAddChannelMembers,channelsControllerRemoveChannelMember,departmentsControllerGetDepartments,departmentsControllerCreateDepartment,departmentsControllerGetDepartment,departmentsControllerUpdateDepartment,departmentsControllerDeleteDepartment,departmentsControllerGetAnnouncements,departmentsControllerCreateAnnouncement,teamsControllerGetTeams,teamsControllerCreateTeam,teamsControllerAddMember,teamsControllerRemoveMember,messagesControllerGetMessages,messagesControllerCreateMessage,messagesControllerUpdateMessage,messagesControllerDeleteMessage,messagesControllerMarkAsRead,messagesControllerAddReaction,messagesControllerRemoveReaction,messagesControllerCreateReply,emojisControllerGetEmojis,emojisControllerCreateEmoji,auditLogsControllerGetAuditLogs,auditLogsControllerExportAuditLogs,inviteLinksControllerGetInviteLinks,inviteLinksControllerCreateInviteLink,apiTokensControllerGetApiTokens,apiTokensControllerCreateApiToken,apiTokensControllerDeleteApiToken,webhooksControllerGetWebhooks,webhooksControllerCreateWebhook,webhooksControllerUpdateWebhook,webhooksControllerDeleteWebhook,callsControllerGetActiveCalls,searchControllerSearch,deviceAuthControllerGenerateQR,deviceAuthControllerCheckStatus,deviceAuthControllerAuthorize,deviceAuthControllerDeny,androidAuthControllerGetProfile,androidAuthControllerChangePassword,androidAuthControllerCheckUsername,androidAuthControllerLogin,androidAuthControllerSignup,androidAuthControllerGoogleLogin,androidAuthControllerGithubLogin,androidAuthControllerRefresh,scheduledNotificationsControllerGetNotifications,scheduledNotificationsControllerCreateNotification,scheduledNotificationsControllerUpdateNotification,scheduledNotificationsControllerDeleteNotification,assetsControllerGetEligibleAssets,supportControllerCreateTicket,supportControllerGetTickets,supportControllerStartLiveChat,supportControllerEndLiveChat,supportControllerUpdateTicketStatus,supportControllerAssignTicket,supportControllerCreateCustomerProfile,supportControllerGetCustomerProfiles}};
+return {appControllerGetHealth,appControllerGetHello,appControllerGetRealtimeConfig,appControllerGetLinkPreview,usersControllerGetUsers,usersControllerSearchUsers,usersControllerGetMe,usersControllerPatchMe,usersControllerUpdateMe,usersControllerGetUser,usersControllerPatchUser,usersControllerGetSocialProfile,usersControllerBlockUser,usersControllerUnblockUser,usersControllerUpdateMyStatus,usersControllerRegisterDeviceToken,usersControllerGetDeviceTokens,usersControllerDeleteDeviceToken,v10UsersControllerGetUser,v10UsersControllerGetMe,v10GatewayControllerGetBotGateway,v10GatewayControllerBotAuth,v10ChannelsControllerGetChannel,v10ChannelsControllerCreateMessage,v10ChannelsControllerGetMessages,v10ChannelsControllerUpdateMessage,v10ChannelsControllerDeleteMessage,v10GuildsControllerGetGuild,v10GuildsControllerGetChannels,v10GuildsControllerGetMembers,v10GuildsControllerGetRoles,v10GuildsControllerAddMemberRole,v10GuildsControllerRemoveMemberRole,v10ApplicationsControllerGetCommands,v10ApplicationsControllerCreateCommand,v10ApplicationsControllerGetGuildCommands,v10ApplicationsControllerCreateGuildCommand,v10InteractionsControllerHandleCallback,v10EnterpriseControllerCreateAnnouncement,v3OAuthControllerGetToken,v3WorkspacesControllerGetWorkspaces,v3WorkspacesControllerProvisionWorkspace,v3WorkspacesControllerGetWorkspaceBySlug,v3WorkspacesControllerUpdateWorkspace,v3WorkspacesControllerDeleteWorkspace,v3WorkspacesControllerGetWorkspaceMembers,v3WorkspacesControllerAddWorkspaceMember,v3WorkspacesControllerGetWorkspaceMember,v3WorkspacesControllerUpdateWorkspaceMember,v3WorkspacesControllerDeleteWorkspaceMember,v3WorkspacesControllerGetChannels,v3WorkspacesControllerCreateChannel,v3WorkspacesControllerGetChannel,v3WorkspacesControllerUpdateChannel,v3WorkspacesControllerDeleteChannel,v3WorkspacesControllerGetChannelMembers,v3WorkspacesControllerAddChannelMembers,v3WorkspacesControllerUpdateChannelMember,v3WorkspacesControllerDeleteChannelMember,v3WebhooksControllerGetWebhooks,v3WebhooksControllerCreateWebhook,v3WebhooksControllerGetWebhook,v3WebhooksControllerUpdateWebhook,v3WebhooksControllerDeleteWebhook,v3ChannelIncomingWebhooksControllerGetChannelWebhooks,v3ChannelIncomingWebhooksControllerCreateChannelWebhook,v3ChannelIncomingWebhooksControllerGetChannelWebhook,v3ChannelIncomingWebhooksControllerUpdateChannelWebhook,v3ChannelIncomingWebhooksControllerDeleteChannelWebhook,v3ChannelIncomingWebhooksControllerExecuteWebhookByUrlToken,v3ChannelIncomingWebhooksControllerExecuteWebhookByChannelId,v3OrganizationsControllerGetOrganizationWorkspaces,v3OrganizationsControllerGetOrganization,v3OrganizationsControllerUpdateOrganization,v3OrganizationsControllerGetM2mApplications,v3OrganizationsControllerCreateM2mApplication,v3OrganizationsControllerUpdateM2mApplication,v3OrganizationsControllerDeleteM2mApplication,notificationsControllerGetNotifications,notificationsControllerGetNotificationById,notificationsControllerUpdateNotification,notificationsControllerDeleteNotification,notificationsControllerMarkAllRead,notificationsControllerGetWorkspaceSettings,notificationsControllerUpdateWorkspaceSettings,notificationsControllerGetChannelSettings,notificationsControllerUpdateChannelSettings,invitationsControllerGetInvitations,invitationsControllerCreateInvitation,invitationsControllerGetInvitationByToken,invitationsControllerAcceptInvitation,integrationsControllerHandlePlaneWebhook,integrationsControllerHandleHulyWebhook,integrationsControllerGetStats,integrationsControllerGetWebhooks,integrationsControllerCreateWebhook,integrationsControllerUpdateWebhook,integrationsControllerDeleteWebhook,integrationsControllerGetWebhookLogs,integrationsControllerGetApiKeys,integrationsControllerUpdateApiKey,integrationsControllerDeleteApiKey,workspaceIntegrationsControllerGetWorkspaceIntegrations,workspaceIntegrationsControllerCreateWorkspaceIntegration,workspaceIntegrationsControllerGetWorkspaceIntegration,workspaceIntegrationsControllerUpdateWorkspaceIntegration,workspaceIntegrationsControllerDeleteWorkspaceIntegration,workspaceIntegrationsControllerTestWorkspaceIntegration,workspaceIntegrationsControllerGetWorkspaceWebhooks,workspaceIntegrationsControllerCreateWorkspaceWebhook,ablyControllerGetToken,storageControllerUploadFile,shortUrlControllerRedirect,callsControllerStartCall,callsControllerUpdateCall,callsControllerInviteToCall,callsControllerGetParticipants,callsControllerGetScheduledCalls,callsControllerScheduleCall,callsControllerPlaySoundboardSound,channelsControllerGetGlobalChannels,channelsControllerCreateChannel,channelsControllerGetMessages,channelsControllerCreateMessage,channelsControllerUpdateMessage,channelsControllerDeleteMessage,channelsControllerMarkAsRead,channelsControllerAddReaction,channelsControllerRemoveReaction,channelsControllerShareChannel,channelsControllerCreateReply,adminControllerGetStats,adminControllerGetMembers,adminControllerUpdateMemberRole,adminControllerGetAssets,adminControllerCreateAsset,adminControllerUpdateAsset,adminControllerDeleteAsset,adminControllerGetProfileAssets,adminControllerCreateProfileAsset,adminControllerGetAssetStats,adminControllerUploadFile,dmsControllerGetDms,dmsControllerCreateDm,dmsControllerGetDm,dmsControllerDeleteDm,dmsControllerGetMessages,dmsControllerCreateMessage,dmsControllerUpdateMessage,dmsControllerDeleteMessage,dmsControllerMarkAsRead,dmsControllerAddReaction,dmsControllerRemoveReaction,friendsControllerGetFriends,friendsControllerGetFriendRequests,friendsControllerSendFriendRequest,friendsControllerUpdateFriendRequest,friendsControllerDeleteFriendRequest,workspacesControllerGetWorkspaces,workspacesControllerCreateWorkspace,workspacesControllerGetWorkspaceRoles,workspacesControllerGetWorkspaceSlugRoles,workspacesControllerDiscoverWorkspaces,workspacesControllerJoinWorkspace,workspacesControllerGetWorkspaceBySlug,workspacesControllerUpdateWorkspaceBySlug,workspacesControllerDeleteWorkspaceBySlug,membersControllerGetWorkspaceMembers,membersControllerUpdateMember,membersControllerRemoveMember,channelsControllerGetWorkspaceChannels,channelsControllerGetChannel,channelsControllerUpdateChannel,channelsControllerDeleteChannel,channelsControllerGetChannelMembers,channelsControllerAddChannelMembers,channelsControllerUpdateChannelMember,channelsControllerRemoveChannelMember,departmentsControllerGetDepartments,departmentsControllerCreateDepartment,departmentsControllerGetDepartment,departmentsControllerUpdateDepartment,departmentsControllerDeleteDepartment,departmentsControllerGetAnnouncements,departmentsControllerCreateAnnouncement,teamsControllerGetTeams,teamsControllerCreateTeam,teamsControllerAddMember,teamsControllerRemoveMember,messagesControllerGetMessages,messagesControllerCreateMessage,messagesControllerUpdateMessage,messagesControllerDeleteMessage,messagesControllerMarkAsRead,messagesControllerAddReaction,messagesControllerRemoveReaction,messagesControllerCreateReply,emojisControllerGetEmojis,emojisControllerCreateEmoji,auditLogsControllerGetAuditLogs,auditLogsControllerExportAuditLogs,inviteLinksControllerGetInviteLinks,inviteLinksControllerCreateInviteLink,apiTokensControllerGetApiTokens,apiTokensControllerCreateApiToken,apiTokensControllerDeleteApiToken,webhooksControllerGetWebhooks,webhooksControllerCreateWebhook,webhooksControllerUpdateWebhook,webhooksControllerDeleteWebhook,callsControllerGetActiveCalls,searchControllerSearch,deviceAuthControllerGenerateQR,deviceAuthControllerCheckStatus,deviceAuthControllerAuthorize,deviceAuthControllerDeny,androidAuthControllerGetProfile,androidAuthControllerChangePassword,androidAuthControllerCheckUsername,androidAuthControllerLogin,androidAuthControllerSignup,androidAuthControllerGoogleLogin,androidAuthControllerGithubLogin,androidAuthControllerRefresh,scheduledNotificationsControllerGetNotifications,scheduledNotificationsControllerCreateNotification,scheduledNotificationsControllerUpdateNotification,scheduledNotificationsControllerDeleteNotification,assetsControllerGetEligibleAssets,supportControllerCreateTicket,supportControllerGetTickets,supportControllerStartLiveChat,supportControllerEndLiveChat,supportControllerUpdateTicketStatus,supportControllerAssignTicket,supportControllerCreateCustomerProfile,supportControllerGetCustomerProfiles}};
 export type AppControllerGetHealthResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['appControllerGetHealth']>>>
 export type AppControllerGetHelloResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['appControllerGetHello']>>>
 export type AppControllerGetRealtimeConfigResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['appControllerGetRealtimeConfig']>>>
@@ -4041,6 +4356,15 @@ export type V3WorkspacesControllerAddWorkspaceMemberResult = NonNullable<Awaited
 export type V3WorkspacesControllerGetWorkspaceMemberResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3WorkspacesControllerGetWorkspaceMember']>>>
 export type V3WorkspacesControllerUpdateWorkspaceMemberResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3WorkspacesControllerUpdateWorkspaceMember']>>>
 export type V3WorkspacesControllerDeleteWorkspaceMemberResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3WorkspacesControllerDeleteWorkspaceMember']>>>
+export type V3WorkspacesControllerGetChannelsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3WorkspacesControllerGetChannels']>>>
+export type V3WorkspacesControllerCreateChannelResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3WorkspacesControllerCreateChannel']>>>
+export type V3WorkspacesControllerGetChannelResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3WorkspacesControllerGetChannel']>>>
+export type V3WorkspacesControllerUpdateChannelResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3WorkspacesControllerUpdateChannel']>>>
+export type V3WorkspacesControllerDeleteChannelResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3WorkspacesControllerDeleteChannel']>>>
+export type V3WorkspacesControllerGetChannelMembersResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3WorkspacesControllerGetChannelMembers']>>>
+export type V3WorkspacesControllerAddChannelMembersResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3WorkspacesControllerAddChannelMembers']>>>
+export type V3WorkspacesControllerUpdateChannelMemberResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3WorkspacesControllerUpdateChannelMember']>>>
+export type V3WorkspacesControllerDeleteChannelMemberResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3WorkspacesControllerDeleteChannelMember']>>>
 export type V3WebhooksControllerGetWebhooksResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3WebhooksControllerGetWebhooks']>>>
 export type V3WebhooksControllerCreateWebhookResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3WebhooksControllerCreateWebhook']>>>
 export type V3WebhooksControllerGetWebhookResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3WebhooksControllerGetWebhook']>>>
@@ -4158,6 +4482,7 @@ export type ChannelsControllerUpdateChannelResult = NonNullable<Awaited<ReturnTy
 export type ChannelsControllerDeleteChannelResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['channelsControllerDeleteChannel']>>>
 export type ChannelsControllerGetChannelMembersResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['channelsControllerGetChannelMembers']>>>
 export type ChannelsControllerAddChannelMembersResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['channelsControllerAddChannelMembers']>>>
+export type ChannelsControllerUpdateChannelMemberResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['channelsControllerUpdateChannelMember']>>>
 export type ChannelsControllerRemoveChannelMemberResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['channelsControllerRemoveChannelMember']>>>
 export type DepartmentsControllerGetDepartmentsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['departmentsControllerGetDepartments']>>>
 export type DepartmentsControllerCreateDepartmentResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['departmentsControllerCreateDepartment']>>>

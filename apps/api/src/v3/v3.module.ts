@@ -4,6 +4,7 @@ import { V3WorkspacesController } from './v3-workspaces.controller';
 import { V3WebhooksController } from './v3-webhooks.controller';
 import { V3ChannelIncomingWebhooksController } from './v3-channel-incoming-webhooks.controller';
 import { V3OrganizationsController } from './v3-organizations.controller';
+import { V3ApplicationsController } from './v3-applications.controller';
 import { ApiV3Guard } from '../auth/api-v3.guard';
 import { ProvisioningService } from '../provisioning/provisioning.service';
 import { PrismaService } from '../prisma.service';
@@ -16,6 +17,7 @@ import { WebhooksService } from '../webhooks/webhooks.service';
     V3WebhooksController,
     V3ChannelIncomingWebhooksController,
     V3OrganizationsController,
+    V3ApplicationsController,
   ],
   providers: [
     ApiV3Guard,

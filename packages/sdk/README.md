@@ -104,11 +104,37 @@ await sdk.workspace.members.delete('acme-corp', 'member_id_xyz');
 // List channels in a workspace
 const channels = await sdk.workspace.channels.list('acme-corp');
 
-// Create a new channel
+// Create a new channel with custom visibility, icon, metadata, and initial members
 const channel = await sdk.workspace.channels.create('acme-corp', {
-  name: 'announcements',
-  type: 'text',
+  name: 'engineering',
+  description: 'Engineering discussion channel',
+  type: 'private',
+  isPrivate: true,
+  icon: 'code',
+  metadata: { department: 'eng' },
 });
+
+// Update channel settings, visibility, and metadata
+await sdk.channel.update('acme-corp', 'channel_id_123', {
+  name: 'eng-tech',
+  description: 'Updated description',
+  icon: 'terminal',
+  metadata: { priority: 'high' },
+});
+
+// Manage channel member access and permissions
+await sdk.channel.members.add('acme-corp', 'channel_id_123', {
+  userIds: ['user_456'],
+  role: 'moderator',
+  permissions: '2048',
+});
+
+await sdk.channel.members.update('acme-corp', 'channel_id_123', 'user_456', {
+  role: 'admin',
+  permissions: '4096',
+});
+
+await sdk.channel.members.remove('acme-corp', 'channel_id_123', 'user_456');
 
 // Send a message to a channel
 await sdk.channel.message.create('channel_id_123', {
