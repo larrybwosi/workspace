@@ -187,7 +187,7 @@ jobs:
       packages: write
     strategy:
       matrix:
-        apps: [api, web]
+        apps: [api, web, admin]
     steps:
       - uses: actions/checkout@v4
         with:

@@ -6,7 +6,7 @@ This guide provides comprehensive, step-by-step instructions for deploying the S
 
 ## 1. Container Architecture Overview
 
-The production Docker Compose topology consists of 5 core microservices orchestrated within dedicated bridge networks, with optional integration with external reverse proxies such as Traefik or Dokploy:
+The production Docker Compose topology consists of 6 core microservices orchestrated within dedicated bridge networks, with optional integration with external reverse proxies such as Traefik or Dokploy:
 
 ```text
                      ┌────────────────────────┐
@@ -14,16 +14,16 @@ The production Docker Compose topology consists of 5 core microservices orchestr
                      │ (Ports 80 / 443 TLS)   │
                      └───────────┬────────────┘
                                  │
-           ┌─────────────────────┴─────────────────────┐
-           │                                           │
-           ▼                                           ▼
-┌─────────────────────┐                     ┌─────────────────────┐
-│   scrymechat-web    │                     │   scrymechat-api    │
-│  (Next.js Standalone│                     │  (NestJS + Fastify) │
-│     Port 3001)      │                     │     Port 3000)      │
-└──────────┬──────────┘                     └──────────┬──────────┘
-           │                                           │
-           └─────────────────────┬─────────────────────┘
+           ┌─────────────────────┼─────────────────────┐
+           │                     │                     │
+           ▼                     ▼                     ▼
+┌─────────────────────┐┌─────────────────────┐┌─────────────────────┐
+│   scrymechat-web    ││   scrymechat-admin  ││   scrymechat-api    │
+│  (Next.js Standalone││(Vite Admin Dashboard││  (NestJS + Fastify) │
+│     Port 3001)      ││     Port 3002)      ││     Port 3000)      │
+└──────────┬──────────┘└──────────┬──────────┘└──────────┬──────────┘
+           │                     │                     │
+           └─────────────────────┼─────────────────────┘
                                  │
                  ┌───────────────┼───────────────┐
                  ▼               ▼               ▼
@@ -62,6 +62,7 @@ cp .env.example .env
 | Variable | Description | Example / Recommended |
 | :--- | :--- | :--- |
 | `WEB_DOMAIN` | Domain for the Web frontend | `chat.scryme.tech` |
+| `ADMIN_DOMAIN` | Domain for the Admin frontend | `admin.chat.scryme.tech` |
 | `API_DOMAIN` | Domain for the NestJS API | `api.chat.scryme.tech` |
 | `BETTER_AUTH_SECRET` | Secret key for session encryption (min 32 chars) | `openssl rand -hex 32` |
 | `BETTER_AUTH_URL` | Auth service base URL | `https://api.chat.scryme.tech` |
