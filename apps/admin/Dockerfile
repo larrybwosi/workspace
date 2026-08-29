@@ -28,8 +28,11 @@ RUN pnpm install --frozen-lockfile --dangerously-allow-all-builds
 COPY --from=builder /app/out/full/ .
 COPY turbo.json turbo.json
 
+# Generate Prisma Client
+RUN DATABASE_URL="postgresql://postgres:postgres@localhost:5432/postgres" npx turbo run db:generate
+
 # Build the static admin app
-RUN npx turbo build --filter=admin
+RUN npx turbo build --filter=admin...
 
 FROM base AS runner
 WORKDIR /app

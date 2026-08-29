@@ -32,6 +32,7 @@ jobs:
               - 'apps/android/**'
             admin:
               - 'apps/admin/**'
+              - 'packages/**'
             docs:
               - 'apps/docs/**'
               - 'apps/v3-docs/**'
@@ -243,6 +244,8 @@ jobs:
           node-version: 22
           cache: 'pnpm'
       - run: pnpm install --no-frozen-lockfile --dangerously-allow-all-builds
+      - name: Run Prisma Generate
+        run: pnpm --filter @repo/database run db:generate
       - name: Run Admin Tests
         run: pnpm --filter admin test
 
