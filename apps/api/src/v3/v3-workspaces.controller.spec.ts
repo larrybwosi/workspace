@@ -24,8 +24,10 @@ vi.mock('@repo/database', () => ({
     },
     channelMember: {
       findMany: vi.fn(),
+      findFirst: vi.fn(),
       createMany: vi.fn(),
       update: vi.fn(),
+      delete: vi.fn(),
       deleteMany: vi.fn(),
     },
     workspaceMember: {
@@ -35,6 +37,11 @@ vi.mock('@repo/database', () => ({
       create: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
+    },
+    user: {
+      findMany: vi.fn(),
+      findFirst: vi.fn(),
+      findUnique: vi.fn(),
     },
     workspaceAuditLog: {
       create: vi.fn().mockReturnValue({ catch: vi.fn() }),
@@ -631,7 +638,7 @@ describe('V3WorkspacesController', () => {
     });
 
     describe('addWorkspaceMember', () => {
-      it('should add member and invalidate caches', async () => {
+      it('should add member by email and invalidate caches', async () => {
         const body = { email: 'user@example.com', role: 'admin' };
         const mockMembership = {
           id: 'm-new',
@@ -660,6 +667,66 @@ describe('V3WorkspacesController', () => {
         expect(redisClient.del).toHaveBeenCalledWith('v2:members:ws-123');
       });
 
+      it('should add member by userId', async () => {
+        const body = { userId: 'user-456', role: 'member' };
+        const mockMembership = {
+          id: 'm-new2',
+          userId: 'user-456',
+          role: 'member',
+          user: { id: 'user-456', name: 'Charlie', email: 'charlie@example.com' },
+        };
+
+        (prisma.workspaceMember.create as any).mockResolvedValue(mockMembership);
+
+        const result = await controller.addWorkspaceMember(context as any, 'acme-slug', body);
+
+        expect(result.success).toBe(true);
+        expect(result.data.member).toEqual(mockMembership);
+        expect(prisma.workspaceMember.create).toHaveBeenCalledWith({
+          data: {
+            workspace: { connect: { id: 'ws-123' } },
+            role: 'member',
+            user: { connect: { id: 'user-456' } },
+          },
+          include: {
+            user: { select: { id: true, name: true, email: true } },
+          },
+        });
+      });
+
+      it('should add member by memberId', async () => {
+        const body = { memberId: 'wsm-789', role: 'moderator' };
+        const mockWsm = { id: 'wsm-789', userId: 'user-789' };
+        const mockMembership = {
+          id: 'm-new3',
+          userId: 'user-789',
+          role: 'moderator',
+          user: { id: 'user-789', name: 'David', email: 'david@example.com' },
+        };
+
+        (prisma.workspaceMember.findUnique as any).mockResolvedValue(mockWsm);
+        (prisma.workspaceMember.create as any).mockResolvedValue(mockMembership);
+
+        const result = await controller.addWorkspaceMember(context as any, 'acme-slug', body);
+
+        expect(result.success).toBe(true);
+        expect(result.data.member).toEqual(mockMembership);
+        expect(prisma.workspaceMember.findUnique).toHaveBeenCalledWith({
+          where: { id: 'wsm-789' },
+          select: { userId: true },
+        });
+        expect(prisma.workspaceMember.create).toHaveBeenCalledWith({
+          data: {
+            workspace: { connect: { id: 'ws-123' } },
+            role: 'moderator',
+            user: { connect: { id: 'user-789' } },
+          },
+          include: {
+            user: { select: { id: true, name: true, email: true } },
+          },
+        });
+      });
+
       it('should throw ForbiddenException if missing scope', async () => {
         const restrictedContext = { ...context, scopes: ['members:read'] };
         await expect(
@@ -669,27 +736,29 @@ describe('V3WorkspacesController', () => {
     });
 
     describe('getWorkspaceMember', () => {
-      it('should return member details', async () => {
+      it('should return member details when queried by userId, memberId, or email', async () => {
         const mockMember = { id: 'm-1', userId: 'user-1', role: 'member' };
-        (prisma.workspaceMember.findUnique as any).mockResolvedValue(mockMember);
+        (prisma.workspaceMember.findFirst as any).mockResolvedValue(mockMember);
 
         const result = await controller.getWorkspaceMember(context as any, 'acme-slug', 'user-1');
 
         expect(result.success).toBe(true);
         expect(result.data.member).toEqual(mockMember);
-        expect(prisma.workspaceMember.findUnique).toHaveBeenCalledWith({
+        expect(prisma.workspaceMember.findFirst).toHaveBeenCalledWith({
           where: {
-            workspaceId_userId: {
-              workspaceId: 'ws-123',
-              userId: 'user-1',
-            },
+            workspaceId: 'ws-123',
+            OR: [
+              { id: 'user-1' },
+              { userId: 'user-1' },
+              { user: { email: 'user-1' } },
+            ],
           },
           select: expect.any(Object),
         });
       });
 
       it('should throw NotFoundException if member does not exist', async () => {
-        (prisma.workspaceMember.findUnique as any).mockResolvedValue(null);
+        (prisma.workspaceMember.findFirst as any).mockResolvedValue(null);
         await expect(controller.getWorkspaceMember(context as any, 'acme-slug', 'user-none')).rejects.toThrow(
           'Member not found in this workspace'
         );
@@ -697,24 +766,31 @@ describe('V3WorkspacesController', () => {
     });
 
     describe('updateWorkspaceMember', () => {
-      it('should update member role directly and invalidate caches', async () => {
+      it('should update member role by member identifier (userId, memberId, email)', async () => {
         const body = { role: 'moderator' as const };
-        const mockMember = { id: 'm-1', userId: 'user-1', role: 'moderator' };
+        const mockExistingMember = { id: 'wsm-1' };
+        const mockUpdatedMember = { id: 'wsm-1', userId: 'user-1', role: 'moderator' };
 
-        (prisma.workspaceMember.update as any).mockResolvedValue(mockMember);
+        (prisma.workspaceMember.findFirst as any).mockResolvedValue(mockExistingMember);
+        (prisma.workspaceMember.update as any).mockResolvedValue(mockUpdatedMember);
 
-        const result = await controller.updateWorkspaceMember(context as any, 'acme-slug', 'user-1', body);
+        const result = await controller.updateWorkspaceMember(context as any, 'acme-slug', 'user-1@example.com', body);
 
         expect(result.success).toBe(true);
-        expect(result.data.member).toEqual(mockMember);
-        expect(prisma.workspaceMember.findUnique).not.toHaveBeenCalled();
-        expect(prisma.workspaceMember.update).toHaveBeenCalledWith({
+        expect(result.data.member).toEqual(mockUpdatedMember);
+        expect(prisma.workspaceMember.findFirst).toHaveBeenCalledWith({
           where: {
-            workspaceId_userId: {
-              workspaceId: 'ws-123',
-              userId: 'user-1',
-            },
+            workspaceId: 'ws-123',
+            OR: [
+              { id: 'user-1@example.com' },
+              { userId: 'user-1@example.com' },
+              { user: { email: 'user-1@example.com' } },
+            ],
           },
+          select: { id: true },
+        });
+        expect(prisma.workspaceMember.update).toHaveBeenCalledWith({
+          where: { id: 'wsm-1' },
           data: { role: 'moderator' },
           include: {
             user: { select: { id: true, name: true, email: true, avatar: true } },
@@ -724,41 +800,27 @@ describe('V3WorkspacesController', () => {
         expect(redisClient.del).toHaveBeenCalledWith('v2:members:ws-123');
       });
 
-      it('should throw NotFoundException if update fails with P2025 error code', async () => {
+      it('should throw NotFoundException if workspace member is not found', async () => {
         const body = { role: 'moderator' as const };
-        const error = new Error('Record to update not found');
-        (error as any).code = 'P2025';
-
-        (prisma.workspaceMember.update as any).mockRejectedValue(error);
+        (prisma.workspaceMember.findFirst as any).mockResolvedValue(null);
 
         await expect(
-          controller.updateWorkspaceMember(context as any, 'acme-slug', 'user-1', body)
+          controller.updateWorkspaceMember(context as any, 'acme-slug', 'nonexistent', body)
         ).rejects.toThrow('Member not found in this workspace');
-      });
-
-      it('should propagate other errors from update', async () => {
-        const body = { role: 'moderator' as const };
-        const error = new Error('Database connection failed');
-
-        (prisma.workspaceMember.update as any).mockRejectedValue(error);
-
-        await expect(
-          controller.updateWorkspaceMember(context as any, 'acme-slug', 'user-1', body)
-        ).rejects.toThrow('Database connection failed');
       });
     });
 
     describe('deleteWorkspaceMember', () => {
-      it('should delete member and invalidate caches', async () => {
+      it('should delete member by member identifier and invalidate caches', async () => {
         const mockWorkspace = {
           ownerId: 'owner-id',
-          members: [{ id: 'm-1' }],
+          members: [{ id: 'wsm-1', userId: 'user-1' }],
         };
 
         (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
-        (prisma.workspaceMember.delete as any).mockResolvedValue({ id: 'm-1' });
+        (prisma.workspaceMember.delete as any).mockResolvedValue({ id: 'wsm-1' });
 
-        const result = await controller.deleteWorkspaceMember(context as any, 'acme-slug', 'user-1');
+        const result = await controller.deleteWorkspaceMember(context as any, 'acme-slug', 'user-1@example.com');
 
         expect(result.success).toBe(true);
         expect(prisma.workspace.findUnique).toHaveBeenCalledWith({
@@ -766,18 +828,19 @@ describe('V3WorkspacesController', () => {
           select: {
             ownerId: true,
             members: {
-              where: { userId: 'user-1' },
-              select: { id: true },
+              where: {
+                OR: [
+                  { id: 'user-1@example.com' },
+                  { userId: 'user-1@example.com' },
+                  { user: { email: 'user-1@example.com' } },
+                ],
+              },
+              select: { id: true, userId: true },
             },
           },
         });
         expect(prisma.workspaceMember.delete).toHaveBeenCalledWith({
-          where: {
-            workspaceId_userId: {
-              workspaceId: 'ws-123',
-              userId: 'user-1',
-            },
-          },
+          where: { id: 'wsm-1' },
         });
         expect(redisClient.del).toHaveBeenCalledWith('v3:members:ws-123');
         expect(redisClient.del).toHaveBeenCalledWith('v2:members:ws-123');
@@ -786,7 +849,7 @@ describe('V3WorkspacesController', () => {
       it('should throw BadRequestException if member to delete is the owner', async () => {
         const mockWorkspace = {
           ownerId: 'owner-id',
-          members: [{ id: 'm-1' }],
+          members: [{ id: 'wsm-owner', userId: 'owner-id' }],
         };
         (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
 
@@ -864,9 +927,41 @@ describe('V3WorkspacesController', () => {
       });
     });
 
+    describe('addChannelMembers', () => {
+      it('should resolve users by memberId, userId, or email and add them to channel', async () => {
+        const body = { emails: ['user1@example.com'], memberId: 'wsm-1' };
+        const mockChannel = { id: 'ch-1', workspaceId: 'ws-123' };
+        const mockMatchedUsers = [{ id: 'user-1' }, { id: 'user-2' }];
+
+        (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
+        (prisma.channel.findUnique as any).mockResolvedValue(mockChannel);
+        (prisma.user.findMany as any).mockResolvedValue(mockMatchedUsers);
+        (prisma.channelMember.createMany as any).mockResolvedValue({ count: 2 });
+        (prisma.channelMember.findMany as any).mockResolvedValue([
+          { id: 'cm-1', channelId: 'ch-1', userId: 'user-1', role: 'member', permissions: null, user: { id: 'user-1' } },
+        ]);
+
+        const result = await controller.addChannelMembers(context as any, 'acme-slug', 'ch-1', body as any);
+
+        expect(result.success).toBe(true);
+        expect(prisma.user.findMany).toHaveBeenCalledWith({
+          where: {
+            OR: [
+              { id: { in: ['user1@example.com', 'wsm-1'] } },
+              { email: { in: ['user1@example.com', 'wsm-1'] } },
+              { workspaceMemberships: { some: { id: { in: ['user1@example.com', 'wsm-1'] }, workspaceId: 'ws-123' } } },
+            ],
+          },
+          select: { id: true },
+        });
+        expect(prisma.channelMember.createMany).toHaveBeenCalled();
+      });
+    });
+
     describe('updateChannelMember', () => {
-      it('should update channel member role and permissions', async () => {
+      it('should update channel member role and permissions using member identifier', async () => {
         const body = { role: 'admin', permissions: '4096' };
+        const mockExistingChannelMember = { id: 'cm-1' };
         const mockUpdatedMember = {
           id: 'cm-1',
           channelId: 'ch-1',
@@ -877,13 +972,43 @@ describe('V3WorkspacesController', () => {
         };
 
         (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
+        (prisma.channelMember.findFirst as any).mockResolvedValue(mockExistingChannelMember);
         (prisma.channelMember.update as any).mockResolvedValue(mockUpdatedMember);
 
-        const result = await controller.updateChannelMember(context as any, 'acme-slug', 'ch-1', 'usr-1', body);
+        const result = await controller.updateChannelMember(context as any, 'acme-slug', 'ch-1', 'usr-1@example.com', body);
 
         expect(result.success).toBe(true);
         expect(result.data.member.role).toBe('admin');
         expect(result.data.member.permissions).toBe('4096');
+        expect(prisma.channelMember.findFirst).toHaveBeenCalledWith({
+          where: {
+            channelId: 'ch-1',
+            channel: { workspaceId: 'ws-123' },
+            OR: [
+              { userId: 'usr-1@example.com' },
+              { user: { email: 'usr-1@example.com' } },
+              { user: { workspaceMemberships: { some: { id: 'usr-1@example.com', workspaceId: 'ws-123' } } } },
+            ],
+          },
+          select: { id: true },
+        });
+      });
+    });
+
+    describe('deleteChannelMember', () => {
+      it('should remove member from channel by member identifier', async () => {
+        const mockExistingChannelMember = { id: 'cm-1' };
+
+        (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
+        (prisma.channelMember.findFirst as any).mockResolvedValue(mockExistingChannelMember);
+        (prisma.channelMember.delete as any).mockResolvedValue({ id: 'cm-1' });
+
+        const result = await controller.deleteChannelMember(context as any, 'acme-slug', 'ch-1', 'wsm-123');
+
+        expect(result.success).toBe(true);
+        expect(prisma.channelMember.delete).toHaveBeenCalledWith({
+          where: { id: 'cm-1' },
+        });
       });
     });
   });
