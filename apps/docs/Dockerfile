@@ -12,7 +12,7 @@ FROM base AS builder
 WORKDIR /app
 RUN pnpm add -g turbo
 COPY . .
-RUN turbo prune --scope=v3-docs --docker
+RUN turbo prune --scope=docs --docker
 
 FROM base AS installer
 WORKDIR /app
@@ -29,7 +29,7 @@ COPY --from=builder /app/out/full/ .
 COPY turbo.json turbo.json
 
 # Build the static docs
-RUN npx turbo build --filter=v3-docs
+RUN npx turbo build --filter=docs
 
 FROM base AS runner
 WORKDIR /app
@@ -41,7 +41,7 @@ RUN adduser --system --uid 1001 staticuser
 # Serve using sirv-cli
 RUN pnpm add -g sirv-cli
 
-COPY --from=installer /app/apps/v3-docs/dist ./dist
+COPY --from=installer /app/apps/docs/dist ./dist
 
 USER staticuser
 
