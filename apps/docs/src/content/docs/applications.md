@@ -1,55 +1,100 @@
 # Applications and Bots
 
-Scrymechat's developer platform allows you to build powerful integrations and automated bots that live directly within your workspaces. This guide covers how to create, configure, and manage your applications.
+Scrymechat's developer platform allows you to build powerful integrations and automated bots that live directly within your workspaces. This guide covers how to create, configure, authenticate, and install applications.
+
+---
 
 ## Creating an Application
 
-To start building on Scrymechat, you first need to create an application in the [Developer Portal](/developer).
+You can create applications programmatically or via developer settings:
 
-1. Navigate to the **Dashboard** in the Developer Portal.
-2. Click on **New Application**.
-3. Provide a name and a brief description for your bot.
-4. Click **Create Application**.
+### Via REST API
 
-Once created, you will be redirected to the application's configuration page.
+```bash
+curl -X POST https://api.chat.scryme.tech/v3/applications \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Acme Support Bot",
+    "description": "Automated customer support assistant",
+    "workspaceSlug": "acme-workspace"
+  }'
+```
 
-## Bot Identity
+---
 
-Every application is associated with a **Bot User**. You can customize your bot's identity to make it recognizable to your users.
+## Bot Credentials & Authentication
 
-- **Bot Name**: This is the display name of your bot in chat.
-- **Bot Avatar**: Upload an icon that represents your application.
+Every application automatically creates an associated **Bot User** equipped with credentials:
 
-## Authentication & Security
+- **Client ID**: Public identifier for OAuth and gateway identification.
+- **Client Secret**: Private secret used for OAuth `client_credentials` grant flow.
+- **Bot Token**: Long-lived authentication token for direct bot operations.
 
-### Bot Token
+### Making Authenticated API Calls
 
-Your **Bot Token** is the primary way your application authenticates with the Scrymechat API.
+Include your bot token in request headers:
 
-:::warning
-**Keep your Bot Token secret.** Never share it on client-side code, public repositories (like GitHub), or in insecure environments. If you suspect your token has been compromised, use the **Revoke Bot Token** button in the configuration page immediately.
-:::
+```bash
+# Discord V10 Gateway Compatibility
+curl -X POST https://api.chat.scryme.tech/v10/channels/CHANNEL_ID/messages \
+  -H "Authorization: Bot YOUR_BOT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"content": "Hello from Acme Support Bot!"}'
 
-### Client ID
+# Native V3 API
+curl -X GET https://api.chat.scryme.tech/v3/workspaces/acme-workspace/bots \
+  -H "Authorization: Bearer YOUR_BOT_TOKEN"
+```
 
-The **Client ID** is a public identifier for your application, used during the OAuth2 flow to identify your app to users and workspaces.
+---
 
-## Scopes and Permissions
+## Adding a Bot to a Workspace
 
-To interact with workspaces, your bot needs specific permissions.
+To enable a bot within a workspace:
 
-- **Scopes**: These define what your application can do (e.g., `bot`, `identify`, `messages.read`).
-- **Permissions**: These are granular chat permissions (e.g., `Send Messages`, `Manage Channels`) that your bot will have once invited to a guild or channel.
+### 1. Install Bot to Workspace
 
-Use the **Permissions Calculator** in the configuration page to generate the correct permission integer for your invitation links.
+```bash
+curl -X POST https://api.chat.scryme.tech/v3/applications/APP_ID/install \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "workspaceSlug": "acme-workspace"
+  }'
+```
 
-## Installation
+### 2. Auto-Provisioning Teams & Channels (`channelDefinitions`)
 
-You can configure how users can install your application:
+Applications can declare `channelDefinitions` so that installing the bot automatically sets up required workspace channels and team structures:
 
-- **Guild Install**: Allows administrators to add your bot to an entire workspace.
-- **User Install**: Allows individuals to add your bot functionality to their own profile for use across different contexts.
+```json
+{
+  "name": "DevOps Bot",
+  "channelDefinitions": [
+    {
+      "teamName": "Engineering",
+      "channelName": "deployments",
+      "teamDescription": "Deployment logs and alerts",
+      "icon": "rocket",
+      "autoPopulateRoles": ["admin", "owner"]
+    }
+  ]
+}
+```
 
-## Next Steps
+When installed:
+- "Engineering" team and "deployments" channel are created if missing.
+- The bot is added as an administrator and channel owner.
+- Users with `admin` or `owner` roles are automatically added to the channel.
 
-Once your bot is configured, you can start using our [API Reference](/api/overview) to send messages, handle webhooks, and listen for real-time events.
+---
+
+## Managing Applications
+
+- **List Applications**: `GET /v3/applications`
+- **Get Application**: `GET /v3/applications/:id`
+- **Update Application**: `PATCH /v3/applications/:id`
+- **Reset Bot Token**: `POST /v3/applications/:id/reset-token`
+- **Delete Application**: `DELETE /v3/applications/:id`
+- **List Workspace Bots**: `GET /v3/workspaces/:slug/bots`

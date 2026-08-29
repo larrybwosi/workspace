@@ -20,9 +20,12 @@ export function Sidebar({ type }: { type: 'user-guide' | 'api-reference' }) {
     : [
         { href: '/api-reference/explorer', label: 'Interactive API Explorer', category: 'General' },
         { href: '/api-reference/authentication', label: 'V3 Authentication', category: 'Resources' },
+        { href: '/api-reference/applications', label: 'V3 Applications & Bots', category: 'Resources' },
         { href: '/api-reference/workspaces', label: 'V3 Workspaces & Members', category: 'Resources' },
         { href: '/api-reference/webhooks', label: 'V3 Webhooks', category: 'Resources' },
         { href: '/api-reference/incoming-webhooks', label: 'V3 Channel Incoming Webhooks', category: 'Resources' },
+        { href: '/api-reference/recipe-bot', label: 'Building a Bot Recipe', category: 'Guides' },
+        { href: '/api-reference/discord-v10', label: 'Discord V10 Gateway', category: 'Guides' },
       ];
 
   const groupedLinks = links.reduce(

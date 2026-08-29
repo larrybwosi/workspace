@@ -43,12 +43,12 @@ export class BetterAuthGuard implements CanActivate {
         }
 
         if (!user && orgId) {
-          const defaultBot = await prisma.defaultBot.findFirst({
-            where: { organizationId: orgId },
-            include: { user: true },
+          const defaultBot = await prisma.botApplication.findFirst({
+            where: { workspace: { organizationId: orgId } },
+            include: { bot: true },
           });
-          if (defaultBot?.user) {
-            user = defaultBot.user;
+          if (defaultBot?.bot) {
+            user = defaultBot.bot;
           } else {
             const firstWorkspace = await prisma.workspace.findFirst({
               where: { organizationId: orgId },
