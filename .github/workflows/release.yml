@@ -13,6 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       has_changeset: ${{ steps.filter.outputs.changeset }}
+      has_android_changes: ${{ steps.filter.outputs.android }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -24,6 +25,8 @@ jobs:
             changeset:
               - '.changeset/*.md'
               - '! .changeset/README.md'
+            android:
+              - 'apps/android/**'
 
   # =======================================================================
   # DEV: patch release, runs when a merge/push to dev is made and changeset files exist
@@ -36,6 +39,7 @@ jobs:
       contents: write
     outputs:
       version: ${{ steps.bump.outputs.version }}
+      has_android_changes: ${{ needs.detect-changeset.outputs.has_android_changes }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -93,6 +97,7 @@ jobs:
 
   android-release-dev:
     needs: [version-dev, create-release-dev]
+    if: needs.version-dev.outputs.has_android_changes == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write
