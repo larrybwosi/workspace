@@ -1,15 +1,11 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-vi.mock('@tauri-apps/api/core', () => ({
-  invoke: vi.fn(),
-}));
-
-import { invoke } from '@tauri-apps/api/core';
 import { customFetch } from './client';
 
 describe('customFetch for auth client', () => {
   const originalFetch = globalThis.fetch;
+  const mockInvoke = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -37,13 +33,13 @@ describe('customFetch for auth client', () => {
       body: JSON.stringify({ email: 'test@example.com', password: 'password' }),
       headers: { 'content-type': 'application/json' },
     });
-    expect(invoke).not.toHaveBeenCalled();
+    expect(mockInvoke).not.toHaveBeenCalled();
     expect(res).toBe(mockResponse);
   });
 
   it('invokes native tauri api_request when running in Tauri environment', async () => {
-    (window as any).__TAURI__ = {};
-    vi.mocked(invoke).mockResolvedValue({
+    (window as any).__TAURI_INTERNALS__ = { invoke: mockInvoke };
+    mockInvoke.mockResolvedValue({
       status: 200,
       headers: { 'set-auth-token': 'mock-session-token', 'content-type': 'application/json' },
       body: { user: { id: 'user-1', email: 'test@example.com' }, session: { token: 'mock-session-token' } },
@@ -55,7 +51,7 @@ describe('customFetch for auth client', () => {
       headers: { 'content-type': 'application/json' },
     });
 
-    expect(invoke).toHaveBeenCalledWith('api_request', {
+    expect(mockInvoke).toHaveBeenCalledWith('api_request', {
       request: {
         method: 'POST',
         path: '/api/auth/sign-in/email',
@@ -72,8 +68,8 @@ describe('customFetch for auth client', () => {
   });
 
   it('falls back to window.fetch if invoke throws an error in Tauri', async () => {
-    (window as any).__TAURI__ = {};
-    vi.mocked(invoke).mockRejectedValue(new Error('Tauri command error'));
+    (window as any).__TAURI_INTERNALS__ = { invoke: mockInvoke };
+    mockInvoke.mockRejectedValue(new Error('Tauri command error'));
 
     const mockResponse = new Response(JSON.stringify({ fallback: true }), { status: 200 });
     const fetchSpy = vi.fn().mockResolvedValue(mockResponse);
