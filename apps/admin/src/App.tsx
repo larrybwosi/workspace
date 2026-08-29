@@ -33,8 +33,8 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 function App() {
   return (
-    <AdminProviders>
-      <Router>
+    <Router>
+      <AdminProviders>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route
@@ -55,8 +55,8 @@ function App() {
           />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </Router>
-    </AdminProviders>
+      </AdminProviders>
+    </Router>
   );
 }
 
