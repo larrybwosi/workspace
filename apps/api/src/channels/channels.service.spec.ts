@@ -327,4 +327,90 @@ describe('ChannelsService', () => {
       await expect(service.getMessages(channelId, userId)).rejects.toThrow('Channel not found');
     });
   });
+
+  describe('createMessage', () => {
+    const channelId = 'ch-1';
+    const userId = 'user-1';
+
+    it('should create message and background realtime publishing and notifications', async () => {
+      const mockChannel = {
+        id: channelId,
+        isPrivate: false,
+        type: 'channel',
+        members: [{ userId }],
+      };
+      const mockCreatedMsg = {
+        id: 'msg-1',
+        channelId,
+        userId,
+        content: 'Hello world',
+        user: { id: userId, name: 'Alice' },
+      };
+
+      mockPrisma.channel.findUnique.mockResolvedValue(mockChannel);
+      mockPrisma.message.create.mockResolvedValue(mockCreatedMsg);
+      mockPrisma.user.update.mockResolvedValue({ id: userId });
+
+      const result = await service.createMessage(channelId, userId, { content: 'Hello world' });
+
+      expect(result).toEqual(mockCreatedMsg);
+      expect(sharedServer.publishRealtime).toHaveBeenCalled();
+      expect(mockNotificationsService.notifyNewMessage).toHaveBeenCalledWith(
+        channelId,
+        userId,
+        'Alice',
+        'msg-1',
+        'Hello world',
+        []
+      );
+    });
+  });
+
+  describe('updateMessage', () => {
+    it('should update message and publish realtime update in background', async () => {
+      const mockMsg = { id: 'msg-1', content: 'Updated content' };
+      mockPrisma.message.update.mockResolvedValue(mockMsg);
+
+      const result = await service.updateMessage('ch-1', 'msg-1', 'user-1', 'Updated content');
+
+      expect(result).toEqual(mockMsg);
+      expect(sharedServer.publishRealtime).toHaveBeenCalled();
+    });
+  });
+
+  describe('deleteMessage', () => {
+    it('should delete message and publish realtime deletion in background', async () => {
+      mockPrisma.message.delete.mockResolvedValue({ id: 'msg-1' });
+
+      const result = await service.deleteMessage('ch-1', 'msg-1');
+
+      expect(result).toEqual({ success: true });
+      expect(sharedServer.publishRealtime).toHaveBeenCalled();
+    });
+  });
+
+  describe('createReply', () => {
+    it('should create reply and background realtime publishing and reply notification', async () => {
+      const channelId = 'ch-1';
+      const userId = 'user-1';
+      const mockChannel = { id: channelId, isPrivate: false, type: 'channel', members: [{ userId }] };
+      const mockReply = { id: 'reply-1', content: 'Reply content', user: { name: 'Alice' } };
+
+      mockPrisma.channel.findUnique.mockResolvedValue(mockChannel);
+      mockPrisma.message.create.mockResolvedValue(mockReply);
+
+      const result = await service.createReply(channelId, 'msg-1', userId, { content: 'Reply content' });
+
+      expect(result).toEqual(mockReply);
+      expect(sharedServer.publishRealtime).toHaveBeenCalled();
+      expect(mockNotificationsService.notifyReply).toHaveBeenCalledWith(
+        channelId,
+        userId,
+        'Alice',
+        'msg-1',
+        'reply-1',
+        'Reply content'
+      );
+    });
+  });
 });
