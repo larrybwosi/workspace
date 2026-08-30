@@ -1440,8 +1440,15 @@ When provisioned via M2M:
 
     const workspace = await this.resolveWorkspaceAndCheckAccess(context, slug);
 
-    const channel = await prisma.channel.findFirst({
-      where: { id: channelId, workspaceId: workspace.id },
+    /**
+     * ⚡ Performance Optimization:
+     * Replaces `prisma.channel.findFirst` with extra database relation filters with a direct O(1) primary key
+     * point lookup via `prisma.channel.findUnique({ where: { id: channelId } })`. Primary key point lookups allow
+     * the PostgreSQL query planner to perform direct B-Tree index lookups without additional filter scans.
+     * Workspace authorization (`channel.workspaceId !== workspace.id`) is validated in application memory.
+     */
+    const channel = await prisma.channel.findUnique({
+      where: { id: channelId },
       include: {
         members: {
           include: {
@@ -1452,7 +1459,7 @@ When provisioned via M2M:
       },
     });
 
-    if (!channel) {
+    if (!channel || channel.workspaceId !== workspace.id) {
       throw new NotFoundException('Channel not found in this workspace');
     }
 
