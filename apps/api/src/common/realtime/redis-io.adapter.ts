@@ -1,9 +1,11 @@
 import { IoAdapter } from '@nestjs/platform-socket.io';
+import { Logger } from '@nestjs/common';
 import { ServerOptions } from 'socket.io';
 import { createAdapter } from '@socket.io/redis-adapter';
 import Redis from 'ioredis';
 
 export class RedisIoAdapter extends IoAdapter {
+  private readonly logger = new Logger(RedisIoAdapter.name);
   private adapterConstructor: ReturnType<typeof createAdapter>;
 
   constructor(
@@ -22,10 +24,10 @@ export class RedisIoAdapter extends IoAdapter {
     const subClient = new Redis(this.redisUrl, redisOptions);
 
     pubClient.on('error', (err) => {
-      console.warn('[RedisIoAdapter] pubClient error:', err.message);
+      this.logger.warn(`pubClient error: ${err.message}`);
     });
     subClient.on('error', (err) => {
-      console.warn('[RedisIoAdapter] subClient error:', err.message);
+      this.logger.warn(`subClient error: ${err.message}`);
     });
 
     this.adapterConstructor = createAdapter(pubClient, subClient);

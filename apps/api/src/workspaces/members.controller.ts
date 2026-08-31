@@ -9,6 +9,7 @@ import {
   BadRequestException,
   NotFoundException,
   ForbiddenException,
+  Logger,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody, ApiProperty } from '@nestjs/swagger';
 import { AuthGuard } from '../auth/auth.guard';
@@ -34,6 +35,7 @@ const updateMemberSchema = z.object({
 @Controller('workspaces/:slug/members')
 @UseGuards(AuthGuard)
 export class MembersController {
+  private readonly logger = new Logger(MembersController.name);
   @Get()
   @ApiOperation({ summary: 'Get all members of a workspace' })
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
@@ -220,13 +222,13 @@ export class MembersController {
           metadata: { newRole: role },
         },
       })
-      .catch(err => console.error('Audit log error:', err));
+      .catch(err => this.logger.error('Audit log error:', err));
 
     publishRealtime(AblyChannels.user(updatedMember.userId), 'NOTIFICATION', {
       type: 'workspace.role_changed',
       workspaceId: workspace.id,
       newRole: role,
-    }).catch(err => console.error('Realtime notification error:', err));
+    }).catch(err => this.logger.error('Realtime notification error:', err));
 
     return updatedMember;
   }
@@ -300,12 +302,12 @@ export class MembersController {
           resourceId: memberId,
         },
       })
-      .catch(err => console.error('Audit log error:', err));
+      .catch(err => this.logger.error('Audit log error:', err));
 
     publishRealtime(AblyChannels.user(memberToRemove.userId), 'NOTIFICATION', {
       type: 'workspace.removed',
       workspaceId: workspace.id,
-    }).catch(err => console.error('Realtime notification error:', err));
+    }).catch(err => this.logger.error('Realtime notification error:', err));
 
     return { success: true };
   }

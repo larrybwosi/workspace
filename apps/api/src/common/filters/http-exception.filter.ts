@@ -25,7 +25,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       }
     }
 
-    if (status === HttpStatus.NOT_FOUND) {
+    if (status < HttpStatus.INTERNAL_SERVER_ERROR) {
       this.logger.warn(`${request.method} ${request.url} -> ${status} | ${JSON.stringify(message)}`);
     } else {
       this.logger.error(

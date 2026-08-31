@@ -6,6 +6,7 @@ import {
   UseGuards,
   UnauthorizedException,
   InternalServerErrorException,
+  Logger,
 } from '@nestjs/common';
 import { ApiV10Guard } from '../auth/api-v10.guard';
 import { ConfigService } from '@nestjs/config';
@@ -15,6 +16,8 @@ import * as Ably from 'ably';
 
 @Controller('bot/v10/gateway')
 export class V10GatewayController {
+  private readonly logger = new Logger(V10GatewayController.name);
+
   constructor(private readonly configService: ConfigService) {}
 
   @Get('bot')
@@ -77,7 +80,7 @@ export class V10GatewayController {
       });
       return tokenRequest;
     } catch (error) {
-      console.error('Error creating bot Ably token request:', error);
+      this.logger.error('Error creating bot Ably token request:', error);
       throw new InternalServerErrorException('Internal Server Error');
     }
   }

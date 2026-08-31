@@ -17,10 +17,14 @@ export class V3ExceptionFilter implements ExceptionFilter {
       message = (responseObj as any).message;
     }
 
-    this.logger.error(
-      `${request.method} ${request.url} -> ${status} | ${JSON.stringify(message)}`,
-      exception instanceof Error ? exception.stack : undefined
-    );
+    if (status < HttpStatus.INTERNAL_SERVER_ERROR) {
+      this.logger.warn(`${request.method} ${request.url} -> ${status} | ${JSON.stringify(message)}`);
+    } else {
+      this.logger.error(
+        `${request.method} ${request.url} -> ${status} | ${JSON.stringify(message)}`,
+        exception instanceof Error ? exception.stack : undefined
+      );
+    }
 
     response.status(status).send({
       statusCode: status,

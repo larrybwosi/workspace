@@ -173,17 +173,6 @@ async function bootstrap() {
   app.useGlobalFilters(new AllExceptionsFilter());
   const fastifyInstance = app.getHttpAdapter().getInstance();
 
-  // Log every incoming request: method, path, status code, and response time
-  fastifyInstance.addHook('onRequest', async (request: any) => {
-    (request as any)._startTime = Date.now();
-  });
-
-  fastifyInstance.addHook('onResponse', async (request: any, reply: any) => {
-    const startTime = (request as any)._startTime ?? Date.now();
-    const duration = Date.now() - startTime;
-    const timestamp = new Date().toISOString();
-    console.log(`[${timestamp}] ${request.method} ${request.url} ${reply.statusCode} - ${duration}ms`);
-  });
 
   await app.register(fastifyCookie as any);
   await app.register(fastifyMultipart as any);

@@ -203,14 +203,11 @@ export class WorkspacesController {
   @ApiResponse({ status: 201, description: 'Workspace created successfully' })
   @ApiResponse({ status: 400, description: 'Invalid input or slug already taken' })
   async createWorkspace(@CurrentUser() user: User, @Body() body: CreateWorkspaceDto): Promise<any> {
-    console.log('body :', body);
     const validatedData = createWorkspaceSchema.safeParse(body);
-    console.log(validatedData);
     if (!validatedData.success) {
       throw new BadRequestException(validatedData.error.issues);
     }
 
-    console.log(validatedData.data);
     const { name, icon, description, isPublic, industry } = validatedData.data;
     let slug = validatedData.data.slug;
 

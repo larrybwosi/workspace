@@ -1,9 +1,10 @@
-import { Injectable, BadRequestException, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, BadRequestException, InternalServerErrorException, Logger } from '@nestjs/common';
 import { prisma } from '@repo/database';
 import * as crypto from 'crypto';
 
 @Injectable()
 export class ProvisioningService {
+  private readonly logger = new Logger(ProvisioningService.name);
   async provisionWorkspace(context: any, data: any) {
     return await prisma
       .$transaction(async tx => {
@@ -186,7 +187,7 @@ export class ProvisioningService {
       })
       .catch(err => {
         if (err instanceof BadRequestException) throw err;
-        console.error('Provisioning failed:', err);
+        this.logger.error('Provisioning failed:', err?.stack || err);
         throw new InternalServerErrorException('Failed to provision workspace');
       });
   }
