@@ -29,12 +29,6 @@ vi.mock('../generated/v3-server', () => {
       v3WorkspacesControllerGetWorkspaceBySlug: vi.fn(async (slug, options) => {
         return { success: true, data: { workspace: { slug } }, options };
       }),
-      channelsControllerGetWorkspaceChannels: vi.fn(async (slug, options) => {
-        return { success: true, data: { channels: [] }, slug, options };
-      }),
-      channelsControllerCreateChannel: vi.fn(async (slug, data, options) => {
-        return { success: true, data: { slug, data }, options };
-      }),
       channelsControllerGetMessages: vi.fn(async (channelId, params, options) => {
         return { success: true, channelId, params, options };
       }),
@@ -52,18 +46,6 @@ vi.mock('../generated/v3-server', () => {
       }),
       channelsControllerRemoveReaction: vi.fn(async (channelId, messageId, emoji, options) => {
         return { success: true, type: 'channel', action: 'removeReaction', channelId, messageId, emoji, options };
-      }),
-      channelsControllerGetChannelMembers: vi.fn(async (slug, channelId, options) => {
-        return { success: true, slug, channelId, members: [], options };
-      }),
-      channelsControllerAddChannelMembers: vi.fn(async (slug, channelId, data, options) => {
-        return { success: true, slug, channelId, data, options };
-      }),
-      channelsControllerUpdateChannelMember: vi.fn(async (slug, channelId, targetUserId, data, options) => {
-        return { success: true, slug, channelId, targetUserId, data, options };
-      }),
-      channelsControllerRemoveChannelMember: vi.fn(async (slug, channelId, targetUserId, options) => {
-        return { success: true, slug, channelId, targetUserId, options };
       }),
 
       // DMs Mock
@@ -172,8 +154,10 @@ vi.mock('../generated/v3-server', () => {
       v3WorkspacesControllerGetChannel: vi.fn(async (slug, channelId, options) => {
         return { success: true, data: { channel: { id: channelId } }, slug, options };
       }),
-      v3WorkspacesControllerUpdateChannel: vi.fn(async (slug, channelId, data, options) => {
-        return { success: true, data: { channel: { id: channelId } }, slug, data, options };
+      v3WorkspacesControllerUpdateChannel: vi.fn(async (...args: any[]) => {
+        const slug = args[0];
+        const channelId = args[1];
+        return { success: true, data: { channel: { id: channelId } }, slug };
       }),
       v3WorkspacesControllerDeleteChannel: vi.fn(async (slug, channelId, options) => {
         return { success: true, data: { success: true }, slug, channelId, options };
@@ -181,11 +165,13 @@ vi.mock('../generated/v3-server', () => {
       v3WorkspacesControllerGetChannelMembers: vi.fn(async (slug, channelId, options) => {
         return { success: true, data: { members: [] }, slug, channelId, options };
       }),
-      v3WorkspacesControllerAddChannelMembers: vi.fn(async (slug, channelId, data, options) => {
-        return { success: true, data: { members: [] }, slug, channelId, data, options };
+      v3WorkspacesControllerAddChannelMembers: vi.fn(async (...args: any[]) => {
+        const slug = args[0];
+        const channelId = args[1];
+        return { success: true, data: { members: [] }, slug, channelId };
       }),
       v3WorkspacesControllerUpdateChannelMember: vi.fn(async (slug, channelId, userId, data, options) => {
-        return { success: true, data: { member: { userId, role: data.role } }, slug, channelId, options };
+        return { success: true, data: { member: { userId, role: data?.role } }, slug, channelId, options };
       }),
       v3WorkspacesControllerDeleteChannelMember: vi.fn(async (slug, channelId, userId, options) => {
         return { success: true, data: { success: true }, slug, channelId, userId, options };
@@ -401,7 +387,37 @@ describe('ScrymeSDK', () => {
       expect(createRes).toEqual({ name: 'general' });
     });
 
-    it('should support channel and message namespaces', async () => {
+    it('should support channel CRUD and channel members operations using V3 endpoints', async () => {
+      const sdk = new ScrymeSDK({
+        baseURL: 'https://api.test.com',
+        token: 'active-token',
+      });
+
+      // Channel CRUD
+      const getChan = await sdk.channel.get('acme-corp', 'chan_123') as any;
+      expect(getChan.id).toBe('chan_123');
+
+      const updateChan = await sdk.channel.update('acme-corp', 'chan_123', { name: 'general-updated' }) as any;
+      expect(updateChan.id).toBe('chan_123');
+
+      const deleteChan = await sdk.channel.delete('acme-corp', 'chan_123') as any;
+      expect(deleteChan.success).toBe(true);
+
+      // Channel Members
+      const listMembers = await sdk.channel.members.list('acme-corp', 'chan_123') as any;
+      expect(listMembers).toEqual([]);
+
+      const addMembers = await sdk.channel.members.add('acme-corp', 'chan_123', { userIds: ['usr_1'] }) as any;
+      expect(addMembers).toEqual([]);
+
+      const updateMember = await sdk.channel.members.update('acme-corp', 'chan_123', 'usr_1', { role: 'admin' }) as any;
+      expect(updateMember).toEqual({ userId: 'usr_1', role: 'admin' });
+
+      const removeMember = await sdk.channel.members.remove('acme-corp', 'chan_123', 'usr_1') as any;
+      expect(removeMember).toEqual({ success: true });
+    });
+
+    it('should support channel message namespaces', async () => {
       const sdk = new ScrymeSDK({
         baseURL: 'https://api.test.com',
         token: 'active-token',
