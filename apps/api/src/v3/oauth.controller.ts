@@ -106,7 +106,7 @@ Generates a bearer token for Machine-to-Machine (M2M) communication.
       // 1. Validate Payload
       const validatedData = tokenRequestSchema.safeParse(body);
       if (!validatedData.success) {
-        console.error('[OAuth Token Error] Validation failed:', validatedData.error.issues);
+        this.logger.warn(`[OAuth Token Error] Validation failed: ${JSON.stringify(validatedData.error.issues)}`);
         throw new BadRequestException(validatedData.error.issues);
       }
 
@@ -119,12 +119,12 @@ Generates a bearer token for Machine-to-Machine (M2M) communication.
           where: { clientId: client_id },
         });
       } catch (dbError) {
-        console.error(`[OAuth Token Error] Database query failed for clientId "${client_id}":`, dbError);
+        this.logger.error(`[OAuth Token Error] Database query failed for clientId "${client_id}":`, dbError);
         throw new InternalServerErrorException('Failed to verify client credentials due to a database error.');
       }
 
       if (!org) {
-        console.warn(`[OAuth Token Error] Client ID not found: "${client_id}"`);
+        this.logger.warn(`[OAuth Token Error] Client ID not found: "${client_id}"`);
         throw new UnauthorizedException('Invalid client credentials');
       }
 
@@ -141,12 +141,12 @@ Generates a bearer token for Machine-to-Machine (M2M) communication.
 
         isValid = isPlainValid || isHashedValid;
       } catch (cryptoError) {
-        console.error(`[OAuth Token Error] Cryptographic comparison error for client_id "${client_id}":`, cryptoError);
+        this.logger.warn(`[OAuth Token Error] Cryptographic comparison error for client_id "${client_id}": ${cryptoError}`);
         throw new UnauthorizedException('Invalid client credentials');
       }
 
       if (!isValid) {
-        console.warn(`[OAuth Token Error] Invalid client_secret provided for client_id: "${client_id}"`);
+        this.logger.warn(`[OAuth Token Error] Invalid client_secret provided for client_id: "${client_id}"`);
         throw new UnauthorizedException('Invalid client credentials: The provided client_secret is incorrect.');
       }
 
@@ -160,7 +160,7 @@ Generates a bearer token for Machine-to-Machine (M2M) communication.
 
         const isAllowed = org.allowedIps.includes(normalizedIp) || (clientIp && org.allowedIps.includes(clientIp));
         if (!isAllowed) {
-          console.warn(`[OAuth Token Error] IP restricted: IP "${clientIp}" (normalized: "${normalizedIp}") not in allowed list for client_id "${client_id}"`);
+          this.logger.warn(`[OAuth Token Error] IP restricted: IP "${clientIp}" (normalized: "${normalizedIp}") not in allowed list for client_id "${client_id}"`);
           throw new ForbiddenException(`Access denied: IP address "${clientIp}" is not in the allowlist.`);
         }
       }
@@ -172,7 +172,7 @@ Generates a bearer token for Machine-to-Machine (M2M) communication.
       if (allowedScopes.length > 0 && allowedScopes[0] !== '*') {
         const unauthorizedScopes = requestedScopes.filter(s => !allowedScopes.includes(s));
         if (unauthorizedScopes.length > 0) {
-          console.warn(`[OAuth Token Error] Forbidden scopes "${unauthorizedScopes.join(', ')}" requested by client_id "${client_id}"`);
+          this.logger.warn(`[OAuth Token Error] Forbidden scopes "${unauthorizedScopes.join(', ')}" requested by client_id "${client_id}"`);
           throw new ForbiddenException(`Unauthorized scopes requested: ${unauthorizedScopes.join(', ')}`);
         }
       }
@@ -189,7 +189,7 @@ Generates a bearer token for Machine-to-Machine (M2M) communication.
       }
 
       // Catch unexpected errors
-      console.error('[OAuth Token Error] Unexpected failure in getToken endpoint:', error);
+      this.logger.error('[OAuth Token Error] Unexpected failure in getToken endpoint:', error);
       throw new InternalServerErrorException('An unexpected error occurred while processing the token request.');
     }
   }
@@ -242,7 +242,7 @@ Generates a bearer token for Machine-to-Machine (M2M) communication.
         scope: accessToken.scopes.join(' '),
       });
     } catch (error) {
-      console.error(`[OAuth Token Error] Database error creating access token for clientId "${publicClientId}":`, error.message);
+      this.logger.error(`[OAuth Token Error] Database error creating access token for clientId "${publicClientId}": ${error.message}`);
       throw new InternalServerErrorException('Failed to generate access token.');
     }
   }

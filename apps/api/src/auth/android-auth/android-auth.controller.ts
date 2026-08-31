@@ -270,7 +270,6 @@ export class AndroidAuthController {
       ...m,
       permissions: Number(m.permissions),
     }));
-    console.log(session);
 
     return {
       token: token || session?.token,
@@ -304,10 +303,14 @@ export class AndroidAuthController {
   }
 
   private handleAuthError(error: any, defaultMessage = 'Authentication failed') {
-    this.logger.error(`${defaultMessage}: ${error.message}`, error.stack);
+    if (error instanceof UnauthorizedException || error instanceof BadRequestException) {
+      throw error;
+    }
     if (error.status === 401) {
+      this.logger.warn(`${defaultMessage}: ${error.message || 'Invalid credentials'}`);
       throw new UnauthorizedException('Invalid credentials');
     }
+    this.logger.warn(`${defaultMessage}: ${error.message || 'Bad request'}`);
     throw new BadRequestException(error.message || defaultMessage);
   }
 }

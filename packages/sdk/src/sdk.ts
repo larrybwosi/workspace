@@ -981,74 +981,108 @@ export class ScrymeSDK {
   public get channel() {
     return {
       /**
-       * Retrieves detailed information of a specific channel.
+       * Retrieves detailed information of a specific channel via V3 API.
        * @param slug The unique workspace slug identifier.
        * @param channelId Unique identifier of the channel.
        * @param options Optional request config override.
-       * @returns Channel details returned exactly from the endpoint.
+       * @returns Channel details returned from the V3 endpoint.
        */
       get: async (slug: string, channelId: string, options?: AxiosRequestConfig): Promise<WorkspaceChannel> => {
-        return this.raw.channelsControllerGetChannel(slug, channelId, options) as unknown as WorkspaceChannel;
+        const res = (await this.raw.v3WorkspacesControllerGetChannel(slug, channelId, options)) as unknown as {
+          success: boolean;
+          data: { channel: WorkspaceChannel };
+        };
+        return res?.data?.channel ?? (res as unknown as WorkspaceChannel);
       },
       /**
-       * Updates configuration, description, icon or status of an existing channel.
+       * Updates configuration, description, icon or status of an existing channel via V3 API.
        * @param slug The unique workspace slug identifier.
        * @param channelId Unique identifier of the channel.
        * @param data Configuration options to update.
        * @param options Optional request config override.
-       * @returns The updated channel details exactly from the endpoint.
+       * @returns The updated channel details returned from the V3 endpoint.
        */
       update: async (
         slug: string,
         channelId: string,
-        data: UpdateWorkspaceChannelDto,
+        data: V3UpdateChannelDto | UpdateWorkspaceChannelDto,
         options?: AxiosRequestConfig
       ): Promise<WorkspaceChannel> => {
-        return this.raw.channelsControllerUpdateChannel(slug, channelId, data, options) as unknown as WorkspaceChannel;
+        const res = (await this.raw.v3WorkspacesControllerUpdateChannel(
+          slug,
+          channelId,
+          data as V3UpdateChannelDto,
+          options
+        )) as unknown as {
+          success: boolean;
+          data: { channel: WorkspaceChannel };
+        };
+        return res?.data?.channel ?? (res as unknown as WorkspaceChannel);
       },
       /**
-       * Permanently deletes a channel from a workspace.
+       * Permanently deletes a channel from a workspace via V3 API.
        * @param slug The unique workspace slug identifier.
        * @param channelId Unique identifier of the channel to delete.
        * @param options Optional request config override.
-       * @returns Success status indicating that the channel was deleted exactly from the endpoint.
+       * @returns Success status indicating that the channel was deleted from the V3 endpoint.
        */
       delete: async (slug: string, channelId: string, options?: AxiosRequestConfig): Promise<{ success: boolean }> => {
-        return this.raw.channelsControllerDeleteChannel(slug, channelId, options) as unknown as { success: boolean };
+        const res = (await this.raw.v3WorkspacesControllerDeleteChannel(slug, channelId, options)) as unknown as {
+          success: boolean;
+          data?: { success: boolean };
+        };
+        return res?.data ?? res;
       },
       /**
-       * Sub-namespace for managing channel member access and permissions.
+       * Sub-namespace for managing channel member access and permissions via V3 API.
        */
       members: {
         /**
-         * Lists members belonging to a specific channel.
+         * Lists members belonging to a specific channel via V3 API.
          * @param slug The unique workspace slug.
          * @param channelId Unique identifier of the channel.
          * @param options Optional request config override.
          */
         list: async (slug: string, channelId: string, options?: AxiosRequestConfig): Promise<any[]> => {
-          return this.raw.channelsControllerGetChannelMembers(slug, channelId, options) as unknown as any[];
+          const res = (await this.raw.v3WorkspacesControllerGetChannelMembers(
+            slug,
+            channelId,
+            options
+          )) as unknown as {
+            success: boolean;
+            data: { members: any[] };
+          };
+          return res?.data?.members ?? (res as unknown as any[]);
         },
         /**
-         * Adds member(s) to a channel with optional role and bitwise permissions.
+         * Adds member(s) to a channel with optional role and bitwise permissions via V3 API.
          * @param slug The unique workspace slug.
          * @param channelId Unique identifier of the channel.
-         * @param data Object containing userIds or userId, role, and optional permissions.
+         * @param data Object containing userIds/memberIds/emails or userId/memberId/email, role, and optional permissions.
          * @param options Optional request config override.
          */
         add: async (
           slug: string,
           channelId: string,
-          data: { userIds?: string[]; userId?: string; role?: string },
+          data: V3AddChannelMemberDto | { userIds?: string[]; userId?: string; role?: string; permissions?: string | number },
           options?: AxiosRequestConfig
         ): Promise<any[]> => {
-          return this.raw.channelsControllerAddChannelMembers(slug, channelId, data, options) as unknown as any[];
+          const res = (await this.raw.v3WorkspacesControllerAddChannelMembers(
+            slug,
+            channelId,
+            data as V3AddChannelMemberDto,
+            options
+          )) as unknown as {
+            success: boolean;
+            data: { members: any[] };
+          };
+          return res?.data?.members ?? (res as unknown as any[]);
         },
         /**
-         * Updates a channel member's role or bitwise permissions.
+         * Updates a channel member's role or bitwise permissions via V3 API.
          * @param slug The unique workspace slug.
          * @param channelId Unique identifier of the channel.
-         * @param targetUserId Target user ID of the channel member.
+         * @param targetUserId Target user ID, member ID, or email of the channel member.
          * @param data Object containing role and/or bitwise permissions.
          * @param options Optional request config override.
          */
@@ -1056,22 +1090,26 @@ export class ScrymeSDK {
           slug: string,
           channelId: string,
           targetUserId: string,
-          data: UpdateChannelMemberDto,
+          data: V3UpdateChannelMemberDto | UpdateChannelMemberDto,
           options?: AxiosRequestConfig
         ): Promise<any> => {
-          return this.raw.channelsControllerUpdateChannelMember(
+          const res = (await this.raw.v3WorkspacesControllerUpdateChannelMember(
             slug,
             channelId,
             targetUserId,
-            data,
+            data as V3UpdateChannelMemberDto,
             options
-          ) as unknown as any;
+          )) as unknown as {
+            success: boolean;
+            data: { member: any };
+          };
+          return res?.data?.member ?? res;
         },
         /**
-         * Removes a member from a channel.
+         * Removes a member from a channel via V3 API.
          * @param slug The unique workspace slug.
          * @param channelId Unique identifier of the channel.
-         * @param targetUserId Target user ID to remove.
+         * @param targetUserId Target user ID, member ID, or email to remove.
          * @param options Optional request config override.
          */
         remove: async (
@@ -1080,12 +1118,16 @@ export class ScrymeSDK {
           targetUserId: string,
           options?: AxiosRequestConfig
         ): Promise<{ success: boolean }> => {
-          return this.raw.channelsControllerRemoveChannelMember(
+          const res = (await this.raw.v3WorkspacesControllerDeleteChannelMember(
             slug,
             channelId,
             targetUserId,
             options
-          ) as unknown as { success: boolean };
+          )) as unknown as {
+            success: boolean;
+            data?: { success: boolean };
+          };
+          return res?.data ?? res;
         },
       },
       /**

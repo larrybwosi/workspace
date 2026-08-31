@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { prisma } from '@repo/database';
 import {
   AblyChannels,
@@ -33,6 +33,7 @@ export interface NotificationPayload {
 
 @Injectable()
 export class NotificationsService {
+  private readonly logger = new Logger(NotificationsService.name);
   async getNotifications(userId: string, unreadOnly = false, limit = 50) {
     return prisma.notification.findMany({
       where: {
@@ -105,7 +106,7 @@ export class NotificationsService {
         notificationId: notification.id,
       });
     } catch (error) {
-      console.error(' Push notification queue error:', error);
+      this.logger.error('Push notification queue error:', error);
       // Don't fail the whole operation if push notifications fail
     }
 

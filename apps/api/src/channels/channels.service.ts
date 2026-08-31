@@ -1,4 +1,4 @@
-import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { Injectable, ForbiddenException, NotFoundException, Logger } from '@nestjs/common';
 import { prisma } from '@repo/database';
 import {
   extractUserMentions,
@@ -11,6 +11,8 @@ import { AblyChannels, AblyEvents, publishRealtime, isUserEligibleForAsset, logA
 
 @Injectable()
 export class ChannelsService {
+  private readonly logger = new Logger(ChannelsService.name);
+
   constructor(private readonly notificationsService: NotificationsService) {}
 
   /**
@@ -389,7 +391,13 @@ export class ChannelsService {
 
     const sender = message.user;
 
-    await this.handleMessageNotifications(
+    /**
+     * ⚡ Performance Optimization:
+     * Background external side-effects (push notifications and realtime event broadcasting)
+     * so they run asynchronously without blocking the HTTP response path.
+     * Expected impact: Cuts message creation response latency (P95/P99) by avoiding external I/O waits.
+     */
+    this.handleMessageNotifications(
       message.id,
       channelId,
       userId,
@@ -399,9 +407,11 @@ export class ChannelsService {
       mentionsAll,
       mentionsHere,
       replyToId
-    );
+    ).catch(err => this.logger.error('Failed to handle message notifications:', err));
 
-    await publishRealtime(AblyChannels.channel(channelId), AblyEvents.MESSAGE_SENT, message);
+    publishRealtime(AblyChannels.channel(channelId), AblyEvents.MESSAGE_SENT, message).catch(err =>
+      this.logger.error('Failed to publish realtime message sent event:', err)
+    );
 
     return message;
   }
@@ -462,7 +472,13 @@ export class ChannelsService {
       },
     });
 
-    await publishRealtime(AblyChannels.channel(channelId), AblyEvents.MESSAGE_UPDATED, message);
+    /**
+     * ⚡ Performance Optimization:
+     * Background realtime event publishing to return HTTP response immediately.
+     */
+    publishRealtime(AblyChannels.channel(channelId), AblyEvents.MESSAGE_UPDATED, message).catch(err =>
+      this.logger.error('Failed to publish realtime message update event:', err)
+    );
 
     return message;
   }
@@ -472,7 +488,13 @@ export class ChannelsService {
       where: { id: messageId },
     });
 
-    await publishRealtime(AblyChannels.channel(channelId), AblyEvents.MESSAGE_DELETED, { id: messageId });
+    /**
+     * ⚡ Performance Optimization:
+     * Background realtime event publishing to return HTTP response immediately.
+     */
+    publishRealtime(AblyChannels.channel(channelId), AblyEvents.MESSAGE_DELETED, { id: messageId }).catch(err =>
+      this.logger.error('Failed to publish realtime message deletion event:', err)
+    );
 
     return { success: true };
   }
@@ -628,17 +650,18 @@ export class ChannelsService {
       },
     });
 
-    await publishRealtime(AblyChannels.channel(channelId), AblyEvents.MESSAGE_SENT, reply);
+    /**
+     * ⚡ Performance Optimization:
+     * Background realtime event publishing and notification sending to return HTTP response immediately.
+     */
+    publishRealtime(AblyChannels.channel(channelId), AblyEvents.MESSAGE_SENT, reply).catch(err =>
+      this.logger.error('Failed to publish realtime reply sent event:', err)
+    );
 
     // Notify the author of the parent message about the reply
-    await this.notificationsService.notifyReply(
-      channelId,
-      userId,
-      reply.user?.name || 'Someone',
-      messageId,
-      reply.id,
-      content
-    );
+    this.notificationsService
+      .notifyReply(channelId, userId, reply.user?.name || 'Someone', messageId, reply.id, content)
+      .catch(err => this.logger.error('Failed to send reply notification:', err));
 
     return reply;
   }

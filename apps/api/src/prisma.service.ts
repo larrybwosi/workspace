@@ -1,9 +1,11 @@
-import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
 // 1. Import PrismaClient type from your db package
 import { prisma, type PrismaClient } from '@repo/database';
 
 @Injectable()
 export class PrismaService implements OnModuleInit, OnModuleDestroy {
+  private readonly logger = new Logger(PrismaService.name);
+
   // 2. Add the explicit return type annotation here
   get client(): PrismaClient {
     return prisma;
@@ -13,7 +15,7 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
     try {
       await prisma.$connect();
     } catch (error: any) {
-      console.warn('[Prisma] Failed to connect to database on init:', error.message);
+      this.logger.warn(`Failed to connect to database on init: ${error.message}`);
     }
   }
   async onModuleDestroy() {

@@ -9,6 +9,7 @@ import {
   BadRequestException,
   ForbiddenException,
   InternalServerErrorException,
+  Logger,
 } from '@nestjs/common';
 import type { FastifyRequest } from 'fastify';
 import { fromNodeHeaders } from 'better-auth/node';
@@ -68,7 +69,7 @@ function extractUserCode(input: string): string {
         return lastPart;
       }
     } catch (e) {
-      console.error('Failed to parse user code from URL', e);
+      // Ignored parsing error
     }
   }
   return code;
@@ -76,6 +77,7 @@ function extractUserCode(input: string): string {
 
 @Controller('device-auth')
 export class DeviceAuthController {
+  private readonly logger = new Logger(DeviceAuthController.name);
   /**
    * Called by the desktop app to start the flow. Returns a device_code
    * (kept private, used only for polling) and a user_code (safe to embed
@@ -101,8 +103,8 @@ export class DeviceAuthController {
           },
         });
       }
-    } catch (e) {
-      console.error('Failed to ensure oAuthClient desktop-app exists', e);
+    } catch (e: any) {
+      this.logger.warn(`Failed to ensure oAuthClient desktop-app exists: ${e.message}`);
     }
 
     const data = await auth.api.deviceCode({
@@ -194,13 +196,13 @@ export class DeviceAuthController {
         headers,
       });
     } catch (error: any) {
-      console.error('QR device authorization error:', error);
       if (error?.status === 404 || error?.body?.error === 'invalid_grant' || error?.body?.error === 'invalid_request') {
         throw new BadRequestException('Session not found or expired');
       }
       if (error?.status === 403 || error?.body?.error === 'access_denied') {
         throw new ForbiddenException('This code belongs to another user');
       }
+      this.logger.error('QR device authorization error:', error);
       throw new InternalServerErrorException('Could not authorize device');
     }
 
@@ -211,8 +213,8 @@ export class DeviceAuthController {
       await publishRealtime(`qr-session:${userCode}`, 'authorized', {
         status: 'authorized',
       });
-    } catch (e) {
-      console.error('Failed to publish realtime notification for device auth', e);
+    } catch (e: any) {
+      this.logger.warn(`Failed to publish realtime notification for device auth: ${e.message}`);
     }
 
     return { success: true };
@@ -251,7 +253,7 @@ export class DeviceAuthController {
         headers,
       });
     } catch (error: any) {
-      console.error('QR device deny error:', error);
+      this.logger.warn(`QR device deny error: ${error.message || 'Session not found or expired'}`);
       throw new BadRequestException('Session not found or expired');
     }
 
@@ -259,8 +261,8 @@ export class DeviceAuthController {
       await publishRealtime(`qr-session:${userCode}`, 'denied', {
         status: 'denied',
       });
-    } catch (e) {
-      console.error('Failed to publish realtime notification for device auth', e);
+    } catch (e: any) {
+      this.logger.warn(`Failed to publish realtime notification for device auth: ${e.message}`);
     }
 
     return { success: true };

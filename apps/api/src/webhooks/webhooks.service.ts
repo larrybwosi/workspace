@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { prisma } from '@repo/database';
 import * as crypto from 'crypto';
 import axios from 'axios';
@@ -13,6 +13,7 @@ export interface WebhookEvent {
 
 @Injectable()
 export class WebhooksService {
+  private readonly logger = new Logger(WebhooksService.name);
   /**
    * Dispatch a webhook event to all registered endpoints for a workspace
    */
@@ -97,7 +98,7 @@ export class WebhooksService {
       // Individual delivery errors are already handled and logged within deliveryPromises.
       Promise.allSettled(deliveryPromises);
     } catch (error) {
-      console.error('Webhook Dispatch Error:', error);
+      this.logger.error('Webhook Dispatch Error:', error);
     }
   }
 
@@ -142,7 +143,7 @@ export class WebhooksService {
 
       return response.data;
     } catch (error: any) {
-      console.error('Organization/M2M Webhook Callback Error:', error);
+      this.logger.error('Organization/M2M Webhook Callback Error:', error);
 
       // Log Organization/M2M webhook failure
       await prisma.webhookLog.create({

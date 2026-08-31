@@ -876,6 +876,54 @@ describe('V3WorkspacesController', () => {
       ownerId: 'owner-xyz',
     };
 
+    describe('getChannel', () => {
+      it('should return channel details by channelId with primary key point lookup', async () => {
+        const mockChannel = {
+          id: 'ch-1',
+          name: 'general',
+          workspaceId: 'ws-123',
+          members: [{ id: 'cm-1', userId: 'user-1', permissions: null }],
+          _count: { members: 1, messages: 5 },
+        };
+
+        (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
+        (prisma.channel.findUnique as any).mockResolvedValue(mockChannel);
+
+        const result = await controller.getChannel(context as any, 'acme-slug', 'ch-1');
+
+        expect(result.success).toBe(true);
+        expect(result.data.channel.name).toBe('general');
+        expect(prisma.channel.findUnique).toHaveBeenCalledWith({
+          where: { id: 'ch-1' },
+          include: {
+            members: {
+              include: {
+                user: { select: { id: true, name: true, email: true, avatar: true } },
+              },
+            },
+            _count: { select: { members: true, messages: true } },
+          },
+        });
+      });
+
+      it('should throw NotFoundException if channel workspaceId does not match context workspace', async () => {
+        const mockChannel = {
+          id: 'ch-1',
+          name: 'general',
+          workspaceId: 'ws-other',
+          members: [],
+          _count: { members: 0, messages: 0 },
+        };
+
+        (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
+        (prisma.channel.findUnique as any).mockResolvedValue(mockChannel);
+
+        await expect(controller.getChannel(context as any, 'acme-slug', 'ch-1')).rejects.toThrow(
+          'Channel not found in this workspace'
+        );
+      });
+    });
+
     describe('getChannels', () => {
       it('should list channels and cache them', async () => {
         const mockChannels = [
