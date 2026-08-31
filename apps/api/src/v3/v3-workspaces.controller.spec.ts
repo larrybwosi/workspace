@@ -8,6 +8,10 @@ import { prisma } from '@repo/database';
 
 vi.mock('@repo/database', () => ({
   prisma: {
+    organization: {
+      findUnique: vi.fn(),
+      findFirst: vi.fn(),
+    },
     workspace: {
       findMany: vi.fn(),
       findUnique: vi.fn(),
@@ -479,7 +483,7 @@ describe('V3WorkspacesController', () => {
       expect(result.data.workspace).toEqual(mockUpdatedWorkspace);
       expect(prisma.workspace.findUnique).toHaveBeenCalledWith({
         where: { slug: 'acme-slug' },
-        select: { id: true, organizationId: true },
+        select: { id: true, organizationId: true, ownerId: true },
       });
       expect(prisma.workspace.update).toHaveBeenCalledWith({
         where: { id: 'ws-123' },

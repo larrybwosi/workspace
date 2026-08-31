@@ -168,8 +168,10 @@ export class ApiV3Guard implements CanActivate {
           throw new UnauthorizedException('Invalid or expired OAuth token');
         }
 
+        const sub = oauthToken.userId || oauthToken.referenceId || oauthToken.clientId || '';
+
         context = {
-          userId: oauthToken.userId || oauthToken.clientId || '',
+          userId: sub,
           clientId: oauthToken.clientId,
           scopes: oauthToken.scopes,
           isBot: true,
@@ -177,12 +179,21 @@ export class ApiV3Guard implements CanActivate {
         };
 
         let org = null;
-        if (context.userId.startsWith('m2m:')) {
-          context.organizationId = context.userId.split(':')[1];
+        if (sub.startsWith('m2m:')) {
+          context.organizationId = sub.split(':')[1];
           org = await prisma.organization.findUnique({
             where: { id: context.organizationId },
           });
-        } else {
+        } else if (oauthToken.clientId) {
+          org = await prisma.organization.findFirst({
+            where: { clientId: oauthToken.clientId },
+          });
+          if (org) {
+            context.organizationId = org.id;
+          }
+        }
+
+        if (!org && context.userId) {
           org = await prisma.organization.findUnique({
             where: { id: context.userId },
           });

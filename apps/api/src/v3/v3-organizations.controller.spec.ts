@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { V3OrganizationsController } from './v3-organizations.controller';
-import { AuthGuard } from '../auth/auth.guard';
+import { ApiV3Guard, ApiV3Context } from '../auth/api-v3.guard';
 import { NotFoundException, ForbiddenException } from '@nestjs/common';
 import { prisma } from '@repo/database';
 
@@ -26,7 +26,7 @@ describe('V3OrganizationsController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [V3OrganizationsController],
     })
-      .overrideGuard(AuthGuard)
+      .overrideGuard(ApiV3Guard)
       .useValue({ canActivate: () => true })
       .compile();
 
@@ -34,7 +34,8 @@ describe('V3OrganizationsController', () => {
     vi.clearAllMocks();
   });
 
-  const mockUser = { id: 'user-1', name: 'Alice', email: 'alice@example.com' } as any;
+  const mockUserContext: ApiV3Context = { userId: 'user-1', clientId: 'session:user-1', scopes: ['*'] };
+  const mockM2mContext: ApiV3Context = { userId: 'm2m:org-1', clientId: 'm2m_123', organizationId: 'org-1', scopes: ['*'] };
 
   describe('getOrganizationWorkspaces', () => {
     it('should return workspaces formatted in V3 response structure if user is a member', async () => {
@@ -46,7 +47,7 @@ describe('V3OrganizationsController', () => {
 
       (prisma.organization.findUnique as any).mockResolvedValue(mockOrg);
 
-      const result = await controller.getOrganizationWorkspaces(mockUser, 'acme');
+      const result = await controller.getOrganizationWorkspaces(mockUserContext, 'acme');
 
       expect(prisma.organization.findUnique).toHaveBeenCalledWith({
         where: { slug: 'acme' },
@@ -57,10 +58,24 @@ describe('V3OrganizationsController', () => {
       expect(result.data).toEqual({ workspaces: mockOrg.workspaces });
     });
 
+    it('should return workspaces formatted in V3 response structure for M2M context', async () => {
+      const mockOrg = {
+        id: 'org-1',
+        workspaces: [{ id: 'ws-1', name: 'Workspace 1' }],
+      };
+
+      (prisma.organization.findUnique as any).mockResolvedValue(mockOrg);
+
+      const result = await controller.getOrganizationWorkspaces(mockM2mContext, 'acme');
+
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual({ workspaces: mockOrg.workspaces });
+    });
+
     it('should throw NotFoundException if organization not found', async () => {
       (prisma.organization.findUnique as any).mockResolvedValue(null);
 
-      await expect(controller.getOrganizationWorkspaces(mockUser, 'missing')).rejects.toThrow(NotFoundException);
+      await expect(controller.getOrganizationWorkspaces(mockUserContext, 'missing')).rejects.toThrow(NotFoundException);
     });
 
     it('should throw ForbiddenException if user is not a member', async () => {
@@ -72,7 +87,7 @@ describe('V3OrganizationsController', () => {
 
       (prisma.organization.findUnique as any).mockResolvedValue(mockOrg);
 
-      await expect(controller.getOrganizationWorkspaces(mockUser, 'acme')).rejects.toThrow(ForbiddenException);
+      await expect(controller.getOrganizationWorkspaces(mockUserContext, 'acme')).rejects.toThrow(ForbiddenException);
     });
   });
 
@@ -87,10 +102,10 @@ describe('V3OrganizationsController', () => {
 
       (prisma.organization.findUnique as any).mockResolvedValue(mockOrg);
 
-      const result = await controller.getOrganization(mockUser, 'acme');
+      const result = await controller.getOrganization(mockUserContext, 'acme');
 
       expect(result.success).toBe(true);
-      expect(result.data).toEqual({ organization: mockOrg });
+      expect(result.data).toEqual({ organization: { id: 'org-1', name: 'Acme', slug: 'acme' } });
     });
   });
 
@@ -104,12 +119,24 @@ describe('V3OrganizationsController', () => {
       (prisma.organization.findUnique as any).mockResolvedValue(mockOrg);
       (prisma.organization.update as any).mockResolvedValue({ id: 'org-1', name: 'New Name' });
 
-      const result = await controller.updateOrganization(mockUser, 'acme', { name: 'New Name' });
+      const result = await controller.updateOrganization(mockUserContext, 'acme', { name: 'New Name' });
 
       expect(prisma.organization.update).toHaveBeenCalledWith({
         where: { id: 'org-1' },
         data: { name: 'New Name' },
       });
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual({ organization: { id: 'org-1', name: 'New Name' } });
+    });
+
+    it('should update organization for M2M context', async () => {
+      const mockOrg = { id: 'org-1' };
+
+      (prisma.organization.findUnique as any).mockResolvedValue(mockOrg);
+      (prisma.organization.update as any).mockResolvedValue({ id: 'org-1', name: 'New Name' });
+
+      const result = await controller.updateOrganization(mockM2mContext, 'acme', { name: 'New Name' });
+
       expect(result.success).toBe(true);
       expect(result.data).toEqual({ organization: { id: 'org-1', name: 'New Name' } });
     });
@@ -122,7 +149,7 @@ describe('V3OrganizationsController', () => {
 
       (prisma.organization.findUnique as any).mockResolvedValue(mockOrg);
 
-      await expect(controller.updateOrganization(mockUser, 'acme', { name: 'New Name' })).rejects.toThrow(ForbiddenException);
+      await expect(controller.updateOrganization(mockUserContext, 'acme', { name: 'New Name' })).rejects.toThrow(ForbiddenException);
     });
   });
 
@@ -140,7 +167,7 @@ describe('V3OrganizationsController', () => {
 
       (prisma.organization.findUnique as any).mockResolvedValue(mockOrg);
 
-      const result = await controller.getM2mApplications(mockUser, 'acme');
+      const result = await controller.getM2mApplications(mockUserContext, 'acme');
 
       expect(result.success).toBe(true);
       expect(result.data.applications).toHaveLength(1);
@@ -157,7 +184,7 @@ describe('V3OrganizationsController', () => {
 
       (prisma.organization.findUnique as any).mockResolvedValue(mockOrg);
 
-      const result = await controller.getM2mApplications(mockUser, 'acme');
+      const result = await controller.getM2mApplications(mockUserContext, 'acme');
 
       expect(result.success).toBe(true);
       expect(result.data.applications).toEqual([]);
@@ -181,7 +208,7 @@ describe('V3OrganizationsController', () => {
         createdAt: new Date('2026-01-01'),
       });
 
-      const result = await controller.createM2mApplication(mockUser, 'acme', {
+      const result = await controller.createM2mApplication(mockUserContext, 'acme', {
         name: 'CI App',
       });
 
@@ -214,7 +241,7 @@ describe('V3OrganizationsController', () => {
         createdAt: new Date('2026-01-01'),
       });
 
-      const result = await controller.updateM2mApplication(mockUser, 'acme', 'org-1', {
+      const result = await controller.updateM2mApplication(mockUserContext, 'acme', 'org-1', {
         name: 'Updated CI App',
         scopes: ['provisioning:workspaces', 'messages:send'],
         allowedIps: ['192.168.1.1'],
@@ -245,7 +272,7 @@ describe('V3OrganizationsController', () => {
       (prisma.organization.findUnique as any).mockResolvedValue(mockOrg);
       (prisma.organization.update as any).mockResolvedValue({});
 
-      const result = await controller.deleteM2mApplication(mockUser, 'acme', 'org-1');
+      const result = await controller.deleteM2mApplication(mockUserContext, 'acme', 'org-1');
 
       expect(prisma.organization.update).toHaveBeenCalledWith({
         where: { id: 'org-1' },

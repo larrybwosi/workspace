@@ -13,11 +13,10 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody, ApiProperty } from '@nestjs/swagger';
-import { AuthGuard } from '../auth/auth.guard';
-import { CurrentUser } from '../auth/current-user.decorator';
+import { ApiV3Guard, ApiV3Context } from '../auth/api-v3.guard';
+import { V3Context } from '../auth/v3-context.decorator';
 import { V3ExceptionFilter } from './v3-exception.filter';
 import { prisma } from '@repo/database';
-import type { User } from '@repo/database';
 import * as crypto from 'crypto';
 import { z } from 'zod';
 import { IsString, IsOptional, IsArray } from 'class-validator';
@@ -81,7 +80,7 @@ const updateOrganizationSchema = z.object({
 @ApiTags('V3 Organizations')
 @ApiBearerAuth()
 @Controller('v3/organizations/:orgSlug')
-@UseGuards(AuthGuard)
+@UseGuards(ApiV3Guard)
 @UseFilters(V3ExceptionFilter)
 export class V3OrganizationsController {
   private formatResponse<T>(data: T) {
@@ -95,21 +94,17 @@ export class V3OrganizationsController {
   @Get('workspaces')
   @ApiOperation({ summary: 'List workspaces for an organization' })
   @ApiParam({ name: 'orgSlug', description: 'The organization slug' })
-  async getOrganizationWorkspaces(@CurrentUser() user: User, @Param('orgSlug') orgSlug: string) {
-    /**
-     * ⚡ Performance Optimization:
-     * 1. Consolidates organization lookup, membership verification, and workspace retrieval into a single query.
-     * 2. Uses nested 'select' to fetch only required fields, reducing database payload and memory usage.
-     * Expected impact: Reduces database round-trips from 2 down to 1.
-     */
+  async getOrganizationWorkspaces(@V3Context() context: ApiV3Context, @Param('orgSlug') orgSlug: string) {
     const organization = await prisma.organization.findUnique({
       where: { slug: orgSlug },
       select: {
         id: true,
-        members: {
-          where: { userId: user.id },
-          select: { id: true },
-        },
+        members: context.organizationId
+          ? undefined
+          : {
+              where: { userId: context.userId },
+              select: { id: true },
+            },
         workspaces: {
           select: {
             id: true,
@@ -143,8 +138,14 @@ export class V3OrganizationsController {
       throw new NotFoundException('Organization not found');
     }
 
-    if (organization.members.length === 0) {
-      throw new ForbiddenException('Not a member of this organization');
+    if (context.organizationId) {
+      if (organization.id !== context.organizationId) {
+        throw new ForbiddenException('Not authorized for this organization');
+      }
+    } else {
+      if (!organization.members || organization.members.length === 0) {
+        throw new ForbiddenException('Not a member of this organization');
+      }
     }
 
     return this.formatResponse({ workspaces: organization.workspaces });
@@ -153,13 +154,7 @@ export class V3OrganizationsController {
   @Get()
   @ApiOperation({ summary: 'Get organization details' })
   @ApiParam({ name: 'orgSlug', description: 'The organization slug' })
-  async getOrganization(@CurrentUser() user: User, @Param('orgSlug') orgSlug: string) {
-    /**
-     * ⚡ Performance Optimization:
-     * 1. Consolidates organization retrieval and membership verification into a single query.
-     * 2. Uses 'select' to retrieve only essential organization fields.
-     * Expected impact: Reduces database round-trips from 2 down to 1.
-     */
+  async getOrganization(@V3Context() context: ApiV3Context, @Param('orgSlug') orgSlug: string) {
     const organization = await prisma.organization.findUnique({
       where: { slug: orgSlug },
       select: {
@@ -169,10 +164,12 @@ export class V3OrganizationsController {
         logo: true,
         metadata: true,
         createdAt: true,
-        members: {
-          where: { userId: user.id },
-          select: { id: true },
-        },
+        members: context.organizationId
+          ? undefined
+          : {
+              where: { userId: context.userId },
+              select: { id: true },
+            },
       },
     });
 
@@ -180,11 +177,18 @@ export class V3OrganizationsController {
       throw new NotFoundException('Organization not found');
     }
 
-    if (organization.members.length === 0) {
-      throw new ForbiddenException('Not a member of this organization');
+    if (context.organizationId) {
+      if (organization.id !== context.organizationId) {
+        throw new ForbiddenException('Not authorized for this organization');
+      }
+    } else {
+      if (!organization.members || organization.members.length === 0) {
+        throw new ForbiddenException('Not a member of this organization');
+      }
     }
 
-    return this.formatResponse({ organization });
+    const { members, ...orgData } = organization as any;
+    return this.formatResponse({ organization: orgData });
   }
 
   @Patch()
@@ -192,7 +196,7 @@ export class V3OrganizationsController {
   @ApiParam({ name: 'orgSlug', description: 'The organization slug' })
   @ApiBody({ type: V3UpdateOrganizationDto })
   async updateOrganization(
-    @CurrentUser() user: User,
+    @V3Context() context: ApiV3Context,
     @Param('orgSlug') orgSlug: string,
     @Body() body: V3UpdateOrganizationDto
   ) {
@@ -200,10 +204,12 @@ export class V3OrganizationsController {
       where: { slug: orgSlug },
       select: {
         id: true,
-        members: {
-          where: { userId: user.id },
-          select: { role: true },
-        },
+        members: context.organizationId
+          ? undefined
+          : {
+              where: { userId: context.userId },
+              select: { role: true },
+            },
       },
     });
 
@@ -211,9 +217,15 @@ export class V3OrganizationsController {
       throw new NotFoundException('Organization not found');
     }
 
-    const member = organization.members[0];
-    if (!member || !['owner', 'admin'].includes(member.role)) {
-      throw new ForbiddenException('You do not have permission to update this organization');
+    if (context.organizationId) {
+      if (organization.id !== context.organizationId) {
+        throw new ForbiddenException('Not authorized for this organization');
+      }
+    } else {
+      const member = organization.members?.[0];
+      if (!member || !['owner', 'admin'].includes(member.role)) {
+        throw new ForbiddenException('You do not have permission to update this organization');
+      }
     }
 
     const validatedData = updateOrganizationSchema.safeParse(body);
@@ -232,7 +244,7 @@ export class V3OrganizationsController {
   @Get('m2m')
   @ApiOperation({ summary: 'List organization M2M applications' })
   @ApiParam({ name: 'orgSlug', description: 'The organization slug' })
-  async getM2mApplications(@CurrentUser() user: User, @Param('orgSlug') orgSlug: string) {
+  async getM2mApplications(@V3Context() context: ApiV3Context, @Param('orgSlug') orgSlug: string) {
     const organization = await prisma.organization.findUnique({
       where: { slug: orgSlug },
       select: {
@@ -242,10 +254,12 @@ export class V3OrganizationsController {
         scopes: true,
         allowedIps: true,
         createdAt: true,
-        members: {
-          where: { userId: user.id },
-          select: { role: true },
-        },
+        members: context.organizationId
+          ? undefined
+          : {
+              where: { userId: context.userId },
+              select: { role: true },
+            },
       },
     });
 
@@ -253,8 +267,14 @@ export class V3OrganizationsController {
       throw new NotFoundException('Organization not found');
     }
 
-    if (organization.members.length === 0) {
-      throw new ForbiddenException('Not a member of this organization');
+    if (context.organizationId) {
+      if (organization.id !== context.organizationId) {
+        throw new ForbiddenException('Not authorized for this organization');
+      }
+    } else {
+      if (!organization.members || organization.members.length === 0) {
+        throw new ForbiddenException('Not a member of this organization');
+      }
     }
 
     const applications = organization.clientId
@@ -278,7 +298,7 @@ export class V3OrganizationsController {
   @ApiParam({ name: 'orgSlug', description: 'The organization slug' })
   @ApiBody({ type: V3CreateM2mApplicationDto })
   async createM2mApplication(
-    @CurrentUser() user: User,
+    @V3Context() context: ApiV3Context,
     @Param('orgSlug') orgSlug: string,
     @Body() body: V3CreateM2mApplicationDto
   ) {
@@ -287,10 +307,12 @@ export class V3OrganizationsController {
       select: {
         id: true,
         name: true,
-        members: {
-          where: { userId: user.id },
-          select: { role: true },
-        },
+        members: context.organizationId
+          ? undefined
+          : {
+              where: { userId: context.userId },
+              select: { role: true },
+            },
       },
     });
 
@@ -298,9 +320,15 @@ export class V3OrganizationsController {
       throw new NotFoundException('Organization not found');
     }
 
-    const member = organization.members[0];
-    if (!member || !['owner', 'admin'].includes(member.role)) {
-      throw new ForbiddenException('You do not have permission to manage M2M credentials');
+    if (context.organizationId) {
+      if (organization.id !== context.organizationId) {
+        throw new ForbiddenException('Not authorized for this organization');
+      }
+    } else {
+      const member = organization.members?.[0];
+      if (!member || !['owner', 'admin'].includes(member.role)) {
+        throw new ForbiddenException('You do not have permission to manage M2M credentials');
+      }
     }
 
     const clientId = `m2m_${crypto.randomBytes(12).toString('hex')}`;
@@ -358,7 +386,7 @@ export class V3OrganizationsController {
   @ApiParam({ name: 'id', description: 'The M2M application/organization ID' })
   @ApiBody({ type: V3UpdateM2mApplicationDto })
   async updateM2mApplication(
-    @CurrentUser() user: User,
+    @V3Context() context: ApiV3Context,
     @Param('orgSlug') orgSlug: string,
     @Param('id') id: string,
     @Body() body: V3UpdateM2mApplicationDto
@@ -372,10 +400,12 @@ export class V3OrganizationsController {
         scopes: true,
         allowedIps: true,
         createdAt: true,
-        members: {
-          where: { userId: user.id },
-          select: { role: true },
-        },
+        members: context.organizationId
+          ? undefined
+          : {
+              where: { userId: context.userId },
+              select: { role: true },
+            },
       },
     });
 
@@ -383,9 +413,15 @@ export class V3OrganizationsController {
       throw new NotFoundException('Organization not found');
     }
 
-    const member = organization.members[0];
-    if (!member || !['owner', 'admin'].includes(member.role)) {
-      throw new ForbiddenException('You do not have permission to manage M2M credentials');
+    if (context.organizationId) {
+      if (organization.id !== context.organizationId) {
+        throw new ForbiddenException('Not authorized for this organization');
+      }
+    } else {
+      const member = organization.members?.[0];
+      if (!member || !['owner', 'admin'].includes(member.role)) {
+        throw new ForbiddenException('You do not have permission to manage M2M credentials');
+      }
     }
 
     if (organization.id !== id && organization.clientId !== id) {
@@ -445,7 +481,7 @@ export class V3OrganizationsController {
   @ApiParam({ name: 'orgSlug', description: 'The organization slug' })
   @ApiParam({ name: 'id', description: 'The M2M application/organization ID' })
   async deleteM2mApplication(
-    @CurrentUser() user: User,
+    @V3Context() context: ApiV3Context,
     @Param('orgSlug') orgSlug: string,
     @Param('id') id: string
   ) {
@@ -453,10 +489,12 @@ export class V3OrganizationsController {
       where: { slug: orgSlug },
       select: {
         id: true,
-        members: {
-          where: { userId: user.id },
-          select: { role: true },
-        },
+        members: context.organizationId
+          ? undefined
+          : {
+              where: { userId: context.userId },
+              select: { role: true },
+            },
       },
     });
 
@@ -464,9 +502,15 @@ export class V3OrganizationsController {
       throw new NotFoundException('Organization not found');
     }
 
-    const member = organization.members[0];
-    if (!member || !['owner', 'admin'].includes(member.role)) {
-      throw new ForbiddenException('You do not have permission to manage M2M credentials');
+    if (context.organizationId) {
+      if (organization.id !== context.organizationId) {
+        throw new ForbiddenException('Not authorized for this organization');
+      }
+    } else {
+      const member = organization.members?.[0];
+      if (!member || !['owner', 'admin'].includes(member.role)) {
+        throw new ForbiddenException('You do not have permission to manage M2M credentials');
+      }
     }
 
     const currentOrg = await prisma.organization.findUnique({

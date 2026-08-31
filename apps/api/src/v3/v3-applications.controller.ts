@@ -7,14 +7,16 @@ import {
   Body,
   Param,
   UseGuards,
+  UseFilters,
   ForbiddenException,
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
-import { AuthGuard } from '../auth/auth.guard';
-import { CurrentUser } from '../auth/current-user.decorator';
-import { prisma, User } from '@repo/database';
+import { ApiV3Guard, ApiV3Context } from '../auth/api-v3.guard';
+import { V3Context } from '../auth/v3-context.decorator';
+import { V3ExceptionFilter } from './v3-exception.filter';
+import { prisma } from '@repo/database';
 import * as crypto from 'crypto';
 
 function generateBotToken(userId: string): string {
@@ -28,16 +30,44 @@ function generateBotToken(userId: string): string {
 @ApiTags('V3 Bot Applications')
 @ApiBearerAuth()
 @Controller()
-@UseGuards(AuthGuard)
+@UseGuards(ApiV3Guard)
+@UseFilters(V3ExceptionFilter)
 export class V3ApplicationsController {
+  private async checkAppAccess(app: any, context: ApiV3Context) {
+    if (context.organizationId) {
+      if (app.ownerId === context.userId) return;
+      if (app.workspaceId) {
+        const ws = await prisma.workspace.findUnique({
+          where: { id: app.workspaceId },
+          select: { organizationId: true },
+        });
+        if (ws?.organizationId === context.organizationId) return;
+      }
+      throw new ForbiddenException('Forbidden');
+    } else {
+      if (app.ownerId !== context.userId) {
+        throw new ForbiddenException('Forbidden');
+      }
+    }
+  }
+
   /**
    * List applications owned by user or organization
    */
   @Get(['v3/applications', 'v2/applications'])
   @ApiOperation({ summary: 'List bot applications' })
-  async listApplications(@CurrentUser() user: User) {
+  async listApplications(@V3Context() context: ApiV3Context) {
+    const whereCondition = context.organizationId
+      ? {
+          OR: [
+            { ownerId: context.userId },
+            { workspace: { organizationId: context.organizationId } },
+          ],
+        }
+      : { ownerId: context.userId };
+
     const apps = await prisma.botApplication.findMany({
-      where: { ownerId: user.id },
+      where: whereCondition,
       include: {
         bot: {
           select: {
@@ -80,7 +110,7 @@ export class V3ApplicationsController {
   @Post(['v3/applications', 'v2/applications'])
   @ApiOperation({ summary: 'Create a bot application' })
   async createApplication(
-    @CurrentUser() user: User,
+    @V3Context() context: ApiV3Context,
     @Body()
     body: {
       name: string;
@@ -114,15 +144,40 @@ export class V3ApplicationsController {
 
     // Resolve target workspace if provided
     let targetWorkspaceId: string | null = null;
+    let targetOwnerId = context.userId;
+
     if (body.workspaceId || body.workspaceSlug) {
       const workspace = await prisma.workspace.findFirst({
         where: {
           OR: [{ id: body.workspaceId }, { slug: body.workspaceSlug }],
         },
-        select: { id: true },
+        select: { id: true, ownerId: true },
       });
       if (workspace) {
         targetWorkspaceId = workspace.id;
+        if (context.organizationId) {
+          targetOwnerId = workspace.ownerId;
+        }
+      }
+    }
+
+    // If targetOwnerId is not a valid user in database (e.g. M2M subject 'm2m:...'), find org owner
+    if (context.organizationId) {
+      const dbOwner = await prisma.user.findUnique({ where: { id: targetOwnerId } });
+      if (!dbOwner) {
+        const orgWithMember = await prisma.organization.findUnique({
+          where: { id: context.organizationId },
+          select: {
+            members: {
+              select: { userId: true },
+              take: 1,
+            },
+          },
+        });
+        const orgMember = orgWithMember?.members[0];
+        if (orgMember) {
+          targetOwnerId = orgMember.userId;
+        }
       }
     }
 
@@ -132,7 +187,7 @@ export class V3ApplicationsController {
         description: body.description,
         clientId,
         clientSecret,
-        ownerId: user.id,
+        ownerId: targetOwnerId,
         botId: botUser.id,
         workspaceId: targetWorkspaceId,
         interactionsUrl: body.interactionsUrl,
@@ -145,7 +200,7 @@ export class V3ApplicationsController {
 
     // If installed to a workspace, add bot as member & provision channels
     if (targetWorkspaceId) {
-      await this.installBotToWorkspace(app.id, targetWorkspaceId, user.id);
+      await this.installBotToWorkspace(app.id, targetWorkspaceId, targetOwnerId);
     }
 
     return {
@@ -174,7 +229,7 @@ export class V3ApplicationsController {
   @Get(['v3/applications/:id', 'v2/applications/:id'])
   @ApiOperation({ summary: 'Get application details' })
   @ApiParam({ name: 'id', description: 'Application ID' })
-  async getApplication(@CurrentUser() user: User, @Param('id') id: string) {
+  async getApplication(@V3Context() context: ApiV3Context, @Param('id') id: string) {
     const app = await prisma.botApplication.findUnique({
       where: { id },
       include: {
@@ -186,9 +241,7 @@ export class V3ApplicationsController {
       throw new NotFoundException('Application not found');
     }
 
-    if (app.ownerId !== user.id) {
-      throw new ForbiddenException('Forbidden');
-    }
+    await this.checkAppAccess(app, context);
 
     return {
       id: app.id,
@@ -220,13 +273,13 @@ export class V3ApplicationsController {
   @ApiOperation({ summary: 'Update bot application' })
   @ApiParam({ name: 'id', description: 'Application ID' })
   async updateApplication(
-    @CurrentUser() user: User,
+    @V3Context() context: ApiV3Context,
     @Param('id') id: string,
     @Body() body: { name?: string; description?: string; channelDefinitions?: any; interactionsUrl?: string }
   ) {
     const app = await prisma.botApplication.findUnique({ where: { id } });
     if (!app) throw new NotFoundException('Application not found');
-    if (app.ownerId !== user.id) throw new ForbiddenException('Forbidden');
+    await this.checkAppAccess(app, context);
 
     const updated = await prisma.botApplication.update({
       where: { id },
@@ -273,14 +326,14 @@ export class V3ApplicationsController {
   @Post(['v3/applications/:id/reset-token', 'v2/applications/:id/reset-token'])
   @ApiOperation({ summary: 'Reset bot token' })
   @ApiParam({ name: 'id', description: 'Application ID' })
-  async resetToken(@CurrentUser() user: User, @Param('id') id: string) {
+  async resetToken(@V3Context() context: ApiV3Context, @Param('id') id: string) {
     const app = await prisma.botApplication.findUnique({
       where: { id },
       include: { bot: true },
     });
 
     if (!app) throw new NotFoundException('Application not found');
-    if (app.ownerId !== user.id) throw new ForbiddenException('Forbidden');
+    await this.checkAppAccess(app, context);
     if (!app.botId) throw new BadRequestException('Bot user not associated with application');
 
     const newToken = generateBotToken(app.botId);
@@ -308,10 +361,10 @@ export class V3ApplicationsController {
   @Post(['v3/applications/:id/delete', 'v2/applications/:id/delete'])
   @ApiOperation({ summary: 'Delete bot application' })
   @ApiParam({ name: 'id', description: 'Application ID' })
-  async deleteApplication(@CurrentUser() user: User, @Param('id') id: string) {
+  async deleteApplication(@V3Context() context: ApiV3Context, @Param('id') id: string) {
     const app = await prisma.botApplication.findUnique({ where: { id } });
     if (!app) throw new NotFoundException('Application not found');
-    if (app.ownerId !== user.id) throw new ForbiddenException('Forbidden');
+    await this.checkAppAccess(app, context);
 
     await prisma.botApplication.delete({ where: { id } });
     if (app.botId) {
@@ -328,7 +381,7 @@ export class V3ApplicationsController {
   @ApiOperation({ summary: 'Install bot application to a workspace' })
   @ApiParam({ name: 'id', description: 'Application ID' })
   async installApplication(
-    @CurrentUser() user: User,
+    @V3Context() context: ApiV3Context,
     @Param('id') id: string,
     @Body() body: { workspaceId?: string; workspaceSlug?: string }
   ) {
@@ -347,7 +400,7 @@ export class V3ApplicationsController {
       throw new NotFoundException('Workspace not found');
     }
 
-    return this.installBotToWorkspace(id, workspace.id, user.id);
+    return this.installBotToWorkspace(id, workspace.id, workspace.ownerId || context.userId);
   }
 
   /**
@@ -356,7 +409,7 @@ export class V3ApplicationsController {
   @Get('v3/workspaces/:slug/bots')
   @ApiOperation({ summary: 'List installed bots in workspace' })
   @ApiParam({ name: 'slug', description: 'Workspace slug' })
-  async listWorkspaceBots(@CurrentUser() user: User, @Param('slug') slug: string) {
+  async listWorkspaceBots(@V3Context() context: ApiV3Context, @Param('slug') slug: string) {
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
       select: {
@@ -403,12 +456,12 @@ export class V3ApplicationsController {
   @Post('v3/workspaces/:slug/bots')
   @ApiOperation({ summary: 'Add a bot to a workspace' })
   @ApiParam({ name: 'slug', description: 'Workspace slug' })
-  async addBotToWorkspace(@CurrentUser() user: User, @Param('slug') slug: string, @Body() body: { applicationId: string }) {
+  async addBotToWorkspace(@V3Context() context: ApiV3Context, @Param('slug') slug: string, @Body() body: { applicationId: string }) {
     if (!body.applicationId) throw new BadRequestException('applicationId is required');
     const workspace = await prisma.workspace.findUnique({ where: { slug } });
     if (!workspace) throw new NotFoundException('Workspace not found');
 
-    return this.installBotToWorkspace(body.applicationId, workspace.id, user.id);
+    return this.installBotToWorkspace(body.applicationId, workspace.id, workspace.ownerId || context.userId);
   }
 
   /**

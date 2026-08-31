@@ -628,7 +628,19 @@ When provisioned via M2M:
     // Security validation
     if (context.organizationId) {
       if (workspace.organizationId !== context.organizationId) {
-        throw new ForbiddenException('M2M application is not authorized to access this workspace');
+        const orgWithMember = await prisma.organization.findUnique({
+          where: { id: context.organizationId },
+          select: {
+            members: {
+              where: { userId: workspace.ownerId },
+              select: { id: true },
+            },
+          },
+        });
+        const hasOwnerAccess = orgWithMember && orgWithMember.members.length > 0;
+        if (!hasOwnerAccess) {
+          throw new ForbiddenException('M2M application is not authorized to access this workspace');
+        }
       }
     } else if (context.workspaceId) {
       if (workspace.id !== context.workspaceId) {
@@ -711,7 +723,7 @@ When provisioned via M2M:
 
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
-      select: { id: true, organizationId: true },
+      select: { id: true, organizationId: true, ownerId: true },
     });
 
     if (!workspace) {
@@ -721,7 +733,19 @@ When provisioned via M2M:
     // Security validation
     if (context.organizationId) {
       if (workspace.organizationId !== context.organizationId) {
-        throw new ForbiddenException('M2M application is not authorized to access this workspace');
+        const orgWithMember = await prisma.organization.findUnique({
+          where: { id: context.organizationId },
+          select: {
+            members: {
+              where: { userId: workspace.ownerId },
+              select: { id: true },
+            },
+          },
+        });
+        const hasOwnerAccess = orgWithMember && orgWithMember.members.length > 0;
+        if (!hasOwnerAccess) {
+          throw new ForbiddenException('M2M application is not authorized to access this workspace');
+        }
       }
     } else if (context.workspaceId) {
       if (workspace.id !== context.workspaceId) {
@@ -832,7 +856,19 @@ When provisioned via M2M:
     // Security validation
     if (context.organizationId) {
       if (workspace.organizationId !== context.organizationId) {
-        throw new ForbiddenException('M2M application is not authorized to access this workspace');
+        const orgWithMember = await prisma.organization.findUnique({
+          where: { id: context.organizationId },
+          select: {
+            members: {
+              where: { userId: workspace.ownerId },
+              select: { id: true },
+            },
+          },
+        });
+        const hasOwnerAccess = orgWithMember && orgWithMember.members.length > 0;
+        if (!hasOwnerAccess) {
+          throw new ForbiddenException('M2M application is not authorized to access this workspace');
+        }
       }
     } else if (context.workspaceId) {
       if (workspace.id !== context.workspaceId) {
@@ -1243,7 +1279,19 @@ When provisioned via M2M:
 
     if (context.organizationId) {
       if (workspace.organizationId !== context.organizationId) {
-        throw new ForbiddenException('M2M application is not authorized to access this workspace');
+        const orgWithMember = await prisma.organization.findUnique({
+          where: { id: context.organizationId },
+          select: {
+            members: {
+              where: { userId: workspace.ownerId },
+              select: { id: true },
+            },
+          },
+        });
+        const hasOwnerAccess = orgWithMember && orgWithMember.members.length > 0;
+        if (!hasOwnerAccess) {
+          throw new ForbiddenException('M2M application is not authorized to access this workspace');
+        }
       }
     } else if (context.workspaceId) {
       if (workspace.id !== context.workspaceId) {
@@ -1354,7 +1402,7 @@ When provisioned via M2M:
     const isPrivate = data.isPrivate !== undefined ? data.isPrivate : data.type === 'private';
     const type = data.type || (isPrivate ? 'private' : 'public');
 
-    const createdById = context.userId || workspace.ownerId;
+    const createdById = context.organizationId ? workspace.ownerId : (context.userId || workspace.ownerId);
 
     const initialMembersToCreate = (data.initialMembers || []).map(m => ({
       userId: m.userId,
