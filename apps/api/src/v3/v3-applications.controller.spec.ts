@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { V3ApplicationsController } from './v3-applications.controller';
-import { AuthGuard } from '../auth/auth.guard';
+import { ApiV3Guard, ApiV3Context } from '../auth/api-v3.guard';
 import { NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { prisma } from '@repo/database';
 
@@ -49,7 +49,7 @@ describe('V3ApplicationsController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [V3ApplicationsController],
     })
-      .overrideGuard(AuthGuard)
+      .overrideGuard(ApiV3Guard)
       .useValue({ canActivate: () => true })
       .compile();
 
@@ -57,7 +57,7 @@ describe('V3ApplicationsController', () => {
     vi.clearAllMocks();
   });
 
-  const mockUser = { id: 'user-1', name: 'Alice', email: 'alice@example.com' } as any;
+  const mockContext: ApiV3Context = { userId: 'user-1', clientId: 'session:user-1', scopes: ['*'] };
 
   describe('listApplications', () => {
     it('should return list of bot applications owned by the user', async () => {
@@ -76,7 +76,7 @@ describe('V3ApplicationsController', () => {
 
       (prisma.botApplication.findMany as any).mockResolvedValue(mockApps);
 
-      const result = await controller.listApplications(mockUser);
+      const result = await controller.listApplications(mockContext);
 
       expect(prisma.botApplication.findMany).toHaveBeenCalledWith({
         where: { ownerId: 'user-1' },
@@ -118,7 +118,7 @@ describe('V3ApplicationsController', () => {
       (prisma.user.create as any).mockResolvedValue(mockBotUser);
       (prisma.botApplication.create as any).mockResolvedValue(mockApp);
 
-      const result = await controller.createApplication(mockUser, {
+      const result = await controller.createApplication(mockContext, {
         name: 'Helper Bot',
         description: 'Assists with tasks',
       });
@@ -135,7 +135,7 @@ describe('V3ApplicationsController', () => {
     });
 
     it('should throw BadRequestException if name is missing', async () => {
-      await expect(controller.createApplication(mockUser, { name: '' })).rejects.toThrow(BadRequestException);
+      await expect(controller.createApplication(mockContext, { name: '' })).rejects.toThrow(BadRequestException);
     });
   });
 
@@ -150,19 +150,19 @@ describe('V3ApplicationsController', () => {
 
       (prisma.botApplication.findUnique as any).mockResolvedValue(mockApp);
 
-      const result = await controller.getApplication(mockUser, 'app-1');
+      const result = await controller.getApplication(mockContext, 'app-1');
       expect(result.name).toBe('My App');
     });
 
     it('should throw NotFoundException if app does not exist', async () => {
       (prisma.botApplication.findUnique as any).mockResolvedValue(null);
-      await expect(controller.getApplication(mockUser, 'missing')).rejects.toThrow(NotFoundException);
+      await expect(controller.getApplication(mockContext, 'missing')).rejects.toThrow(NotFoundException);
     });
 
     it('should throw ForbiddenException if app owned by another user', async () => {
       const mockApp = { id: 'app-1', ownerId: 'other-user' };
       (prisma.botApplication.findUnique as any).mockResolvedValue(mockApp);
-      await expect(controller.getApplication(mockUser, 'app-1')).rejects.toThrow(ForbiddenException);
+      await expect(controller.getApplication(mockContext, 'app-1')).rejects.toThrow(ForbiddenException);
     });
   });
 
@@ -181,7 +181,7 @@ describe('V3ApplicationsController', () => {
         botToken: 'new_token_123',
       });
 
-      const result = await controller.resetToken(mockUser, 'app-1');
+      const result = await controller.resetToken(mockContext, 'app-1');
 
       expect(prisma.user.update).toHaveBeenCalledWith({
         where: { id: 'bot-1' },
@@ -203,7 +203,7 @@ describe('V3ApplicationsController', () => {
       (prisma.botApplication.delete as any).mockResolvedValue(mockApp);
       (prisma.user.delete as any).mockResolvedValue({ id: 'bot-1' });
 
-      const result = await controller.deleteApplication(mockUser, 'app-1');
+      const result = await controller.deleteApplication(mockContext, 'app-1');
 
       expect(prisma.botApplication.delete).toHaveBeenCalledWith({ where: { id: 'app-1' } });
       expect(prisma.user.delete).toHaveBeenCalledWith({ where: { id: 'bot-1' } });
@@ -241,7 +241,7 @@ describe('V3ApplicationsController', () => {
       (prisma.channelMember.upsert as any).mockResolvedValue({});
       (prisma.workspaceMember.findMany as any).mockResolvedValue([{ userId: 'admin-user' }]);
 
-      const result = await controller.installApplication(mockUser, 'app-1', {
+      const result = await controller.installApplication(mockContext, 'app-1', {
         workspaceSlug: 'acme-ws',
       });
 
@@ -278,7 +278,7 @@ describe('V3ApplicationsController', () => {
 
       (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
 
-      const result = await controller.listWorkspaceBots(mockUser, 'acme-ws');
+      const result = await controller.listWorkspaceBots(mockContext, 'acme-ws');
 
       expect(prisma.workspace.findUnique).toHaveBeenCalledWith({
         where: { slug: 'acme-ws' },
