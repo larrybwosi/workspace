@@ -10,7 +10,7 @@ The production Docker Compose topology consists of 6 core microservices orchestr
 
 ```text
                      ┌────────────────────────┐
-                     │ Traefik / Edge Proxy   │
+                     │ Traefik / Edge Proxy   │ 
                      │ (Ports 80 / 443 TLS)   │
                      └───────────┬────────────┘
                                  │
