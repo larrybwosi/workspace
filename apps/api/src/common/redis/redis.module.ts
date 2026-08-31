@@ -1,6 +1,8 @@
-import { Module, Global } from '@nestjs/common';
+import { Module, Global, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
+
+const logger = new Logger('RedisModule');
 
 @Global()
 @Module({
@@ -30,7 +32,7 @@ import Redis from 'ioredis';
           // Only log once every 30 seconds to avoid flooding
           const now = Date.now();
           if (!client['lastLogErrorTime'] || now - client['lastLogErrorTime'] > 30000) {
-            console.warn('[Redis] Connection error:', error.message);
+            logger.warn(`[Redis] Connection error: ${error.message}`);
             client['lastLogErrorTime'] = now;
           }
         });

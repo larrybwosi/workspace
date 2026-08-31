@@ -1,4 +1,4 @@
-import { Injectable, ForbiddenException, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, ForbiddenException, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { prisma, User } from '@repo/database';
 import { z } from 'zod';
 import * as crypto from 'crypto';
@@ -100,6 +100,8 @@ export const INTEGRATION_METADATA = {
 
 @Injectable()
 export class IntegrationsService {
+  private readonly logger = new Logger(IntegrationsService.name);
+
   constructor(private readonly systemMessagesService: SystemMessagesService) {}
 
   async handlePlaneWebhook(body: any) {
@@ -467,7 +469,7 @@ export class IntegrationsService {
           },
         },
       })
-      .catch(err => console.error('Workspace audit log creation error (integration.created):', err));
+      .catch(err => this.logger.error('Workspace audit log creation error (integration.created):', err));
 
     return {
       ...integration,
@@ -568,7 +570,7 @@ export class IntegrationsService {
           metadata: data,
         },
       })
-      .catch(err => console.error('Workspace audit log creation error (integration.updated):', err));
+      .catch(err => this.logger.error('Workspace audit log creation error (integration.updated):', err));
 
     return integration;
   }
@@ -626,7 +628,7 @@ export class IntegrationsService {
           resourceId: integrationId,
         },
       })
-      .catch(err => console.error('Workspace audit log creation error (integration.deleted):', err));
+      .catch(err => this.logger.error('Workspace audit log creation error (integration.deleted):', err));
 
     return { success: true };
   }
@@ -769,7 +771,7 @@ export class IntegrationsService {
           metadata: testResult as any,
         },
       })
-      .catch(err => console.error('Workspace audit log creation error (integration.tested):', err));
+      .catch(err => this.logger.error('Workspace audit log creation error (integration.tested):', err));
 
     return testResult;
   }

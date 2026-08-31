@@ -4,6 +4,7 @@ import {
   NotFoundException,
   ForbiddenException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { prisma } from '@repo/database';
 import type { User } from '@repo/database';
@@ -21,6 +22,7 @@ import {
 
 @Injectable()
 export class CallsService {
+  private readonly logger = new Logger(CallsService.name);
   private async resolveWorkspaceId(workspaceIdOrSlug: string): Promise<string> {
     const workspace =
       (await prisma.workspace.findUnique({
@@ -52,7 +54,7 @@ export class CallsService {
     }
 
     if (!agoraConfig.appId || !agoraConfig.appCertificate) {
-      console.warn('Agora configuration is missing');
+      this.logger.warn('Agora configuration is missing');
     }
 
     let workspaceId = incomingWorkspaceId;
