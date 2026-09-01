@@ -140,24 +140,30 @@ Every node can have a `condition`.
 ```
 **Operators**: `EQUALS`, `NOT_EQUALS`, `CONTAINS`, `GREATER_THAN`, `LESS_THAN`, `EXISTS`, `NOT_EXISTS`.
 
-### Actions
-Actions are rendered as buttons at the bottom of the card.
+### Actions & Webhook Callbacks
+Actions are rendered as interactive buttons at the bottom of the card.
 
 ```json
 {
   "id": "submit_action",
-  "label": "Submit",
+  "label": "Submit Feedback",
   "type": "PRIMARY",
   "handler": {
     "type": "CALLBACK",
-    "callbackId": "my-plugin-id",
+    "callbackId": "feedback-plugin-id",
     "includeFormState": true,
-    "payload": { "extra": "data" }
+    "payload": { "category": "user-experience" }
   }
 }
 ```
 
-When clicked, the UI first validates all visible inputs. If valid, the `formState` (all input values) is merged into the payload sent to your backend.
+### Response Execution Flow
+
+1. **User Interaction**: When a user clicks an action button, the client validates all active inputs on the form.
+2. **Action Dispatch**: The client sends a `POST /workspaces/:slug/messages/:messageId/actions` request with the selected `actionId`, optional user `comment`, and accumulated `formState`.
+3. **Database Log**: Scrymechat records the submission in `MessageActionResponse`.
+4. **Real-time Sync**: Broadcasts `message.action_response` over WebSocket/Ably to instantly reflect user input on all open workspace clients.
+5. **Webhook Notification**: If the custom message includes a `callbackUrl` in its `metadata`, an HTTP POST request is dispatched asynchronously to your service with an HMAC SHA-256 signature (`X-Webhook-Signature`).
 
 ---
 
