@@ -1,16 +1,17 @@
 # Scryme Chat TypeScript SDK (`@scryme/chat`)
 
-A high-performance, developer-friendly, fully typed TypeScript/JavaScript SDK for interacting with the Skyrme Chat V2 and V3 Enterprise APIs.
+A high-performance, developer-friendly, fully typed TypeScript/JavaScript SDK for interacting with the Scryme Chat V2 and V3 Enterprise APIs.
 
-Designed primarily for backend integrations, servers, and automated Machine-to-Machine (M2M) environments, this SDK provides unmatched DX with automatic OAuth2 token management, dynamic API proxying, and fluent nested helper chains.
+Designed primarily for backend integrations, servers, and automated Machine-to-Machine (M2M) environments, this SDK provides unmatched DX with automatic OAuth2 token management, dynamic API proxying, custom message builders, and fluent nested helper chains.
 
 ---
 
 ## Features
 
 - **OAuth2 Client Credentials Grant**: Built-in, fully automated caching and renewal of M2M access tokens with timing-safe, proactive expiration buffers.
-- **Dynamic Method Proxying (`sdk.raw`)**: Automatic injection of Bearer token and Base URL headers into any of the 100+ generated V3 API endpoints with complete TypeScript autocompletion.
-- **Fluent Nested Namespaces**: High-level, developer-friendly helper routes (`sdk.workspace`, `sdk.channel`, `sdk.message`, etc.) for seamless workspace, department, team, and member administration.
+- **Dynamic Method Proxying (`sdk.raw`)**: Automatic injection of Bearer token and Base URL headers into any of the generated V3 API endpoints with complete TypeScript autocompletion.
+- **Fluent Nested Namespaces**: High-level, developer-friendly helper routes (`sdk.workspace`, `sdk.channel`, `sdk.message`, `sdk.webhooks`, `sdk.bot`) for seamless workspace, department, team, and member administration.
+- **Custom Message Builders**: Type-safe helpers (`createCustomMessageSchema`, `createFormCustomMessageSchema`) for generating node-based interactive in-chat forms, surveys, and approval cards.
 - **Isomorphic Support**: Works out-of-the-box in Node.js, Next.js (server/client), Vite, and React Native.
 
 ---
@@ -114,35 +115,73 @@ const channel = await sdk.workspace.channels.create('acme-corp', {
   metadata: { department: 'eng' },
 });
 
-// Update channel settings, visibility, and metadata
-await sdk.channel.update('acme-corp', 'channel_id_123', {
-  name: 'eng-tech',
-  description: 'Updated description',
-  icon: 'terminal',
-  metadata: { priority: 'high' },
-});
-
-// Manage channel member access and permissions
-await sdk.channel.members.add('acme-corp', 'channel_id_123', {
-  userIds: ['user_456'],
-  role: 'moderator',
-  permissions: '2048',
-});
-
-await sdk.channel.members.update('acme-corp', 'channel_id_123', 'user_456', {
-  role: 'admin',
-  permissions: '4096',
-});
-
-await sdk.channel.members.remove('acme-corp', 'channel_id_123', 'user_456');
-
-// Send a message to a channel
+// Send a message to a channel with interactive buttons
 await sdk.channel.message.create('channel_id_123', {
-  content: 'Hello Team! This is automated via our new TS SDK 🚀',
+  content: 'Please approve the deployment request',
+  messageType: 'approval',
+  metadata: {
+    callbackUrl: 'https://my-app.example.com/api/actions/callback',
+  },
+  actions: [
+    { actionId: 'approve', label: 'Approve', style: 'primary' },
+    { actionId: 'reject', label: 'Reject', style: 'danger' }
+  ]
 });
 
 // Fetch channel messages
 const messages = await sdk.channel.message.list('channel_id_123', { limit: 10 });
+```
+
+#### Webhooks Management
+```typescript
+// List workspace webhooks
+const webhooks = await sdk.webhooks.list('acme-corp');
+
+// Create outgoing workspace webhook
+const newWebhook = await sdk.webhooks.create('acme-corp', {
+  name: 'CI Notifier',
+  url: 'https://my-app.example.com/api/webhooks',
+  events: ['message.sent', 'message.action_response'],
+});
+```
+
+---
+
+### Custom Message Builders
+
+Use `@scryme/chat` custom message builders to construct rich, interactive forms and surveys to attach to messages:
+
+```typescript
+import { createFormCustomMessageSchema } from '@scryme/chat';
+
+const feedbackSchema = createFormCustomMessageSchema({
+  title: 'Quarterly Team Feedback',
+  description: 'Please submit your thoughts on team performance',
+  icon: 'HelpCircle',
+  inputs: [
+    {
+      id: 'rating',
+      label: 'Performance Rating (1-5)',
+      placeholder: 'Enter 1 to 5',
+      required: true,
+    },
+    {
+      id: 'comments',
+      label: 'Additional Comments',
+      placeholder: 'Optional feedback...',
+      multiline: true,
+    }
+  ],
+  submitLabel: 'Send Feedback',
+  callbackId: 'team-feedback-submit',
+});
+
+// Send the custom form message to a channel
+await sdk.channel.message.create('channel_id_123', {
+  content: 'New feedback survey',
+  messageType: 'custom',
+  metadata: feedbackSchema,
+});
 ```
 
 ---
@@ -165,7 +204,7 @@ const users = await sdk.raw.usersControllerSearchUsers({ q: 'alice' });
 
 // Fully typed update workspace webhook call
 const webhook = await sdk.raw.v3WebhooksControllerCreateWebhook('acme-corp', {
-  name: 'Slack Sync Sync',
+  name: 'Slack Sync',
   url: 'https://hooks.slack.com/services/...',
   events: ['message.created'],
 });
@@ -189,4 +228,4 @@ pnpm test
 
 ## License
 
-MIT © Skyrme Chat Enterprise
+MIT © Scryme Chat Enterprise

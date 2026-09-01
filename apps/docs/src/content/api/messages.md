@@ -64,6 +64,9 @@ Send a message to a channel or a specific user.
   "channelId": "chan_123",
   "content": "New deployment request",
   "messageType": "approval",
+  "metadata": {
+    "callbackUrl": "https://your-bot.example.com/api/actions/callback"
+  },
   "actions": [
     { "actionId": "approve", "label": "Approve", "style": "primary", "value": "deploy_prod_123" },
     { "actionId": "deny", "label": "Deny", "style": "danger", "value": "deploy_prod_123" }
@@ -71,13 +74,75 @@ Send a message to a channel or a specific user.
 }
 ```
 
-### Interactive Actions
+---
 
-Interactive actions allow users to trigger webhooks in your application by clicking buttons on a message.
+## Interactive Actions & Response Triggers
 
-1. **User clicks a button**: Scrymechat sends an `action.triggered` webhook to your app.
-2. **Payload**: The payload includes the `actionId`, `value`, `messageId`, and the user who clicked it.
-3. **Response**: Your server should respond with a `200 OK`. You can also optionally update the original message to reflect the new state.
+Interactive actions enable in-chat workflows where clicking a button or submitting a form in a message dispatches structured data back to your backend.
+
+### Triggering an Interactive Action
+
+When a client clicks a button or submits form data, the client sends a request to trigger the action:
+
+**Endpoint:** `POST /workspaces/:slug/messages/:messageId/actions`
+
+**Headers:**
+```http
+Authorization: Bearer <token>
+```
+
+**Body:**
+```json
+{
+  "actionId": "approve",
+  "comment": "Approved for deployment",
+  "metadata": {
+    "environment": "staging"
+  }
+}
+```
+
+**Execution Pipeline:**
+
+1. **Database Logging**: Scrymechat logs the action response (`MessageActionResponse`) linked to the message and user.
+2. **Realtime Broadcast**: Broadcasts a `message.action_response` event over WebSocket/Ably to update UI across all active workspace clients.
+3. **Webhook Dispatch**: If `metadata.callbackUrl` is specified on the message, an HTTP POST request containing the response details is dispatched to the callback URL with an HMAC SHA-256 signature (`X-Webhook-Signature`).
+4. **Audit Logging**: Creates a `workspaceAuditLog` entry tracking the action execution for enterprise compliance.
+
+### Fetch Action Responses
+
+Retrieve all recorded user responses and form submissions for a specific message.
+
+**Endpoint:** `GET /workspaces/:slug/messages/:messageId/actions`
+
+**Response:**
+```json
+{
+  "success": true,
+  "responses": [
+    {
+      "id": "resp_001",
+      "actionId": "act_approve",
+      "messageId": "msg_9988",
+      "userId": "usr_dev123",
+      "actionValue": "approve",
+      "comment": "Approved for deployment",
+      "metadata": {
+        "environment": "staging"
+      },
+      "respondedAt": "2026-09-01T12:00:00.000Z",
+      "user": {
+        "id": "usr_dev123",
+        "name": "Jane Doe",
+        "email": "jane@acme.com",
+        "avatar": "https://example.com/avatar.jpg"
+      }
+    }
+  ]
+}
+```
+
+---
 
 ### Custom Metadata
 
@@ -114,4 +179,4 @@ The `metadata` field allows you to store structured JSON data with your message.
 
 ## Real-time Events
 
-Scrymechat uses Ably for real-time delivery. When you send a message via the API, it is automatically broadcast to all connected clients in the workspace.
+Scrymechat uses real-time event broadcasting for message delivery. When you send a message via the API, it is automatically broadcast to all connected clients in the workspace.
