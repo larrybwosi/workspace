@@ -1,3 +1,9 @@
+## 2026-09-01 - [Prisma/Performance] Atomic Deletion Scoping and Background Audit Log Creation in API Tokens
+
+**Learning:** In `ApiTokensController`, `deleteApiToken` previously performed read-then-delete database queries and awaited audit log creation synchronously. Replacing `delete` with `deleteMany({ where: { id: tokenId, workspaceId: workspace.id } })` enforces workspace multi-tenant scoping and record deletion in a single atomic database operation. Furthermore, backgrounding non-critical `workspaceAuditLog.create` calls with `.catch()` removes secondary database write latency from blocking HTTP client responses.
+
+**Action:** Consolidate sub-resource deletion and authorization verification into atomic `deleteMany` calls with compound tenant filters, and background non-critical audit log writes with `.catch()`.
+
 ## 2026-08-27 - [Prisma/Performance] Short-circuiting Empty Secondary Queries and O(1) Map Lookups in Audit Logs
 
 **Learning:** In `AuditLogsController`, `WorkspaceAuditLog` stores `userId` as a plain scalar without a Prisma model relation to `User`. When querying audit log feeds or exporting CSVs, performing `prisma.user.findMany({ where: { id: { in: userIds } } })` unconditionally invokes a database query even when `userIds` is empty (e.g., workspaces with no audit log records). Guarding secondary relation queries with an empty-check short-circuit (`userIds.length > 0 ? await prisma.user.findMany(...) : []`) avoids redundant database calls entirely. Furthermore, using `new Map(users.map(u => [u.id, u]))` instead of object reduction provides cleaner O(1) lookups in Node.js.
