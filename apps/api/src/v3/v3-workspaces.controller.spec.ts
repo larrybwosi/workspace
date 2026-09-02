@@ -1049,17 +1049,22 @@ describe('V3WorkspacesController', () => {
 
     describe('deleteChannelMember', () => {
       it('should remove member from channel by member identifier', async () => {
-        const mockExistingChannelMember = { id: 'cm-1' };
-
         (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
-        (prisma.channelMember.findFirst as any).mockResolvedValue(mockExistingChannelMember);
-        (prisma.channelMember.delete as any).mockResolvedValue({ id: 'cm-1' });
+        (prisma.channelMember.deleteMany as any).mockResolvedValue({ count: 1 });
 
         const result = await controller.deleteChannelMember(context as any, 'acme-slug', 'ch-1', 'wsm-123');
 
         expect(result.success).toBe(true);
-        expect(prisma.channelMember.delete).toHaveBeenCalledWith({
-          where: { id: 'cm-1' },
+        expect(prisma.channelMember.deleteMany).toHaveBeenCalledWith({
+          where: {
+            channelId: 'ch-1',
+            channel: { workspaceId: mockWorkspace.id },
+            OR: [
+              { userId: 'wsm-123' },
+              { user: { email: 'wsm-123' } },
+              { user: { workspaceMemberships: { some: { id: 'wsm-123', workspaceId: mockWorkspace.id } } } },
+            ],
+          },
         });
       });
     });
