@@ -1,3 +1,9 @@
+## 2026-09-03 - [Prisma/Performance] Batch Channel Member Population and Unique Point Lookups in Bot Applications
+
+**Learning:** In `V3ApplicationsController.installBotToWorkspace`, auto-populating workspace members into channel membership based on channel definitions (`autoPopulateRoles`) previously performed sequential `prisma.channelMember.upsert` calls in a `for` loop. Replacing this loop with a single `prisma.channelMember.createMany` query with `skipDuplicates: true` reduces database round-trips from N down to 1 during application installation and provisioning. Furthermore, replacing `prisma.workspace.findFirst` with `OR` filters in `createApplication` and `installApplication` with serial `findUnique` point lookups leverages direct O(1) B-tree index lookups on primary key `id` or unique `slug`.
+
+**Action:** Use `createMany({ data: ..., skipDuplicates: true })` instead of `upsert` loops for bulk relation creation, and replace multi-column `OR` `findFirst` lookups with serial `findUnique` calls targeting primary keys or unique indices.
+
 ## 2026-09-02 - [Prisma/Performance] Atomic Sub-Resource Channel Member Deletion
 
 **Learning:** In `V3WorkspacesController`, `deleteChannelMember` previously performed a `prisma.channelMember.findFirst` lookup query followed by a `prisma.channelMember.delete` mutation query. Replacing read-then-delete queries with a single atomic `prisma.channelMember.deleteMany` query using compound tenant filters (`channelId`, `channel.workspaceId`, and member identifiers) eliminates unnecessary database round-trips (reducing RTT from 2 to 1) and prevents read-then-delete race conditions on high-frequency channel management paths.
