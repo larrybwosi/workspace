@@ -1897,7 +1897,14 @@ When provisioned via M2M:
 
     const workspace = await this.resolveWorkspaceAndCheckAccess(context, slug);
 
-    const existingChannelMember = await prisma.channelMember.findFirst({
+    /**
+     * ⚡ Performance Optimization:
+     * Replaces sequential read-then-delete queries (`findFirst` followed by `delete`) with a single atomic
+     * `prisma.channelMember.deleteMany` operation using compound tenant filters.
+     * This reduces database round-trips (RTT) from 2 queries down to 1 and eliminates read-then-delete race conditions.
+     * Expected impact: ~50% reduction in database latency for channel member removals.
+     */
+    await prisma.channelMember.deleteMany({
       where: {
         channelId,
         channel: { workspaceId: workspace.id },
@@ -1907,14 +1914,7 @@ When provisioned via M2M:
           { user: { workspaceMemberships: { some: { id: memberIdParam, workspaceId: workspace.id } } } },
         ],
       },
-      select: { id: true },
     });
-
-    if (existingChannelMember) {
-      await prisma.channelMember.delete({
-        where: { id: existingChannelMember.id },
-      });
-    }
 
     return this.formatResponse({ success: true });
   }

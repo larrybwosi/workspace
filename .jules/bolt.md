@@ -1,3 +1,9 @@
+## 2026-09-02 - [Prisma/Performance] Atomic Sub-Resource Channel Member Deletion
+
+**Learning:** In `V3WorkspacesController`, `deleteChannelMember` previously performed a `prisma.channelMember.findFirst` lookup query followed by a `prisma.channelMember.delete` mutation query. Replacing read-then-delete queries with a single atomic `prisma.channelMember.deleteMany` query using compound tenant filters (`channelId`, `channel.workspaceId`, and member identifiers) eliminates unnecessary database round-trips (reducing RTT from 2 to 1) and prevents read-then-delete race conditions on high-frequency channel management paths.
+
+**Action:** Consolidate sub-resource deletion and authorization verification into single atomic `deleteMany` calls with compound tenant filters on versioned controllers.
+
 ## 2026-09-01 - [Prisma/Performance] Atomic Deletion Scoping and Background Audit Log Creation in API Tokens
 
 **Learning:** In `ApiTokensController`, `deleteApiToken` previously performed read-then-delete database queries and awaited audit log creation synchronously. Replacing `delete` with `deleteMany({ where: { id: tokenId, workspaceId: workspace.id } })` enforces workspace multi-tenant scoping and record deletion in a single atomic database operation. Furthermore, backgrounding non-critical `workspaceAuditLog.create` calls with `.catch()` removes secondary database write latency from blocking HTTP client responses.
