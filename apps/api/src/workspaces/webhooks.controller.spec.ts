@@ -13,6 +13,7 @@ vi.mock('@repo/database', () => ({
     },
     workspaceWebhook: {
       findFirst: vi.fn(),
+      findUnique: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
       deleteMany: vi.fn(),
@@ -186,17 +187,18 @@ describe('WebhooksController', () => {
       });
 
       // Target webhook exists in Workspace B (not Workspace A)
-      (prisma.workspaceWebhook.findFirst as any).mockResolvedValue(null);
+      (prisma.workspaceWebhook.findUnique as any).mockResolvedValue({
+        id: 'wh-belonging-to-workspace-b',
+        workspaceId: 'ws-2',
+      });
 
       await expect(
         controller.updateWebhook(mockUser, 'acme', 'wh-belonging-to-workspace-b', { active: false })
       ).rejects.toThrow(NotFoundException);
 
-      expect(prisma.workspaceWebhook.findFirst).toHaveBeenCalledWith({
-        where: {
-          id: 'wh-belonging-to-workspace-b',
-          workspaceId: 'ws-1',
-        },
+      expect(prisma.workspaceWebhook.findUnique).toHaveBeenCalledWith({
+        where: { id: 'wh-belonging-to-workspace-b' },
+        select: { id: true, workspaceId: true },
       });
     });
 
@@ -206,10 +208,9 @@ describe('WebhooksController', () => {
         members: [{ role: 'owner' }],
       });
 
-      (prisma.workspaceWebhook.findFirst as any).mockResolvedValue({
+      (prisma.workspaceWebhook.findUnique as any).mockResolvedValue({
         id: 'wh-1',
         workspaceId: 'ws-1',
-        name: 'My Hook',
       });
 
       const updatedWebhook = {
@@ -224,6 +225,10 @@ describe('WebhooksController', () => {
       const result = await controller.updateWebhook(mockUser, 'acme', 'wh-1', { active: false });
 
       expect(result).toEqual(updatedWebhook);
+      expect(prisma.workspaceWebhook.findUnique).toHaveBeenCalledWith({
+        where: { id: 'wh-1' },
+        select: { id: true, workspaceId: true },
+      });
       expect(prisma.workspaceWebhook.update).toHaveBeenCalledWith({
         where: { id: 'wh-1' },
         data: { active: false },
