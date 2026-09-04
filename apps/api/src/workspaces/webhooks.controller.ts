@@ -193,6 +193,23 @@ export class WebhooksController {
     }
     const data = validatedData.data;
 
+    /**
+     * 🛡️ Security Hardening (BOLA / IDOR Mitigation):
+     * Verify that the webhook exists and belongs specifically to the requested workspace.
+     * Prevents cross-workspace unauthorized modifications if an attacker provides a webhook ID
+     * from a different workspace.
+     */
+    const existingWebhook = await prisma.workspaceWebhook.findFirst({
+      where: {
+        id: webhookId,
+        workspaceId: workspace.id,
+      },
+    });
+
+    if (!existingWebhook) {
+      throw new NotFoundException('Webhook not found');
+    }
+
     const webhook = await prisma.workspaceWebhook.update({
       where: { id: webhookId },
       data,
@@ -228,9 +245,21 @@ export class WebhooksController {
       throw new ForbiddenException('Forbidden');
     }
 
-    await prisma.workspaceWebhook.delete({
-      where: { id: webhookId },
+    /**
+     * 🛡️ Security Hardening (BOLA / IDOR Mitigation):
+     * Perform an atomic deletion with workspace boundary validation (workspaceId: workspace.id).
+     * Prevents cross-workspace deletion if an attacker provides a webhook ID belonging to another workspace.
+     */
+    const result = await prisma.workspaceWebhook.deleteMany({
+      where: {
+        id: webhookId,
+        workspaceId: workspace.id,
+      },
     });
+
+    if (result.count === 0) {
+      throw new NotFoundException('Webhook not found');
+    }
 
     return { message: 'Webhook deleted successfully' };
   }
