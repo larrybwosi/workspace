@@ -19,12 +19,25 @@ export function Sidebar({ type }: { type: 'user-guide' | 'api-reference' }) {
       ]
     : [
         { href: '/api-reference/explorer', label: 'Interactive API Explorer', category: 'General' },
+        { href: '/api-reference/getting-started', label: 'Getting Started', category: 'General' },
         { href: '/api-reference/authentication', label: 'V3 Authentication', category: 'Resources' },
         { href: '/api-reference/applications', label: 'V3 Applications & Bots', category: 'Resources' },
         { href: '/api-reference/workspaces', label: 'V3 Workspaces & Members', category: 'Resources' },
         { href: '/api-reference/webhooks', label: 'V3 Webhooks', category: 'Resources' },
         { href: '/api-reference/incoming-webhooks', label: 'V3 Channel Incoming Webhooks', category: 'Resources' },
+        { href: '/api-reference/organization-m2m', label: 'Organization M2M', category: 'Resources' },
+        { href: '/api-reference/api-tokens', label: 'API Tokens', category: 'Resources' },
+        { href: '/api-reference/messages', label: 'Messages', category: 'Resources' },
+        { href: '/api-reference/teams', label: 'Teams', category: 'Resources' },
+        { href: '/api-reference/announcements', label: 'Announcements', category: 'Resources' },
+        { href: '/api-reference/search', label: 'Search', category: 'Resources' },
+        { href: '/api-reference/real-time', label: 'Real-time Subscriptions', category: 'Resources' },
+        { href: '/api-reference/qr-auth', label: 'QR Authentication', category: 'Resources' },
+        { href: '/api-reference/errors', label: 'Error Handling', category: 'Resources' },
         { href: '/api-reference/recipe-bot', label: 'Building a Bot Recipe', category: 'Guides' },
+        { href: '/api-reference/recipe-file-uploads', label: 'File Uploads Recipe', category: 'Guides' },
+        { href: '/api-reference/recipe-slash-commands', label: 'Slash Commands Recipe', category: 'Guides' },
+        { href: '/api-reference/recipe-sync-members', label: 'Sync Members Recipe', category: 'Guides' },
         { href: '/api-reference/discord-v10', label: 'Discord V10 Gateway', category: 'Guides' },
       ];
 

@@ -252,15 +252,24 @@ function ExplorerCard({ method, path, operation, opId }: ExplorerCardProps) {
         {operation.description && <p className="text-sm text-muted-foreground mt-1">{operation.description}</p>}
       </CardHeader>
       <CardContent className="py-6">
-        <Tabs defaultValue="params">
+        <Tabs defaultValue="code">
           <div className="flex items-center justify-between mb-4">
-            <TabsList className="bg-muted/50 flex-wrap">
-              <TabsTrigger value="params">Parameters</TabsTrigger>
-              <TabsTrigger value="request">Request</TabsTrigger>
-              <TabsTrigger value="responses">Responses</TabsTrigger>
-              <TabsTrigger value="code" className="gap-2">
-                <Terminal className="h-3 w-3" />
+            <TabsList className="bg-muted/50 flex-wrap p-1 gap-1 border border-border/10 rounded-lg">
+              <TabsTrigger
+                value="code"
+                className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-semibold shadow-xs"
+              >
+                <Terminal className="h-3.5 w-3.5" />
                 Code Examples
+              </TabsTrigger>
+              <TabsTrigger value="params" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-semibold shadow-xs">
+                Parameters
+              </TabsTrigger>
+              <TabsTrigger value="request" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-semibold shadow-xs">
+                Request
+              </TabsTrigger>
+              <TabsTrigger value="responses" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-semibold shadow-xs">
+                Responses
               </TabsTrigger>
             </TabsList>
           </div>
