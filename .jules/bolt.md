@@ -1,3 +1,9 @@
+## 2026-09-04 - [Prisma/Performance] O(1) Short-Circuiting Point Lookups for Workspace Member Identifiers in V3 Enterprise API
+
+**Learning:** In `V3WorkspacesController` (`getWorkspaceMember`, `updateWorkspaceMember`, and `deleteWorkspaceMember`), resolving workspace members by member ID, user ID, or user email previously executed `prisma.workspaceMember.findFirst` with multi-column `OR` filters across `workspaceMember` and `user` relations. This forced PostgreSQL to execute multi-table JOINs and index union scans. Replacing multi-column `OR` queries with serial `findUnique` point lookups (by primary key `id`, compound unique index `workspaceId_userId`, or `user.email`) leverages direct O(1) B-tree indexes, eliminating join overhead and multi-index scans.
+
+**Action:** Replace `findFirst` queries containing multi-column `OR` filters across relation models with sequential `findUnique` point lookups targeting primary keys and unique indexes.
+
 ## 2026-09-03 - [Prisma/Performance] Batch Channel Member Population and Unique Point Lookups in Bot Applications
 
 **Learning:** In `V3ApplicationsController.installBotToWorkspace`, auto-populating workspace members into channel membership based on channel definitions (`autoPopulateRoles`) previously performed sequential `prisma.channelMember.upsert` calls in a `for` loop. Replacing this loop with a single `prisma.channelMember.createMany` query with `skipDuplicates: true` reduces database round-trips from N down to 1 during application installation and provisioning. Furthermore, replacing `prisma.workspace.findFirst` with `OR` filters in `createApplication` and `installApplication` with serial `findUnique` point lookups leverages direct O(1) B-tree index lookups on primary key `id` or unique `slug`.
