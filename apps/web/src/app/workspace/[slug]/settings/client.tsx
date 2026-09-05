@@ -4,7 +4,7 @@ import { Settings, Link as LinkIcon, Menu } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GeneralTab } from '@/components/features/workspace/settings/general-tab';
 import { MembersTab } from '@/components/features/workspace/settings/members-tab';
-import { CustomersTab } from '@/components/features/workspace/settings/customers-tab';
+import { TicketsTab } from '@repo/ui';
 import { SecurityTab } from '@/components/features/workspace/settings/security-tab';
 import { WorkspaceWebhooksManagement } from '@/components/features/workspace/workspace-webhooks-management';
 import { NotificationsTab } from '@/components/features/workspace/settings/notifications-tab';
@@ -57,7 +57,7 @@ export default function WorkspaceSettingsPageClient({ workspace }: { workspace: 
                 <TabsList className="flex-wrap h-auto">
                   <TabsTrigger value="general">General</TabsTrigger>
                   <TabsTrigger value="members">Members</TabsTrigger>
-                  <TabsTrigger value="customers">Customers</TabsTrigger>
+                  <TabsTrigger value="tickets">Tickets</TabsTrigger>
                   <TabsTrigger value="invites">Invite Links</TabsTrigger>
                   <TabsTrigger value="security">Security</TabsTrigger>
                   <TabsTrigger value="integrations">Integrations</TabsTrigger>
@@ -74,8 +74,8 @@ export default function WorkspaceSettingsPageClient({ workspace }: { workspace: 
                   <MembersTab workspaceId={workspaceSlug} />
                 </TabsContent>
 
-                <TabsContent value="customers" className="space-y-6">
-                  <CustomersTab workspaceId={workspaceSlug} />
+                <TabsContent value="tickets" className="space-y-6">
+                  <TicketsTab workspaceId={workspaceSlug} />
                 </TabsContent>
 
                 <TabsContent value="invites" className="space-y-6">

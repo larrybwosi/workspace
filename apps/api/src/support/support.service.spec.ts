@@ -62,11 +62,17 @@ describe('SupportService', () => {
   });
 
   describe('createTicket', () => {
-    it('should create a ticket and initial message successfully via nested operations', async () => {
+    it('should upsert customer profile and create a ticket and initial message successfully', async () => {
       const workspaceId = 'ws-1';
       const customerUserId = 'user-1';
       const subject = 'Help me';
       const initialMessage = 'I have a problem';
+
+      const mockCustomerProfile = {
+        id: 'cp-1',
+        userId: customerUserId,
+        workspaceId,
+      };
 
       const mockTicket = {
         id: 'ticket-1',
@@ -78,16 +84,23 @@ describe('SupportService', () => {
         channel: { id: 'ch-1' },
       };
 
+      mockPrisma.customerProfile.upsert.mockResolvedValue(mockCustomerProfile);
       mockPrisma.supportTicket.create.mockResolvedValue(mockTicket);
 
       const result = await service.createTicket(workspaceId, customerUserId, subject, initialMessage);
+
+      expect(mockPrisma.customerProfile.upsert).toHaveBeenCalledWith({
+        where: { userId: customerUserId },
+        update: { workspaceId },
+        create: { userId: customerUserId, workspaceId },
+      });
 
       expect(mockPrisma.supportTicket.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
             subject,
             workspace: { connect: { id: workspaceId } },
-            customer: { connect: { userId: customerUserId } },
+            customer: { connect: { id: 'cp-1' } },
             channel: expect.objectContaining({
               create: expect.objectContaining({
                 type: 'support_ticket',
@@ -103,15 +116,6 @@ describe('SupportService', () => {
         })
       );
       expect(result.id).toBe('ticket-1');
-    });
-
-    it('should throw BadRequestException if customer profile is not found (Prisma P2025)', async () => {
-      const error = new Error('Record not found');
-      (error as any).code = 'P2025';
-      mockPrisma.supportTicket.create.mockRejectedValue(error);
-
-      await expect(service.createTicket('ws-1', 'user-1', 'subject')).rejects.toThrow(BadRequestException);
-      await expect(service.createTicket('ws-1', 'user-1', 'subject')).rejects.toThrow('Customer profile not found');
     });
   });
 
