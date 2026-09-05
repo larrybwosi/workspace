@@ -20,18 +20,18 @@ export default function HomePage() {
         <div className="container py-24 sm:py-32">
           <div className="mx-auto max-w-3xl text-center space-y-6">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20 animate-pulse">
-              <Shield className="h-3 w-3" /> Scrymechat Enterprise V3 Release
+              <Shield className="h-3 w-3" /> Scrymechat Release
             </div>
             <h1 className="text-5xl font-extrabold tracking-tight text-foreground sm:text-7xl bg-linear-to-b from-foreground to-foreground/50 bg-clip-text text-transparent">
               Enterprise Communication at Scale
             </h1>
             <p className="mt-6 text-xl leading-8 text-muted-foreground max-w-2xl mx-auto">
-              Welcome to the Scrymechat V3 Developer Portal. Build high-performance machine-to-machine integrations, provision multi-tenant workspaces, configure ultra-fast cached webhooks, and manage bots securely.
+              Welcome to the Scrymechat Developer Portal. Build high-performance machine-to-machine integrations, provision multi-tenant workspaces, configure ultra-fast cached webhooks, and manage bots securely.
             </p>
             <div className="mt-10 flex items-center justify-center gap-x-6">
               <Button size="lg" asChild className="shadow-lg shadow-primary/20">
                 <Link to="/api-reference" className="gap-2">
-                  Explore V3 API <ArrowRight className="h-4 w-4" />
+                  Explore  API <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>
               <Button variant="outline" size="lg" asChild>
@@ -52,7 +52,7 @@ export default function HomePage() {
             <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 mb-6 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
               <Code2 className="h-6 w-6" />
             </div>
-            <h2 className="text-2xl font-bold mb-4">V3 API Reference</h2>
+            <h2 className="text-2xl font-bold mb-4">API Reference</h2>
             <p className="text-muted-foreground mb-6 leading-relaxed">
               Programmatic provisioning and management for Enterprise. Explore our high-performance endpoints with built-in OAuth credentials on Organizations.
             </p>
@@ -86,7 +86,7 @@ export default function HomePage() {
             </div>
             <h3 className="font-bold">Redis-Backed Performance</h3>
             <p className="text-sm text-muted-foreground">
-              V3 endpoints feature optimized Redis caching with a 10-minute TTL and automated database cache-invalidation on updates.
+              endpoints feature optimized Redis caching with a 10-minute TTL and automated database cache-invalidation on updates.
             </p>
           </div>
           <div className="space-y-4 text-center sm:text-left">
@@ -104,7 +104,7 @@ export default function HomePage() {
             </div>
             <h3 className="font-bold">Automated Webhooks</h3>
             <p className="text-sm text-muted-foreground">
-              V3 Webhooks dispatch events dynamically to registered callback URLs, protected by strong HMAC SHA-256 validation.
+              Webhooks dispatch events dynamically to registered callback URLs, protected by strong HMAC SHA-256 validation.
             </p>
           </div>
           <div className="space-y-4 text-center sm:text-left">

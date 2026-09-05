@@ -60,7 +60,7 @@ export function DeveloperDashboard() {
   return (
     <>
       <Helmet>
-        <title>My Applications | Skryme Developer Portal</title>
+        <title>My Applications | Scryme Developer Portal</title>
       </Helmet>
 
       <div className="container mx-auto px-4 py-12">

@@ -419,9 +419,9 @@ export default function ApiReferencePage() {
         </div>
         <main className="flex-1 min-w-0">
           <div className="max-w-4xl">
-            <h1 className="text-4xl font-bold tracking-tight mb-4">V3 API Explorer</h1>
+            <h1 className="text-4xl font-bold tracking-tight mb-4"> API Explorer</h1>
             <p className="text-xl text-muted-foreground mb-8">
-              Interactive reference explorer for Skyrme Chat V3 Enterprise client-facing endpoints.
+              Interactive reference explorer for Scyrme Chat Enterprise client-facing endpoints.
             </p>
 
             <div className="space-y-12">

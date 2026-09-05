@@ -16,7 +16,7 @@ export default function Layout({ children }: { children: ReactNode }) {
             <Link className="flex items-center space-x-2" to="/">
               <MessageSquare className="h-6 w-6 text-primary" />
               <span className="font-bold text-lg tracking-tight flex items-center gap-1.5">
-                Skyrme <span className="text-muted-foreground font-medium">Enterprise V3 Docs</span>
+                Scyrme <span className="text-muted-foreground font-medium">Enterprise V3 Docs</span>
                 <span className="inline-flex items-center rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary ring-1 ring-inset ring-primary/20">
                   V3
                 </span>

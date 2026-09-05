@@ -78,11 +78,11 @@ const CopyButton = ({ value }: { value: string }) => {
 };
 
 const SLUG_TO_TAGS_MAP: Record<string, string[]> = {
-  authentication: ['V3 Authentication'],
-  workspaces: ['V3 Workspaces'],
-  webhooks: ['V3 Webhooks'],
-  'incoming-webhooks': ['V3 Channel Incoming Webhooks'],
-  organizations: ['V3 Organizations'],
+  authentication: ['Authentication'],
+  workspaces: ['Workspaces'],
+  webhooks: ['Webhooks'],
+  'incoming-webhooks': ['Channel Incoming Webhooks'],
+  organizations: ['Organizations'],
 };
 
 interface DocPageProps {
@@ -589,7 +589,7 @@ export default function DocPage({ type, defaultSlug }: DocPageProps) {
                     {activeSlug?.replace(/-/g, ' ')}
                   </h1>
                   <p className="text-xl text-muted-foreground mb-8">
-                    Dynamically generated reference documentation powered by our OpenAPI specification and v3 SDK
+                    Dynamically generated reference documentation powered by our OpenAPI specification and SDK
                     package.
                   </p>
 

@@ -5,7 +5,7 @@ export const Footer = () => (
     <div className="max-w-screen-xl mx-auto px-10">
       <div className="grid grid-cols-2 md:grid-cols-6 gap-10 mb-12">
         <div className="col-span-2">
-          <p className="text-[14px] font-medium text-slate-900 dark:text-white mb-3">Skryme</p>
+          <p className="text-[14px] font-medium text-slate-900 dark:text-white mb-3">Scryme</p>
           <p className="text-[13px] text-slate-500 dark:text-slate-400 leading-relaxed max-w-[220px] mb-6">
             Team communication and collaboration for modern engineering organizations and individuals.
           </p>
@@ -44,7 +44,7 @@ export const Footer = () => (
         ))}
       </div>
       <div className="border-t border-slate-200 dark:border-slate-800 pt-6 flex items-center justify-between flex-wrap gap-4">
-        <p className="text-[12px] text-slate-400">© 2026 Skryme, Inc. All rights reserved.</p>
+        <p className="text-[12px] text-slate-400">© 2026 Scryme, Inc. All rights reserved.</p>
         <div className="flex gap-6">
           {['System status', 'Security', 'Contact'].map(l => (
             <a

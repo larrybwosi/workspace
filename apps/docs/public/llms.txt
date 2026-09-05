@@ -1,6 +1,6 @@
-# Skyrme Chat V3 Enterprise API & Documentation
+# Scyrme Chat V3 Enterprise API & Documentation
 
-Skyrme Chat is a next-generation, high-performance, secure communication platform built for enterprises. This is the primary directory for the V3 API designed for Machine-to-Machine (M2M) automation, bot provisioning, custom message rendering, and secure tenant orchestration.
+Scyrme Chat is a next-generation, high-performance, secure communication platform built for enterprises. This is the primary directory for the V3 API designed for Machine-to-Machine (M2M) automation, bot provisioning, custom message rendering, and secure tenant orchestration.
 
 ## Key Capabilities
 
