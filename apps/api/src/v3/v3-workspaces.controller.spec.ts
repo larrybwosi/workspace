@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { V3WorkspacesController } from './v3-workspaces.controller';
 import { ProvisioningService } from '../provisioning/provisioning.service';
+import { WebhooksService } from '../webhooks/webhooks.service';
 import { ApiV3Guard } from '../auth/api-v3.guard';
 import { ConfigService } from '@nestjs/config';
 import { vi, describe, beforeEach, it, expect } from 'vitest';
@@ -81,6 +82,7 @@ describe('V3WorkspacesController', () => {
         { provide: ProvisioningService, useValue: mockProvisioningService },
         { provide: 'REDIS_CLIENT', useValue: redisClient },
         { provide: ConfigService, useValue: {} },
+        { provide: WebhooksService, useValue: { dispatch: vi.fn().mockResolvedValue(undefined) } },
         ApiV3Guard,
       ],
     }).compile();

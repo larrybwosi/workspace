@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { InvitationsService } from './invitations.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { WebhooksService } from '../webhooks/webhooks.service';
 import { NotFoundException, ForbiddenException } from '@nestjs/common';
 
 // Mock @repo/database
@@ -58,6 +59,7 @@ describe('InvitationsService', () => {
       providers: [
         InvitationsService,
         { provide: NotificationsService, useValue: mockNotificationsService },
+        { provide: WebhooksService, useValue: { dispatch: vi.fn().mockResolvedValue(undefined) } },
       ],
     }).compile();
 

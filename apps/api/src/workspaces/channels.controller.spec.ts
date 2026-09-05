@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ChannelsController } from './channels.controller';
 import { AuthGuard } from '../auth/auth.guard';
+import { WebhooksService } from '../webhooks/webhooks.service';
 import { NotFoundException, ForbiddenException } from '@nestjs/common';
 
 // Mock @repo/database prisma
@@ -323,6 +324,12 @@ describe('ChannelsController - NestJS module', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ChannelsController],
+      providers: [
+        {
+          provide: WebhooksService,
+          useValue: { dispatch: vi.fn().mockResolvedValue(undefined) },
+        },
+      ],
     })
       .overrideGuard(AuthGuard)
       .useValue({ canActivate: () => true })
