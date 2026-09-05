@@ -20,6 +20,7 @@ import { V3ExceptionFilter } from './v3-exception.filter';
 import { ApiV3Guard, ApiV3Context } from '../auth/api-v3.guard';
 import { V3Context } from '../auth/v3-context.decorator';
 import { ProvisioningService } from '../provisioning/provisioning.service';
+import { WebhooksService } from '../webhooks/webhooks.service';
 import { prisma } from '@repo/database';
 import { z } from 'zod';
 import { IsString, IsOptional, IsEmail, IsArray, IsEnum } from 'class-validator';
@@ -363,7 +364,8 @@ export class V3WorkspacesController {
 
   constructor(
     private readonly provisioningService: ProvisioningService,
-    @Inject('REDIS_CLIENT') private readonly redis: Redis
+    @Inject('REDIS_CLIENT') private readonly redis: Redis,
+    private readonly webhooksService?: WebhooksService
   ) {}
 
   private formatResponse<T>(data: T) {
@@ -1456,6 +1458,10 @@ When provisioned via M2M:
         },
       })
       .catch(err => this.logger.error('Audit log error in createChannel:', err));
+
+    if (this.webhooksService) {
+      this.webhooksService.dispatch(workspace.id, 'channel.created', { channel }).catch(() => null);
+    }
 
     const formattedChannel = {
       ...channel,

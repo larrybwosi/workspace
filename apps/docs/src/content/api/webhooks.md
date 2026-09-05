@@ -1,30 +1,129 @@
 # Webhooks (Enterprise V3)
 
-Webhooks allow your application to receive real-time notifications about events happening in Scrymechat. The Scrymechat V3 API provides a high-performance, Redis-cached webhooks interface designed for massive enterprise volume.
+Webhooks allow your application to send messages into Scrymechat (Incoming Webhooks) and receive real-time notifications about workspace events (Outgoing Webhooks). The Scrymechat V3 API provides a high-performance, Redis-cached webhooks interface designed for massive enterprise volume.
 
 ---
 
-## Lifecycle
+## Overview
 
-1. **Register**: Provide a URL and a list of events you want to subscribe to.
-2. **Receive**: Scrymechat sends an HTTP POST request to your URL when an event occurs.
-3. **Verify**: Use the webhook secret to verify that the request came from Scrymechat.
+- **Incoming Webhooks**: Post messages and file attachments directly to channels from external systems (such as GitHub, CI/CD pipelines, or monitoring alerts) without full user authentication.
+- **Outgoing Webhooks**: Receive real-time HTTP POST notifications at your specified endpoint when events occur within your workspace (e.g., `message.sent`, `channel.created`, `member.added`).
 
 ---
 
-## Managing Webhooks via V3 API
+## 1. Incoming Webhooks (Channel Integration)
 
-All V3 webhooks are fully integrated with Redis caching (10-minute TTL) and automatic cache invalidation upon mutation.
+Incoming webhooks provide a secure token-based URL to post messages directly to specific workspace channels.
 
-### List Workspace Webhooks (V3)
+### Create Channel Incoming Webhook
 
-Returns all configured webhooks for a given workspace. Requires `webhooks:read` scope.
+**Endpoint:** `POST /v3/workspaces/:slug/channels/:channelId/incoming-webhooks`
+
+**Headers:**
+```http
+Authorization: Bearer <token>
+Content-Type: application/json
+```
+
+**Request Body:**
+```json
+{
+  "name": "Deployment Bot",
+  "description": "Posts production build status alerts"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "webhook": {
+      "id": "cwh_12345",
+      "channelId": "ch_general",
+      "name": "Deployment Bot",
+      "description": "Posts production build status alerts",
+      "token": "a1b2c3d4e5f6...",
+      "secret": "s1s2s3s4s5...",
+      "isActive": true,
+      "createdAt": "2026-07-10T00:00:00.000Z"
+    }
+  },
+  "timestamp": "2026-07-10T07:12:00.000Z"
+}
+```
+
+---
+
+### Execute Incoming Webhook (URL Token)
+
+Send messages to a channel using the webhook token directly in the request path. No authentication header is required.
+
+**Endpoint:** `POST /v3/webhooks/incoming/:token`
+
+**Headers:**
+```http
+Content-Type: application/json
+X-Webhook-Signature: sha256=<hmac_signature> (optional)
+```
+
+**Request Body:**
+```json
+{
+  "content": "🚀 Production deployment v2.1.0 completed successfully!",
+  "username": "Deploy Bot",
+  "avatar_url": "https://example.com/bot-avatar.png",
+  "attachments": [
+    {
+      "name": "build-log.txt",
+      "type": "text/plain",
+      "url": "https://example.com/logs/123.txt"
+    }
+  ]
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "success": true,
+    "messageId": "msg_98765"
+  },
+  "timestamp": "2026-07-10T07:12:05.000Z"
+}
+```
+
+---
+
+### Execute Incoming Webhook (Channel ID in Path)
+
+Alternatively, target a channel ID directly and provide the token via header or query parameter.
+
+**Endpoint:** `POST /v3/channels/:channelId/webhooks/incoming?token=<token>`
+
+**Headers:**
+```http
+X-Webhook-Token: <token> (optional if passed via query parameter)
+Content-Type: application/json
+```
+
+---
+
+## 2. Outgoing Webhooks (Event Delivery)
+
+Outgoing webhooks deliver event payloads to external URLs when events occur in your workspace.
+
+### List Workspace Outgoing Webhooks
+
+Returns all configured webhooks for a workspace. Requires `webhooks:read` scope.
 
 **Endpoint:** `GET /v3/workspaces/:slug/webhooks`
 
 **Headers:**
 ```http
-Authorization: Bearer <oat_...>
+Authorization: Bearer <token>
 ```
 
 **Response:**
@@ -34,9 +133,9 @@ Authorization: Bearer <oat_...>
   "data": [
     {
       "id": "wh_123",
-      "name": "My V3 Integration",
+      "name": "Production Dispatcher",
       "url": "https://your-app.com/api/webhooks",
-      "events": ["message.sent", "channel.created"],
+      "events": ["message.sent", "channel.created", "member.added"],
       "active": true,
       "createdAt": "2026-07-10T00:00:00.000Z"
     }
@@ -47,23 +146,18 @@ Authorization: Bearer <oat_...>
 
 ---
 
-### Create V3 Webhook
+### Create Outgoing Webhook
 
-Register a new high-performance destination for events. Requires `webhooks:write` scope.
+Register a new destination URL for workspace events. Requires `webhooks:write` scope.
 
 **Endpoint:** `POST /v3/workspaces/:slug/webhooks`
 
-**Headers:**
-```http
-Authorization: Bearer <oat_...>
-```
-
-**Body:**
+**Request Body:**
 ```json
 {
-  "name": "My V3 Integration",
+  "name": "Production Dispatcher",
   "url": "https://your-app.com/api/webhooks",
-  "events": ["message.sent", "channel.created"],
+  "events": ["message.sent", "channel.created", "member.added"],
   "active": true
 }
 ```
@@ -73,12 +167,14 @@ Authorization: Bearer <oat_...>
 {
   "success": true,
   "data": {
-    "id": "wh_123",
-    "name": "My V3 Integration",
-    "url": "https://your-app.com/api/webhooks",
-    "events": ["message.sent", "channel.created"],
-    "active": true,
-    "secret": "whsec_..."
+    "webhook": {
+      "id": "wh_123",
+      "name": "Production Dispatcher",
+      "url": "https://your-app.com/api/webhooks",
+      "events": ["message.sent", "channel.created", "member.added"],
+      "active": true
+    },
+    "secret": "whsec_38f29d..."
   },
   "timestamp": "2026-07-10T07:12:00.000Z"
 }
@@ -86,101 +182,27 @@ Authorization: Bearer <oat_...>
 
 ---
 
-### Get Webhook Details (V3)
+### Supported Outgoing Events
 
-Retrieve configuration and details for a specific webhook by its ID. Requires `webhooks:read` scope.
-
-**Endpoint:** `GET /v3/workspaces/:slug/webhooks/:webhookId`
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "id": "wh_123",
-    "name": "My V3 Integration",
-    "url": "https://your-app.com/api/webhooks",
-    "events": ["message.sent", "channel.created"],
-    "active": true
-  },
-  "timestamp": "2026-07-10T07:12:00.000Z"
-}
-```
+| Event             | Description                                                   | Payload Context                              |
+| :---------------- | :------------------------------------------------------------ | :------------------------------------------- |
+| `message.sent`    | A new message was posted to a channel or DM.                  | Message ID, content, channel, and author.    |
+| `channel.created` | A new channel was created in the workspace.                   | Channel ID, name, workspace ID, creator.     |
+| `member.added`    | A new member joined or accepted an invitation to a workspace. | Workspace ID, member user ID, assigned role.|
 
 ---
 
-### Update Webhook (V3)
+## 3. Security & Signature Verification
 
-Update an existing webhook configuration. Instantly invalidates relevant Redis cache keys. Requires `webhooks:write` scope.
+Scrymechat signs every outgoing webhook POST request using your secret with HMAC SHA-256. The signature is sent in the `X-Webhook-Signature` header in the format `sha256=<hash>`.
 
-**Endpoint:** `PATCH /v3/workspaces/:slug/webhooks/:webhookId`
-
-**Body:**
-```json
-{
-  "name": "Updated V3 Integration",
-  "active": false
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "id": "wh_123",
-    "name": "Updated V3 Integration",
-    "url": "https://your-app.com/api/webhooks",
-    "events": ["message.sent", "channel.created"],
-    "active": false
-  },
-  "timestamp": "2026-07-10T07:14:00.000Z"
-}
-```
-
----
-
-### Delete Webhook (V3)
-
-Permanently deletes a webhook. Instantly invalidates relevant Redis cache keys. Requires `webhooks:write` scope.
-
-**Endpoint:** `DELETE /v3/workspaces/:slug/webhooks/:webhookId`
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "success": true
-  },
-  "timestamp": "2026-07-10T07:15:00.000Z"
-}
-```
-
----
-
-## Supported Events
-
-| Event             | Description                                  |
-| :---------------- | :------------------------------------------- |
-| `message.sent`    | A new message was posted to a channel or DM. |
-| `channel.created` | A new channel was created in the workspace.  |
-| `member.added`    | A new member joined the workspace.           |
-
----
-
-## Security & Signature Verification
-
-Scrymechat signs every webhook request with your `secret` (using standard timing-safe HMAC SHA-256 signatures). The signature is included in the `X-Webhook-Signature` header.
-
-### Node.js Verification Example
+### Verification Example (Node.js)
 
 ```javascript
 const crypto = require('crypto');
 
-function verify(payload, secret, signature) {
-  const hmac = crypto.createHmac('sha256', secret);
-  const digest = hmac.update(payload).digest('hex');
-  return crypto.timingSafeEqual(Buffer.from(digest), Buffer.from(signature));
+function verifySignature(rawPayload, secret, headerSignature) {
+  const expected = 'sha256=' + crypto.createHmac('sha256', secret).update(rawPayload).digest('hex');
+  return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(headerSignature));
 }
 ```

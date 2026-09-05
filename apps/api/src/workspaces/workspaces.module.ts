@@ -14,9 +14,10 @@ import { CallsController } from './calls.controller';
 import { SearchController } from './search.controller';
 import { MessagesService } from './messages.service';
 import { TeamSyncService } from './team-sync.service';
+import { WebhooksService } from '../webhooks/webhooks.service';
 
 @Module({
-  providers: [MessagesService, TeamSyncService],
+  providers: [MessagesService, TeamSyncService, WebhooksService],
   controllers: [
     WorkspacesController,
     MembersController,
