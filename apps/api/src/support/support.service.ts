@@ -17,63 +17,58 @@ export class SupportService {
   }
 
   async createTicket(workspaceId: string, customerUserId: string, subject: string, initialMessage?: string) {
-    /**
-     * ⚡ Performance Optimization:
-     * Consolidates customer lookup, channel creation, ticket creation, and initial message creation
-     * into a single database round-trip using nested Prisma operations.
-     * Reduces database RTT from 4 down to 1.
-     */
-    try {
-      const ticket = await prisma.supportTicket.create({
-        data: {
-          subject,
-          status: 'OPEN',
-          workspace: { connect: { id: workspaceId } },
-          customer: { connect: { userId: customerUserId } },
-          channel: {
-            create: {
-              name: `ticket-${Math.random().toString(36).substring(7)}`,
-              icon: '🎫',
-              type: 'support_ticket',
-              workspace: { connect: { id: workspaceId } },
-              isPrivate: true,
-              members: {
-                create: {
-                  userId: customerUserId,
-                  role: 'member',
-                },
-              },
-              messages: initialMessage
-                ? {
-                    create: {
-                      userId: customerUserId,
-                      content: initialMessage,
-                      messageType: 'support_request',
-                    },
-                  }
-                : undefined,
-            },
-          },
-        },
-        include: {
-          customer: {
-            include: {
-              user: true,
-            },
-          },
-          channel: true,
-        },
-      });
+    // Ensure the customer profile exists for customerUserId in this workspace (or upsert if missing)
+    const customerProfile = await prisma.customerProfile.upsert({
+      where: { userId: customerUserId },
+      update: { workspaceId },
+      create: {
+        userId: customerUserId,
+        workspaceId,
+      },
+    });
 
-      return ticket;
-    } catch (error) {
-      // Prisma error code for 'An operation failed because it depends on one or more records that were required but not found'
-      // This happens when 'connect: { userId: customerUserId }' fails because the customer profile doesn't exist.
-      if ((error as any).code === 'P2025') {
-        throw new BadRequestException('Customer profile not found');
-      }
-      throw error;
-    }
+    const ticket = await prisma.supportTicket.create({
+      data: {
+        subject,
+        status: 'OPEN',
+        workspace: { connect: { id: workspaceId } },
+        customer: { connect: { id: customerProfile.id } },
+        channel: {
+          create: {
+            name: `ticket-${Math.random().toString(36).substring(7)}`,
+            icon: '🎫',
+            type: 'support_ticket',
+            workspace: { connect: { id: workspaceId } },
+            isPrivate: true,
+            members: {
+              create: {
+                userId: customerUserId,
+                role: 'member',
+              },
+            },
+            messages: initialMessage
+              ? {
+                  create: {
+                    userId: customerUserId,
+                    content: initialMessage,
+                    messageType: 'support_request',
+                  },
+                }
+              : undefined,
+          },
+        },
+      },
+      include: {
+        customer: {
+          include: {
+            user: true,
+          },
+        },
+        channel: true,
+      },
+    });
+
+    return ticket;
   }
 
   async getTickets(workspaceId: string, userId: string) {

@@ -9,6 +9,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { type UploadedFile } from '@repo/shared';
 import { toast } from 'sonner';
 import { useChannel, useUser, useUserSocialProfile, userKeys } from '@repo/api-client';
+import { usePresence } from '../../lib/contexts/presence-context';
 import { useSession } from '@repo/shared';
 import { EditChannelDialog } from '../workspace/edit-channel-dialog';
 import type { Message } from '@repo/types';
@@ -67,6 +68,8 @@ export function ChannelView({
   const dmUserId = channelId.startsWith('dm-') ? channelId.replace('dm-', '') : null;
   const { data: dmUser } = useUser(dmUserId || '');
   const { data: socialProfile } = useUserSocialProfile(dmUserId || '');
+  const { onlineUsers } = usePresence();
+  const isOnline = dmUserId ? onlineUsers.has(dmUserId) : false;
   const { sendFriendRequestMutation, respondToFriendRequestMutation, friendRequests, blockUserMutation, unblockUserMutation } = useSocialActions(dmUserId);
 
   const handleSendFriendRequest = useCallback(() => {
@@ -200,6 +203,9 @@ export function ChannelView({
           channelDescription={(channelData as any)?.description}
           memberCount={(channelData as any)?._count?.members ?? (channelData as any)?.memberCount}
           isPrivate={(channelData as any)?.isPrivate || (channelData as any)?.type === 'private'}
+          isDm={isDm}
+          dmUser={dmUser}
+          isOnline={isOnline}
           onEdit={() => setEditDialogOpen(true)}
           onToggleInfo={onToggleInfo}
           onToggleSidebar={onToggleSidebar}
