@@ -141,7 +141,11 @@ export class ScheduledNotificationsController {
   @ApiBody({ type: UpdateScheduledNotificationDto })
   @ApiResponse({ status: 200, description: 'Notification updated' })
   async updateNotification(@CurrentUser() user: User, @Param('id') id: string, @Body() body: UpdateScheduledNotificationDto) {
-    const { action, ...updates } = body;
+    const { action, scheduledFor, ...rest } = body;
+    const updates = {
+      ...rest,
+      ...(scheduledFor ? { scheduledFor: new Date(scheduledFor) } : {}),
+    };
     try {
       if (action === 'pause') {
         return await pauseScheduledNotification(id, user.id);
