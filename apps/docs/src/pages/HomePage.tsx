@@ -31,7 +31,7 @@ export default function HomePage() {
             <div className="mt-10 flex items-center justify-center gap-x-6">
               <Button size="lg" asChild className="shadow-lg shadow-primary/20">
                 <Link to="/api-reference" className="gap-2">
-                  Explore  API <ArrowRight className="h-4 w-4" />
+                  Explore V3 API <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>
               <Button variant="outline" size="lg" asChild>
