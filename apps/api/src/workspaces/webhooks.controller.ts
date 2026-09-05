@@ -194,19 +194,17 @@ export class WebhooksController {
     const data = validatedData.data;
 
     /**
-     * 🛡️ Security Hardening (BOLA / IDOR Mitigation):
-     * Verify that the webhook exists and belongs specifically to the requested workspace.
-     * Prevents cross-workspace unauthorized modifications if an attacker provides a webhook ID
-     * from a different workspace.
+     * ⚡ Performance Optimization & Security Hardening (BOLA / IDOR Mitigation):
+     * Replaces `prisma.workspaceWebhook.findFirst` with a direct O(1) primary key point lookup via `findUnique` on 'id'.
+     * Workspace scoping (`existingWebhook.workspaceId === workspace.id`) is validated in application memory.
+     * This leverages the primary key B-Tree index, avoiding multi-column index scans.
      */
-    const existingWebhook = await prisma.workspaceWebhook.findFirst({
-      where: {
-        id: webhookId,
-        workspaceId: workspace.id,
-      },
+    const existingWebhook = await prisma.workspaceWebhook.findUnique({
+      where: { id: webhookId },
+      select: { id: true, workspaceId: true },
     });
 
-    if (!existingWebhook) {
+    if (!existingWebhook || existingWebhook.workspaceId !== workspace.id) {
       throw new NotFoundException('Webhook not found');
     }
 
