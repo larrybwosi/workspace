@@ -1,0 +1,135 @@
+
+> web@2.1.0 dev /app/apps/web
+> next dev --port 3001 --turbo
+
+▲ Next.js 16.2.12 (Turbopack)
+- Local:         http://localhost:3001
+- Network:       http://192.168.0.2:3001
+✓ Ready in 638ms
+○ Compiling proxy ...
+
+◇ injected env (0) from ../../.env // tip: ⌘ suppress logs { quiet: true }
+[Proxy] Session verification failed for path: /
+[Proxy] Session verification failed for path: /dm/user-123
+○ Compiling /login ...
+ GET /login 200 in 27.3s (next.js: 23.3s, proxy.ts: 11ms, application-code: 4.0s)
+ GET /login 200 in 261ms (next.js: 13ms, proxy.ts: 12ms, application-code: 236ms)
+[Proxy] Session verification failed for path: /api/ably/token
+Failed to proxy http://localhost:3000/api/auth/get-session AggregateError:
+    at ignore-listed frames {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:3000
+        at <unknown> (Error: connect ECONNREFUSED ::1:3000) {
+      errno: -111,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:3000) {
+      errno: -111,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+AggregateError:
+    at ignore-listed frames {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:3000
+        at <unknown> (Error: connect ECONNREFUSED ::1:3000) {
+      errno: -111,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:3000) {
+      errno: -111,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+[browser] Failed to fetch realtime provider type, defaulting to socketio TypeError: Failed to fetch
+    at fetchProviderType (../../packages/shared/src/realtime.ts:57:28)
+    at Object.subscribe (../../packages/shared/src/realtime.ts:98:24)
+    at PresenceProvider.useEffect (../../packages/ui/src/lib/contexts/presence-context.tsx:56:14)
+  55 |   try {
+  56 |     const baseURL = getBaseURL();
+> 57 |     const response = await fetch(`${baseURL.replace(/\/$/, '')}/api/config/realtime`);
+     |                            ^
+  58 |     const data = await response.json();
+  59 |     if (data.provider === 'socketio' || data.provider === 'ably') {
+  60 |       providerType = data.provider; (../../packages/shared/src/realtime.ts:65:13)
+[Proxy] Session verification failed for path: /dm/user-123
+[browser] 15:02:57.258 Ably: Auth.requestToken(): token request signing call returned error; err = [_PartialErrorInfo: Error response received from server: 401 body was: {"error":"Unauthorized"}; statusCode=401]
+[browser] Error fetching presence: Error: Connection closed (../../packages/ui/src/lib/contexts/presence-context.tsx:29:17)
+[browser] ⨯ unhandledRejection: Error: Connection closed
+[browser] ⨯ unhandledRejection: Error: Connection closed
+ GET /login 200 in 438ms (next.js: 22ms, proxy.ts: 14ms, application-code: 402ms)
+[Proxy] Session verification failed for path: /api/ably/token
+[browser] Failed to fetch realtime provider type, defaulting to socketio TypeError: Failed to fetch
+    at fetchProviderType (../../packages/shared/src/realtime.ts:57:28)
+    at Object.subscribe (../../packages/shared/src/realtime.ts:98:24)
+    at PresenceProvider.useEffect (../../packages/ui/src/lib/contexts/presence-context.tsx:56:14)
+  55 |   try {
+  56 |     const baseURL = getBaseURL();
+> 57 |     const response = await fetch(`${baseURL.replace(/\/$/, '')}/api/config/realtime`);
+     |                            ^
+  58 |     const data = await response.json();
+  59 |     if (data.provider === 'socketio' || data.provider === 'ably') {
+  60 |       providerType = data.provider; (../../packages/shared/src/realtime.ts:65:13)
+[browser] 15:02:59.520 Ably: Auth.requestToken(): token request signing call returned error; err = [_PartialErrorInfo: Error response received from server: 401 body was: {"error":"Unauthorized"}; statusCode=401]
+Failed to proxy http://localhost:3000/api/auth/get-session AggregateError:
+    at ignore-listed frames {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:3000
+        at <unknown> (Error: connect ECONNREFUSED ::1:3000) {
+      errno: -111,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:3000) {
+      errno: -111,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+AggregateError:
+    at ignore-listed frames {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:3000
+        at <unknown> (Error: connect ECONNREFUSED ::1:3000) {
+      errno: -111,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:3000) {
+      errno: -111,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}

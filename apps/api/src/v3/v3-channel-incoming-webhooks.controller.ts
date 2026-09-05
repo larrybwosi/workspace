@@ -145,6 +145,48 @@ export class V3ChannelIncomingWebhooksController {
   // MANAGEMENT (CRUD) ENDPOINTS
   // ============================================
 
+  @Get('v3/workspaces/:slug/incoming-webhooks')
+  @UseGuards(ApiV3Guard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'List all incoming webhooks in a workspace',
+    description: 'Requires webhooks:read scope. Retrieves all incoming webhooks configured across all channels in this workspace.',
+  })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiResponse({ status: 200, description: 'List of incoming webhooks returned successfully.' })
+  async getWorkspaceIncomingWebhooks(
+    @V3Context() context: ApiV3Context,
+    @Param('slug') slug: string
+  ) {
+    if (!context.scopes.includes('webhooks:read') && !context.scopes.includes('*')) {
+      throw new ForbiddenException('Forbidden: Missing webhooks:read scope');
+    }
+
+    if (!context.workspaceId) {
+      throw new BadRequestException('Workspace ID not resolved');
+    }
+
+    const webhooks = await prisma.channelIncomingWebhook.findMany({
+      where: {
+        channel: {
+          workspaceId: context.workspaceId,
+        },
+      },
+      include: {
+        channel: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return this.formatResponse({ webhooks });
+  }
+
   @Get('v3/workspaces/:slug/channels/:channelId/incoming-webhooks')
   @UseGuards(ApiV3Guard)
   @ApiBearerAuth()

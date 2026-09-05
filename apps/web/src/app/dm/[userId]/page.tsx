@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useParams, useRouter } from 'next/navigation';
-import { WorkspaceSidebar, WorkspaceRail, DynamicHeader, usePresence } from '@repo/ui';
+import { Sidebar, WorkspaceRail, DynamicHeader, usePresence } from '@repo/ui';
 import { ChannelView } from '@/components/features/chat/channel-view';
 import { InfoPanel } from '@/components/shared/info-panel';
 import { useUser } from '@repo/api-client';
@@ -52,9 +52,10 @@ export default function DMPage() {
   return (
     <div className="h-screen flex overflow-hidden bg-background">
       {/* Rail + Sidebar */}
-      <WorkspaceSidebar
+      <Sidebar
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
+        activeChannel={`dm-${userId}`}
       />
 
       {/* Main area */}
