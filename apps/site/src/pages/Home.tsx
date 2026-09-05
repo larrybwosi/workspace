@@ -39,7 +39,7 @@ const Hero = () => (
           Communication for teams and individuals.
         </h1>
         <p className="text-[17px] text-slate-500 dark:text-slate-400 leading-relaxed mb-8 max-w-xl">
-          Skryme brings together real-time messaging, organization workspaces, and developer integrations — for teams
+          Scryme brings together real-time messaging, organization workspaces, and developer integrations — for teams
           building software and friends staying connected.
         </p>
         <div className="flex gap-3 flex-wrap">
@@ -114,7 +114,7 @@ const Hero = () => (
               </div>
             </div>
             <div className="flex items-center gap-3 px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded text-[12px]">
-              <span className="text-slate-400">skryme-bot</span>
+              <span className="text-slate-400">Scryme-bot</span>
               <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded text-[11px] font-medium">
                 PR #841 approved
               </span>
@@ -162,7 +162,7 @@ const MessagingSection = () => (
             Channels, DMs, and threads — all in one place.
           </h2>
           <p className="text-[17px] text-slate-500 dark:text-slate-400 leading-relaxed mb-8">
-            Whether you're coordinating a sprint or catching up with a friend, Skryme keeps every conversation organized
+            Whether you're coordinating a sprint or catching up with a friend, Scryme keeps every conversation organized
             and searchable.
           </p>
           <div className="space-y-6">
@@ -331,7 +331,7 @@ const GitHubSection = () => (
           </h2>
           <p className="text-[17px] text-slate-500 dark:text-slate-400 leading-relaxed mb-8">
             Our native GitHub integration brings pull requests, issues, and deployments directly into your team
-            channels. Review, approve, and ship without leaving Skryme.
+            channels. Review, approve, and ship without leaving Scryme.
           </p>
           <div className="space-y-6">
             {[
@@ -343,7 +343,7 @@ const GitHubSection = () => (
               {
                 icon: <CheckCircle2 size={16} />,
                 title: 'Quick approve and merge',
-                body: 'Approve pull requests or request changes directly from Skryme using slash commands.',
+                body: 'Approve pull requests or request changes directly from Scryme using slash commands.',
               },
               {
                 icon: <RefreshCw size={16} />,
@@ -353,7 +353,7 @@ const GitHubSection = () => (
               {
                 icon: <Terminal size={16} />,
                 title: 'Issue sync',
-                body: 'Automatically sync GitHub issues to your Skryme workspace — link discussions to code.',
+                body: 'Automatically sync GitHub issues to your Scryme workspace — link discussions to code.',
               },
             ].map(f => (
               <div key={f.title} className="flex gap-4">
@@ -381,13 +381,13 @@ const GitHubSection = () => (
             <div className="w-2.5 h-2.5 rounded-full bg-[#ff5f57]" />
             <div className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
             <div className="w-2.5 h-2.5 rounded-full bg-[#28c941]" />
-            <span className="ml-3 text-[11px] text-[#8b949e] font-mono">#releases — skryme-bot</span>
+            <span className="ml-3 text-[11px] text-[#8b949e] font-mono">#releases — Scryme-bot</span>
           </div>
           <div className="p-6 font-mono text-[12px] space-y-4">
             <div>
               <p className="text-[#8b949e] mb-1">— Pull Request opened</p>
               <p className="text-[#c9d1d9]">
-                <span className="text-[#7ee787]">skryme-bot</span> [github] →{' '}
+                <span className="text-[#7ee787]">Scryme-bot</span> [github] →{' '}
                 <span className="text-[#58a6ff]">PR #841</span>
               </p>
               <p className="text-[#c9d1d9]">
@@ -424,7 +424,7 @@ const APISection = () => (
           API and Integrations
         </p>
         <h2 className="text-3xl md:text-4xl font-medium tracking-tight text-slate-900 dark:text-white mb-4">
-          Build on Skryme. Connect everything.
+          Build on Scryme. Connect everything.
         </h2>
         <p className="text-[17px] text-slate-500 dark:text-slate-400 leading-relaxed">
           Use our REST and WebSocket API to build bots, automate workflows, and connect the tools your team already
@@ -497,7 +497,7 @@ const SecuritySection = () => (
           Enterprise-grade security, by default.
         </h2>
         <p className="text-[17px] text-slate-500 dark:text-slate-400 leading-relaxed">
-          Skryme is built for teams where security is non-negotiable. Every workspace is protected by industry-leading
+          Scryme is built for teams where security is non-negotiable. Every workspace is protected by industry-leading
           standards.
         </p>
       </div>

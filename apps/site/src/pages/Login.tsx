@@ -65,7 +65,7 @@ export default function Login() {
         <div className="text-center">
           <Link to="/" className="inline-flex items-center gap-2 mb-6">
             <Layout className="h-8 w-8 text-primary" />
-            <span className="text-2xl font-bold tracking-tight">Skryme</span>
+            <span className="text-2xl font-bold tracking-tight">Scryme</span>
           </Link>
           <h2 className="text-3xl font-extrabold text-on-surface">Welcome back</h2>
           <p className="mt-2 text-on-surface-variant">Log in to your developer account</p>

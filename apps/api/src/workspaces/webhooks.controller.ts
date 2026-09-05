@@ -193,6 +193,21 @@ export class WebhooksController {
     }
     const data = validatedData.data;
 
+    /**
+     * ⚡ Performance Optimization & Security Hardening (BOLA / IDOR Mitigation):
+     * Replaces `prisma.workspaceWebhook.findFirst` with a direct O(1) primary key point lookup via `findUnique` on 'id'.
+     * Workspace scoping (`existingWebhook.workspaceId === workspace.id`) is validated in application memory.
+     * This leverages the primary key B-Tree index, avoiding multi-column index scans.
+     */
+    const existingWebhook = await prisma.workspaceWebhook.findUnique({
+      where: { id: webhookId },
+      select: { id: true, workspaceId: true },
+    });
+
+    if (!existingWebhook || existingWebhook.workspaceId !== workspace.id) {
+      throw new NotFoundException('Webhook not found');
+    }
+
     const webhook = await prisma.workspaceWebhook.update({
       where: { id: webhookId },
       data,
@@ -228,9 +243,21 @@ export class WebhooksController {
       throw new ForbiddenException('Forbidden');
     }
 
-    await prisma.workspaceWebhook.delete({
-      where: { id: webhookId },
+    /**
+     * 🛡️ Security Hardening (BOLA / IDOR Mitigation):
+     * Perform an atomic deletion with workspace boundary validation (workspaceId: workspace.id).
+     * Prevents cross-workspace deletion if an attacker provides a webhook ID belonging to another workspace.
+     */
+    const result = await prisma.workspaceWebhook.deleteMany({
+      where: {
+        id: webhookId,
+        workspaceId: workspace.id,
+      },
     });
+
+    if (result.count === 0) {
+      throw new NotFoundException('Webhook not found');
+    }
 
     return { message: 'Webhook deleted successfully' };
   }

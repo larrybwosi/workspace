@@ -1,6 +1,7 @@
 import { Injectable, ForbiddenException, NotFoundException, BadRequestException } from '@nestjs/common';
 import { prisma, type User } from '@repo/database';
 import { NotificationsService } from '../notifications/notifications.service';
+import { WebhooksService } from '../webhooks/webhooks.service';
 import * as crypto from 'crypto';
 
 const INVITATION_USER_SELECT = {
@@ -39,7 +40,10 @@ const PLATFORM_INVITATION_SELECT = {
 
 @Injectable()
 export class InvitationsService {
-  constructor(private readonly notificationsService: NotificationsService) {}
+  constructor(
+    private readonly notificationsService: NotificationsService,
+    private readonly webhooksService?: WebhooksService
+  ) {}
 
   async getInvitations(userId: string, workspaceId?: string) {
     if (workspaceId) {
@@ -286,7 +290,7 @@ export class InvitationsService {
         throw new BadRequestException('Already a member');
       }
 
-      await prisma.$transaction([
+      const [newMember] = await prisma.$transaction([
         prisma.workspaceMember.create({
           data: {
             workspaceId: inviteLink.workspaceId,
@@ -299,6 +303,10 @@ export class InvitationsService {
           data: { uses: { increment: 1 } },
         }),
       ]);
+
+      if (this.webhooksService) {
+        this.webhooksService.dispatch(inviteLink.workspaceId, 'member.added', { member: newMember }).catch(() => null);
+      }
 
       if (inviteLink.createdById && inviteLink.createdById !== user.id) {
         await this.notificationsService.createNotification({
@@ -340,7 +348,7 @@ export class InvitationsService {
         throw new BadRequestException('Already a member');
       }
 
-      await prisma.$transaction([
+      const [newMember] = await prisma.$transaction([
         prisma.workspaceMember.create({
           data: {
             workspaceId: workspaceInvite.workspaceId,
@@ -353,6 +361,12 @@ export class InvitationsService {
           data: { status: 'accepted', acceptedAt: new Date() },
         }),
       ]);
+
+      if (this.webhooksService) {
+        this.webhooksService
+          .dispatch(workspaceInvite.workspaceId, 'member.added', { member: newMember })
+          .catch(() => null);
+      }
 
       if (workspaceInvite.invitedBy && workspaceInvite.invitedBy !== user.id) {
         await this.notificationsService.createNotification({

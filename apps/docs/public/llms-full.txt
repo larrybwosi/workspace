@@ -1,12 +1,12 @@
-# Skyrme Chat V3 API - Full Consolidated Enterprise Reference
+# Scyrme Chat V3 API - Full Consolidated Enterprise Reference
 
-This file compiles all documentation, guides, schemas, and API references for the Skyrme Chat V3 platform. It is designed to provide AI models and developers with complete context in a single scan.
+This file compiles all documentation, guides, schemas, and API references for the Scyrme Chat V3 platform. It is designed to provide AI models and developers with complete context in a single scan.
 
 ---
 
 ## 1. Overview & Enterprise Security Architecture
 
-Skyrme Chat V3 is built on enterprise-grade pillars, ensuring absolute tenant isolation, robust access controls, and resistance against side-channel attacks.
+Scyrme Chat V3 is built on enterprise-grade pillars, ensuring absolute tenant isolation, robust access controls, and resistance against side-channel attacks.
 
 ### OAuth2 Client Credentials Grant
 M2M (Machine-to-Machine) systems authenticate by presenting credentials to the token exchange endpoint to obtain a secure Bearer token prefixing with `oat_`:

@@ -1,6 +1,6 @@
 # Machine-to-Machine (M2M) V3 API Integration Guide
 
-Machine-to-Machine (M2M) integration allows your organization's backend systems, internal microservices, and enterprise applications to interact with Skyrme Chat autonomously. This is ideal for provisioning tenants, managing workspace CRUD at scale, configuring webhooks, sync member registries, and orchestrating server-side bot workflows.
+Machine-to-Machine (M2M) integration allows your organization's backend systems, internal microservices, and enterprise applications to interact with Scyrme Chat autonomously. This is ideal for provisioning tenants, managing workspace CRUD at scale, configuring webhooks, sync member registries, and orchestrating server-side bot workflows.
 
 ---
 

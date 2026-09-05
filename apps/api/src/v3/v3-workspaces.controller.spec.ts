@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { V3WorkspacesController } from './v3-workspaces.controller';
 import { ProvisioningService } from '../provisioning/provisioning.service';
+import { WebhooksService } from '../webhooks/webhooks.service';
 import { ApiV3Guard } from '../auth/api-v3.guard';
 import { ConfigService } from '@nestjs/config';
 import { vi, describe, beforeEach, it, expect } from 'vitest';
@@ -81,6 +82,7 @@ describe('V3WorkspacesController', () => {
         { provide: ProvisioningService, useValue: mockProvisioningService },
         { provide: 'REDIS_CLIENT', useValue: redisClient },
         { provide: ConfigService, useValue: {} },
+        { provide: WebhooksService, useValue: { dispatch: vi.fn().mockResolvedValue(undefined) } },
         ApiV3Guard,
       ],
     }).compile();
@@ -1049,17 +1051,22 @@ describe('V3WorkspacesController', () => {
 
     describe('deleteChannelMember', () => {
       it('should remove member from channel by member identifier', async () => {
-        const mockExistingChannelMember = { id: 'cm-1' };
-
         (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
-        (prisma.channelMember.findFirst as any).mockResolvedValue(mockExistingChannelMember);
-        (prisma.channelMember.delete as any).mockResolvedValue({ id: 'cm-1' });
+        (prisma.channelMember.deleteMany as any).mockResolvedValue({ count: 1 });
 
         const result = await controller.deleteChannelMember(context as any, 'acme-slug', 'ch-1', 'wsm-123');
 
         expect(result.success).toBe(true);
-        expect(prisma.channelMember.delete).toHaveBeenCalledWith({
-          where: { id: 'cm-1' },
+        expect(prisma.channelMember.deleteMany).toHaveBeenCalledWith({
+          where: {
+            channelId: 'ch-1',
+            channel: { workspaceId: mockWorkspace.id },
+            OR: [
+              { userId: 'wsm-123' },
+              { user: { email: 'wsm-123' } },
+              { user: { workspaceMemberships: { some: { id: 'wsm-123', workspaceId: mockWorkspace.id } } } },
+            ],
+          },
         });
       });
     });

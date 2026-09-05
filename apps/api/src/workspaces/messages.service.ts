@@ -20,10 +20,13 @@ import {
   extractUserMentions,
   hasSpecialMention,
 } from '@/common/utils/mention-utils';
+import { WebhooksService } from '../webhooks/webhooks.service';
 
 @Injectable()
 export class MessagesService {
   private readonly logger = new Logger(MessagesService.name);
+
+  constructor(private readonly webhooksService?: WebhooksService) {}
 
   // --- Core Validations ---
   async verifyWorkspaceAccess(userId: string, slug: string) {
@@ -321,6 +324,9 @@ export class MessagesService {
       publishRealtime(AblyChannels.channel(channelId), AblyEvents.MESSAGE_SENT, message),
       channel.workspaceId
         ? publishRealtime(AblyChannels.workspace(channel.workspaceId), AblyEvents.MESSAGE_SENT, message)
+        : Promise.resolve(),
+      channel.workspaceId && this.webhooksService
+        ? this.webhooksService.dispatch(channel.workspaceId, 'message.sent', { message })
         : Promise.resolve(),
     ]).catch(err => this.logger.error('Failed to process message side effects:', err));
 

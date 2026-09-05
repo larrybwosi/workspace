@@ -16,6 +16,7 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
+  Skeleton,
   cn,
 } from '@repo/ui';
 import {
@@ -88,6 +89,58 @@ const SLUG_TO_TAGS_MAP: Record<string, string[]> = {
 interface DocPageProps {
   type: 'user-guide' | 'api-reference';
   defaultSlug?: string;
+}
+
+function DocSkeleton() {
+  return (
+    <div className="max-w-(--breakpoint-2xl) mx-auto px-4 sm:px-6 lg:px-8 flex-1 py-10" aria-label="Loading documentation...">
+      <span className="sr-only">Loading documentation...</span>
+      <div className="flex flex-col md:flex-row gap-6 lg:gap-12">
+        <div className="hidden md:block w-[220px] lg:w-[260px] shrink-0 space-y-4">
+          <Skeleton className="h-6 w-32 mb-6" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-5/6" />
+          <Skeleton className="h-4 w-4/6" />
+          <Skeleton className="h-6 w-28 mt-8 mb-4" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-3/4" />
+        </div>
+        <main className="flex-1 min-w-0">
+          <div className="xl:grid xl:grid-cols-[1fr_250px] xl:gap-12">
+            <div className="mx-auto w-full min-w-0 space-y-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Skeleton className="h-4 w-16" />
+                <Skeleton className="h-4 w-4" />
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-4" />
+                <Skeleton className="h-4 w-32" />
+              </div>
+              <Skeleton className="h-10 w-2/3 mb-4" />
+              <Skeleton className="h-5 w-1/2 mb-8" />
+              <div className="space-y-4 pt-4">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-11/12" />
+                <Skeleton className="h-4 w-4/5" />
+                <Skeleton className="h-4 w-full" />
+              </div>
+              <Skeleton className="h-40 w-full rounded-xl my-8" />
+              <div className="space-y-4">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-5/6" />
+                <Skeleton className="h-4 w-3/4" />
+              </div>
+            </div>
+            <div className="hidden xl:block w-[250px] space-y-4">
+              <Skeleton className="h-4 w-24 mb-4" />
+              <Skeleton className="h-3 w-full" />
+              <Skeleton className="h-3 w-4/5" />
+              <Skeleton className="h-3 w-3/4" />
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  );
 }
 
 const renderSchema = (schema: any) => {
@@ -298,15 +351,24 @@ function EndpointCard({ method, path, operation, opId }: EndpointCardProps) {
         {operation.description && <p className="text-sm text-muted-foreground mt-1">{operation.description}</p>}
       </CardHeader>
       <CardContent className="py-6">
-        <Tabs defaultValue="params">
+        <Tabs defaultValue="code">
           <div className="flex items-center justify-between mb-4">
-            <TabsList className="bg-muted/50 flex-wrap">
-              <TabsTrigger value="params">Parameters</TabsTrigger>
-              <TabsTrigger value="request">Request</TabsTrigger>
-              <TabsTrigger value="responses">Responses</TabsTrigger>
-              <TabsTrigger value="code" className="gap-2">
-                <Terminal className="h-3 w-3" />
+            <TabsList className="bg-muted/50 flex-wrap p-1 gap-1 border border-border/10 rounded-lg">
+              <TabsTrigger
+                value="code"
+                className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-semibold shadow-xs"
+              >
+                <Terminal className="h-3.5 w-3.5" />
                 Code Examples
+              </TabsTrigger>
+              <TabsTrigger value="params" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-semibold shadow-xs">
+                Parameters
+              </TabsTrigger>
+              <TabsTrigger value="request" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-semibold shadow-xs">
+                Request
+              </TabsTrigger>
+              <TabsTrigger value="responses" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-semibold shadow-xs">
+                Responses
               </TabsTrigger>
             </TabsList>
           </div>
@@ -467,12 +529,6 @@ export default function DocPage({ type, defaultSlug }: DocPageProps) {
 
     setLoading(true);
 
-    if (type === 'api-reference' && SLUG_TO_TAGS_MAP[activeSlug]) {
-      setContent('');
-      setLoading(false);
-      return;
-    }
-
     const folder = type === 'user-guide' ? 'docs' : 'api';
 
     // @ts-ignore
@@ -490,7 +546,7 @@ export default function DocPage({ type, defaultSlug }: DocPageProps) {
         setLoading(false);
       });
     } else {
-      setContent(null);
+      setContent('');
       setLoading(false);
     }
   }, [activeSlug, type]);
@@ -500,7 +556,7 @@ export default function DocPage({ type, defaultSlug }: DocPageProps) {
   }
 
   if (loading) {
-    return <div className="container py-10">Loading...</div>;
+    return <DocSkeleton />;
   }
 
   if (content === null) {
@@ -509,6 +565,17 @@ export default function DocPage({ type, defaultSlug }: DocPageProps) {
 
   // Generate Table of Contents (TOC)
   let toc: Array<{ title: string; id: string }> = [];
+  if (content) {
+    const headings = content.match(/^##\s+.+$/gm) || [];
+    headings.forEach(h => {
+      const title = h.replace(/^##\s+/, '');
+      const id = title
+        .toLowerCase()
+        .replace(/[^\w\s-]/g, '')
+        .replace(/\s+/g, '-');
+      toc.push({ title, id });
+    });
+  }
   if (mappedTags) {
     mappedTags.forEach(tagName => {
       const tagObj = openapi.tags.find(t => t.name === tagName);
@@ -518,16 +585,6 @@ export default function DocPage({ type, defaultSlug }: DocPageProps) {
           id: tagName.toLowerCase().replace(/\s+/g, '-'),
         });
       }
-    });
-  } else {
-    const headings = content.match(/^##\s+.+$/gm) || [];
-    toc = headings.map(h => {
-      const title = h.replace(/^##\s+/, '');
-      const id = title
-        .toLowerCase()
-        .replace(/[^\w\s-]/g, '')
-        .replace(/\s+/g, '-');
-      return { title, id };
     });
   }
 
@@ -583,54 +640,8 @@ export default function DocPage({ type, defaultSlug }: DocPageProps) {
                 <span className="text-foreground font-medium capitalize">{activeSlug?.replace(/-/g, ' ')}</span>
               </nav>
 
-              {mappedTags ? (
-                <div>
-                  <h1 className="text-4xl font-extrabold tracking-tight mb-4 capitalize">
-                    {activeSlug?.replace(/-/g, ' ')}
-                  </h1>
-                  <p className="text-xl text-muted-foreground mb-8">
-                    Dynamically generated reference documentation powered by our OpenAPI specification and v3 SDK
-                    package.
-                  </p>
-
-                  <div className="space-y-12">
-                    {mappedTags.map(tagName => {
-                      const tagObj = openapi.tags.find(t => t.name === tagName);
-                      const tagId = tagName.toLowerCase().replace(/\s+/g, '-');
-
-                      // Get operations for this tag (filter to V3 starting paths only)
-                      const tagOperations: Array<{ method: string; path: string; operation: any; opId: string }> = [];
-                      Object.entries(openapi.paths).forEach(([path, methods]: [string, any]) => {
-                        if (!path.startsWith('/api/v3/')) return;
-                        Object.entries(methods).forEach(([method, operation]: [string, any]) => {
-                          if (operation.tags?.includes(tagName)) {
-                            const opId = `${method}-${path}`.replace(/\//g, '-');
-                            tagOperations.push({ method, path, operation, opId });
-                          }
-                        });
-                      });
-
-                      if (tagOperations.length === 0) return null;
-
-                      return (
-                        <section key={tagName} id={tagId} className="scroll-mt-24">
-                          <div className="flex items-center gap-2 mb-6 border-b border-border/10 pb-2">
-                            <h2 className="text-2xl font-bold">{tagName}</h2>
-                          </div>
-                          {tagObj?.description && <p className="text-muted-foreground mb-6">{tagObj.description}</p>}
-
-                          <div className="space-y-6">
-                            {tagOperations.map(({ method, path, operation, opId }) => (
-                              <EndpointCard key={opId} method={method} path={path} operation={operation} opId={opId} />
-                            ))}
-                          </div>
-                        </section>
-                      );
-                    })}
-                  </div>
-                </div>
-              ) : (
-                <div className="prose prose-slate dark:prose-invert max-w-none prose-headings:scroll-mt-24 prose-p:leading-relaxed prose-pre:bg-muted/50 prose-pre:border prose-pre:border-border/10">
+              {content ? (
+                <div className="prose prose-slate dark:prose-invert max-w-none prose-headings:scroll-mt-24 prose-p:leading-relaxed prose-pre:bg-muted/50 prose-pre:border prose-pre:border-border/10 mb-12">
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
                     components={{
@@ -767,7 +778,47 @@ export default function DocPage({ type, defaultSlug }: DocPageProps) {
                     {content}
                   </ReactMarkdown>
                 </div>
-              )}
+              ) : null}
+
+              {mappedTags ? (
+                <div>
+                  <div className="space-y-12">
+                    {mappedTags.map(tagName => {
+                      const tagObj = openapi.tags.find(t => t.name === tagName);
+                      const tagId = tagName.toLowerCase().replace(/\s+/g, '-');
+
+                      // Get operations for this tag (filter to V3 starting paths only)
+                      const tagOperations: Array<{ method: string; path: string; operation: any; opId: string }> = [];
+                      Object.entries(openapi.paths).forEach(([path, methods]: [string, any]) => {
+                        if (!path.startsWith('/api/v3/')) return;
+                        Object.entries(methods).forEach(([method, operation]: [string, any]) => {
+                          if (operation.tags?.includes(tagName)) {
+                            const opId = `${method}-${path}`.replace(/\//g, '-');
+                            tagOperations.push({ method, path, operation, opId });
+                          }
+                        });
+                      });
+
+                      if (tagOperations.length === 0) return null;
+
+                      return (
+                        <section key={tagName} id={tagId} className="scroll-mt-24">
+                          <div className="flex items-center gap-2 mb-6 border-b border-border/10 pb-2">
+                            <h2 className="text-2xl font-bold">{tagName}</h2>
+                          </div>
+                          {tagObj?.description && <p className="text-muted-foreground mb-6">{tagObj.description}</p>}
+
+                          <div className="space-y-6">
+                            {tagOperations.map(({ method, path, operation, opId }) => (
+                              <EndpointCard key={opId} method={method} path={path} operation={operation} opId={opId} />
+                            ))}
+                          </div>
+                        </section>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : null}
 
               <div className="mt-16 pt-8 border-t border-border/40 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-8">
                 <div className="space-y-4">

@@ -14,221 +14,283 @@ Outgoing webhooks automatically post JSON payloads to your server whenever speci
 2. **Receive**: Scrymechat dispatches an HTTP POST request to your URL when an event triggers.
 3. **Verify**: Use the signature in the `X-Webhook-Signature` header (HMAC SHA-256) to verify authenticity.
 
-### List Workspace Webhooks (V3)
+Incoming webhooks give external tools a fast, tokenized endpoint for posting messages to designated workspace channels.
 
-Returns all configured webhooks for a given workspace. Requires `webhooks:read` scope.
+### Creating an Incoming Webhook
 
-**Endpoint:** `GET /v3/workspaces/:slug/webhooks`
+**Endpoint:** `POST /v3/workspaces/:slug/channels/:channelId/incoming-webhooks`
+**Required Scope:** `webhooks:write` or `*`
 
-**Headers:**
+#### Request Headers
 ```http
-Authorization: Bearer <oat_...>
+Authorization: Bearer <user_or_m2m_token>
+Content-Type: application/json
 ```
 
-**Response:**
+#### Request Body
+```json
+{
+  "name": "GitHub Deployment Bot",
+  "description": "Posts production build alerts to #deployments"
+}
+```
+
+#### Response Example (201 Created)
 ```json
 {
   "success": true,
-  "data": [
-    {
-      "id": "wh_123",
-      "name": "Production Event Handler",
-      "url": "https://your-app.com/api/webhooks",
-      "events": ["message.sent", "message.action_response", "channel.created"],
-      "active": true,
-      "createdAt": "2026-07-10T00:00:00.000Z"
+  "data": {
+    "webhook": {
+      "id": "cwh_987654321",
+      "channelId": "ch_deployments_123",
+      "name": "GitHub Deployment Bot",
+      "description": "Posts production build alerts to #deployments",
+      "token": "tok_sec_9f8e7d6c5b4a321",
+      "secret": "whsec_38f29d81a742c0192e4b",
+      "isActive": true,
+      "createdAt": "2026-03-31T12:00:00.000Z"
     }
-  ],
-  "timestamp": "2026-07-10T07:12:00.000Z"
-}
-```
-
----
-
-### Create Workspace Webhook (V3)
-
-Register a new outgoing webhook endpoint. Requires `webhooks:write` scope.
-
-**Endpoint:** `POST /v3/workspaces/:slug/webhooks`
-
-**Headers:**
-```http
-Authorization: Bearer <oat_...>
-```
-
-**Body:**
-```json
-{
-  "name": "Production Event Handler",
-  "url": "https://your-app.com/api/webhooks",
-  "events": ["message.sent", "message.action_response", "channel.created"],
-  "active": true
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "id": "wh_123",
-    "name": "Production Event Handler",
-    "url": "https://your-app.com/api/webhooks",
-    "events": ["message.sent", "message.action_response", "channel.created"],
-    "active": true,
-    "secret": "whsec_..."
   },
-  "timestamp": "2026-07-10T07:12:00.000Z"
+  "timestamp": "2026-03-31T12:00:00.000Z"
 }
 ```
 
 ---
 
-### Get Webhook Details (V3)
+### Executing an Incoming Webhook
 
-Retrieve configuration for a specific webhook. Requires `webhooks:read` scope.
+To dispatch a message into a channel, send an HTTP POST request containing your webhook token.
 
-**Endpoint:** `GET /v3/workspaces/:slug/webhooks/:webhookId`
+#### Method 1: Token in Path (Recommended)
+**Endpoint:** `POST /v3/webhooks/incoming/:token`
 
----
-
-### Update Webhook (V3)
-
-Update an existing webhook configuration. Instantly invalidates Redis cache keys. Requires `webhooks:write` scope.
-
-**Endpoint:** `PATCH /v3/workspaces/:slug/webhooks/:webhookId`
-
----
-
-### Delete Webhook (V3)
-
-Permanently deletes a webhook. Requires `webhooks:write` scope.
-
-**Endpoint:** `DELETE /v3/workspaces/:slug/webhooks/:webhookId`
-
----
-
-## Supported Outgoing Events
-
-| Event                   | Description                                                                     |
-| :---------------------- | :------------------------------------------------------------------------------ |
-| `message.sent`          | A new message was posted to a channel or direct message.                        |
-| `message.action_response`| A user interacted with a button/form inside an interactive custom message.      |
-| `channel.created`       | A new channel was created in the workspace.                                     |
-| `member.added`          | A new member joined the workspace.                                             |
-
----
-
-## Incoming Channel Webhooks (Discord-Compatible)
-
-Incoming webhooks allow external services to post messages into Scrymechat channels using standard HTTP POST requests without requiring full OAuth or M2M user authentication.
-
-### Create Channel Incoming Webhook
-
-**Endpoint:** `POST /v3/channels/:channelId/incoming-webhooks`
-
+#### Method 2: Channel ID & Token Header
+**Endpoint:** `POST /v3/channels/:channelId/webhooks/incoming?token=<token>`
 **Headers:**
 ```http
-Authorization: Bearer <oat_...>
+X-Webhook-Token: <token>
+Content-Type: application/json
 ```
 
-**Body:**
+#### Incoming Webhook Payload Options
+
+| Field | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `content` | string | Yes | The body text of the message. Full Markdown formatting is supported. |
+| `username` | string | No | Custom bot display name (overrides the default webhook name). |
+| `avatar_url` | string | No | Custom avatar image URL for the posted message. |
+| `attachments` | array | No | Array of media/file attachment objects. |
+
+#### Example Request Body
 ```json
 {
-  "name": "GitHub CI/CD Notifier",
-  "avatarUrl": "https://example.com/github-bot.png"
+  "content": "🚀 **Deployment Successful**\nBuild `#2048` deployed to `production` cluster in **1.4s**.",
+  "username": "CI Release Manager",
+  "avatar_url": "https://assets.scryme.tech/icons/deploy-bot.png",
+  "attachments": [
+    {
+      "name": "build-summary.json",
+      "type": "application/json",
+      "url": "https://ci.acme.com/artifacts/build-2048.json"
+    }
+  ]
 }
 ```
 
-**Response:**
+#### Response Example (200 OK)
 ```json
 {
   "success": true,
   "data": {
-    "id": "inwh_abc123",
-    "token": "tok_xyz789",
-    "name": "GitHub CI/CD Notifier",
-    "url": "https://api.chat.scryme.tech/v3/webhooks/inwh_abc123/tok_xyz789",
-    "channelId": "chan_456"
+    "success": true,
+    "messageId": "msg_01H123456789"
+  },
+  "timestamp": "2026-03-31T12:00:02.000Z"
+}
+```
+
+---
+
+## 2. Outgoing Webhooks (Event Delivery)
+
+Outgoing webhooks deliver real-time workspace event payloads to your server endpoints.
+
+### Managing Outgoing Webhooks
+
+- **List Webhooks**: `GET /v3/workspaces/:slug/webhooks` (Scope: `webhooks:read`)
+- **Get Webhook Details**: `GET /v3/workspaces/:slug/webhooks/:webhookId` (Scope: `webhooks:read`)
+- **Create Webhook**: `POST /v3/workspaces/:slug/webhooks` (Scope: `webhooks:write`)
+- **Update Webhook**: `PATCH /v3/workspaces/:slug/webhooks/:webhookId` (Scope: `webhooks:write`)
+- **Delete Webhook**: `DELETE /v3/workspaces/:slug/webhooks/:webhookId` (Scope: `webhooks:write`)
+
+---
+
+### Outgoing Event Types & Payloads
+
+Scrymechat dispatches JSON payloads to registered URLs for subscribed events. Every event object follows a standard envelope structure:
+
+```json
+{
+  "id": "evt_7f8a9b0c1d2e",
+  "type": "message.sent",
+  "workspaceId": "ws_acme_corp",
+  "createdAt": "2026-03-31T12:05:00.000Z",
+  "data": { ... }
+}
+```
+
+#### Supported Event Types
+
+| Event Type | Description | Trigger Context |
+| :--- | :--- | :--- |
+| `message.sent` | A new message was posted in a channel or DM. | Message object, channel ID, author details. |
+| `channel.created` | A new channel was created in the workspace. | Channel ID, channel name, team, creator ID. |
+| `member.added` | A user joined or was added to the workspace. | Workspace ID, user ID, assigned role. |
+
+#### Event Payload Examples
+
+##### `message.sent` Payload
+```json
+{
+  "id": "evt_9182736450",
+  "type": "message.sent",
+  "workspaceId": "ws_acme_corp",
+  "createdAt": "2026-03-31T12:05:00.000Z",
+  "data": {
+    "id": "msg_998877",
+    "channelId": "ch_general",
+    "content": "Meeting starts in 5 minutes!",
+    "author": {
+      "id": "usr_123",
+      "name": "Jane Doe",
+      "email": "jane@acme.com"
+    }
+  }
+}
+```
+
+##### `channel.created` Payload
+```json
+{
+  "id": "evt_1122334455",
+  "type": "channel.created",
+  "workspaceId": "ws_acme_corp",
+  "createdAt": "2026-03-31T12:10:00.000Z",
+  "data": {
+    "id": "ch_prod_alerts",
+    "name": "prod-alerts",
+    "topic": "System Health & Monitoring",
+    "createdBy": "usr_456"
+  }
+}
+```
+
+##### `member.added` Payload
+```json
+{
+  "id": "evt_5566778899",
+  "type": "member.added",
+  "workspaceId": "ws_acme_corp",
+  "createdAt": "2026-03-31T12:15:00.000Z",
+  "data": {
+    "workspaceId": "ws_acme_corp",
+    "userId": "usr_789",
+    "role": "member",
+    "joinedAt": "2026-03-31T12:15:00.000Z"
   }
 }
 ```
 
 ### Post Message via Incoming Webhook
 
-Dispatches a message directly to the target channel.
+## 3. HMAC SHA-256 Signature Verification
 
-**Endpoint:** `POST /v3/webhooks/:webhookId/:token`
+To guarantee request integrity and authenticity, every outgoing webhook delivery includes two security headers:
 
-**Body:**
-```json
-{
-  "content": "🚀 Build #42 succeeded on `main` branch!",
-  "username": "CI Bot",
-  "avatar_url": "https://example.com/bot-avatar.png",
-  "embeds": [
-    {
-      "title": "Build Details",
-      "description": "All 142 unit tests passed in 1.4s.",
-      "color": 3066993
-    }
-  ]
-}
-```
+- `X-Webhook-Signature`: Signature in the format `sha256=<hex_hmac>`
+- `X-Webhook-Event`: The event type string (e.g. `message.sent`)
 
----
+Your application **must** verify this signature using your webhook secret before processing event payloads.
 
-## Interactive Action Webhook Callbacks
+### Verification Code Examples
 
-When users click interactive buttons or submit forms on messages that declare a `callbackUrl` metadata property, Scrymechat dispatches an asynchronous `message.action_response` HTTP POST payload directly to your configured `callbackUrl` or registered workspace webhooks.
+#### Node.js / TypeScript
+```typescript
+import * as crypto from 'crypto';
 
-### Action Response Payload Example
-
-```json
-{
-  "event": "message.action_response",
-  "timestamp": "2026-09-01T12:00:00.000Z",
-  "workspace": {
-    "id": "ws_enterprise",
-    "name": "Acme Corp Workspace"
-  },
-  "message": {
-    "id": "msg_9988",
-    "content": "Deployment Approval Request",
-    "channelId": "chan_prod"
-  },
-  "action": {
-    "id": "approve_deploy",
-    "label": "Approve Release"
-  },
-  "response": {
-    "userId": "usr_dev123",
-    "userName": "Jane Doe",
-    "userEmail": "jane@acme.com",
-    "actionValue": "approve_deploy",
-    "comment": "Approved for staging deployment",
-    "metadata": {
-      "environment": "staging"
-    },
-    "respondedAt": "2026-09-01T12:00:00.000Z"
+export function verifyWebhookSignature(
+  rawBody: string,
+  secret: string,
+  headerSignature: string
+): boolean {
+  if (!headerSignature || !headerSignature.startsWith('sha256=')) {
+    return false;
   }
+
+  const expectedSignature = 'sha256=' + crypto
+    .createHmac('sha256', secret)
+    .update(rawBody)
+    .digest('hex');
+
+  const expectedBuffer = Buffer.from(expectedSignature);
+  const actualBuffer = Buffer.from(headerSignature);
+
+  if (expectedBuffer.length !== actualBuffer.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(expectedBuffer, actualBuffer);
+}
+```
+
+#### Python (Flask / FastAPI)
+```python
+import hmac
+import hashlib
+
+def verify_webhook_signature(raw_body: bytes, secret: str, header_signature: str) -> bool:
+    if not header_signature or not header_signature.startswith("sha256="):
+        return False
+
+    expected = "sha256=" + hmac.new(
+        secret.encode("utf-8"),
+        raw_body,
+        hashlib.sha256
+    ).hexdigest()
+
+    return hmac.compare_digest(expected, header_signature)
+```
+
+#### Go
+```go
+package main
+
+import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"crypto/subtle"
+	"encoding/hex"
+	"strings"
+)
+
+func VerifySignature(rawPayload []byte, secret string, headerSignature string) bool {
+	if !strings.HasPrefix(headerSignature, "sha256=") {
+		return false
+	}
+
+	mac := hmac.New(sha256.New, []byte(secret))
+	mac.Write(rawPayload)
+	expectedSig := "sha256=" + hex.EncodeToString(mac.Sum(nil))
+
+	return subtle.ConstantTimeCompare([]byte(expectedSig), []byte(headerSignature)) == 1
 }
 ```
 
 ---
 
-## Security & Signature Verification
+## 4. Delivery Behavior & Caching
 
-Scrymechat signs every webhook request using standard timing-safe HMAC SHA-256 signatures. The signature is included in the `X-Webhook-Signature` header (formatted as `sha256=<hash>`).
-
-### Node.js Verification Example
-
-```javascript
-const crypto = require('crypto');
-
-function verifyWebhook(rawPayload, secret, headerSignature) {
-  const hmac = crypto.createHmac('sha256', secret);
-  const digest = 'sha256=' + hmac.update(rawPayload).digest('hex');
-  return crypto.timingSafeEqual(Buffer.from(digest), Buffer.from(headerSignature));
-}
-```
+- **Timeout**: Scrymechat enforces a 5-second HTTP request timeout per webhook dispatch.
+- **Async Non-Blocking Execution**: Webhook event dispatch is executed asynchronously in background background threads (`Promise.allSettled`), ensuring API response latency remains sub-10ms.
+- **Redis Caching**: Workspace webhooks are cached in Redis under key `v3:workspace:<workspaceId>:webhooks` with a **10-minute TTL**. Creating, updating, or deleting webhooks automatically invalidates the Redis cache instantly.
+- **Delivery Logging**: Outgoing webhooks record delivery status, status codes, and execution payloads in `WorkspaceWebhookLog` for diagnostic inspection.

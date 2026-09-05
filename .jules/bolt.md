@@ -1,3 +1,21 @@
+## 2026-09-03 - [Prisma/Performance] Batch Channel Member Population and Unique Point Lookups in Bot Applications
+
+**Learning:** In `V3ApplicationsController.installBotToWorkspace`, auto-populating workspace members into channel membership based on channel definitions (`autoPopulateRoles`) previously performed sequential `prisma.channelMember.upsert` calls in a `for` loop. Replacing this loop with a single `prisma.channelMember.createMany` query with `skipDuplicates: true` reduces database round-trips from N down to 1 during application installation and provisioning. Furthermore, replacing `prisma.workspace.findFirst` with `OR` filters in `createApplication` and `installApplication` with serial `findUnique` point lookups leverages direct O(1) B-tree index lookups on primary key `id` or unique `slug`.
+
+**Action:** Use `createMany({ data: ..., skipDuplicates: true })` instead of `upsert` loops for bulk relation creation, and replace multi-column `OR` `findFirst` lookups with serial `findUnique` calls targeting primary keys or unique indices.
+
+## 2026-09-02 - [Prisma/Performance] Atomic Sub-Resource Channel Member Deletion
+
+**Learning:** In `V3WorkspacesController`, `deleteChannelMember` previously performed a `prisma.channelMember.findFirst` lookup query followed by a `prisma.channelMember.delete` mutation query. Replacing read-then-delete queries with a single atomic `prisma.channelMember.deleteMany` query using compound tenant filters (`channelId`, `channel.workspaceId`, and member identifiers) eliminates unnecessary database round-trips (reducing RTT from 2 to 1) and prevents read-then-delete race conditions on high-frequency channel management paths.
+
+**Action:** Consolidate sub-resource deletion and authorization verification into single atomic `deleteMany` calls with compound tenant filters on versioned controllers.
+
+## 2026-09-01 - [Prisma/Performance] Atomic Deletion Scoping and Background Audit Log Creation in API Tokens
+
+**Learning:** In `ApiTokensController`, `deleteApiToken` previously performed read-then-delete database queries and awaited audit log creation synchronously. Replacing `delete` with `deleteMany({ where: { id: tokenId, workspaceId: workspace.id } })` enforces workspace multi-tenant scoping and record deletion in a single atomic database operation. Furthermore, backgrounding non-critical `workspaceAuditLog.create` calls with `.catch()` removes secondary database write latency from blocking HTTP client responses.
+
+**Action:** Consolidate sub-resource deletion and authorization verification into atomic `deleteMany` calls with compound tenant filters, and background non-critical audit log writes with `.catch()`.
+
 ## 2026-08-27 - [Prisma/Performance] Short-circuiting Empty Secondary Queries and O(1) Map Lookups in Audit Logs
 
 **Learning:** In `AuditLogsController`, `WorkspaceAuditLog` stores `userId` as a plain scalar without a Prisma model relation to `User`. When querying audit log feeds or exporting CSVs, performing `prisma.user.findMany({ where: { id: { in: userIds } } })` unconditionally invokes a database query even when `userIds` is empty (e.g., workspaces with no audit log records). Guarding secondary relation queries with an empty-check short-circuit (`userIds.length > 0 ? await prisma.user.findMany(...) : []`) avoids redundant database calls entirely. Furthermore, using `new Map(users.map(u => [u.id, u]))` instead of object reduction provides cleaner O(1) lookups in Node.js.

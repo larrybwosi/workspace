@@ -92,7 +92,7 @@ export function AppConfig() {
   return (
     <>
       <Helmet>
-        <title>Bot Configuration | Skryme Developer Portal</title>
+        <title>Bot Configuration | Scryme Developer Portal</title>
       </Helmet>
 
       <div className="container mx-auto px-4 py-12">
@@ -324,7 +324,7 @@ export function AppConfig() {
                     <div className="flex gap-2">
                       <Input
                         className="flex-1 bg-surface-container-low border-outline-variant/20 rounded-xl px-4 py-3 text-sm h-auto"
-                        defaultValue="https://support.skryme.com/auth/callback"
+                        defaultValue="https://support.scryme.com/auth/callback"
                       />
                       <button className="p-3 text-error-dim hover:bg-error-container/10 rounded-xl transition-colors">
                         <Trash2 className="w-5 h-5" />

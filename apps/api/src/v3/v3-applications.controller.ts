@@ -147,12 +147,16 @@ export class V3ApplicationsController {
     let targetOwnerId = context.userId;
 
     if (body.workspaceId || body.workspaceSlug) {
-      const workspace = await prisma.workspace.findFirst({
-        where: {
-          OR: [{ id: body.workspaceId }, { slug: body.workspaceSlug }],
-        },
-        select: { id: true, ownerId: true },
-      });
+      /**
+       * ⚡ Performance Optimization:
+       * Replaces `prisma.workspace.findFirst` with `OR` filter with serial `findUnique` point lookups.
+       * Direct O(1) primary key or unique slug B-Tree lookups avoid multi-column index scans.
+       */
+      const workspace = body.workspaceId
+        ? await prisma.workspace.findUnique({ where: { id: body.workspaceId }, select: { id: true, ownerId: true } })
+        : body.workspaceSlug
+        ? await prisma.workspace.findUnique({ where: { slug: body.workspaceSlug }, select: { id: true, ownerId: true } })
+        : null;
       if (workspace) {
         targetWorkspaceId = workspace.id;
         if (context.organizationId) {
@@ -390,11 +394,14 @@ export class V3ApplicationsController {
       throw new BadRequestException('workspaceId or workspaceSlug is required');
     }
 
-    const workspace = await prisma.workspace.findFirst({
-      where: {
-        OR: [{ id: workspaceIdOrSlug }, { slug: workspaceIdOrSlug }],
-      },
-    });
+    /**
+     * ⚡ Performance Optimization:
+     * Replaces `prisma.workspace.findFirst` with `OR` filter with serial `findUnique` point lookups.
+     * Direct O(1) primary key or unique slug B-Tree lookups avoid multi-column index scans.
+     */
+    const workspace = body.workspaceId
+      ? await prisma.workspace.findUnique({ where: { id: body.workspaceId } })
+      : await prisma.workspace.findUnique({ where: { slug: workspaceIdOrSlug } });
 
     if (!workspace) {
       throw new NotFoundException('Workspace not found');
@@ -564,6 +571,12 @@ export class V3ApplicationsController {
 
         // Auto populate workspace members with matching roles into channel/team
         if (Array.isArray(def.autoPopulateRoles) && def.autoPopulateRoles.length > 0) {
+          /**
+           * ⚡ Performance Optimization:
+           * Replaces sequential `prisma.channelMember.upsert` queries inside a loop with a single batch
+           * `prisma.channelMember.createMany` query using `skipDuplicates: true`.
+           * This reduces database round-trips from N down to 1 during channel auto-population.
+           */
           const matchingMembers = await prisma.workspaceMember.findMany({
             where: {
               workspaceId,
@@ -572,19 +585,13 @@ export class V3ApplicationsController {
             select: { userId: true },
           });
 
-          for (const member of matchingMembers) {
-            await prisma.channelMember.upsert({
-              where: {
-                channelId_userId: {
-                  channelId: channel.id,
-                  userId: member.userId,
-                },
-              },
-              update: {},
-              create: {
+          if (matchingMembers.length > 0) {
+            await prisma.channelMember.createMany({
+              data: matchingMembers.map(member => ({
                 channelId: channel.id,
                 userId: member.userId,
-              },
+              })),
+              skipDuplicates: true,
             });
           }
         }

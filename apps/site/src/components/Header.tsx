@@ -17,7 +17,7 @@ const Header = () => {
       <div className="flex justify-between items-center w-full px-10 py-0 h-14 max-w-screen-xl mx-auto">
         <div className="flex items-center gap-10">
           <Link to="/" className="text-[15px] font-medium tracking-tight text-slate-900 dark:text-white">
-            Skryme
+            Scryme
           </Link>
           <div className="hidden md:flex gap-7">
             {NAV_LINKS.map(({ label, to }) => (

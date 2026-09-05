@@ -19,6 +19,7 @@ import type { User } from '@repo/database';
 import { z } from 'zod';
 import { AblyChannels, EVENTS, getAblyServer } from '@repo/shared/server';
 import { IsString, IsOptional, IsEnum, IsArray } from 'class-validator';
+import { WebhooksService } from '../webhooks/webhooks.service';
 
 class CreateWorkspaceChannelDto {
   @IsString()
@@ -146,6 +147,8 @@ const updateChannelMemberSchema = z.object({
 @Controller('workspaces/:slug/channels')
 @UseGuards(AuthGuard)
 export class ChannelsController {
+  constructor(private readonly webhooksService?: WebhooksService) {}
+
   @Get()
   @ApiOperation({ summary: 'Get all channels in a workspace' })
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
@@ -363,6 +366,10 @@ export class ChannelsController {
     if (ably) {
       const ablyChannel = ably.channels.get(AblyChannels.workspace(workspace.id));
       await ablyChannel.publish(EVENTS.CHANNEL_CREATED, { channel, userId: user.id });
+    }
+
+    if (this.webhooksService) {
+      this.webhooksService.dispatch(workspace.id, 'channel.created', { channel }).catch(() => null);
     }
 
     return channel;

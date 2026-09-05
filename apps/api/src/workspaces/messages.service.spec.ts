@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { MessagesService } from './messages.service';
+import { WebhooksService } from '../webhooks/webhooks.service';
 import { prisma } from '@repo/database';
 import * as sharedServer from '@repo/shared/server';
 import { vi, describe, beforeEach, it, expect } from 'vitest';
@@ -51,7 +52,13 @@ describe('MessagesService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [MessagesService],
+      providers: [
+        MessagesService,
+        {
+          provide: WebhooksService,
+          useValue: { dispatch: vi.fn().mockResolvedValue(undefined) },
+        },
+      ],
     }).compile();
 
     service = module.get<MessagesService>(MessagesService);

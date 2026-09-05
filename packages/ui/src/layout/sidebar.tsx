@@ -30,8 +30,8 @@ import { usePresence } from '../lib/contexts/presence-context';
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
-  activeChannel: string;
-  onChannelSelect: (channelId: string) => void;
+  activeChannel?: string;
+  onChannelSelect?: (channelId: string) => void;
   onMembersClick?: () => void;
   currentWorkspaceId?: string;
   onWorkspaceChange?: (workspaceId: string) => void;

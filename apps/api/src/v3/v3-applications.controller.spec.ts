@@ -38,6 +38,7 @@ vi.mock('@repo/database', () => ({
     },
     channelMember: {
       upsert: vi.fn(),
+      createMany: vi.fn(),
     },
   },
 }));
@@ -230,7 +231,7 @@ describe('V3ApplicationsController', () => {
         ],
       };
 
-      (prisma.workspace.findFirst as any).mockResolvedValue(mockWorkspace);
+      (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
       (prisma.botApplication.findUnique as any).mockResolvedValue(mockApp);
       (prisma.workspaceMember.upsert as any).mockResolvedValue({});
       (prisma.botApplication.update as any).mockResolvedValue({});
@@ -239,6 +240,7 @@ describe('V3ApplicationsController', () => {
       (prisma.channel.findFirst as any).mockResolvedValue(null);
       (prisma.channel.create as any).mockResolvedValue({ id: 'chan-1', name: 'deploys' });
       (prisma.channelMember.upsert as any).mockResolvedValue({});
+      (prisma.channelMember.createMany as any).mockResolvedValue({ count: 1 });
       (prisma.workspaceMember.findMany as any).mockResolvedValue([{ userId: 'admin-user' }]);
 
       const result = await controller.installApplication(mockContext, 'app-1', {

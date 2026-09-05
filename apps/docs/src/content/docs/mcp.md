@@ -60,7 +60,7 @@ The server exposes several URI schemes for accessing content:
 
 ### OpenAPI Schema
 - **URI:** `docs://api/openapi.json`
-- **Description:** The full OpenAPI v3 specification for the Skyrme Chat API.
+- **Description:** The full OpenAPI v3 specification for the Scyrme Chat API.
 
 ## Tools
 

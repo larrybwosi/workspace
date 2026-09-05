@@ -7842,8 +7842,8 @@
     }
   },
   "info": {
-    "title": "Skyrme Chat API",
-    "description": "Comprehensive API documentation for Skyrme Chat V2 and V3 Enterprise. This documentation describes both standard V2 integrations and high-performance, secure V3 Enterprise M2M interfaces.",
+    "title": "Scyrme Chat API",
+    "description": "Comprehensive API documentation for Scyrme Chat V2 and V3 Enterprise. This documentation describes both standard V2 integrations and high-performance, secure V3 Enterprise M2M interfaces.",
     "version": "3.0",
     "contact": {}
   },
