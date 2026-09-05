@@ -12,6 +12,7 @@ export function Sidebar({ type }: { type: 'user-guide' | 'api-reference' }) {
         { href: '/user-guide/custom-messages', label: 'Custom Messages', category: 'Basics' },
         { href: '/user-guide/making-calls', label: 'Making Calls', category: 'Advanced' },
         { href: '/user-guide/inviting-members', label: 'Inviting Members', category: 'Advanced' },
+        { href: '/user-guide/webhooks', label: 'Webhook Integrations', category: 'Integrations' },
         { href: '/user-guide/applications', label: 'Applications', category: 'Integrations' },
         { href: '/user-guide/m2m-integration', label: 'M2M Integration', category: 'Integrations' },
         { href: '/user-guide/bot-provisioning', label: 'Bot Provisioning', category: 'Integrations' },

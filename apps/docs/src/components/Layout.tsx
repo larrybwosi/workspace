@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router';
 import type { ReactNode } from 'react';
 import { ThemeToggle, Button } from '@repo/ui';
-import { MessageSquare, ShieldCheck } from 'lucide-react';
+import { MessageSquare } from 'lucide-react';
 import { Icons } from './Icons';
 import { GlobalSearch } from './GlobalSearch';
 
@@ -16,7 +16,7 @@ export default function Layout({ children }: { children: ReactNode }) {
             <Link className="flex items-center space-x-2" to="/">
               <MessageSquare className="h-6 w-6 text-primary" />
               <span className="font-bold text-lg tracking-tight flex items-center gap-1.5">
-                Scyrme <span className="text-muted-foreground font-medium">Enterprise V3 Docs</span>
+                Scrymechat <span className="text-muted-foreground font-medium">Enterprise V3 Docs</span>
                 <span className="inline-flex items-center rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary ring-1 ring-inset ring-primary/20">
                   V3
                 </span>
@@ -61,7 +61,7 @@ export default function Layout({ children }: { children: ReactNode }) {
             <div className="col-span-1 md:col-span-1 space-y-4">
               <div className="flex items-center space-x-2">
                 <MessageSquare className="h-5 w-5 text-primary" />
-                <span className="font-bold tracking-tight">Skyrme Chat Enterprise</span>
+                <span className="font-bold tracking-tight">Scrymechat Enterprise</span>
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 The modern communication platform for teams that value privacy, multi-tenant workspace isolation,
@@ -133,7 +133,7 @@ export default function Layout({ children }: { children: ReactNode }) {
           </div>
           <div className="mt-12 pt-8 border-t border-border/5 flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-xs text-muted-foreground">
-              &copy; {new Date().getFullYear()} Skyrme Chat Enterprise. Built with ❤️ for enterprise integration.
+              &copy; {new Date().getFullYear()} Scrymechat Enterprise. Built with ❤️ for enterprise integration.
             </p>
             <div className="flex items-center gap-4">
               <a
