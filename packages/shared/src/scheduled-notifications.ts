@@ -40,7 +40,21 @@ export async function createScheduledNotification(config: ScheduledNotificationC
   return scheduledNotification;
 }
 
-export async function updateScheduledNotification(id: string, updates: Partial<ScheduledNotificationConfig>) {
+/**
+ * THREAT MITIGATION: BOLA/IDOR Prevention
+ * Verifies that the scheduled notification belongs to the specified userId before modifying.
+ */
+export async function updateScheduledNotification(id: string, updates: Partial<ScheduledNotificationConfig>, userId?: string) {
+  if (userId) {
+    const existing = await prisma.scheduledNotification.findFirst({
+      where: { id, userId },
+      select: { id: true },
+    });
+    if (!existing) {
+      throw new Error('Scheduled notification not found or access denied');
+    }
+  }
+
   return await prisma.scheduledNotification.update({
     where: { id },
     data: {
@@ -50,20 +64,62 @@ export async function updateScheduledNotification(id: string, updates: Partial<S
   });
 }
 
-export async function deleteScheduledNotification(id: string) {
+/**
+ * THREAT MITIGATION: BOLA/IDOR Prevention
+ * Verifies that the scheduled notification belongs to the specified userId before deleting.
+ */
+export async function deleteScheduledNotification(id: string, userId?: string) {
+  if (userId) {
+    const existing = await prisma.scheduledNotification.findFirst({
+      where: { id, userId },
+      select: { id: true },
+    });
+    if (!existing) {
+      throw new Error('Scheduled notification not found or access denied');
+    }
+  }
+
   return await prisma.scheduledNotification.delete({
     where: { id },
   });
 }
 
-export async function pauseScheduledNotification(id: string) {
+/**
+ * THREAT MITIGATION: BOLA/IDOR Prevention
+ * Verifies that the scheduled notification belongs to the specified userId before pausing.
+ */
+export async function pauseScheduledNotification(id: string, userId?: string) {
+  if (userId) {
+    const existing = await prisma.scheduledNotification.findFirst({
+      where: { id, userId },
+      select: { id: true },
+    });
+    if (!existing) {
+      throw new Error('Scheduled notification not found or access denied');
+    }
+  }
+
   return await prisma.scheduledNotification.update({
     where: { id },
     data: { isActive: false },
   });
 }
 
-export async function resumeScheduledNotification(id: string) {
+/**
+ * THREAT MITIGATION: BOLA/IDOR Prevention
+ * Verifies that the scheduled notification belongs to the specified userId before resuming.
+ */
+export async function resumeScheduledNotification(id: string, userId?: string) {
+  if (userId) {
+    const existing = await prisma.scheduledNotification.findFirst({
+      where: { id, userId },
+      select: { id: true },
+    });
+    if (!existing) {
+      throw new Error('Scheduled notification not found or access denied');
+    }
+  }
+
   return await prisma.scheduledNotification.update({
     where: { id },
     data: { isActive: true },

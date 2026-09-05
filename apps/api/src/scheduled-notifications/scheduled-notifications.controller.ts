@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards, NotFoundException } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -64,6 +64,37 @@ class CreateScheduledNotificationDto {
   metadata?: any;
 }
 
+/**
+ * THREAT MITIGATION: Input Validation & Mass Assignment Protection
+ * Explicit DTO class with class-validator prevents arbitrary property injection during updates.
+ */
+class UpdateScheduledNotificationDto {
+  @IsOptional()
+  @IsEnum(['pause', 'resume'])
+  @ApiProperty({ required: false, enum: ['pause', 'resume'] })
+  action?: 'pause' | 'resume';
+
+  @IsOptional()
+  @IsString()
+  @ApiProperty({ required: false, example: 'Updated title' })
+  title?: string;
+
+  @IsOptional()
+  @IsString()
+  @ApiProperty({ required: false, example: 'Updated message' })
+  message?: string;
+
+  @IsOptional()
+  @IsEnum(['custom', 'once', 'daily', 'weekly', 'monthly'])
+  @ApiProperty({ required: false, enum: ['custom', 'once', 'daily', 'weekly', 'monthly'] })
+  scheduleType?: 'custom' | 'once' | 'daily' | 'weekly' | 'monthly';
+
+  @IsOptional()
+  @IsString()
+  @ApiProperty({ required: false, description: 'ISO format datetime' })
+  scheduledFor?: string;
+}
+
 @ApiTags('Scheduled Notifications')
 @ApiBearerAuth()
 @Controller('scheduled-notifications')
@@ -100,35 +131,48 @@ export class ScheduledNotificationsController {
     });
   }
 
+  /**
+   * THREAT MITIGATION: BOLA/IDOR Prevention & Input Validation
+   * Passes user.id to verify ownership before modifying and validates payload via UpdateScheduledNotificationDto.
+   */
   @Patch(':id')
   @ApiOperation({ summary: 'Update a scheduled notification' })
   @ApiParam({ name: 'id', description: 'The notification ID' })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        action: { type: 'string', enum: ['pause', 'resume'] },
-        title: { type: 'string' },
-        message: { type: 'string' },
-      },
-    },
-  })
+  @ApiBody({ type: UpdateScheduledNotificationDto })
   @ApiResponse({ status: 200, description: 'Notification updated' })
-  async updateNotification(@CurrentUser() user: User, @Param('id') id: string, @Body() body: any) {
+  async updateNotification(@CurrentUser() user: User, @Param('id') id: string, @Body() body: UpdateScheduledNotificationDto) {
     const { action, ...updates } = body;
-    if (action === 'pause') {
-      return pauseScheduledNotification(id);
-    } else if (action === 'resume') {
-      return resumeScheduledNotification(id);
+    try {
+      if (action === 'pause') {
+        return await pauseScheduledNotification(id, user.id);
+      } else if (action === 'resume') {
+        return await resumeScheduledNotification(id, user.id);
+      }
+      return await updateScheduledNotification(id, updates, user.id);
+    } catch (error: any) {
+      if (error.message?.includes('not found or access denied')) {
+        throw new NotFoundException('Scheduled notification not found');
+      }
+      throw error;
     }
-    return updateScheduledNotification(id, updates);
   }
 
+  /**
+   * THREAT MITIGATION: BOLA/IDOR Prevention
+   * Passes user.id to verify ownership before deleting a scheduled notification.
+   */
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a scheduled notification' })
   @ApiParam({ name: 'id', description: 'The notification ID' })
   @ApiResponse({ status: 200, description: 'Notification deleted' })
   async deleteNotification(@CurrentUser() user: User, @Param('id') id: string) {
-    return deleteScheduledNotification(id);
+    try {
+      return await deleteScheduledNotification(id, user.id);
+    } catch (error: any) {
+      if (error.message?.includes('not found or access denied')) {
+        throw new NotFoundException('Scheduled notification not found');
+      }
+      throw error;
+    }
   }
 }
