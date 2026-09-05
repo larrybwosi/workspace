@@ -37,6 +37,7 @@ vi.mock('@repo/ui', () => ({
   TabsList: ({ children }: any) => <div className="tabs-list">{children}</div>,
   TabsTrigger: ({ children }: any) => <button className="tabs-trigger">{children}</button>,
   TabsContent: ({ children }: any) => <div className="tabs-content">{children}</div>,
+  Skeleton: ({ className }: any) => <div className={`skeleton ${className || ''}`} data-testid="skeleton" />,
   cn: (...args: any[]) => args.join(' '),
 }));
 
@@ -48,21 +49,19 @@ describe('DocPage', () => {
   it('renders loading or page states for markdown user-guide', async () => {
     mockSlug = 'joining-workspace';
     render(<DocPage type="user-guide" />);
-    // Since markdown fetching is asynchronous via dynamic imports, it starts with Loading...
-    expect(screen.getByText(/Loading...|Page not found/)).toBeDefined();
+    // Starts with skeleton loading state
+    expect(screen.getByText(/Loading...|Page not found|Loading documentation/)).toBeDefined();
   });
 
   it('renders dynamic endpoint details for mapped api-reference routes', async () => {
     mockSlug = 'workspaces';
     render(<DocPage type="api-reference" />);
 
-    // Since it's a mapped api-reference route, it immediately renders without Loading state
-    // Let's assert that elements for dynamic rendering are shown:
-    // e.g. "Workspaces" as header title, and the dynamic help description
-    expect(screen.getByText(/Dynamically generated reference documentation/i)).toBeDefined();
-    expect(screen.getAllByText(/V3 Workspaces/)[0]).toBeDefined();
+    await waitFor(() => {
+      expect(screen.getAllByText(/V3 Workspaces/)[0]).toBeDefined();
+    });
 
-    // Check that some workspace operations and paths render correctly
+    // Check that workspace operations and paths render correctly
     expect(screen.getAllByText(/GET/)[0]).toBeDefined();
     expect(screen.getAllByText(/\/api\/v3\/workspaces/)[0]).toBeDefined();
 

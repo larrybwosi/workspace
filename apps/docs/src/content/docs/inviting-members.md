@@ -1,21 +1,65 @@
-# Inviting Members
+# Inviting & Managing Members
 
-Build your team by inviting new members to your Scrymechat workspace.
+Expand your team by inviting colleagues, collaborators, or external partners into your Scrymechat workspace.
 
-## How to Invite
+---
 
-If you have the appropriate permissions, you can invite others:
+## 1. How to Invite Members
 
-1. Click your **Workspace Name** in the top left.
-2. Select **Invite People**.
-3. Enter the email addresses of the people you want to join.
-4. (Optional) Assign them to specific channels or departments.
-5. Click **Send Invitations**.
+Workspace Administrators and Team Leads can send email invitations or generate shareable invite links.
 
-## Managing Pending Invites
+### Step-by-step Instructions
 
-Admins can view and revoke pending invitations from the **Workspace Settings** > **Members** tab.
+1. Click your **Workspace Name** in the top left corner of the sidebar.
+2. Click **Invite People** from the dropdown menu.
+3. Enter one or multiple email addresses separated by commas.
+4. Select the initial **Workspace Role**:
+   - `Admin`: Full access to workspace settings, billing, and member management.
+   - `Member`: Standard access to create channels, send messages, and join calls.
+   - `Guest`: Restricted access to specific assigned channels only.
+5. Select default channels/teams for new members to join automatically.
+6. Click **Send Invitations**.
 
-## Bulk Invites
+> SUCCESS: Invites will be emailed immediately with a direct sign-up link.
 
-For large teams, you can upload a CSV file with email addresses to invite dozens of people at once.
+---
+
+## 2. Managing Pending Invitations
+
+Track pending invites, resend invitation emails, or revoke access before a user accepts.
+
+1. Go to **Workspace Settings** > **Members**.
+2. Click the **Pending Invitations** tab.
+3. Next to any pending invite:
+   - Click **Resend Email** to dispatch a reminder.
+   - Click **Revoke** to cancel the invitation link permanently.
+
+---
+
+## 3. Bulk CSV Import
+
+For large enterprise deployments, you can invite hundreds of members at once using a CSV file.
+
+### CSV Format Example
+```csv
+email,role,channels
+alice@acme.com,member,general;engineering
+bob@acme.com,admin,general;leadership
+carol@acme.com,guest,general;support
+```
+
+1. Go to **Workspace Settings** > **Members** > **Bulk Import**.
+2. Upload your `.csv` file.
+3. Review the parsed member table and click **Confirm & Send All**.
+
+---
+
+## Member Roles & Permissions Summary
+
+| Permission | Owner | Admin | Member | Guest |
+| :--- | :---: | :---: | :---: | :---: |
+| Manage Workspace Settings | ✅ | ✅ | ❌ | ❌ |
+| Invite New Members | ✅ | ✅ | ✅ | ❌ |
+| Create Public Channels | ✅ | ✅ | ✅ | ❌ |
+| Manage Webhooks & Bots | ✅ | ✅ | ❌ | ❌ |
+| Access Assigned Channels Only | ❌ | ❌ | ❌ | ✅ |
