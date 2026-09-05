@@ -1,19 +1,18 @@
-# Webhooks (Enterprise V3)
+# Webhooks & Integrations (Enterprise V3)
 
-Webhooks allow external applications to seamlessly communicate with Scrymechat. The Scrymechat V3 API provides a high-performance, Redis-cached webhooks interface designed for massive enterprise event processing and automated channel messaging.
-
----
-
-## Webhook Architecture Overview
-
-Scrymechat supports two primary webhook communication patterns:
-
-1. **Incoming Webhooks**: Allow external systems (CI/CD pipelines, GitHub, monitoring services, internal alerts) to post messages and file attachments directly into specific workspace channels using a unique URL token—without full OAuth user login.
-2. **Outgoing Webhooks**: Send HTTP POST requests from Scrymechat to your registered external HTTPS endpoints in real-time whenever events occur in your workspace (such as `message.sent`, `channel.created`, or `member.added`).
+Webhooks allow your application to send and receive real-time notifications about events happening in Scrymechat. The Scrymechat V3 API provides high-performance outgoing webhooks, Discord-compatible incoming channel webhooks, and asynchronous callbacks for interactive message actions.
 
 ---
 
-## 1. Incoming Webhooks (Channel Integration)
+## Outgoing Workspace Webhooks
+
+Outgoing webhooks automatically post JSON payloads to your server whenever specified events occur within a workspace. Outgoing webhooks are Redis-cached (10-minute TTL) with automatic cache invalidation upon mutation.
+
+### Lifecycle
+
+1. **Register**: Provide a destination URL and a list of event subscriptions.
+2. **Receive**: Scrymechat dispatches an HTTP POST request to your URL when an event triggers.
+3. **Verify**: Use the signature in the `X-Webhook-Signature` header (HMAC SHA-256) to verify authenticity.
 
 Incoming webhooks give external tools a fast, tokenized endpoint for posting messages to designated workspace channels.
 
@@ -202,7 +201,7 @@ Scrymechat dispatches JSON payloads to registered URLs for subscribed events. Ev
 }
 ```
 
----
+### Post Message via Incoming Webhook
 
 ## 3. HMAC SHA-256 Signature Verification
 
