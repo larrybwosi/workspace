@@ -4,6 +4,7 @@ import * as React from 'react';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useParams, useRouter } from 'next/navigation';
+import { Sidebar, WorkspaceRail, DynamicHeader, usePresence } from '@repo/ui';
 import { WorkspaceSidebar } from '@repo/ui';
 import { ChannelView } from '@/components/features/chat/channel-view';
 import { InfoPanel } from '@/components/shared/info-panel';
@@ -43,9 +44,10 @@ export default function DMPage() {
   return (
     <div className="h-screen flex overflow-hidden bg-background">
       {/* Rail + Sidebar */}
-      <WorkspaceSidebar
+      <Sidebar
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
+        activeChannel={`dm-${userId}`}
       />
 
       {/* Main area */}

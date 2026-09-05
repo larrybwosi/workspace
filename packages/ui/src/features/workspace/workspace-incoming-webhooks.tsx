@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/card';
 import { Button } from '../../components/button';
-import { Plus, Trash2, Copy, RefreshCw, CheckCircle2, XCircle } from 'lucide-react';
+import { Plus, Trash2, Copy, Check, CheckCircle2, XCircle, ExternalLink } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -14,10 +14,11 @@ import {
 } from '../../components/dialog';
 import { Input } from '../../components/input';
 import { Label } from '../../components/label';
+import { Textarea } from '../../components/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/select';
 import { Badge } from '../../components/badge';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@repo/api-client';
+import { apiClient, useWorkspaceChannels } from '@repo/api-client';
 import { toast } from 'sonner';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/table';
 
@@ -29,87 +30,181 @@ export function WorkspaceIncomingWebhooks({ workspaceSlug }: WorkspaceIncomingWe
   const queryClient = useQueryClient();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [name, setName] = useState('');
-  const [action, setAction] = useState('create_channel');
-  const [selectedWebhook, setSelectedWebhook] = useState<any>(null);
+  const [description, setDescription] = useState('');
+  const [selectedChannelId, setSelectedChannelId] = useState('');
+  const [copiedKeyMap, setCopiedKeyMap] = useState<Record<string, boolean>>({});
 
-  // Fetch webhooks
-  const { data: webhooks, isLoading } = useQuery({
-    queryKey: ['workspace-webhooks', workspaceSlug],
+  // Credentials of newly created webhook to display once
+  const [createdWebhook, setCreatedSecretWebhook] = useState<{
+    token: string;
+    secret: string;
+    channelName?: string;
+  } | null>(null);
+
+  // 1. Fetch channels for the workspace
+  const { data: channels, isLoading: channelsLoading } = useWorkspaceChannels(workspaceSlug);
+
+  // 2. Fetch all incoming webhooks in workspace
+  const { data: responseData, isLoading } = useQuery({
+    queryKey: ['workspace-incoming-webhooks', workspaceSlug],
     queryFn: async () => {
-      const { data } = await apiClient.get(`/workspaces/${workspaceSlug}/webhooks`);
+      const { data } = await apiClient.get(`/v3/workspaces/${workspaceSlug}/incoming-webhooks`);
       return data;
     },
   });
 
-  // Create webhook
+  const webhooks = responseData?.data?.webhooks || [];
+
+  // 3. Create incoming webhook mutation
   const createWebhook = useMutation({
-    mutationFn: async (data: any) => {
-      const response = await apiClient.post(`/workspaces/${workspaceSlug}/webhooks`, data);
-      return response.data;
+    mutationFn: async ({ channelId, payload }: { channelId: string; payload: { name: string; description?: string } }) => {
+      const { data } = await apiClient.post(
+        `/v3/workspaces/${workspaceSlug}/channels/${channelId}/incoming-webhooks`,
+        payload
+      );
+      return data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['workspace-webhooks', workspaceSlug] });
-      toast.success('Webhook created successfully');
+    onSuccess: (res: any, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['workspace-incoming-webhooks', workspaceSlug] });
+      toast.success('Incoming webhook created successfully');
       setCreateDialogOpen(false);
       setName('');
+      setDescription('');
+      setSelectedChannelId('');
+
+      if (res?.data?.webhook) {
+        const channelObj = channels?.find((c: any) => c.id === variables.channelId);
+        setCreatedSecretWebhook({
+          token: res.data.webhook.token,
+          secret: res.data.webhook.secret,
+          channelName: channelObj?.name,
+        });
+      }
     },
     onError: () => {
-      toast.error('Failed to create webhook');
+      toast.error('Failed to create incoming webhook');
     },
   });
 
-  // Delete webhook
+  // 4. Delete incoming webhook mutation
   const deleteWebhook = useMutation({
-    mutationFn: async (webhookId: string) => {
-      await apiClient.delete(`/workspaces/${workspaceSlug}/webhooks/${webhookId}`);
+    mutationFn: async ({ channelId, webhookId }: { channelId: string; webhookId: string }) => {
+      await apiClient.delete(
+        `/v3/workspaces/${workspaceSlug}/channels/${channelId}/incoming-webhooks/${webhookId}`
+      );
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['workspace-webhooks', workspaceSlug] });
-      toast.success('Webhook deleted');
+      queryClient.invalidateQueries({ queryKey: ['workspace-incoming-webhooks', workspaceSlug] });
+      toast.success('Incoming webhook deleted');
     },
     onError: () => {
-      toast.error('Failed to delete webhook');
+      toast.error('Failed to delete incoming webhook');
     },
   });
 
-  // Regenerate token
-  const regenerateToken = useMutation({
-    mutationFn: async (webhookId: string) => {
-      const { data } = await apiClient.post(`/workspaces/${workspaceSlug}/webhooks/${webhookId}/regenerate`);
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['workspace-webhooks', workspaceSlug] });
-      toast.success('Token regenerated');
-    },
-    onError: () => {
-      toast.error('Failed to regenerate token');
-    },
-  });
+  const getBaseUrl = () => {
+    return typeof window !== 'undefined' ? window.location.origin : 'https://api.chat.scryme.tech';
+  };
+
+  const getTriggerUrl = (token: string) => {
+    return `${getBaseUrl()}/api/v3/webhooks/incoming/${token}`;
+  };
+
+  const handleCopy = (text: string, key: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedKeyMap(prev => ({ ...prev, [key]: true }));
+    setTimeout(() => {
+      setCopiedKeyMap(prev => ({ ...prev, [key]: false }));
+    }, 2000);
+    toast.success('Copied to clipboard');
+  };
 
   const handleCreate = () => {
-    createWebhook.mutate({ name, action });
-  };
-
-  const handleCopyUrl = (webhook: any) => {
-    const url = `${window.location.origin}/api/webhooks/${webhook.id}`;
-    navigator.clipboard.writeText(url);
-    toast.success('Webhook URL copied');
-  };
-
-  const handleCopyToken = (token: string) => {
-    navigator.clipboard.writeText(token);
-    toast.success('Token copied');
+    if (!name.trim() || !selectedChannelId) return;
+    createWebhook.mutate({
+      channelId: selectedChannelId,
+      payload: { name: name.trim(), description: description.trim() || undefined },
+    });
   };
 
   return (
     <>
+      {/* Newly Created Webhook Alert */}
+      {createdWebhook && (
+        <Card className="border-green-500/50 bg-green-500/10 mb-6">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-green-600 flex items-center gap-2">
+              <CheckCircle2 className="size-5" />
+              Incoming Webhook Created Successfully!
+            </CardTitle>
+            <CardDescription className="text-green-700 font-medium">
+              Copy the token and trigger URL below now. For security reasons, the signing secret cannot be displayed again.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold uppercase text-green-700">Webhook Trigger URL (Option A - Token in URL)</Label>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 rounded bg-background px-3 py-2 font-mono text-sm break-all border">
+                  {getTriggerUrl(createdWebhook.token)}
+                </code>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => handleCopy(getTriggerUrl(createdWebhook.token), 'created-url')}
+                >
+                  {copiedKeyMap['created-url'] ? <Check className="size-4 text-green-600" /> : <Copy className="size-4" />}
+                </Button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold uppercase text-green-700">Webhook Token</Label>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 rounded bg-background px-3 py-2 font-mono text-sm break-all border">
+                  {createdWebhook.token}
+                </code>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => handleCopy(createdWebhook.token, 'created-token')}
+                >
+                  {copiedKeyMap['created-token'] ? <Check className="size-4 text-green-600" /> : <Copy className="size-4" />}
+                </Button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold uppercase text-green-700">Signing Secret</Label>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 rounded bg-background px-3 py-2 font-mono text-sm break-all border">
+                  {createdWebhook.secret}
+                </code>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => handleCopy(createdWebhook.secret, 'created-secret')}
+                >
+                  {copiedKeyMap['created-secret'] ? <Check className="size-4 text-green-600" /> : <Copy className="size-4" />}
+                </Button>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-2">
+              <Button size="sm" variant="outline" className="border-green-600/50" onClick={() => setCreatedSecretWebhook(null)}>
+                Dismiss
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>Incoming Webhooks</CardTitle>
-              <CardDescription>Receive data from external services to create/update resources</CardDescription>
+              <CardDescription>Receive data from external services to post messages directly into channels</CardDescription>
             </div>
             <Button onClick={() => setCreateDialogOpen(true)}>
               <Plus className="mr-2 size-4" />
@@ -125,23 +220,30 @@ export function WorkspaceIncomingWebhooks({ workspaceSlug }: WorkspaceIncomingWe
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
-                  <TableHead>Action</TableHead>
+                  <TableHead>Channel</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Deliveries</TableHead>
-                  <TableHead>Last Used</TableHead>
+                  <TableHead>Last Received</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {webhooks.map((webhook: any) => (
                   <TableRow key={webhook.id}>
-                    <TableCell className="font-medium">{webhook.name}</TableCell>
+                    <TableCell className="font-medium">
+                      <div>
+                        <div>{webhook.name}</div>
+                        {webhook.description && (
+                          <div className="text-xs text-muted-foreground">{webhook.description}</div>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell>
-                      <Badge variant="outline">{webhook.action}</Badge>
+                      <Badge variant="outline">#{webhook.channel?.name || 'channel'}</Badge>
                     </TableCell>
                     <TableCell>
                       {webhook.isActive ? (
-                        <Badge variant="default" className="gap-1">
+                        <Badge variant="default" className="gap-1 bg-green-500 hover:bg-green-600">
                           <CheckCircle2 className="h-3 w-3" />
                           Active
                         </Badge>
@@ -152,28 +254,27 @@ export function WorkspaceIncomingWebhooks({ workspaceSlug }: WorkspaceIncomingWe
                         </Badge>
                       )}
                     </TableCell>
-                    <TableCell>{webhook.deliveryCount || 0}</TableCell>
+                    <TableCell className="font-mono text-sm">{webhook.totalReceived || 0}</TableCell>
                     <TableCell className="text-muted-foreground text-sm">
-                      {webhook.lastUsedAt ? new Date(webhook.lastUsedAt).toLocaleDateString() : 'Never'}
+                      {webhook.lastReceivedAt ? new Date(webhook.lastReceivedAt).toLocaleString() : 'Never'}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
-                        <Button variant="ghost" size="icon" onClick={() => handleCopyUrl(webhook)}>
-                          <Copy className="h-4 w-4" />
-                        </Button>
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => regenerateToken.mutate(webhook.id)}
-                          disabled={regenerateToken.isPending}
+                          onClick={() => handleCopy(getTriggerUrl(webhook.token), `url-${webhook.id}`)}
+                          title="Copy Trigger URL"
                         >
-                          <RefreshCw className="h-4 w-4" />
+                          {copiedKeyMap[`url-${webhook.id}`] ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
                         </Button>
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => deleteWebhook.mutate(webhook.id)}
+                          className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                          onClick={() => deleteWebhook.mutate({ channelId: webhook.channelId, webhookId: webhook.id })}
                           disabled={deleteWebhook.isPending}
+                          title="Delete Webhook"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -185,7 +286,7 @@ export function WorkspaceIncomingWebhooks({ workspaceSlug }: WorkspaceIncomingWe
             </Table>
           ) : (
             <div className="text-center py-12">
-              <p className="text-muted-foreground mb-4">No webhooks configured yet</p>
+              <p className="text-muted-foreground mb-4">No incoming webhooks configured yet</p>
               <Button variant="outline" onClick={() => setCreateDialogOpen(true)}>
                 <Plus className="mr-2 h-4 w-4" />
                 Create your first webhook
@@ -195,40 +296,64 @@ export function WorkspaceIncomingWebhooks({ workspaceSlug }: WorkspaceIncomingWe
         </CardContent>
       </Card>
 
+      {/* Create Dialog */}
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Create Incoming Webhook</DialogTitle>
-            <DialogDescription>Configure a new webhook to receive data from external services</DialogDescription>
+            <DialogDescription>Configure a webhook to post messages to a workspace channel</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Webhook Name</Label>
-              <Input id="name" value={name} onChange={e => setName(e.target.value)} placeholder="GitHub Integration" />
+              <Label htmlFor="webhook-name">Webhook Name</Label>
+              <Input
+                id="webhook-name"
+                value={name}
+                onChange={e => setName(e.target.value)}
+                placeholder="e.g. GitHub Deployment Bot"
+              />
             </div>
+
             <div className="space-y-2">
-              <Label>Action</Label>
-              <Select value={action} onValueChange={setAction}>
-                <SelectTrigger>
-                  <SelectValue />
+              <Label htmlFor="channel-select">Target Channel</Label>
+              <Select value={selectedChannelId} onValueChange={setSelectedChannelId}>
+                <SelectTrigger id="channel-select">
+                  <SelectValue placeholder="Select a channel" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="create_channel">Create Channel</SelectItem>
-                  <SelectItem value="update_channel">Update Channel</SelectItem>
-                  <SelectItem value="create_department">Create Department</SelectItem>
-                  <SelectItem value="update_department">Update Department</SelectItem>
-                  <SelectItem value="create_project">Create Project</SelectItem>
-                  <SelectItem value="add_member">Add Member</SelectItem>
-                  <SelectItem value="send_message">Send Message</SelectItem>
+                  {channelsLoading ? (
+                    <SelectItem value="loading" disabled>Loading channels...</SelectItem>
+                  ) : channels && channels.length > 0 ? (
+                    channels.map((channel: any) => (
+                      <SelectItem key={channel.id} value={channel.id}>
+                        #{channel.name}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="none" disabled>No channels available</SelectItem>
+                  )}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="webhook-desc">Description (Optional)</Label>
+              <Textarea
+                id="webhook-desc"
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+                placeholder="Posts build notifications from our CI/CD pipeline"
+              />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleCreate} disabled={createWebhook.isPending || !name}>
+            <Button
+              onClick={handleCreate}
+              disabled={createWebhook.isPending || !name.trim() || !selectedChannelId}
+            >
               {createWebhook.isPending ? 'Creating...' : 'Create Webhook'}
             </Button>
           </DialogFooter>
