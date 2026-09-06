@@ -1870,18 +1870,45 @@ When provisioned via M2M:
       }
     }
 
-    const existingChannelMember = await prisma.channelMember.findFirst({
+    // Verify channel belongs to workspace first to enforce multi-tenant isolation
+    const channel = await prisma.channel.findUnique({
+      where: { id: channelId },
+      select: { workspaceId: true },
+    });
+
+    if (!channel || channel.workspaceId !== workspace.id) {
+      throw new NotFoundException('Channel not found in this workspace');
+    }
+
+    /**
+     * ⚡ Performance Optimization:
+     * Replaces `prisma.channelMember.findFirst` with `OR` filter with serial short-circuiting `findUnique` point lookups.
+     * Direct O(1) compound unique key lookup (`channelId_userId`) leverages direct B-Tree index lookups,
+     * avoiding costly multi-table JOINs and index union scans.
+     */
+    let existingChannelMember = await prisma.channelMember.findUnique({
       where: {
-        channelId,
-        channel: { workspaceId: workspace.id },
-        OR: [
-          { userId: memberIdParam },
-          { user: { email: memberIdParam } },
-          { user: { workspaceMemberships: { some: { id: memberIdParam, workspaceId: workspace.id } } } },
-        ],
+        channelId_userId: { channelId, userId: memberIdParam },
       },
       select: { id: true },
     });
+
+    if (!existingChannelMember) {
+      const workspaceMember = await this.findWorkspaceMemberByIdentifier(
+        workspace.id,
+        memberIdParam,
+        { userId: true }
+      );
+
+      if (workspaceMember) {
+        existingChannelMember = await prisma.channelMember.findUnique({
+          where: {
+            channelId_userId: { channelId, userId: workspaceMember.userId },
+          },
+          select: { id: true },
+        });
+      }
+    }
 
     if (!existingChannelMember) {
       throw new NotFoundException('Member not found in this channel');

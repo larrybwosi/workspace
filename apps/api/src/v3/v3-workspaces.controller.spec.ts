@@ -30,6 +30,7 @@ vi.mock('@repo/database', () => ({
     channelMember: {
       findMany: vi.fn(),
       findFirst: vi.fn(),
+      findUnique: vi.fn(),
       createMany: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
@@ -995,7 +996,7 @@ describe('V3WorkspacesController', () => {
     });
 
     describe('updateChannelMember', () => {
-      it('should update channel member role and permissions using member identifier', async () => {
+      it('should update channel member role and permissions using member identifier via findUnique point lookups', async () => {
         const body = { role: 'admin', permissions: '4096' };
         const mockExistingChannelMember = { id: 'cm-1' };
         const mockUpdatedMember = {
@@ -1006,9 +1007,17 @@ describe('V3WorkspacesController', () => {
           permissions: 4096n,
           user: { id: 'usr-1', name: 'Dev' },
         };
+        const mockUser = { id: 'usr-1' };
 
+        const mockChannel = { id: 'ch-1', workspaceId: 'ws-123' };
         (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
-        (prisma.channelMember.findFirst as any).mockResolvedValue(mockExistingChannelMember);
+        (prisma.channel.findUnique as any).mockResolvedValue(mockChannel);
+        (prisma.channelMember.findUnique as any).mockResolvedValueOnce(null); // Direct userId lookup
+        (prisma.workspaceMember.findUnique as any).mockResolvedValueOnce(null); // Direct WSM id lookup
+        (prisma.workspaceMember.findUnique as any).mockResolvedValueOnce(null); // Direct WSM compound lookup
+        (prisma.user.findUnique as any).mockResolvedValueOnce(mockUser); // User email lookup
+        (prisma.workspaceMember.findUnique as any).mockResolvedValueOnce({ userId: 'usr-1' }); // Resolved WSM
+        (prisma.channelMember.findUnique as any).mockResolvedValueOnce(mockExistingChannelMember); // Resolved ChannelMember
         (prisma.channelMember.update as any).mockResolvedValue(mockUpdatedMember);
 
         const result = await controller.updateChannelMember(context as any, 'acme-slug', 'ch-1', 'usr-1@example.com', body);
@@ -1016,15 +1025,15 @@ describe('V3WorkspacesController', () => {
         expect(result.success).toBe(true);
         expect(result.data.member.role).toBe('admin');
         expect(result.data.member.permissions).toBe('4096');
-        expect(prisma.channelMember.findFirst).toHaveBeenCalledWith({
+        expect(prisma.channelMember.findUnique).toHaveBeenCalledWith({
           where: {
-            channelId: 'ch-1',
-            channel: { workspaceId: 'ws-123' },
-            OR: [
-              { userId: 'usr-1@example.com' },
-              { user: { email: 'usr-1@example.com' } },
-              { user: { workspaceMemberships: { some: { id: 'usr-1@example.com', workspaceId: 'ws-123' } } } },
-            ],
+            channelId_userId: { channelId: 'ch-1', userId: 'usr-1@example.com' },
+          },
+          select: { id: true },
+        });
+        expect(prisma.channelMember.findUnique).toHaveBeenCalledWith({
+          where: {
+            channelId_userId: { channelId: 'ch-1', userId: 'usr-1' },
           },
           select: { id: true },
         });
