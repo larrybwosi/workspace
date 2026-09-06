@@ -1080,16 +1080,10 @@ When provisioned via M2M:
       throw new BadRequestException('Workspace context is missing');
     }
 
-    const member = await prisma.workspaceMember.findFirst({
-      where: {
-        workspaceId,
-        OR: [
-          { id: memberIdParam },
-          { userId: memberIdParam },
-          { user: { email: memberIdParam } },
-        ],
-      },
-      select: {
+    const member = await this.findWorkspaceMemberByIdentifier(
+      workspaceId,
+      memberIdParam,
+      {
         id: true,
         workspaceId: true,
         userId: true,
@@ -1109,8 +1103,8 @@ When provisioned via M2M:
           },
         },
         department: { select: { id: true, name: true } },
-      },
-    });
+      }
+    );
 
     if (!member) {
       throw new NotFoundException('Member not found in this workspace');
@@ -1150,17 +1144,11 @@ When provisioned via M2M:
     }
     const { role } = validatedData.data;
 
-    const existingMember = await prisma.workspaceMember.findFirst({
-      where: {
-        workspaceId,
-        OR: [
-          { id: memberIdParam },
-          { userId: memberIdParam },
-          { user: { email: memberIdParam } },
-        ],
-      },
-      select: { id: true },
-    });
+    const existingMember = await this.findWorkspaceMemberByIdentifier(
+      workspaceId,
+      memberIdParam,
+      { id: true, workspaceId: true }
+    );
 
     if (!existingMember) {
       throw new NotFoundException('Member not found in this workspace');
@@ -1225,30 +1213,22 @@ When provisioned via M2M:
 
     const workspace = await prisma.workspace.findUnique({
       where: { id: workspaceId },
-      select: {
-        ownerId: true,
-        members: {
-          where: {
-            OR: [
-              { id: memberIdParam },
-              { userId: memberIdParam },
-              { user: { email: memberIdParam } },
-            ],
-          },
-          select: { id: true, userId: true },
-        },
-      },
+      select: { ownerId: true },
     });
 
     if (!workspace) {
       throw new NotFoundException('Workspace not found');
     }
 
-    if (workspace.members.length === 0) {
+    const memberToDelete = await this.findWorkspaceMemberByIdentifier(
+      workspaceId,
+      memberIdParam,
+      { id: true, userId: true, workspaceId: true }
+    );
+
+    if (!memberToDelete) {
       throw new NotFoundException('Member not found in this workspace');
     }
-
-    const memberToDelete = workspace.members[0];
 
     if (workspace.ownerId === memberToDelete.userId) {
       throw new BadRequestException('Cannot remove workspace owner');
@@ -1267,6 +1247,57 @@ When provisioned via M2M:
     }
 
     return this.formatResponse({ success: true });
+  }
+
+  /**
+   * Bolt Performance Optimization:
+   * Replaces `findFirst` / `OR` relation queries with serial short-circuiting `findUnique` point lookups.
+   * Primary key (`id`) and compound unique key (`workspaceId_userId`) lookups leverage O(1) B-tree indexes,
+   * avoiding costly multi-table joins and index union scans.
+   */
+  private async findWorkspaceMemberByIdentifier<T>(
+    workspaceId: string,
+    memberIdParam: string,
+    select: T
+  ) {
+    // 1. Point lookup by primary key `id`
+    let member = await prisma.workspaceMember.findUnique({
+      where: { id: memberIdParam },
+      select: select as any,
+    });
+
+    if (member && (member as any).workspaceId && (member as any).workspaceId !== workspaceId) {
+      member = null;
+    }
+
+    // 2. Point lookup by compound unique key [workspaceId, userId]
+    if (!member) {
+      member = await prisma.workspaceMember.findUnique({
+        where: {
+          workspaceId_userId: { workspaceId, userId: memberIdParam },
+        },
+        select: select as any,
+      });
+    }
+
+    // 3. Point lookup by user email
+    if (!member && memberIdParam.includes('@')) {
+      const user = await prisma.user.findUnique({
+        where: { email: memberIdParam },
+        select: { id: true },
+      });
+
+      if (user) {
+        member = await prisma.workspaceMember.findUnique({
+          where: {
+            workspaceId_userId: { workspaceId, userId: user.id },
+          },
+          select: select as any,
+        });
+      }
+    }
+
+    return member;
   }
 
   private async resolveWorkspaceAndCheckAccess(context: ApiV3Context, slug: string) {
