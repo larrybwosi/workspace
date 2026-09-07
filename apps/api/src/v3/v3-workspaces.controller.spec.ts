@@ -30,6 +30,7 @@ vi.mock('@repo/database', () => ({
     channelMember: {
       findMany: vi.fn(),
       findFirst: vi.fn(),
+      findUnique: vi.fn(),
       createMany: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
@@ -995,9 +996,9 @@ describe('V3WorkspacesController', () => {
     });
 
     describe('updateChannelMember', () => {
-      it('should update channel member role and permissions using member identifier', async () => {
+      it('should update channel member role and permissions using direct userId point lookup', async () => {
         const body = { role: 'admin', permissions: '4096' };
-        const mockExistingChannelMember = { id: 'cm-1' };
+        const mockExistingChannelMember = { id: 'cm-1', channel: { workspaceId: 'ws-123' } };
         const mockUpdatedMember = {
           id: 'cm-1',
           channelId: 'ch-1',
@@ -1008,7 +1009,42 @@ describe('V3WorkspacesController', () => {
         };
 
         (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
-        (prisma.channelMember.findFirst as any).mockResolvedValue(mockExistingChannelMember);
+        (prisma.channelMember.findUnique as any).mockResolvedValue(mockExistingChannelMember);
+        (prisma.channelMember.update as any).mockResolvedValue(mockUpdatedMember);
+
+        const result = await controller.updateChannelMember(context as any, 'acme-slug', 'ch-1', 'usr-1', body);
+
+        expect(result.success).toBe(true);
+        expect(result.data.member.role).toBe('admin');
+        expect(result.data.member.permissions).toBe('4096');
+        expect(prisma.channelMember.findUnique).toHaveBeenCalledWith({
+          where: {
+            channelId_userId: { channelId: 'ch-1', userId: 'usr-1' },
+          },
+          select: { id: true, channel: { select: { workspaceId: true } } },
+        });
+      });
+
+      it('should update channel member role and permissions using user email identifier via fallback point lookup', async () => {
+        const body = { role: 'admin', permissions: '4096' };
+        const mockExistingChannelMember = { id: 'cm-1', channel: { workspaceId: 'ws-123' } };
+        const mockUpdatedMember = {
+          id: 'cm-1',
+          channelId: 'ch-1',
+          userId: 'usr-1',
+          role: 'admin',
+          permissions: 4096n,
+          user: { id: 'usr-1', name: 'Dev' },
+        };
+
+        (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
+        // First findUnique for direct 'usr-1@example.com' as userId returns null
+        (prisma.channelMember.findUnique as any).mockResolvedValueOnce(null);
+        // findWorkspaceMemberByIdentifier resolves 'usr-1@example.com' to userId 'usr-1'
+        (prisma.user.findUnique as any).mockResolvedValueOnce({ id: 'usr-1' });
+        (prisma.workspaceMember.findUnique as any).mockResolvedValueOnce({ id: 'wsm-1', userId: 'usr-1', workspaceId: 'ws-123' });
+        // Second findUnique for resolved 'usr-1' returns channel member
+        (prisma.channelMember.findUnique as any).mockResolvedValueOnce(mockExistingChannelMember);
         (prisma.channelMember.update as any).mockResolvedValue(mockUpdatedMember);
 
         const result = await controller.updateChannelMember(context as any, 'acme-slug', 'ch-1', 'usr-1@example.com', body);
@@ -1016,18 +1052,6 @@ describe('V3WorkspacesController', () => {
         expect(result.success).toBe(true);
         expect(result.data.member.role).toBe('admin');
         expect(result.data.member.permissions).toBe('4096');
-        expect(prisma.channelMember.findFirst).toHaveBeenCalledWith({
-          where: {
-            channelId: 'ch-1',
-            channel: { workspaceId: 'ws-123' },
-            OR: [
-              { userId: 'usr-1@example.com' },
-              { user: { email: 'usr-1@example.com' } },
-              { user: { workspaceMemberships: { some: { id: 'usr-1@example.com', workspaceId: 'ws-123' } } } },
-            ],
-          },
-          select: { id: true },
-        });
       });
     });
 

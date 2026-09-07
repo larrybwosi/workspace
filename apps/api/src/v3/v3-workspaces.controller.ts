@@ -1870,20 +1870,34 @@ When provisioned via M2M:
       }
     }
 
-    const existingChannelMember = await prisma.channelMember.findFirst({
+    /**
+     * ⚡ Bolt Performance Optimization:
+     * Replaces `prisma.channelMember.findFirst` with `OR` relation filters across multiple tables
+     * with serial short-circuiting `findUnique` point lookups targeting compound unique indices (`channelId_userId`)
+     * and primary keys. Direct point lookups leverage O(1) B-tree indexes, eliminating multi-table JOINs
+     * and index union scans in PostgreSQL.
+     */
+    let existingChannelMember = await prisma.channelMember.findUnique({
       where: {
-        channelId,
-        channel: { workspaceId: workspace.id },
-        OR: [
-          { userId: memberIdParam },
-          { user: { email: memberIdParam } },
-          { user: { workspaceMemberships: { some: { id: memberIdParam, workspaceId: workspace.id } } } },
-        ],
+        channelId_userId: { channelId, userId: memberIdParam },
       },
-      select: { id: true },
+      select: { id: true, channel: { select: { workspaceId: true } } },
     });
 
     if (!existingChannelMember) {
+      // Resolve member via workspace member identifier lookup helper
+      const wsm = await this.findWorkspaceMemberByIdentifier(workspace.id, memberIdParam, { userId: true });
+      if (wsm?.userId) {
+        existingChannelMember = await prisma.channelMember.findUnique({
+          where: {
+            channelId_userId: { channelId, userId: wsm.userId },
+          },
+          select: { id: true, channel: { select: { workspaceId: true } } },
+        });
+      }
+    }
+
+    if (!existingChannelMember || existingChannelMember.channel?.workspaceId !== workspace.id) {
       throw new NotFoundException('Member not found in this channel');
     }
 
