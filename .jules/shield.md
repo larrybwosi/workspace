@@ -1,0 +1,3 @@
+## 2026-09-07 - Enforcement of `isPublic` Authorization Check on Workspace Self-Join Endpoint
+**Learning:** `POST /workspaces/:slug/join` previously fetched the workspace and allowed any authenticated user to create a workspace membership (`role: member`), ignoring the `workspace.isPublic` flag. Existing members were returned directly, but non-members could bypass workspace invites for private workspaces simply by supplying the target slug (BOLA / Broken Object Level Authorization).
+**Action:** When implementing workspace/resource join operations, always explicitly verify public visibility (`isPublic: true`) or valid invitation tokens before instantiating resource membership records for non-members.
