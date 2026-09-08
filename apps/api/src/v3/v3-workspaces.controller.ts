@@ -1071,10 +1071,24 @@ When provisioned via M2M:
       if (existingWsm?.user) {
         existingUser = existingWsm.user;
       } else {
-        existingUser = await prisma.user.findFirst({
-          where: { OR: [{ id: memberId }, { email: memberId }] },
+        /**
+         * ⚡ Bolt Performance Optimization:
+         * Replaces `prisma.user.findFirst` with `OR` filter across `id` and `email` with serial short-circuiting `findUnique` point lookups.
+         * Primary key (`id`) and unique key (`email`) lookups leverage direct O(1) B-tree indexes,
+         * avoiding costly index union scans.
+         */
+        existingUser = await prisma.user.findUnique({
+          where: { id: memberId },
           select: { id: true, email: true, name: true },
         });
+
+        if (!existingUser && memberId.includes('@')) {
+          existingUser = await prisma.user.findUnique({
+            where: { email: memberId },
+            select: { id: true, email: true, name: true },
+          });
+        }
+
         if (!existingUser && memberId.includes('@')) {
           targetEmail = memberId;
         }
