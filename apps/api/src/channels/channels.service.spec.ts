@@ -16,6 +16,7 @@ vi.mock('@repo/database', () => ({
     },
     message: {
       findMany: vi.fn(),
+      findUnique: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
@@ -367,8 +368,9 @@ describe('ChannelsService', () => {
   });
 
   describe('updateMessage', () => {
-    it('should update message and publish realtime update in background', async () => {
+    it('should update message and publish realtime update in background for message author', async () => {
       const mockMsg = { id: 'msg-1', content: 'Updated content' };
+      mockPrisma.message.findUnique.mockResolvedValue({ id: 'msg-1', channelId: 'ch-1', userId: 'user-1' });
       mockPrisma.message.update.mockResolvedValue(mockMsg);
 
       const result = await service.updateMessage('ch-1', 'msg-1', 'user-1', 'Updated content');
@@ -376,16 +378,81 @@ describe('ChannelsService', () => {
       expect(result).toEqual(mockMsg);
       expect(sharedServer.publishRealtime).toHaveBeenCalled();
     });
+
+    it('should throw NotFoundException if message does not exist or channelId mismatches', async () => {
+      mockPrisma.message.findUnique.mockResolvedValue(null);
+      await expect(service.updateMessage('ch-1', 'msg-1', 'user-1', 'Updated content')).rejects.toThrow(
+        NotFoundException
+      );
+
+      mockPrisma.message.findUnique.mockResolvedValue({ id: 'msg-1', channelId: 'other-channel', userId: 'user-1' });
+      await expect(service.updateMessage('ch-1', 'msg-1', 'user-1', 'Updated content')).rejects.toThrow(
+        NotFoundException
+      );
+    });
+
+    it('should throw ForbiddenException if user is not author of the message', async () => {
+      mockPrisma.message.findUnique.mockResolvedValue({ id: 'msg-1', channelId: 'ch-1', userId: 'other-user' });
+
+      await expect(service.updateMessage('ch-1', 'msg-1', 'user-1', 'Updated content')).rejects.toThrow(
+        ForbiddenException
+      );
+    });
   });
 
   describe('deleteMessage', () => {
-    it('should delete message and publish realtime deletion in background', async () => {
+    it('should delete message and publish realtime deletion in background for message author', async () => {
+      mockPrisma.message.findUnique.mockResolvedValue({
+        id: 'msg-1',
+        channelId: 'ch-1',
+        userId: 'user-1',
+        channel: { workspace: { members: [] }, members: [] },
+      });
       mockPrisma.message.delete.mockResolvedValue({ id: 'msg-1' });
 
-      const result = await service.deleteMessage('ch-1', 'msg-1');
+      const result = await service.deleteMessage('ch-1', 'msg-1', 'user-1');
 
       expect(result).toEqual({ success: true });
       expect(sharedServer.publishRealtime).toHaveBeenCalled();
+    });
+
+    it('should allow deletion for workspace/channel admins even if not message author', async () => {
+      mockPrisma.message.findUnique.mockResolvedValue({
+        id: 'msg-1',
+        channelId: 'ch-1',
+        userId: 'author-user',
+        channel: { workspace: { members: [{ role: 'admin' }] }, members: [] },
+      });
+      mockPrisma.message.delete.mockResolvedValue({ id: 'msg-1' });
+
+      const result = await service.deleteMessage('ch-1', 'msg-1', 'admin-user');
+
+      expect(result).toEqual({ success: true });
+      expect(sharedServer.publishRealtime).toHaveBeenCalled();
+    });
+
+    it('should throw NotFoundException if message does not exist or channelId mismatches', async () => {
+      mockPrisma.message.findUnique.mockResolvedValue(null);
+      await expect(service.deleteMessage('ch-1', 'msg-1', 'user-1')).rejects.toThrow(NotFoundException);
+
+      mockPrisma.message.findUnique.mockResolvedValue({
+        id: 'msg-1',
+        channelId: 'other-channel',
+        userId: 'user-1',
+        channel: { workspace: { members: [] }, members: [] },
+      });
+      await expect(service.deleteMessage('ch-1', 'msg-1', 'user-1')).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw ForbiddenException if user is not author or admin', async () => {
+      mockPrisma.message.findUnique.mockResolvedValue({
+        id: 'msg-1',
+        channelId: 'ch-1',
+        userId: 'author-user',
+        channel: { workspace: { members: [{ role: 'member' }] }, members: [{ role: 'member' }] },
+      });
+
+      await expect(service.deleteMessage('ch-1', 'msg-1', 'attacker-user')).rejects.toThrow(ForbiddenException);
     });
   });
 

@@ -458,6 +458,20 @@ export class ChannelsService {
   }
 
   async updateMessage(channelId: string, messageId: string, userId: string, content: string) {
+    const existingMessage = await prisma.message.findUnique({
+      where: { id: messageId },
+      select: { id: true, channelId: true, userId: true },
+    });
+
+    if (!existingMessage || existingMessage.channelId !== channelId) {
+      throw new NotFoundException('Message not found');
+    }
+
+    // Threat Mitigation: BOLA/IDOR Protection - Ensure user owns the message before updating
+    if (userId && existingMessage.userId !== userId) {
+      throw new ForbiddenException('You can only update your own messages');
+    }
+
     const message = await prisma.message.update({
       where: { id: messageId },
       data: {
@@ -483,7 +497,51 @@ export class ChannelsService {
     return message;
   }
 
-  async deleteMessage(channelId: string, messageId: string) {
+  async deleteMessage(channelId: string, messageId: string, userId?: string) {
+    const existingMessage = await prisma.message.findUnique({
+      where: { id: messageId },
+      select: {
+        id: true,
+        channelId: true,
+        userId: true,
+        channel: {
+          select: {
+            workspaceId: true,
+            workspace: {
+              select: {
+                members: {
+                  where: userId ? { userId } : { userId: '' },
+                  select: { role: true },
+                },
+              },
+            },
+            members: {
+              where: userId ? { userId } : { userId: '' },
+              select: { role: true },
+            },
+          },
+        },
+      },
+    });
+
+    if (!existingMessage || existingMessage.channelId !== channelId) {
+      throw new NotFoundException('Message not found');
+    }
+
+    // Threat Mitigation: BOLA/IDOR Protection - Verify author ownership or workspace/channel admin privileges before deletion
+    if (userId && existingMessage.userId !== userId) {
+      const isWorkspaceAdmin = existingMessage.channel?.workspace?.members?.some(
+        m => m.role === 'owner' || m.role === 'admin'
+      );
+      const isChannelAdmin = existingMessage.channel?.members?.some(
+        m => m.role === 'admin' || m.role === 'moderator'
+      );
+
+      if (!isWorkspaceAdmin && !isChannelAdmin) {
+        throw new ForbiddenException('You can only delete your own messages');
+      }
+    }
+
     await prisma.message.delete({
       where: { id: messageId },
     });

@@ -80,8 +80,13 @@ export class ChannelsController {
   @ApiParam({ name: 'channelId', description: 'The channel ID' })
   @ApiParam({ name: 'messageId', description: 'The message ID' })
   @ApiResponse({ status: 200, description: 'Message deleted' })
-  async deleteMessage(@Param('channelId') channelId: string, @Param('messageId') messageId: string) {
-    return this.channelsService.deleteMessage(channelId, messageId);
+  async deleteMessage(
+    @Param('channelId') channelId: string,
+    @Param('messageId') messageId: string,
+    @CurrentUser() user: User
+  ) {
+    // Threat Mitigation: Pass authenticated user ID to enforce ownership / authorization checks on deletion
+    return this.channelsService.deleteMessage(channelId, messageId, user.id);
   }
 
   @Post(':channelId/messages/read')
