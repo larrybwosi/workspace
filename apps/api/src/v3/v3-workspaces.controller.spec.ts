@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { V3WorkspacesController } from './v3-workspaces.controller';
 import { ProvisioningService } from '../provisioning/provisioning.service';
 import { WebhooksService } from '../webhooks/webhooks.service';
+import { ChannelsService } from '../channels/channels.service';
 import { ApiV3Guard } from '../auth/api-v3.guard';
 import { ConfigService } from '@nestjs/config';
 import { vi, describe, beforeEach, it, expect } from 'vitest';
@@ -77,10 +78,20 @@ describe('V3WorkspacesController', () => {
       pipeline: vi.fn().mockReturnValue(mockPipeline),
     };
 
+    const mockChannelsService = {
+      getMessages: vi.fn().mockResolvedValue({ messages: [], nextCursor: null }),
+      createMessage: vi.fn().mockResolvedValue({ id: 'msg_1', content: 'hello' }),
+      updateMessage: vi.fn().mockResolvedValue({ id: 'msg_1', content: 'updated' }),
+      deleteMessage: vi.fn().mockResolvedValue({ success: true }),
+      addReaction: vi.fn().mockResolvedValue({ id: 'react_1', emoji: '👍' }),
+      removeReaction: vi.fn().mockResolvedValue({ success: true }),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [V3WorkspacesController],
       providers: [
         { provide: ProvisioningService, useValue: mockProvisioningService },
+        { provide: ChannelsService, useValue: mockChannelsService },
         { provide: 'REDIS_CLIENT', useValue: redisClient },
         { provide: ConfigService, useValue: {} },
         { provide: WebhooksService, useValue: { dispatch: vi.fn().mockResolvedValue(undefined) } },

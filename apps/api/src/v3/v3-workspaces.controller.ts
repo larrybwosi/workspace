@@ -6,6 +6,7 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   UseGuards,
   ForbiddenException,
   BadRequestException,
@@ -21,10 +22,12 @@ import { ApiV3Guard, ApiV3Context } from '../auth/api-v3.guard';
 import { V3Context } from '../auth/v3-context.decorator';
 import { ProvisioningService } from '../provisioning/provisioning.service';
 import { WebhooksService } from '../webhooks/webhooks.service';
+import { ChannelsService } from '../channels/channels.service';
 import { prisma } from '@repo/database';
 import { z } from 'zod';
 import { IsString, IsOptional, IsEmail, IsArray, IsEnum } from 'class-validator';
 import Redis from 'ioredis';
+import * as crypto from 'crypto';
 
 export class V3UpdateWorkspaceDto {
   @IsString()
@@ -364,9 +367,62 @@ export class V3WorkspacesController {
 
   constructor(
     private readonly provisioningService: ProvisioningService,
+    private readonly channelsService: ChannelsService,
     @Inject('REDIS_CLIENT') private readonly redis: Redis,
     private readonly webhooksService?: WebhooksService
   ) {}
+
+  private async resolveEffectiveUserId(context: ApiV3Context, workspaceId?: string): Promise<string> {
+    if (context.userId && !context.userId.startsWith('m2m:')) {
+      return context.userId;
+    }
+    if (workspaceId) {
+      const botApp = await prisma.botApplication.findFirst({
+        where: { workspaceId },
+        select: { botId: true },
+      });
+      if (botApp?.botId) {
+        return botApp.botId;
+      }
+      const workspace = await prisma.workspace.findUnique({
+        where: { id: workspaceId },
+        select: { id: true, name: true, slug: true, ownerId: true },
+      });
+      if (workspace) {
+        const botId = `bot_${crypto.randomBytes(8).toString('hex')}`;
+        const botUser = await prisma.user.create({
+          data: {
+            id: botId,
+            name: `${workspace.name} Bot`,
+            email: `${workspace.slug}-bot@system.internal`,
+            isBot: true,
+            status: 'online',
+          },
+        });
+        const clientId = `bot_${crypto.randomBytes(16).toString('hex')}`;
+        const clientSecret = crypto.randomBytes(32).toString('hex');
+        await prisma.botApplication.create({
+          data: {
+            name: `${workspace.name} Bot`,
+            description: `Default bot for ${workspace.name}`,
+            clientId,
+            clientSecret,
+            ownerId: workspace.ownerId,
+            botId: botUser.id,
+            workspaceId: workspace.id,
+          },
+        });
+        await prisma.workspaceMember.upsert({
+          where: { workspaceId_userId: { workspaceId: workspace.id, userId: botUser.id } },
+          update: {},
+          create: { workspaceId: workspace.id, userId: botUser.id, role: 'admin' },
+        });
+        return botUser.id;
+      }
+    }
+    if (context.userId) return context.userId;
+    throw new BadRequestException('Unable to resolve user context for message action');
+  }
 
   private formatResponse<T>(data: T) {
     return {
@@ -1981,5 +2037,163 @@ When provisioned via M2M:
     });
 
     return this.formatResponse({ success: true });
+  }
+
+  @Get(':slug/channels/:channelId/messages')
+  @ApiOperation({
+    summary: 'Get channel messages (Enterprise M2M)',
+    description: 'Retrieve message history for a channel in a workspace. Requires messages:read scope.',
+  })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'channelId', description: 'The channel ID' })
+  @ApiResponse({ status: 200, description: 'List of messages returned successfully.' })
+  async getChannelMessages(
+    @V3Context() context: ApiV3Context,
+    @Param('slug') slug: string,
+    @Param('channelId') channelId: string,
+    @Query('cursor') cursor?: string,
+    @Query('limit') limitNum = '50'
+  ) {
+    if (!context.scopes.includes('messages:read') && !context.scopes.includes('*')) {
+      throw new ForbiddenException('Missing messages:read scope');
+    }
+
+    const workspace = await this.resolveWorkspaceAndCheckAccess(context, slug);
+    const userId = await this.resolveEffectiveUserId(context, workspace.id);
+
+    const result = await this.channelsService.getMessages(channelId, userId, cursor, parseInt(limitNum));
+    return this.formatResponse(result);
+  }
+
+  @Post(':slug/channels/:channelId/messages')
+  @ApiOperation({
+    summary: 'Send a message to a channel (Enterprise M2M)',
+    description: 'Send a message to a channel. Requires messages:send scope.',
+  })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'channelId', description: 'The channel ID' })
+  @ApiResponse({ status: 201, description: 'Message created successfully.' })
+  async createChannelMessage(
+    @V3Context() context: ApiV3Context,
+    @Param('slug') slug: string,
+    @Param('channelId') channelId: string,
+    @Body() body: any
+  ) {
+    if (!context.scopes.includes('messages:send') && !context.scopes.includes('messages:write') && !context.scopes.includes('*')) {
+      throw new ForbiddenException('Missing messages:send scope');
+    }
+
+    const workspace = await this.resolveWorkspaceAndCheckAccess(context, slug);
+    const userId = await this.resolveEffectiveUserId(context, workspace.id);
+
+    const message = await this.channelsService.createMessage(channelId, userId, body);
+    return this.formatResponse({ message });
+  }
+
+  @Patch(':slug/channels/:channelId/messages/:messageId')
+  @ApiOperation({
+    summary: 'Update a channel message (Enterprise M2M)',
+    description: 'Update content of a message. Requires messages:send scope.',
+  })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'channelId', description: 'The channel ID' })
+  @ApiParam({ name: 'messageId', description: 'The message ID' })
+  @ApiResponse({ status: 200, description: 'Message updated successfully.' })
+  async updateChannelMessage(
+    @V3Context() context: ApiV3Context,
+    @Param('slug') slug: string,
+    @Param('channelId') channelId: string,
+    @Param('messageId') messageId: string,
+    @Body() body: { content: string }
+  ) {
+    if (!context.scopes.includes('messages:send') && !context.scopes.includes('messages:write') && !context.scopes.includes('*')) {
+      throw new ForbiddenException('Missing messages:send scope');
+    }
+
+    const workspace = await this.resolveWorkspaceAndCheckAccess(context, slug);
+    const userId = await this.resolveEffectiveUserId(context, workspace.id);
+
+    const message = await this.channelsService.updateMessage(channelId, messageId, userId, body.content);
+    return this.formatResponse({ message });
+  }
+
+  @Delete(':slug/channels/:channelId/messages/:messageId')
+  @ApiOperation({
+    summary: 'Delete a channel message (Enterprise M2M)',
+    description: 'Delete a message. Requires messages:send scope.',
+  })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'channelId', description: 'The channel ID' })
+  @ApiParam({ name: 'messageId', description: 'The message ID' })
+  @ApiResponse({ status: 200, description: 'Message deleted successfully.' })
+  async deleteChannelMessage(
+    @V3Context() context: ApiV3Context,
+    @Param('slug') slug: string,
+    @Param('channelId') channelId: string,
+    @Param('messageId') messageId: string
+  ) {
+    if (!context.scopes.includes('messages:send') && !context.scopes.includes('messages:write') && !context.scopes.includes('*')) {
+      throw new ForbiddenException('Missing messages:send scope');
+    }
+
+    await this.resolveWorkspaceAndCheckAccess(context, slug);
+
+    const result = await this.channelsService.deleteMessage(channelId, messageId);
+    return this.formatResponse(result);
+  }
+
+  @Post(':slug/channels/:channelId/messages/:messageId/reactions')
+  @ApiOperation({
+    summary: 'Add a reaction to a channel message (Enterprise M2M)',
+    description: 'Add an emoji reaction to a message. Requires messages:send scope.',
+  })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'channelId', description: 'The channel ID' })
+  @ApiParam({ name: 'messageId', description: 'The message ID' })
+  @ApiResponse({ status: 201, description: 'Reaction added successfully.' })
+  async addChannelMessageReaction(
+    @V3Context() context: ApiV3Context,
+    @Param('slug') slug: string,
+    @Param('channelId') channelId: string,
+    @Param('messageId') messageId: string,
+    @Body() body: { emoji: string }
+  ) {
+    if (!context.scopes.includes('messages:send') && !context.scopes.includes('messages:write') && !context.scopes.includes('*')) {
+      throw new ForbiddenException('Missing messages:send scope');
+    }
+
+    const workspace = await this.resolveWorkspaceAndCheckAccess(context, slug);
+    const userId = await this.resolveEffectiveUserId(context, workspace.id);
+
+    const reaction = await this.channelsService.addReaction(channelId, messageId, userId, body.emoji);
+    return this.formatResponse({ reaction });
+  }
+
+  @Delete(':slug/channels/:channelId/messages/:messageId/reactions/:emoji')
+  @ApiOperation({
+    summary: 'Remove a reaction from a channel message (Enterprise M2M)',
+    description: 'Remove an emoji reaction from a message. Requires messages:send scope.',
+  })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'channelId', description: 'The channel ID' })
+  @ApiParam({ name: 'messageId', description: 'The message ID' })
+  @ApiParam({ name: 'emoji', description: 'The emoji character' })
+  @ApiResponse({ status: 200, description: 'Reaction removed successfully.' })
+  async removeChannelMessageReaction(
+    @V3Context() context: ApiV3Context,
+    @Param('slug') slug: string,
+    @Param('channelId') channelId: string,
+    @Param('messageId') messageId: string,
+    @Param('emoji') emoji: string
+  ) {
+    if (!context.scopes.includes('messages:send') && !context.scopes.includes('messages:write') && !context.scopes.includes('*')) {
+      throw new ForbiddenException('Missing messages:send scope');
+    }
+
+    const workspace = await this.resolveWorkspaceAndCheckAccess(context, slug);
+    const userId = await this.resolveEffectiveUserId(context, workspace.id);
+
+    const result = await this.channelsService.removeReaction(channelId, messageId, userId, emoji);
+    return this.formatResponse(result);
   }
 }

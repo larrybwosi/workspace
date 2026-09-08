@@ -15,21 +15,6 @@ export type SupportControllerGetTicketsParams = {
 workspaceId: string;
 };
 
-export type ScheduledNotificationsControllerUpdateNotificationBodyAction = typeof ScheduledNotificationsControllerUpdateNotificationBodyAction[keyof typeof ScheduledNotificationsControllerUpdateNotificationBodyAction];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ScheduledNotificationsControllerUpdateNotificationBodyAction = {
-  pause: 'pause',
-  resume: 'resume',
-} as const;
-
-export type ScheduledNotificationsControllerUpdateNotificationBody = {
-  action?: ScheduledNotificationsControllerUpdateNotificationBodyAction;
-  message?: string;
-  title?: string;
-};
-
 export type ScheduledNotificationsControllerGetNotificationsParams = {
 /**
  * Return stats instead of list
@@ -153,21 +138,6 @@ export type FriendsControllerGetFriendsParams = {
 search?: string;
 };
 
-export type DmsControllerAddReactionBody = {
-  emoji?: string;
-};
-
-export type DmsControllerGetMessagesParams = {
-/**
- * Pagination cursor
- */
-cursor?: string;
-/**
- * Number of messages to return
- */
-limit?: unknown;
-};
-
 export type AdminControllerUploadFileBody = {
   file?: Blob;
 };
@@ -192,23 +162,6 @@ role: string;
 status: string;
 };
 
-export type ChannelsControllerAddReactionBody = {
-  emoji?: string;
-};
-
-export type ChannelsControllerMarkAsReadBody = {
-  messageIds?: string[];
-};
-
-export type ChannelsControllerUpdateMessageBody = {
-  content?: string;
-};
-
-export type ChannelsControllerGetMessagesParams = {
-cursor?: string;
-limit?: unknown;
-};
-
 export type CallsControllerGetScheduledCallsParams = {
 /**
  * The workspace ID
@@ -229,6 +182,21 @@ export type InvitationsControllerGetInvitationsParams = {
  * Filter by workspace ID
  */
 workspaceId?: string;
+};
+
+export type DmsControllerAddReactionBody = {
+  emoji?: string;
+};
+
+export type DmsControllerGetMessagesParams = {
+/**
+ * Pagination cursor
+ */
+cursor?: string;
+/**
+ * Number of messages to return
+ */
+limit?: unknown;
 };
 
 export type NotificationsControllerGetChannelSettingsParams = {
@@ -256,11 +224,37 @@ unreadOnly?: string;
 limit?: string;
 };
 
+export type ChannelsControllerAddReactionBody = {
+  emoji?: string;
+};
+
+export type ChannelsControllerMarkAsReadBody = {
+  messageIds?: string[];
+};
+
+export type ChannelsControllerUpdateMessageBody = {
+  content?: string;
+};
+
+export type ChannelsControllerGetMessagesParams = {
+cursor?: string;
+limit?: unknown;
+};
+
+export type V3DmsControllerGetMessagesParams = {
+cursor?: string;
+limit?: unknown;
+};
+
 export type V3ChannelIncomingWebhooksControllerExecuteWebhookByChannelIdParams = {
 /**
  * The unique webhook token (can alternatively use x-webhook-token header)
  */
 token?: string;
+};
+
+export type V3WorkspacesControllerGetChannelMessagesParams = {
+cursor: string;
 };
 
 export type V3WorkspacesControllerDeleteWorkspace200Data = {
@@ -272,6 +266,11 @@ export type V3WorkspacesControllerDeleteWorkspace200 = {
   success?: boolean;
   timestamp?: string;
 };
+
+/**
+ * @nullable
+ */
+export type V3WorkspacesControllerUpdateWorkspace200DataWorkspaceBrandingConfig = { [key: string]: unknown } | null;
 
 export type V3WorkspacesControllerUpdateWorkspace200DataWorkspace = {
   /** @nullable */
@@ -298,10 +297,15 @@ export type V3WorkspacesControllerUpdateWorkspace200 = {
   timestamp?: string;
 };
 
-/**
- * @nullable
- */
-export type V3WorkspacesControllerUpdateWorkspace200DataWorkspaceBrandingConfig = { [key: string]: unknown } | null;
+export type V3WorkspacesControllerGetWorkspaceBySlug200Data = {
+  workspace?: V3WorkspacesControllerGetWorkspaceBySlug200DataWorkspace;
+};
+
+export type V3WorkspacesControllerGetWorkspaceBySlug200 = {
+  data?: V3WorkspacesControllerGetWorkspaceBySlug200Data;
+  success?: boolean;
+  timestamp?: string;
+};
 
 /**
  * @nullable
@@ -321,16 +325,6 @@ export type V3WorkspacesControllerGetWorkspaceBySlug200DataWorkspace = {
   industry?: string | null;
   name?: string;
   slug?: string;
-};
-
-export type V3WorkspacesControllerGetWorkspaceBySlug200Data = {
-  workspace?: V3WorkspacesControllerGetWorkspaceBySlug200DataWorkspace;
-};
-
-export type V3WorkspacesControllerGetWorkspaceBySlug200 = {
-  data?: V3WorkspacesControllerGetWorkspaceBySlug200Data;
-  success?: boolean;
-  timestamp?: string;
 };
 
 export type V3WorkspacesControllerProvisionWorkspace201DataWorkspace = {
@@ -400,26 +394,7 @@ after?: string;
 };
 
 export type UsersControllerDeleteDeviceTokenParams = {
-token: string;
-};
-
-export type UsersControllerRegisterDeviceTokenBodyPlatform = typeof UsersControllerRegisterDeviceTokenBodyPlatform[keyof typeof UsersControllerRegisterDeviceTokenBodyPlatform];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const UsersControllerRegisterDeviceTokenBodyPlatform = {
-  web: 'web',
-  ios: 'ios',
-  android: 'android',
-  desktop: 'desktop',
-} as const;
-
-export type UsersControllerRegisterDeviceTokenBodyDeviceInfo = { [key: string]: unknown };
-
-export type UsersControllerRegisterDeviceTokenBody = {
-  deviceInfo?: UsersControllerRegisterDeviceTokenBodyDeviceInfo;
-  platform: UsersControllerRegisterDeviceTokenBodyPlatform;
-  token: string;
+token?: string;
 };
 
 export type UsersControllerSearchUsersParams = {
@@ -429,6 +404,46 @@ query: string;
 export type AppControllerGetLinkPreviewParams = {
 url: string;
 };
+
+export interface CreateCustomerProfileDto { [key: string]: unknown }
+
+export interface AssignTicketDto { [key: string]: unknown }
+
+export interface UpdateTicketStatusDto { [key: string]: unknown }
+
+export interface StartLiveChatDto { [key: string]: unknown }
+
+export interface CreateTicketDto { [key: string]: unknown }
+
+export type UpdateScheduledNotificationDtoScheduleType = typeof UpdateScheduledNotificationDtoScheduleType[keyof typeof UpdateScheduledNotificationDtoScheduleType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UpdateScheduledNotificationDtoScheduleType = {
+  custom: 'custom',
+  once: 'once',
+  daily: 'daily',
+  weekly: 'weekly',
+  monthly: 'monthly',
+} as const;
+
+export type UpdateScheduledNotificationDtoAction = typeof UpdateScheduledNotificationDtoAction[keyof typeof UpdateScheduledNotificationDtoAction];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UpdateScheduledNotificationDtoAction = {
+  pause: 'pause',
+  resume: 'resume',
+} as const;
+
+export interface UpdateScheduledNotificationDto {
+  action?: UpdateScheduledNotificationDtoAction;
+  message?: string;
+  /** ISO format datetime */
+  scheduledFor?: string;
+  scheduleType?: UpdateScheduledNotificationDtoScheduleType;
+  title?: string;
+}
 
 export type CreateScheduledNotificationDtoScheduleType = typeof CreateScheduledNotificationDtoScheduleType[keyof typeof CreateScheduledNotificationDtoScheduleType];
 
@@ -794,19 +809,6 @@ export interface SendFriendRequestDto {
   receiverId: string;
 }
 
-export interface MarkAsReadDto {
-  messageIds: string[];
-}
-
-export interface UpdateDmMessageDto {
-  content: string;
-}
-
-export interface CreateDmDto {
-  /** The ID of the user to start a DM with */
-  userId: string;
-}
-
 export interface SoundboardSoundDto { [key: string]: unknown }
 
 export interface ScheduleCallDto { [key: string]: unknown }
@@ -886,6 +888,19 @@ export interface CreateInvitationDto {
   workspaceId?: string;
 }
 
+export interface MarkAsReadDto {
+  messageIds: string[];
+}
+
+export interface UpdateDmMessageDto {
+  content: string;
+}
+
+export interface CreateDmDto {
+  /** The ID of the user to start a DM with */
+  userId: string;
+}
+
 export interface UpdateNotificationDto {
   isRead: boolean;
 }
@@ -919,6 +934,13 @@ export const WorkspaceSettingsDtoPreference = {
 export interface WorkspaceSettingsDto {
   preference: WorkspaceSettingsDtoPreference;
   workspaceId: string;
+}
+
+export interface V3CreateDmDto {
+  /** Target user ID to start direct message conversation with */
+  targetUserId?: string;
+  /** Target user ID (alias) */
+  userId?: string;
 }
 
 export interface V3UpdateM2mApplicationDto {
@@ -1002,22 +1024,22 @@ export interface V3UpdateChannelMemberDto {
 export type V3AddChannelMemberDtoPermissions = { [key: string]: unknown };
 
 export interface V3AddChannelMemberDto {
+  /** Email address of user to add to channel */
+  email?: string;
+  /** Array of user emails to add */
+  emails?: string[];
+  /** Workspace member ID to add to channel */
+  memberId?: string;
+  /** Array of workspace member IDs to add */
+  memberIds?: string[];
   /** Bitwise permission string or integer value */
   permissions?: V3AddChannelMemberDtoPermissions;
   /** Channel role */
   role?: string;
-  /** User ID to add to channel */
+  /** User ID, Member ID, or Email to add to channel */
   userId?: string;
-  /** Member ID to add to channel */
-  memberId?: string;
-  /** Email address to add to channel */
-  email?: string;
-  /** Array of user IDs to add */
+  /** Array of user IDs, member IDs, or emails to add */
   userIds?: string[];
-  /** Array of workspace member IDs to add */
-  memberIds?: string[];
-  /** Array of user emails to add */
-  emails?: string[];
 }
 
 export type V3UpdateChannelDtoType = typeof V3UpdateChannelDtoType[keyof typeof V3UpdateChannelDtoType];
@@ -1104,12 +1126,12 @@ export interface V3UpdateMemberRoleDto {
 export interface V3AddMemberDto {
   /** The email of the user to add */
   email?: string;
-  /** The user ID of the user to add */
-  userId?: string;
   /** The workspace member ID of the user to add */
   memberId?: string;
   /** The role of the member */
   role?: string;
+  /** The user ID of the user to add */
+  userId?: string;
 }
 
 /**
@@ -1190,6 +1212,100 @@ export interface V3TokenRequestDto {
   grant_type: V3TokenRequestDtoGrantType;
   /** Space-separated list of scopes requested. */
   scope?: string;
+}
+
+export interface DeleteDeviceTokenDto {
+  /** Push notification device token to deactivate */
+  token?: string;
+}
+
+/**
+ * Device platform
+ */
+export type RegisterDeviceTokenDtoPlatform = typeof RegisterDeviceTokenDtoPlatform[keyof typeof RegisterDeviceTokenDtoPlatform];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const RegisterDeviceTokenDtoPlatform = {
+  web: 'web',
+  ios: 'ios',
+  android: 'android',
+  desktop: 'desktop',
+} as const;
+
+/**
+ * Metadata regarding the target device
+ */
+export type RegisterDeviceTokenDtoDeviceInfo = { [key: string]: unknown };
+
+export interface RegisterDeviceTokenDto {
+  /** Metadata regarding the target device */
+  deviceInfo?: RegisterDeviceTokenDtoDeviceInfo;
+  /** Device platform */
+  platform: RegisterDeviceTokenDtoPlatform;
+  /** Push notification device token */
+  token: string;
+}
+
+/**
+ * Online presence status
+ */
+export type UpdateUserProfileDtoStatus = typeof UpdateUserProfileDtoStatus[keyof typeof UpdateUserProfileDtoStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UpdateUserProfileDtoStatus = {
+  online: 'online',
+  offline: 'offline',
+  away: 'away',
+  dnd: 'dnd',
+} as const;
+
+/**
+ * Notification settings object
+ */
+export type UpdateUserProfileDtoNotificationPreferences = { [key: string]: unknown };
+
+export interface UpdateUserProfileDto {
+  /** Avatar image URL */
+  avatar?: string;
+  /** Banner image URL */
+  banner?: string;
+  /** User biography */
+  bio?: string;
+  /** Profile image URL */
+  image?: string;
+  /** Full display name */
+  name?: string;
+  /** Notification settings object */
+  notificationPreferences?: UpdateUserProfileDtoNotificationPreferences;
+  /** Online presence status */
+  status?: UpdateUserProfileDtoStatus;
+  /** Custom status emoji */
+  statusEmoji?: string;
+  /** Custom status text */
+  statusText?: string;
+  /** Unique handle/username */
+  username?: string;
+}
+
+/**
+ * User online status
+ */
+export type UpdateUserStatusDtoStatus = typeof UpdateUserStatusDtoStatus[keyof typeof UpdateUserStatusDtoStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UpdateUserStatusDtoStatus = {
+  online: 'online',
+  offline: 'offline',
+  away: 'away',
+  dnd: 'dnd',
+} as const;
+
+export interface UpdateUserStatusDto {
+  /** User online status */
+  status: UpdateUserStatusDtoStatus;
 }
 
 
@@ -1289,10 +1405,12 @@ const usersControllerGetMe = (
  * @summary Update current user profile
  */
 const usersControllerPatchMe = (
-
+    updateUserProfileDto: BodyType<UpdateUserProfileDto>,
  options?: SecondParameter<typeof customInstance>,) => {
       return customInstance<void>(
-      {url: `/api/users/me`, method: 'PATCH'
+      {url: `/api/users/me`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateUserProfileDto
     },
       options);
     }
@@ -1301,10 +1419,12 @@ const usersControllerPatchMe = (
  * @summary Update current user profile
  */
 const usersControllerUpdateMe = (
-
+    updateUserProfileDto: BodyType<UpdateUserProfileDto>,
  options?: SecondParameter<typeof customInstance>,) => {
       return customInstance<void>(
-      {url: `/api/users/me`, method: 'POST'
+      {url: `/api/users/me`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: updateUserProfileDto
     },
       options);
     }
@@ -1326,9 +1446,12 @@ const usersControllerGetUser = (
  */
 const usersControllerPatchUser = (
     id: string,
+    updateUserProfileDto: BodyType<UpdateUserProfileDto>,
  options?: SecondParameter<typeof customInstance>,) => {
       return customInstance<void>(
-      {url: `/api/users/${id}`, method: 'PATCH'
+      {url: `/api/users/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateUserProfileDto
     },
       options);
     }
@@ -1373,10 +1496,12 @@ const usersControllerUnblockUser = (
  * @summary Update current user status
  */
 const usersControllerUpdateMyStatus = (
-
+    updateUserStatusDto: BodyType<UpdateUserStatusDto>,
  options?: SecondParameter<typeof customInstance>,) => {
       return customInstance<void>(
-      {url: `/api/users/me/status`, method: 'PATCH'
+      {url: `/api/users/me/status`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateUserStatusDto
     },
       options);
     }
@@ -1385,12 +1510,12 @@ const usersControllerUpdateMyStatus = (
  * @summary Register a device token for push notifications
  */
 const usersControllerRegisterDeviceToken = (
-    usersControllerRegisterDeviceTokenBody: BodyType<UsersControllerRegisterDeviceTokenBody>,
+    registerDeviceTokenDto: BodyType<RegisterDeviceTokenDto>,
  options?: SecondParameter<typeof customInstance>,) => {
       return customInstance<void>(
       {url: `/api/users/me/device-tokens`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
-      data: usersControllerRegisterDeviceTokenBody
+      data: registerDeviceTokenDto
     },
       options);
     }
@@ -1411,10 +1536,13 @@ const usersControllerGetDeviceTokens = (
  * @summary Deactivate a device token
  */
 const usersControllerDeleteDeviceToken = (
-    params: UsersControllerDeleteDeviceTokenParams,
+    deleteDeviceTokenDto?: BodyType<DeleteDeviceTokenDto>,
+    params?: UsersControllerDeleteDeviceTokenParams,
  options?: SecondParameter<typeof customInstance>,) => {
       return customInstance<void>(
       {url: `/api/users/me/device-tokens`, method: 'DELETE',
+      headers: {'Content-Type': 'application/json', },
+      data: deleteDeviceTokenDto,
         params
     },
       options);
@@ -1754,7 +1882,7 @@ const v3WorkspacesControllerGetWorkspaceMembers = (
     }
 
 /**
- * Add a new member to a specific workspace. Requires members:write scope.
+ * Add a new member to a specific workspace using user email, user ID, or workspace member ID. Requires members:write scope.
  * @summary Add a member to the workspace (Enterprise M2M)
  */
 const v3WorkspacesControllerAddWorkspaceMember = (
@@ -1770,30 +1898,30 @@ const v3WorkspacesControllerAddWorkspaceMember = (
     }
 
 /**
- * Retrieve details of a specific workspace member by userId. Requires members:read scope.
+ * Retrieve details of a specific workspace member by member ID, user ID, or user email address. Requires members:read scope.
  * @summary Get details of a specific workspace member (Enterprise M2M)
  */
 const v3WorkspacesControllerGetWorkspaceMember = (
     slug: string,
-    userId: string,
+    memberId: string,
  options?: SecondParameter<typeof customInstance>,) => {
       return customInstance<void>(
-      {url: `/api/v3/workspaces/${slug}/members/${userId}`, method: 'GET'
+      {url: `/api/v3/workspaces/${slug}/members/${memberId}`, method: 'GET'
     },
       options);
     }
 
 /**
- * Update the role of a specific workspace member. Requires members:write scope.
+ * Update the role of a specific workspace member by member ID, user ID, or user email address. Requires members:write scope.
  * @summary Update a workspace member role (Enterprise M2M)
  */
 const v3WorkspacesControllerUpdateWorkspaceMember = (
     slug: string,
-    userId: string,
+    memberId: string,
     v3UpdateMemberRoleDto: BodyType<V3UpdateMemberRoleDto>,
  options?: SecondParameter<typeof customInstance>,) => {
       return customInstance<void>(
-      {url: `/api/v3/workspaces/${slug}/members/${userId}`, method: 'PATCH',
+      {url: `/api/v3/workspaces/${slug}/members/${memberId}`, method: 'PATCH',
       headers: {'Content-Type': 'application/json', },
       data: v3UpdateMemberRoleDto
     },
@@ -1801,15 +1929,15 @@ const v3WorkspacesControllerUpdateWorkspaceMember = (
     }
 
 /**
- * Remove a workspace member by userId. Requires members:write scope.
+ * Remove a workspace member by member ID, user ID, or user email address. Requires members:write scope.
  * @summary Remove a member from the workspace (Enterprise M2M)
  */
 const v3WorkspacesControllerDeleteWorkspaceMember = (
     slug: string,
-    userId: string,
+    memberId: string,
  options?: SecondParameter<typeof customInstance>,) => {
       return customInstance<void>(
-      {url: `/api/v3/workspaces/${slug}/members/${userId}`, method: 'DELETE'
+      {url: `/api/v3/workspaces/${slug}/members/${memberId}`, method: 'DELETE'
     },
       options);
     }
@@ -1903,7 +2031,7 @@ const v3WorkspacesControllerGetChannelMembers = (
     }
 
 /**
- * Add user(s) to a channel with customizable role and permissions. Requires channels:write scope.
+ * Add user(s) to a channel using user IDs, member IDs, or email addresses with customizable role and permissions. Requires channels:write scope.
  * @summary Add members to a channel (Enterprise M2M)
  */
 const v3WorkspacesControllerAddChannelMembers = (
@@ -1920,17 +2048,17 @@ const v3WorkspacesControllerAddChannelMembers = (
     }
 
 /**
- * Update the role or bitwise permissions of a channel member. Requires channels:write scope.
+ * Update the role or bitwise permissions of a channel member using user ID, member ID, or email address. Requires channels:write scope.
  * @summary Update channel member role and permissions (Enterprise M2M)
  */
 const v3WorkspacesControllerUpdateChannelMember = (
     slug: string,
     channelId: string,
-    userId: string,
+    memberId: string,
     v3UpdateChannelMemberDto: BodyType<V3UpdateChannelMemberDto>,
  options?: SecondParameter<typeof customInstance>,) => {
       return customInstance<void>(
-      {url: `/api/v3/workspaces/${slug}/channels/${channelId}/members/${userId}`, method: 'PATCH',
+      {url: `/api/v3/workspaces/${slug}/channels/${channelId}/members/${memberId}`, method: 'PATCH',
       headers: {'Content-Type': 'application/json', },
       data: v3UpdateChannelMemberDto
     },
@@ -1938,16 +2066,107 @@ const v3WorkspacesControllerUpdateChannelMember = (
     }
 
 /**
- * Remove a specific member from a channel. Requires channels:write scope.
+ * Remove a specific member from a channel using user ID, workspace member ID, or email address. Requires channels:write scope.
  * @summary Remove a member from a channel (Enterprise M2M)
  */
 const v3WorkspacesControllerDeleteChannelMember = (
     slug: string,
     channelId: string,
-    userId: string,
+    memberId: string,
  options?: SecondParameter<typeof customInstance>,) => {
       return customInstance<void>(
-      {url: `/api/v3/workspaces/${slug}/channels/${channelId}/members/${userId}`, method: 'DELETE'
+      {url: `/api/v3/workspaces/${slug}/channels/${channelId}/members/${memberId}`, method: 'DELETE'
+    },
+      options);
+    }
+
+/**
+ * Retrieve message history for a channel in a workspace. Requires messages:read scope.
+ * @summary Get channel messages (Enterprise M2M)
+ */
+const v3WorkspacesControllerGetChannelMessages = (
+    slug: string,
+    channelId: string,
+    params: V3WorkspacesControllerGetChannelMessagesParams,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/channels/${channelId}/messages`, method: 'GET',
+        params
+    },
+      options);
+    }
+
+/**
+ * Send a message to a channel. Requires messages:send scope.
+ * @summary Send a message to a channel (Enterprise M2M)
+ */
+const v3WorkspacesControllerCreateChannelMessage = (
+    slug: string,
+    channelId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/channels/${channelId}/messages`, method: 'POST'
+    },
+      options);
+    }
+
+/**
+ * Update content of a message. Requires messages:send scope.
+ * @summary Update a channel message (Enterprise M2M)
+ */
+const v3WorkspacesControllerUpdateChannelMessage = (
+    slug: string,
+    channelId: string,
+    messageId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/channels/${channelId}/messages/${messageId}`, method: 'PATCH'
+    },
+      options);
+    }
+
+/**
+ * Delete a message. Requires messages:send scope.
+ * @summary Delete a channel message (Enterprise M2M)
+ */
+const v3WorkspacesControllerDeleteChannelMessage = (
+    slug: string,
+    channelId: string,
+    messageId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/channels/${channelId}/messages/${messageId}`, method: 'DELETE'
+    },
+      options);
+    }
+
+/**
+ * Add an emoji reaction to a message. Requires messages:send scope.
+ * @summary Add a reaction to a channel message (Enterprise M2M)
+ */
+const v3WorkspacesControllerAddChannelMessageReaction = (
+    slug: string,
+    channelId: string,
+    messageId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/channels/${channelId}/messages/${messageId}/reactions`, method: 'POST'
+    },
+      options);
+    }
+
+/**
+ * Remove an emoji reaction from a message. Requires messages:send scope.
+ * @summary Remove a reaction from a channel message (Enterprise M2M)
+ */
+const v3WorkspacesControllerRemoveChannelMessageReaction = (
+    slug: string,
+    channelId: string,
+    messageId: string,
+    emoji: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/channels/${channelId}/messages/${messageId}/reactions/${emoji}`, method: 'DELETE'
     },
       options);
     }
@@ -2022,6 +2241,19 @@ const v3WebhooksControllerDeleteWebhook = (
  options?: SecondParameter<typeof customInstance>,) => {
       return customInstance<void>(
       {url: `/api/v3/workspaces/${slug}/webhooks/${webhookId}`, method: 'DELETE'
+    },
+      options);
+    }
+
+/**
+ * Requires webhooks:read scope. Retrieves all incoming webhooks configured across all channels in this workspace.
+ * @summary List all incoming webhooks in a workspace
+ */
+const v3ChannelIncomingWebhooksControllerGetWorkspaceIncomingWebhooks = (
+    slug: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/incoming-webhooks`, method: 'GET'
     },
       options);
     }
@@ -2235,6 +2467,465 @@ const v3OrganizationsControllerDeleteM2mApplication = (
     }
 
 /**
+ * @summary List bot applications
+ */
+const v3ApplicationsControllerListApplications0 = (
+
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v3/applications`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * @summary Create a bot application
+ */
+const v3ApplicationsControllerCreateApplication0 = (
+
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v3/applications`, method: 'POST'
+    },
+      options);
+    }
+
+/**
+ * @summary List bot applications
+ */
+const v3ApplicationsControllerListApplications1 = (
+
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v2/applications`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * @summary Create a bot application
+ */
+const v3ApplicationsControllerCreateApplication1 = (
+
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v2/applications`, method: 'POST'
+    },
+      options);
+    }
+
+/**
+ * @summary Get application details
+ */
+const v3ApplicationsControllerGetApplication0 = (
+    id: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v3/applications/${id}`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * @summary Update bot application
+ */
+const v3ApplicationsControllerUpdateApplication = (
+    id: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v3/applications/${id}`, method: 'PATCH'
+    },
+      options);
+    }
+
+/**
+ * @summary Delete bot application
+ */
+const v3ApplicationsControllerDeleteApplication = (
+    id: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v3/applications/${id}`, method: 'DELETE'
+    },
+      options);
+    }
+
+/**
+ * @summary Get application details
+ */
+const v3ApplicationsControllerGetApplication1 = (
+    id: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v2/applications/${id}`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * @summary Reset bot token
+ */
+const v3ApplicationsControllerResetToken0 = (
+    id: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v3/applications/${id}/reset-token`, method: 'POST'
+    },
+      options);
+    }
+
+/**
+ * @summary Reset bot token
+ */
+const v3ApplicationsControllerResetToken1 = (
+    id: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v2/applications/${id}/reset-token`, method: 'POST'
+    },
+      options);
+    }
+
+/**
+ * @summary Install bot application to a workspace
+ */
+const v3ApplicationsControllerInstallApplication0 = (
+    id: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v3/applications/${id}/install`, method: 'POST'
+    },
+      options);
+    }
+
+/**
+ * @summary Install bot application to a workspace
+ */
+const v3ApplicationsControllerInstallApplication1 = (
+    id: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v2/applications/${id}/install`, method: 'POST'
+    },
+      options);
+    }
+
+/**
+ * @summary List installed bots in workspace
+ */
+const v3ApplicationsControllerListWorkspaceBots = (
+    slug: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/bots`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * @summary Add a bot to a workspace
+ */
+const v3ApplicationsControllerAddBotToWorkspace = (
+    slug: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/bots`, method: 'POST'
+    },
+      options);
+    }
+
+/**
+ * Retrieve active direct message conversations for the authenticated user/bot. Requires messages:read scope.
+ * @summary List direct message conversations (Enterprise M2M V3)
+ */
+const v3DmsControllerGetDms = (
+
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v3/dms`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * Create a new DM conversation with a target user. Requires messages:send scope.
+ * @summary Create or retrieve a direct message conversation (Enterprise M2M V3)
+ */
+const v3DmsControllerCreateDm = (
+    v3CreateDmDto: BodyType<V3CreateDmDto>,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v3/dms`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: v3CreateDmDto
+    },
+      options);
+    }
+
+/**
+ * Retrieve specific direct message conversation details. Requires messages:read scope.
+ * @summary Get details of a direct message conversation (Enterprise M2M V3)
+ */
+const v3DmsControllerGetDm = (
+    dmId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v3/dms/${dmId}`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * Delete a direct message conversation. Requires messages:send scope.
+ * @summary Delete a direct message conversation (Enterprise M2M V3)
+ */
+const v3DmsControllerDeleteDm = (
+    dmId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v3/dms/${dmId}`, method: 'DELETE'
+    },
+      options);
+    }
+
+/**
+ * Retrieve message history for a direct message conversation. Requires messages:read scope.
+ * @summary Get direct message conversation messages (Enterprise M2M V3)
+ */
+const v3DmsControllerGetMessages = (
+    dmId: string,
+    params?: V3DmsControllerGetMessagesParams,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v3/dms/${dmId}/messages`, method: 'GET',
+        params
+    },
+      options);
+    }
+
+/**
+ * Send a message in a DM conversation. Requires messages:send scope.
+ * @summary Send a message in a direct message conversation (Enterprise M2M V3)
+ */
+const v3DmsControllerCreateMessage = (
+    dmId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v3/dms/${dmId}/messages`, method: 'POST'
+    },
+      options);
+    }
+
+/**
+ * Update content of a direct message. Requires messages:send scope.
+ * @summary Update a direct message (Enterprise M2M V3)
+ */
+const v3DmsControllerUpdateMessage = (
+    dmId: string,
+    messageId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v3/dms/${dmId}/messages/${messageId}`, method: 'PATCH'
+    },
+      options);
+    }
+
+/**
+ * Delete a direct message. Requires messages:send scope.
+ * @summary Delete a direct message (Enterprise M2M V3)
+ */
+const v3DmsControllerDeleteMessage = (
+    dmId: string,
+    messageId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v3/dms/${dmId}/messages/${messageId}`, method: 'DELETE'
+    },
+      options);
+    }
+
+/**
+ * Add an emoji reaction to a DM message. Requires messages:send scope.
+ * @summary Add a reaction to a direct message (Enterprise M2M V3)
+ */
+const v3DmsControllerAddReaction = (
+    dmId: string,
+    messageId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v3/dms/${dmId}/messages/${messageId}/reactions`, method: 'POST'
+    },
+      options);
+    }
+
+/**
+ * Remove an emoji reaction from a DM message. Requires messages:send scope.
+ * @summary Remove a reaction from a direct message (Enterprise M2M V3)
+ */
+const v3DmsControllerRemoveReaction = (
+    dmId: string,
+    messageId: string,
+    emoji: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/v3/dms/${dmId}/messages/${messageId}/reactions/${emoji}`, method: 'DELETE'
+    },
+      options);
+    }
+
+/**
+ * @summary Get global channels
+ */
+const channelsControllerGetGlobalChannels = (
+
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/channels`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * @summary Create a new channel in a workspace
+ */
+const channelsControllerCreateChannel = (
+    slug: string,
+    createWorkspaceChannelDto: BodyType<CreateWorkspaceChannelDto>,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/workspaces/${slug}/channels`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createWorkspaceChannelDto
+    },
+      options);
+    }
+
+/**
+ * @summary Get messages from a channel
+ */
+const channelsControllerGetMessages = (
+    channelId: string,
+    params?: ChannelsControllerGetMessagesParams,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/channels/${channelId}/messages`, method: 'GET',
+        params
+    },
+      options);
+    }
+
+/**
+ * @summary Send a message to a channel
+ */
+const channelsControllerCreateMessage = (
+    channelId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/channels/${channelId}/messages`, method: 'POST'
+    },
+      options);
+    }
+
+/**
+ * @summary Update a message
+ */
+const channelsControllerUpdateMessage = (
+    channelId: string,
+    messageId: string,
+    channelsControllerUpdateMessageBody: BodyType<ChannelsControllerUpdateMessageBody>,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/channels/${channelId}/messages/${messageId}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: channelsControllerUpdateMessageBody
+    },
+      options);
+    }
+
+/**
+ * @summary Delete a message
+ */
+const channelsControllerDeleteMessage = (
+    channelId: string,
+    messageId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/channels/${channelId}/messages/${messageId}`, method: 'DELETE'
+    },
+      options);
+    }
+
+/**
+ * @summary Mark messages as read
+ */
+const channelsControllerMarkAsRead = (
+    channelId: string,
+    channelsControllerMarkAsReadBody: BodyType<ChannelsControllerMarkAsReadBody>,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/channels/${channelId}/messages/read`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: channelsControllerMarkAsReadBody
+    },
+      options);
+    }
+
+/**
+ * @summary Add a reaction to a message
+ */
+const channelsControllerAddReaction = (
+    channelId: string,
+    messageId: string,
+    channelsControllerAddReactionBody: BodyType<ChannelsControllerAddReactionBody>,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/channels/${channelId}/messages/${messageId}/reactions`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: channelsControllerAddReactionBody
+    },
+      options);
+    }
+
+/**
+ * @summary Remove a reaction from a message
+ */
+const channelsControllerRemoveReaction = (
+    channelId: string,
+    messageId: string,
+    emoji: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/channels/${channelId}/messages/${messageId}/reactions/${emoji}`, method: 'DELETE'
+    },
+      options);
+    }
+
+/**
+ * @summary Share a channel with another workspace
+ */
+const channelsControllerShareChannel = (
+    channelId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/channels/${channelId}/share`, method: 'POST'
+    },
+      options);
+    }
+
+/**
+ * @summary Reply to a message
+ */
+const channelsControllerCreateReply = (
+    channelId: string,
+    messageId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/channels/${channelId}/messages/${messageId}/reply`, method: 'POST'
+    },
+      options);
+    }
+
+/**
  * @summary Get notifications for the current user
  */
 const notificationsControllerGetNotifications = (
@@ -2348,6 +3039,156 @@ const notificationsControllerUpdateChannelSettings = (
       {url: `/api/notifications/settings/channel`, method: 'PATCH',
       headers: {'Content-Type': 'application/json', },
       data: channelSettingsDto
+    },
+      options);
+    }
+
+/**
+ * @summary Get all DM conversations for the current user
+ */
+const dmsControllerGetDms = (
+
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/dms`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * @summary Start a new DM conversation
+ */
+const dmsControllerCreateDm = (
+    createDmDto: BodyType<CreateDmDto>,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/dms`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createDmDto
+    },
+      options);
+    }
+
+/**
+ * @summary Get DM conversation details
+ */
+const dmsControllerGetDm = (
+    conversationId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/dms/${conversationId}`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * @summary Delete a DM conversation
+ */
+const dmsControllerDeleteDm = (
+    conversationId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/dms/${conversationId}`, method: 'DELETE'
+    },
+      options);
+    }
+
+/**
+ * @summary Get messages in a DM conversation
+ */
+const dmsControllerGetMessages = (
+    conversationId: string,
+    params?: DmsControllerGetMessagesParams,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/dms/${conversationId}/messages`, method: 'GET',
+        params
+    },
+      options);
+    }
+
+/**
+ * @summary Send a message in a DM
+ */
+const dmsControllerCreateMessage = (
+    conversationId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/dms/${conversationId}/messages`, method: 'POST'
+    },
+      options);
+    }
+
+/**
+ * @summary Update a DM message
+ */
+const dmsControllerUpdateMessage = (
+    conversationId: string,
+    messageId: string,
+    updateDmMessageDto: BodyType<UpdateDmMessageDto>,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/dms/${conversationId}/messages/${messageId}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateDmMessageDto
+    },
+      options);
+    }
+
+/**
+ * @summary Delete a DM message
+ */
+const dmsControllerDeleteMessage = (
+    conversationId: string,
+    messageId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/dms/${conversationId}/messages/${messageId}`, method: 'DELETE'
+    },
+      options);
+    }
+
+/**
+ * @summary Mark messages as read in a DM
+ */
+const dmsControllerMarkAsRead = (
+    conversationId: string,
+    markAsReadDto: BodyType<MarkAsReadDto>,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/dms/${conversationId}/messages/read`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: markAsReadDto
+    },
+      options);
+    }
+
+/**
+ * @summary Add a reaction to a DM message
+ */
+const dmsControllerAddReaction = (
+    conversationId: string,
+    messageId: string,
+    dmsControllerAddReactionBody: BodyType<DmsControllerAddReactionBody>,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/dms/${conversationId}/messages/${messageId}/reactions`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: dmsControllerAddReactionBody
+    },
+      options);
+    }
+
+/**
+ * @summary Remove a reaction from a DM message
+ */
+const dmsControllerRemoveReaction = (
+    conversationId: string,
+    messageId: string,
+    emoji: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      return customInstance<void>(
+      {url: `/api/dms/${conversationId}/messages/${messageId}/reactions/${emoji}`, method: 'DELETE'
     },
       options);
     }
@@ -2777,158 +3618,6 @@ const callsControllerPlaySoundboardSound = (
     }
 
 /**
- * @summary Get global channels
- */
-const channelsControllerGetGlobalChannels = (
-
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/channels`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * @summary Create a new channel in a workspace
- */
-const channelsControllerCreateChannel = (
-    slug: string,
-    createWorkspaceChannelDto: BodyType<CreateWorkspaceChannelDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/workspaces/${slug}/channels`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createWorkspaceChannelDto
-    },
-      options);
-    }
-
-/**
- * @summary Get messages from a channel
- */
-const channelsControllerGetMessages = (
-    channelId: string,
-    params?: ChannelsControllerGetMessagesParams,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/channels/${channelId}/messages`, method: 'GET',
-        params
-    },
-      options);
-    }
-
-/**
- * @summary Send a message to a channel
- */
-const channelsControllerCreateMessage = (
-    channelId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/channels/${channelId}/messages`, method: 'POST'
-    },
-      options);
-    }
-
-/**
- * @summary Update a message
- */
-const channelsControllerUpdateMessage = (
-    channelId: string,
-    messageId: string,
-    channelsControllerUpdateMessageBody: BodyType<ChannelsControllerUpdateMessageBody>,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/channels/${channelId}/messages/${messageId}`, method: 'PATCH',
-      headers: {'Content-Type': 'application/json', },
-      data: channelsControllerUpdateMessageBody
-    },
-      options);
-    }
-
-/**
- * @summary Delete a message
- */
-const channelsControllerDeleteMessage = (
-    channelId: string,
-    messageId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/channels/${channelId}/messages/${messageId}`, method: 'DELETE'
-    },
-      options);
-    }
-
-/**
- * @summary Mark messages as read
- */
-const channelsControllerMarkAsRead = (
-    channelId: string,
-    channelsControllerMarkAsReadBody: BodyType<ChannelsControllerMarkAsReadBody>,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/channels/${channelId}/messages/read`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: channelsControllerMarkAsReadBody
-    },
-      options);
-    }
-
-/**
- * @summary Add a reaction to a message
- */
-const channelsControllerAddReaction = (
-    channelId: string,
-    messageId: string,
-    channelsControllerAddReactionBody: BodyType<ChannelsControllerAddReactionBody>,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/channels/${channelId}/messages/${messageId}/reactions`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: channelsControllerAddReactionBody
-    },
-      options);
-    }
-
-/**
- * @summary Remove a reaction from a message
- */
-const channelsControllerRemoveReaction = (
-    channelId: string,
-    messageId: string,
-    emoji: string,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/channels/${channelId}/messages/${messageId}/reactions/${emoji}`, method: 'DELETE'
-    },
-      options);
-    }
-
-/**
- * @summary Share a channel with another workspace
- */
-const channelsControllerShareChannel = (
-    channelId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/channels/${channelId}/share`, method: 'POST'
-    },
-      options);
-    }
-
-/**
- * @summary Reply to a message
- */
-const channelsControllerCreateReply = (
-    channelId: string,
-    messageId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/channels/${channelId}/messages/${messageId}/reply`, method: 'POST'
-    },
-      options);
-    }
-
-/**
  * @summary Get global system statistics
  */
 const adminControllerGetStats = (
@@ -3066,156 +3755,6 @@ if(adminControllerUploadFileBody.file !== undefined) {
       {url: `/api/admin/upload`, method: 'POST',
       headers: {'Content-Type': 'multipart/form-data', },
        data: formData
-    },
-      options);
-    }
-
-/**
- * @summary Get all DM conversations for the current user
- */
-const dmsControllerGetDms = (
-
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/dms`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * @summary Start a new DM conversation
- */
-const dmsControllerCreateDm = (
-    createDmDto: BodyType<CreateDmDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/dms`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createDmDto
-    },
-      options);
-    }
-
-/**
- * @summary Get DM conversation details
- */
-const dmsControllerGetDm = (
-    conversationId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/dms/${conversationId}`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * @summary Delete a DM conversation
- */
-const dmsControllerDeleteDm = (
-    conversationId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/dms/${conversationId}`, method: 'DELETE'
-    },
-      options);
-    }
-
-/**
- * @summary Get messages in a DM conversation
- */
-const dmsControllerGetMessages = (
-    conversationId: string,
-    params?: DmsControllerGetMessagesParams,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/dms/${conversationId}/messages`, method: 'GET',
-        params
-    },
-      options);
-    }
-
-/**
- * @summary Send a message in a DM
- */
-const dmsControllerCreateMessage = (
-    conversationId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/dms/${conversationId}/messages`, method: 'POST'
-    },
-      options);
-    }
-
-/**
- * @summary Update a DM message
- */
-const dmsControllerUpdateMessage = (
-    conversationId: string,
-    messageId: string,
-    updateDmMessageDto: BodyType<UpdateDmMessageDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/dms/${conversationId}/messages/${messageId}`, method: 'PATCH',
-      headers: {'Content-Type': 'application/json', },
-      data: updateDmMessageDto
-    },
-      options);
-    }
-
-/**
- * @summary Delete a DM message
- */
-const dmsControllerDeleteMessage = (
-    conversationId: string,
-    messageId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/dms/${conversationId}/messages/${messageId}`, method: 'DELETE'
-    },
-      options);
-    }
-
-/**
- * @summary Mark messages as read in a DM
- */
-const dmsControllerMarkAsRead = (
-    conversationId: string,
-    markAsReadDto: BodyType<MarkAsReadDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/dms/${conversationId}/messages/read`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: markAsReadDto
-    },
-      options);
-    }
-
-/**
- * @summary Add a reaction to a DM message
- */
-const dmsControllerAddReaction = (
-    conversationId: string,
-    messageId: string,
-    dmsControllerAddReactionBody: BodyType<DmsControllerAddReactionBody>,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/dms/${conversationId}/messages/${messageId}/reactions`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: dmsControllerAddReactionBody
-    },
-      options);
-    }
-
-/**
- * @summary Remove a reaction from a DM message
- */
-const dmsControllerRemoveReaction = (
-    conversationId: string,
-    messageId: string,
-    emoji: string,
- options?: SecondParameter<typeof customInstance>,) => {
-      return customInstance<void>(
-      {url: `/api/dms/${conversationId}/messages/${messageId}/reactions/${emoji}`, method: 'DELETE'
     },
       options);
     }
@@ -4185,12 +4724,12 @@ const scheduledNotificationsControllerCreateNotification = (
  */
 const scheduledNotificationsControllerUpdateNotification = (
     id: string,
-    scheduledNotificationsControllerUpdateNotificationBody: BodyType<ScheduledNotificationsControllerUpdateNotificationBody>,
+    updateScheduledNotificationDto: BodyType<UpdateScheduledNotificationDto>,
  options?: SecondParameter<typeof customInstance>,) => {
       return customInstance<void>(
       {url: `/api/scheduled-notifications/${id}`, method: 'PATCH',
       headers: {'Content-Type': 'application/json', },
-      data: scheduledNotificationsControllerUpdateNotificationBody
+      data: updateScheduledNotificationDto
     },
       options);
     }
@@ -4223,10 +4762,12 @@ const assetsControllerGetEligibleAssets = (
  * @summary Create a support ticket
  */
 const supportControllerCreateTicket = (
-
+    createTicketDto: BodyType<CreateTicketDto>,
  options?: SecondParameter<typeof customInstance>,) => {
       return customInstance<void>(
-      {url: `/api/support/tickets`, method: 'POST'
+      {url: `/api/support/tickets`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createTicketDto
     },
       options);
     }
@@ -4248,10 +4789,12 @@ const supportControllerGetTickets = (
  * @summary Start a live chat session
  */
 const supportControllerStartLiveChat = (
-
+    startLiveChatDto: BodyType<StartLiveChatDto>,
  options?: SecondParameter<typeof customInstance>,) => {
       return customInstance<void>(
-      {url: `/api/support/live-chat`, method: 'POST'
+      {url: `/api/support/live-chat`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: startLiveChatDto
     },
       options);
     }
@@ -4273,9 +4816,12 @@ const supportControllerEndLiveChat = (
  */
 const supportControllerUpdateTicketStatus = (
     ticketId: string,
+    updateTicketStatusDto: BodyType<UpdateTicketStatusDto>,
  options?: SecondParameter<typeof customInstance>,) => {
       return customInstance<void>(
-      {url: `/api/support/tickets/${ticketId}/status`, method: 'PATCH'
+      {url: `/api/support/tickets/${ticketId}/status`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateTicketStatusDto
     },
       options);
     }
@@ -4285,9 +4831,12 @@ const supportControllerUpdateTicketStatus = (
  */
 const supportControllerAssignTicket = (
     ticketId: string,
+    assignTicketDto: BodyType<AssignTicketDto>,
  options?: SecondParameter<typeof customInstance>,) => {
       return customInstance<void>(
-      {url: `/api/support/tickets/${ticketId}/assign`, method: 'PATCH'
+      {url: `/api/support/tickets/${ticketId}/assign`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: assignTicketDto
     },
       options);
     }
@@ -4296,10 +4845,12 @@ const supportControllerAssignTicket = (
  * @summary Create or update customer profile
  */
 const supportControllerCreateCustomerProfile = (
-
+    createCustomerProfileDto: BodyType<CreateCustomerProfileDto>,
  options?: SecondParameter<typeof customInstance>,) => {
       return customInstance<void>(
-      {url: `/api/support/customers`, method: 'POST'
+      {url: `/api/support/customers`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createCustomerProfileDto
     },
       options);
     }
@@ -4317,7 +4868,7 @@ const supportControllerGetCustomerProfiles = (
       options);
     }
 
-return {appControllerGetHealth,appControllerGetHello,appControllerGetRealtimeConfig,appControllerGetLinkPreview,usersControllerGetUsers,usersControllerSearchUsers,usersControllerGetMe,usersControllerPatchMe,usersControllerUpdateMe,usersControllerGetUser,usersControllerPatchUser,usersControllerGetSocialProfile,usersControllerBlockUser,usersControllerUnblockUser,usersControllerUpdateMyStatus,usersControllerRegisterDeviceToken,usersControllerGetDeviceTokens,usersControllerDeleteDeviceToken,v10UsersControllerGetUser,v10UsersControllerGetMe,v10GatewayControllerGetBotGateway,v10GatewayControllerBotAuth,v10ChannelsControllerGetChannel,v10ChannelsControllerCreateMessage,v10ChannelsControllerGetMessages,v10ChannelsControllerUpdateMessage,v10ChannelsControllerDeleteMessage,v10GuildsControllerGetGuild,v10GuildsControllerGetChannels,v10GuildsControllerGetMembers,v10GuildsControllerGetRoles,v10GuildsControllerAddMemberRole,v10GuildsControllerRemoveMemberRole,v10ApplicationsControllerGetCommands,v10ApplicationsControllerCreateCommand,v10ApplicationsControllerGetGuildCommands,v10ApplicationsControllerCreateGuildCommand,v10InteractionsControllerHandleCallback,v10EnterpriseControllerCreateAnnouncement,v3OAuthControllerGetToken,v3WorkspacesControllerGetWorkspaces,v3WorkspacesControllerProvisionWorkspace,v3WorkspacesControllerGetWorkspaceBySlug,v3WorkspacesControllerUpdateWorkspace,v3WorkspacesControllerDeleteWorkspace,v3WorkspacesControllerGetWorkspaceMembers,v3WorkspacesControllerAddWorkspaceMember,v3WorkspacesControllerGetWorkspaceMember,v3WorkspacesControllerUpdateWorkspaceMember,v3WorkspacesControllerDeleteWorkspaceMember,v3WorkspacesControllerGetChannels,v3WorkspacesControllerCreateChannel,v3WorkspacesControllerGetChannel,v3WorkspacesControllerUpdateChannel,v3WorkspacesControllerDeleteChannel,v3WorkspacesControllerGetChannelMembers,v3WorkspacesControllerAddChannelMembers,v3WorkspacesControllerUpdateChannelMember,v3WorkspacesControllerDeleteChannelMember,v3WebhooksControllerGetWebhooks,v3WebhooksControllerCreateWebhook,v3WebhooksControllerGetWebhook,v3WebhooksControllerUpdateWebhook,v3WebhooksControllerDeleteWebhook,v3ChannelIncomingWebhooksControllerGetChannelWebhooks,v3ChannelIncomingWebhooksControllerCreateChannelWebhook,v3ChannelIncomingWebhooksControllerGetChannelWebhook,v3ChannelIncomingWebhooksControllerUpdateChannelWebhook,v3ChannelIncomingWebhooksControllerDeleteChannelWebhook,v3ChannelIncomingWebhooksControllerExecuteWebhookByUrlToken,v3ChannelIncomingWebhooksControllerExecuteWebhookByChannelId,v3OrganizationsControllerGetOrganizationWorkspaces,v3OrganizationsControllerGetOrganization,v3OrganizationsControllerUpdateOrganization,v3OrganizationsControllerGetM2mApplications,v3OrganizationsControllerCreateM2mApplication,v3OrganizationsControllerUpdateM2mApplication,v3OrganizationsControllerDeleteM2mApplication,notificationsControllerGetNotifications,notificationsControllerGetNotificationById,notificationsControllerUpdateNotification,notificationsControllerDeleteNotification,notificationsControllerMarkAllRead,notificationsControllerGetWorkspaceSettings,notificationsControllerUpdateWorkspaceSettings,notificationsControllerGetChannelSettings,notificationsControllerUpdateChannelSettings,invitationsControllerGetInvitations,invitationsControllerCreateInvitation,invitationsControllerGetInvitationByToken,invitationsControllerAcceptInvitation,integrationsControllerHandlePlaneWebhook,integrationsControllerHandleHulyWebhook,integrationsControllerGetStats,integrationsControllerGetWebhooks,integrationsControllerCreateWebhook,integrationsControllerUpdateWebhook,integrationsControllerDeleteWebhook,integrationsControllerGetWebhookLogs,integrationsControllerGetApiKeys,integrationsControllerUpdateApiKey,integrationsControllerDeleteApiKey,workspaceIntegrationsControllerGetWorkspaceIntegrations,workspaceIntegrationsControllerCreateWorkspaceIntegration,workspaceIntegrationsControllerGetWorkspaceIntegration,workspaceIntegrationsControllerUpdateWorkspaceIntegration,workspaceIntegrationsControllerDeleteWorkspaceIntegration,workspaceIntegrationsControllerTestWorkspaceIntegration,workspaceIntegrationsControllerGetWorkspaceWebhooks,workspaceIntegrationsControllerCreateWorkspaceWebhook,ablyControllerGetToken,storageControllerUploadFile,shortUrlControllerRedirect,callsControllerStartCall,callsControllerUpdateCall,callsControllerInviteToCall,callsControllerGetParticipants,callsControllerGetScheduledCalls,callsControllerScheduleCall,callsControllerPlaySoundboardSound,channelsControllerGetGlobalChannels,channelsControllerCreateChannel,channelsControllerGetMessages,channelsControllerCreateMessage,channelsControllerUpdateMessage,channelsControllerDeleteMessage,channelsControllerMarkAsRead,channelsControllerAddReaction,channelsControllerRemoveReaction,channelsControllerShareChannel,channelsControllerCreateReply,adminControllerGetStats,adminControllerGetMembers,adminControllerUpdateMemberRole,adminControllerGetAssets,adminControllerCreateAsset,adminControllerUpdateAsset,adminControllerDeleteAsset,adminControllerGetProfileAssets,adminControllerCreateProfileAsset,adminControllerGetAssetStats,adminControllerUploadFile,dmsControllerGetDms,dmsControllerCreateDm,dmsControllerGetDm,dmsControllerDeleteDm,dmsControllerGetMessages,dmsControllerCreateMessage,dmsControllerUpdateMessage,dmsControllerDeleteMessage,dmsControllerMarkAsRead,dmsControllerAddReaction,dmsControllerRemoveReaction,friendsControllerGetFriends,friendsControllerGetFriendRequests,friendsControllerSendFriendRequest,friendsControllerUpdateFriendRequest,friendsControllerDeleteFriendRequest,workspacesControllerGetWorkspaces,workspacesControllerCreateWorkspace,workspacesControllerGetWorkspaceRoles,workspacesControllerGetWorkspaceSlugRoles,workspacesControllerDiscoverWorkspaces,workspacesControllerJoinWorkspace,workspacesControllerGetWorkspaceBySlug,workspacesControllerUpdateWorkspaceBySlug,workspacesControllerDeleteWorkspaceBySlug,membersControllerGetWorkspaceMembers,membersControllerUpdateMember,membersControllerRemoveMember,channelsControllerGetWorkspaceChannels,channelsControllerGetChannel,channelsControllerUpdateChannel,channelsControllerDeleteChannel,channelsControllerGetChannelMembers,channelsControllerAddChannelMembers,channelsControllerUpdateChannelMember,channelsControllerRemoveChannelMember,departmentsControllerGetDepartments,departmentsControllerCreateDepartment,departmentsControllerGetDepartment,departmentsControllerUpdateDepartment,departmentsControllerDeleteDepartment,departmentsControllerGetAnnouncements,departmentsControllerCreateAnnouncement,teamsControllerGetTeams,teamsControllerCreateTeam,teamsControllerAddMember,teamsControllerRemoveMember,messagesControllerGetMessages,messagesControllerCreateMessage,messagesControllerUpdateMessage,messagesControllerDeleteMessage,messagesControllerMarkAsRead,messagesControllerAddReaction,messagesControllerRemoveReaction,messagesControllerCreateReply,emojisControllerGetEmojis,emojisControllerCreateEmoji,auditLogsControllerGetAuditLogs,auditLogsControllerExportAuditLogs,inviteLinksControllerGetInviteLinks,inviteLinksControllerCreateInviteLink,apiTokensControllerGetApiTokens,apiTokensControllerCreateApiToken,apiTokensControllerDeleteApiToken,webhooksControllerGetWebhooks,webhooksControllerCreateWebhook,webhooksControllerUpdateWebhook,webhooksControllerDeleteWebhook,callsControllerGetActiveCalls,searchControllerSearch,deviceAuthControllerGenerateQR,deviceAuthControllerCheckStatus,deviceAuthControllerAuthorize,deviceAuthControllerDeny,androidAuthControllerGetProfile,androidAuthControllerChangePassword,androidAuthControllerCheckUsername,androidAuthControllerLogin,androidAuthControllerSignup,androidAuthControllerGoogleLogin,androidAuthControllerGithubLogin,androidAuthControllerRefresh,scheduledNotificationsControllerGetNotifications,scheduledNotificationsControllerCreateNotification,scheduledNotificationsControllerUpdateNotification,scheduledNotificationsControllerDeleteNotification,assetsControllerGetEligibleAssets,supportControllerCreateTicket,supportControllerGetTickets,supportControllerStartLiveChat,supportControllerEndLiveChat,supportControllerUpdateTicketStatus,supportControllerAssignTicket,supportControllerCreateCustomerProfile,supportControllerGetCustomerProfiles}};
+return {appControllerGetHealth,appControllerGetHello,appControllerGetRealtimeConfig,appControllerGetLinkPreview,usersControllerGetUsers,usersControllerSearchUsers,usersControllerGetMe,usersControllerPatchMe,usersControllerUpdateMe,usersControllerGetUser,usersControllerPatchUser,usersControllerGetSocialProfile,usersControllerBlockUser,usersControllerUnblockUser,usersControllerUpdateMyStatus,usersControllerRegisterDeviceToken,usersControllerGetDeviceTokens,usersControllerDeleteDeviceToken,v10UsersControllerGetUser,v10UsersControllerGetMe,v10GatewayControllerGetBotGateway,v10GatewayControllerBotAuth,v10ChannelsControllerGetChannel,v10ChannelsControllerCreateMessage,v10ChannelsControllerGetMessages,v10ChannelsControllerUpdateMessage,v10ChannelsControllerDeleteMessage,v10GuildsControllerGetGuild,v10GuildsControllerGetChannels,v10GuildsControllerGetMembers,v10GuildsControllerGetRoles,v10GuildsControllerAddMemberRole,v10GuildsControllerRemoveMemberRole,v10ApplicationsControllerGetCommands,v10ApplicationsControllerCreateCommand,v10ApplicationsControllerGetGuildCommands,v10ApplicationsControllerCreateGuildCommand,v10InteractionsControllerHandleCallback,v10EnterpriseControllerCreateAnnouncement,v3OAuthControllerGetToken,v3WorkspacesControllerGetWorkspaces,v3WorkspacesControllerProvisionWorkspace,v3WorkspacesControllerGetWorkspaceBySlug,v3WorkspacesControllerUpdateWorkspace,v3WorkspacesControllerDeleteWorkspace,v3WorkspacesControllerGetWorkspaceMembers,v3WorkspacesControllerAddWorkspaceMember,v3WorkspacesControllerGetWorkspaceMember,v3WorkspacesControllerUpdateWorkspaceMember,v3WorkspacesControllerDeleteWorkspaceMember,v3WorkspacesControllerGetChannels,v3WorkspacesControllerCreateChannel,v3WorkspacesControllerGetChannel,v3WorkspacesControllerUpdateChannel,v3WorkspacesControllerDeleteChannel,v3WorkspacesControllerGetChannelMembers,v3WorkspacesControllerAddChannelMembers,v3WorkspacesControllerUpdateChannelMember,v3WorkspacesControllerDeleteChannelMember,v3WorkspacesControllerGetChannelMessages,v3WorkspacesControllerCreateChannelMessage,v3WorkspacesControllerUpdateChannelMessage,v3WorkspacesControllerDeleteChannelMessage,v3WorkspacesControllerAddChannelMessageReaction,v3WorkspacesControllerRemoveChannelMessageReaction,v3WebhooksControllerGetWebhooks,v3WebhooksControllerCreateWebhook,v3WebhooksControllerGetWebhook,v3WebhooksControllerUpdateWebhook,v3WebhooksControllerDeleteWebhook,v3ChannelIncomingWebhooksControllerGetWorkspaceIncomingWebhooks,v3ChannelIncomingWebhooksControllerGetChannelWebhooks,v3ChannelIncomingWebhooksControllerCreateChannelWebhook,v3ChannelIncomingWebhooksControllerGetChannelWebhook,v3ChannelIncomingWebhooksControllerUpdateChannelWebhook,v3ChannelIncomingWebhooksControllerDeleteChannelWebhook,v3ChannelIncomingWebhooksControllerExecuteWebhookByUrlToken,v3ChannelIncomingWebhooksControllerExecuteWebhookByChannelId,v3OrganizationsControllerGetOrganizationWorkspaces,v3OrganizationsControllerGetOrganization,v3OrganizationsControllerUpdateOrganization,v3OrganizationsControllerGetM2mApplications,v3OrganizationsControllerCreateM2mApplication,v3OrganizationsControllerUpdateM2mApplication,v3OrganizationsControllerDeleteM2mApplication,v3ApplicationsControllerListApplications0,v3ApplicationsControllerCreateApplication0,v3ApplicationsControllerListApplications1,v3ApplicationsControllerCreateApplication1,v3ApplicationsControllerGetApplication0,v3ApplicationsControllerUpdateApplication,v3ApplicationsControllerDeleteApplication,v3ApplicationsControllerGetApplication1,v3ApplicationsControllerResetToken0,v3ApplicationsControllerResetToken1,v3ApplicationsControllerInstallApplication0,v3ApplicationsControllerInstallApplication1,v3ApplicationsControllerListWorkspaceBots,v3ApplicationsControllerAddBotToWorkspace,v3DmsControllerGetDms,v3DmsControllerCreateDm,v3DmsControllerGetDm,v3DmsControllerDeleteDm,v3DmsControllerGetMessages,v3DmsControllerCreateMessage,v3DmsControllerUpdateMessage,v3DmsControllerDeleteMessage,v3DmsControllerAddReaction,v3DmsControllerRemoveReaction,channelsControllerGetGlobalChannels,channelsControllerCreateChannel,channelsControllerGetMessages,channelsControllerCreateMessage,channelsControllerUpdateMessage,channelsControllerDeleteMessage,channelsControllerMarkAsRead,channelsControllerAddReaction,channelsControllerRemoveReaction,channelsControllerShareChannel,channelsControllerCreateReply,notificationsControllerGetNotifications,notificationsControllerGetNotificationById,notificationsControllerUpdateNotification,notificationsControllerDeleteNotification,notificationsControllerMarkAllRead,notificationsControllerGetWorkspaceSettings,notificationsControllerUpdateWorkspaceSettings,notificationsControllerGetChannelSettings,notificationsControllerUpdateChannelSettings,dmsControllerGetDms,dmsControllerCreateDm,dmsControllerGetDm,dmsControllerDeleteDm,dmsControllerGetMessages,dmsControllerCreateMessage,dmsControllerUpdateMessage,dmsControllerDeleteMessage,dmsControllerMarkAsRead,dmsControllerAddReaction,dmsControllerRemoveReaction,invitationsControllerGetInvitations,invitationsControllerCreateInvitation,invitationsControllerGetInvitationByToken,invitationsControllerAcceptInvitation,integrationsControllerHandlePlaneWebhook,integrationsControllerHandleHulyWebhook,integrationsControllerGetStats,integrationsControllerGetWebhooks,integrationsControllerCreateWebhook,integrationsControllerUpdateWebhook,integrationsControllerDeleteWebhook,integrationsControllerGetWebhookLogs,integrationsControllerGetApiKeys,integrationsControllerUpdateApiKey,integrationsControllerDeleteApiKey,workspaceIntegrationsControllerGetWorkspaceIntegrations,workspaceIntegrationsControllerCreateWorkspaceIntegration,workspaceIntegrationsControllerGetWorkspaceIntegration,workspaceIntegrationsControllerUpdateWorkspaceIntegration,workspaceIntegrationsControllerDeleteWorkspaceIntegration,workspaceIntegrationsControllerTestWorkspaceIntegration,workspaceIntegrationsControllerGetWorkspaceWebhooks,workspaceIntegrationsControllerCreateWorkspaceWebhook,ablyControllerGetToken,storageControllerUploadFile,shortUrlControllerRedirect,callsControllerStartCall,callsControllerUpdateCall,callsControllerInviteToCall,callsControllerGetParticipants,callsControllerGetScheduledCalls,callsControllerScheduleCall,callsControllerPlaySoundboardSound,adminControllerGetStats,adminControllerGetMembers,adminControllerUpdateMemberRole,adminControllerGetAssets,adminControllerCreateAsset,adminControllerUpdateAsset,adminControllerDeleteAsset,adminControllerGetProfileAssets,adminControllerCreateProfileAsset,adminControllerGetAssetStats,adminControllerUploadFile,friendsControllerGetFriends,friendsControllerGetFriendRequests,friendsControllerSendFriendRequest,friendsControllerUpdateFriendRequest,friendsControllerDeleteFriendRequest,workspacesControllerGetWorkspaces,workspacesControllerCreateWorkspace,workspacesControllerGetWorkspaceRoles,workspacesControllerGetWorkspaceSlugRoles,workspacesControllerDiscoverWorkspaces,workspacesControllerJoinWorkspace,workspacesControllerGetWorkspaceBySlug,workspacesControllerUpdateWorkspaceBySlug,workspacesControllerDeleteWorkspaceBySlug,membersControllerGetWorkspaceMembers,membersControllerUpdateMember,membersControllerRemoveMember,channelsControllerGetWorkspaceChannels,channelsControllerGetChannel,channelsControllerUpdateChannel,channelsControllerDeleteChannel,channelsControllerGetChannelMembers,channelsControllerAddChannelMembers,channelsControllerUpdateChannelMember,channelsControllerRemoveChannelMember,departmentsControllerGetDepartments,departmentsControllerCreateDepartment,departmentsControllerGetDepartment,departmentsControllerUpdateDepartment,departmentsControllerDeleteDepartment,departmentsControllerGetAnnouncements,departmentsControllerCreateAnnouncement,teamsControllerGetTeams,teamsControllerCreateTeam,teamsControllerAddMember,teamsControllerRemoveMember,messagesControllerGetMessages,messagesControllerCreateMessage,messagesControllerUpdateMessage,messagesControllerDeleteMessage,messagesControllerMarkAsRead,messagesControllerAddReaction,messagesControllerRemoveReaction,messagesControllerCreateReply,emojisControllerGetEmojis,emojisControllerCreateEmoji,auditLogsControllerGetAuditLogs,auditLogsControllerExportAuditLogs,inviteLinksControllerGetInviteLinks,inviteLinksControllerCreateInviteLink,apiTokensControllerGetApiTokens,apiTokensControllerCreateApiToken,apiTokensControllerDeleteApiToken,webhooksControllerGetWebhooks,webhooksControllerCreateWebhook,webhooksControllerUpdateWebhook,webhooksControllerDeleteWebhook,callsControllerGetActiveCalls,searchControllerSearch,deviceAuthControllerGenerateQR,deviceAuthControllerCheckStatus,deviceAuthControllerAuthorize,deviceAuthControllerDeny,androidAuthControllerGetProfile,androidAuthControllerChangePassword,androidAuthControllerCheckUsername,androidAuthControllerLogin,androidAuthControllerSignup,androidAuthControllerGoogleLogin,androidAuthControllerGithubLogin,androidAuthControllerRefresh,scheduledNotificationsControllerGetNotifications,scheduledNotificationsControllerCreateNotification,scheduledNotificationsControllerUpdateNotification,scheduledNotificationsControllerDeleteNotification,assetsControllerGetEligibleAssets,supportControllerCreateTicket,supportControllerGetTickets,supportControllerStartLiveChat,supportControllerEndLiveChat,supportControllerUpdateTicketStatus,supportControllerAssignTicket,supportControllerCreateCustomerProfile,supportControllerGetCustomerProfiles}};
 export type AppControllerGetHealthResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['appControllerGetHealth']>>>
 export type AppControllerGetHelloResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['appControllerGetHello']>>>
 export type AppControllerGetRealtimeConfigResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['appControllerGetRealtimeConfig']>>>
@@ -4377,11 +4928,18 @@ export type V3WorkspacesControllerGetChannelMembersResult = NonNullable<Awaited<
 export type V3WorkspacesControllerAddChannelMembersResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3WorkspacesControllerAddChannelMembers']>>>
 export type V3WorkspacesControllerUpdateChannelMemberResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3WorkspacesControllerUpdateChannelMember']>>>
 export type V3WorkspacesControllerDeleteChannelMemberResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3WorkspacesControllerDeleteChannelMember']>>>
+export type V3WorkspacesControllerGetChannelMessagesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3WorkspacesControllerGetChannelMessages']>>>
+export type V3WorkspacesControllerCreateChannelMessageResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3WorkspacesControllerCreateChannelMessage']>>>
+export type V3WorkspacesControllerUpdateChannelMessageResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3WorkspacesControllerUpdateChannelMessage']>>>
+export type V3WorkspacesControllerDeleteChannelMessageResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3WorkspacesControllerDeleteChannelMessage']>>>
+export type V3WorkspacesControllerAddChannelMessageReactionResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3WorkspacesControllerAddChannelMessageReaction']>>>
+export type V3WorkspacesControllerRemoveChannelMessageReactionResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3WorkspacesControllerRemoveChannelMessageReaction']>>>
 export type V3WebhooksControllerGetWebhooksResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3WebhooksControllerGetWebhooks']>>>
 export type V3WebhooksControllerCreateWebhookResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3WebhooksControllerCreateWebhook']>>>
 export type V3WebhooksControllerGetWebhookResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3WebhooksControllerGetWebhook']>>>
 export type V3WebhooksControllerUpdateWebhookResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3WebhooksControllerUpdateWebhook']>>>
 export type V3WebhooksControllerDeleteWebhookResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3WebhooksControllerDeleteWebhook']>>>
+export type V3ChannelIncomingWebhooksControllerGetWorkspaceIncomingWebhooksResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3ChannelIncomingWebhooksControllerGetWorkspaceIncomingWebhooks']>>>
 export type V3ChannelIncomingWebhooksControllerGetChannelWebhooksResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3ChannelIncomingWebhooksControllerGetChannelWebhooks']>>>
 export type V3ChannelIncomingWebhooksControllerCreateChannelWebhookResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3ChannelIncomingWebhooksControllerCreateChannelWebhook']>>>
 export type V3ChannelIncomingWebhooksControllerGetChannelWebhookResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3ChannelIncomingWebhooksControllerGetChannelWebhook']>>>
@@ -4396,6 +4954,41 @@ export type V3OrganizationsControllerGetM2mApplicationsResult = NonNullable<Awai
 export type V3OrganizationsControllerCreateM2mApplicationResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3OrganizationsControllerCreateM2mApplication']>>>
 export type V3OrganizationsControllerUpdateM2mApplicationResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3OrganizationsControllerUpdateM2mApplication']>>>
 export type V3OrganizationsControllerDeleteM2mApplicationResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3OrganizationsControllerDeleteM2mApplication']>>>
+export type V3ApplicationsControllerListApplications0Result = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3ApplicationsControllerListApplications0']>>>
+export type V3ApplicationsControllerCreateApplication0Result = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3ApplicationsControllerCreateApplication0']>>>
+export type V3ApplicationsControllerListApplications1Result = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3ApplicationsControllerListApplications1']>>>
+export type V3ApplicationsControllerCreateApplication1Result = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3ApplicationsControllerCreateApplication1']>>>
+export type V3ApplicationsControllerGetApplication0Result = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3ApplicationsControllerGetApplication0']>>>
+export type V3ApplicationsControllerUpdateApplicationResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3ApplicationsControllerUpdateApplication']>>>
+export type V3ApplicationsControllerDeleteApplicationResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3ApplicationsControllerDeleteApplication']>>>
+export type V3ApplicationsControllerGetApplication1Result = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3ApplicationsControllerGetApplication1']>>>
+export type V3ApplicationsControllerResetToken0Result = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3ApplicationsControllerResetToken0']>>>
+export type V3ApplicationsControllerResetToken1Result = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3ApplicationsControllerResetToken1']>>>
+export type V3ApplicationsControllerInstallApplication0Result = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3ApplicationsControllerInstallApplication0']>>>
+export type V3ApplicationsControllerInstallApplication1Result = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3ApplicationsControllerInstallApplication1']>>>
+export type V3ApplicationsControllerListWorkspaceBotsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3ApplicationsControllerListWorkspaceBots']>>>
+export type V3ApplicationsControllerAddBotToWorkspaceResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3ApplicationsControllerAddBotToWorkspace']>>>
+export type V3DmsControllerGetDmsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3DmsControllerGetDms']>>>
+export type V3DmsControllerCreateDmResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3DmsControllerCreateDm']>>>
+export type V3DmsControllerGetDmResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3DmsControllerGetDm']>>>
+export type V3DmsControllerDeleteDmResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3DmsControllerDeleteDm']>>>
+export type V3DmsControllerGetMessagesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3DmsControllerGetMessages']>>>
+export type V3DmsControllerCreateMessageResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3DmsControllerCreateMessage']>>>
+export type V3DmsControllerUpdateMessageResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3DmsControllerUpdateMessage']>>>
+export type V3DmsControllerDeleteMessageResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3DmsControllerDeleteMessage']>>>
+export type V3DmsControllerAddReactionResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3DmsControllerAddReaction']>>>
+export type V3DmsControllerRemoveReactionResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['v3DmsControllerRemoveReaction']>>>
+export type ChannelsControllerGetGlobalChannelsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['channelsControllerGetGlobalChannels']>>>
+export type ChannelsControllerCreateChannelResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['channelsControllerCreateChannel']>>>
+export type ChannelsControllerGetMessagesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['channelsControllerGetMessages']>>>
+export type ChannelsControllerCreateMessageResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['channelsControllerCreateMessage']>>>
+export type ChannelsControllerUpdateMessageResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['channelsControllerUpdateMessage']>>>
+export type ChannelsControllerDeleteMessageResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['channelsControllerDeleteMessage']>>>
+export type ChannelsControllerMarkAsReadResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['channelsControllerMarkAsRead']>>>
+export type ChannelsControllerAddReactionResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['channelsControllerAddReaction']>>>
+export type ChannelsControllerRemoveReactionResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['channelsControllerRemoveReaction']>>>
+export type ChannelsControllerShareChannelResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['channelsControllerShareChannel']>>>
+export type ChannelsControllerCreateReplyResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['channelsControllerCreateReply']>>>
 export type NotificationsControllerGetNotificationsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['notificationsControllerGetNotifications']>>>
 export type NotificationsControllerGetNotificationByIdResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['notificationsControllerGetNotificationById']>>>
 export type NotificationsControllerUpdateNotificationResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['notificationsControllerUpdateNotification']>>>
@@ -4405,6 +4998,17 @@ export type NotificationsControllerGetWorkspaceSettingsResult = NonNullable<Awai
 export type NotificationsControllerUpdateWorkspaceSettingsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['notificationsControllerUpdateWorkspaceSettings']>>>
 export type NotificationsControllerGetChannelSettingsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['notificationsControllerGetChannelSettings']>>>
 export type NotificationsControllerUpdateChannelSettingsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['notificationsControllerUpdateChannelSettings']>>>
+export type DmsControllerGetDmsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['dmsControllerGetDms']>>>
+export type DmsControllerCreateDmResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['dmsControllerCreateDm']>>>
+export type DmsControllerGetDmResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['dmsControllerGetDm']>>>
+export type DmsControllerDeleteDmResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['dmsControllerDeleteDm']>>>
+export type DmsControllerGetMessagesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['dmsControllerGetMessages']>>>
+export type DmsControllerCreateMessageResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['dmsControllerCreateMessage']>>>
+export type DmsControllerUpdateMessageResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['dmsControllerUpdateMessage']>>>
+export type DmsControllerDeleteMessageResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['dmsControllerDeleteMessage']>>>
+export type DmsControllerMarkAsReadResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['dmsControllerMarkAsRead']>>>
+export type DmsControllerAddReactionResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['dmsControllerAddReaction']>>>
+export type DmsControllerRemoveReactionResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['dmsControllerRemoveReaction']>>>
 export type InvitationsControllerGetInvitationsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['invitationsControllerGetInvitations']>>>
 export type InvitationsControllerCreateInvitationResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['invitationsControllerCreateInvitation']>>>
 export type InvitationsControllerGetInvitationByTokenResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['invitationsControllerGetInvitationByToken']>>>
@@ -4438,17 +5042,6 @@ export type CallsControllerGetParticipantsResult = NonNullable<Awaited<ReturnTyp
 export type CallsControllerGetScheduledCallsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['callsControllerGetScheduledCalls']>>>
 export type CallsControllerScheduleCallResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['callsControllerScheduleCall']>>>
 export type CallsControllerPlaySoundboardSoundResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['callsControllerPlaySoundboardSound']>>>
-export type ChannelsControllerGetGlobalChannelsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['channelsControllerGetGlobalChannels']>>>
-export type ChannelsControllerCreateChannelResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['channelsControllerCreateChannel']>>>
-export type ChannelsControllerGetMessagesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['channelsControllerGetMessages']>>>
-export type ChannelsControllerCreateMessageResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['channelsControllerCreateMessage']>>>
-export type ChannelsControllerUpdateMessageResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['channelsControllerUpdateMessage']>>>
-export type ChannelsControllerDeleteMessageResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['channelsControllerDeleteMessage']>>>
-export type ChannelsControllerMarkAsReadResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['channelsControllerMarkAsRead']>>>
-export type ChannelsControllerAddReactionResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['channelsControllerAddReaction']>>>
-export type ChannelsControllerRemoveReactionResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['channelsControllerRemoveReaction']>>>
-export type ChannelsControllerShareChannelResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['channelsControllerShareChannel']>>>
-export type ChannelsControllerCreateReplyResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['channelsControllerCreateReply']>>>
 export type AdminControllerGetStatsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['adminControllerGetStats']>>>
 export type AdminControllerGetMembersResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['adminControllerGetMembers']>>>
 export type AdminControllerUpdateMemberRoleResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['adminControllerUpdateMemberRole']>>>
@@ -4460,17 +5053,6 @@ export type AdminControllerGetProfileAssetsResult = NonNullable<Awaited<ReturnTy
 export type AdminControllerCreateProfileAssetResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['adminControllerCreateProfileAsset']>>>
 export type AdminControllerGetAssetStatsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['adminControllerGetAssetStats']>>>
 export type AdminControllerUploadFileResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['adminControllerUploadFile']>>>
-export type DmsControllerGetDmsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['dmsControllerGetDms']>>>
-export type DmsControllerCreateDmResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['dmsControllerCreateDm']>>>
-export type DmsControllerGetDmResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['dmsControllerGetDm']>>>
-export type DmsControllerDeleteDmResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['dmsControllerDeleteDm']>>>
-export type DmsControllerGetMessagesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['dmsControllerGetMessages']>>>
-export type DmsControllerCreateMessageResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['dmsControllerCreateMessage']>>>
-export type DmsControllerUpdateMessageResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['dmsControllerUpdateMessage']>>>
-export type DmsControllerDeleteMessageResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['dmsControllerDeleteMessage']>>>
-export type DmsControllerMarkAsReadResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['dmsControllerMarkAsRead']>>>
-export type DmsControllerAddReactionResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['dmsControllerAddReaction']>>>
-export type DmsControllerRemoveReactionResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['dmsControllerRemoveReaction']>>>
 export type FriendsControllerGetFriendsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['friendsControllerGetFriends']>>>
 export type FriendsControllerGetFriendRequestsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['friendsControllerGetFriendRequests']>>>
 export type FriendsControllerSendFriendRequestResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSkyrmeChatAPI>['friendsControllerSendFriendRequest']>>>
