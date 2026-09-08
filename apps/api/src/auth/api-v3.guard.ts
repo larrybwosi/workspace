@@ -12,6 +12,7 @@ import { prisma } from '@repo/database';
 import Redis from 'ioredis';
 import * as crypto from 'crypto';
 import { auth } from '@repo/auth';
+import { fromNodeHeaders } from 'better-auth/node';
 
 export interface ApiV3Context {
   userId: string;
@@ -32,20 +33,57 @@ export class ApiV3Guard implements CanActivate {
     private readonly configService: ConfigService
   ) {}
 
+  private inject(headers: Headers): void {
+    const h = headers.get('authorization') || '';
+    if (!h.startsWith('Bearer ')) return;
+    const t = h.split(' ')[1];
+
+    const keys = [
+      'better-auth.session_token',
+      'better-auth.session-token',
+      '__Secure-better-auth.session_token',
+      '__Secure-better-auth.session-token',
+    ];
+    const cookie = headers.get('cookie') || '';
+
+    let updatedCookie = cookie;
+    for (const k of keys) {
+      if (t && !cookie.includes(k)) {
+        updatedCookie = updatedCookie ? `${updatedCookie}; ${k}=${t}` : `${k}=${t}`;
+      }
+    }
+
+    if (updatedCookie !== cookie) {
+      headers.set('cookie', updatedCookie);
+    }
+  }
+
   async canActivate(executionContext: ExecutionContext): Promise<boolean> {
     const request = executionContext.switchToHttp().getRequest();
     const slug = request.params.slug;
 
-    const authHeader = request.headers.authorization;
+    const authHeader = request.headers.authorization || request.headers.Authorization || '';
     let context: ApiV3Context | undefined;
     let rateLimit = 200; // default for V3
     let rateLimitKey = '';
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    let isApiOrOAuthToken = false;
+
+    if (typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
+      const accessToken = authHeader.substring(7).trim();
+      if (accessToken.startsWith('wst_') || accessToken.startsWith('oat_')) {
+        isApiOrOAuthToken = true;
+      }
+    }
+
+    if (!isApiOrOAuthToken) {
       // Session fallback
+      const headers = fromNodeHeaders(request.headers);
+      this.inject(headers);
+
       const session = await auth.api
         .getSession({
-          headers: request.headers,
+          headers,
         })
         .catch(() => null);
 
@@ -114,7 +152,7 @@ export class ApiV3Guard implements CanActivate {
       rateLimit = 2000;
       rateLimitKey = `ratelimit:v3:session:${session.user.id}`;
     } else {
-      const accessToken = authHeader.substring(7);
+      const accessToken = authHeader.substring(7).trim();
       if (accessToken.startsWith('wst_')) {
         const hashedToken = crypto.createHash('sha256').update(accessToken).digest('hex');
         const apiToken = await prisma.workspaceApiToken.findUnique({
@@ -281,8 +319,6 @@ export class ApiV3Guard implements CanActivate {
 
         rateLimit = 2000;
         rateLimitKey = `ratelimit:v3:oauth:${oauthToken.id}`;
-      } else {
-        throw new UnauthorizedException('Invalid access token format');
       }
     }
 
