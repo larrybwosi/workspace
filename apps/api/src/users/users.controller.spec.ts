@@ -1,9 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
-import { UsersController } from './users.controller';
+import { UsersController, UpdateUserStatusDto, UpdateUserProfileDto, RegisterDeviceTokenDto, DeleteDeviceTokenDto } from './users.controller';
 import { AuthGuard } from '../auth/auth.guard';
 import { BadRequestException } from '@nestjs/common';
 import { prisma } from '@repo/database';
+import { validate } from 'class-validator';
+import { plainToInstance } from 'class-transformer';
 
 // Mock @repo/database prisma
 vi.mock('@repo/database', () => ({
@@ -213,6 +215,44 @@ describe('UsersController', () => {
 
     it('should throw ForbiddenException if patchUser id is another user', async () => {
       await expect(controller.patchUser(mockUser, 'user-2', { name: 'Other User' })).rejects.toThrow();
+    });
+  });
+
+  describe('DTO validation tests', () => {
+    it('should pass UpdateUserStatusDto for valid status', async () => {
+      const dto = plainToInstance(UpdateUserStatusDto, { status: 'away' });
+      const errors = await validate(dto);
+      expect(errors.length).toBe(0);
+    });
+
+    it('should fail UpdateUserStatusDto for invalid status value', async () => {
+      const dto = plainToInstance(UpdateUserStatusDto, { status: 'invalid_status' });
+      const errors = await validate(dto);
+      expect(errors.length).toBeGreaterThan(0);
+    });
+
+    it('should pass RegisterDeviceTokenDto for valid web/ios/android platform', async () => {
+      const dto = plainToInstance(RegisterDeviceTokenDto, { token: 'dt-123', platform: 'android' });
+      const errors = await validate(dto);
+      expect(errors.length).toBe(0);
+    });
+
+    it('should fail RegisterDeviceTokenDto for invalid platform', async () => {
+      const dto = plainToInstance(RegisterDeviceTokenDto, { token: 'dt-123', platform: 'windows_phone' });
+      const errors = await validate(dto);
+      expect(errors.length).toBeGreaterThan(0);
+    });
+
+    it('should pass UpdateUserProfileDto for partial updates', async () => {
+      const dto = plainToInstance(UpdateUserProfileDto, { bio: 'New Bio', status: 'dnd' });
+      const errors = await validate(dto);
+      expect(errors.length).toBe(0);
+    });
+
+    it('should fail UpdateUserProfileDto for invalid status field', async () => {
+      const dto = plainToInstance(UpdateUserProfileDto, { status: 'super_online' });
+      const errors = await validate(dto);
+      expect(errors.length).toBeGreaterThan(0);
     });
   });
 });
