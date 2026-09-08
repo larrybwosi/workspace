@@ -560,7 +560,7 @@ export interface AssignSupportTicketDto {
 /**
  * Options for starting a new live chat session.
  */
-export interface StartLiveChatDto {
+export interface SupportStartLiveChatDto {
   /** Unique workspace identifier where live chat is initialized. */
   workspaceId: string;
   /** Optional metadata associated with the live chat session. */
@@ -570,7 +570,7 @@ export interface StartLiveChatDto {
 /**
  * Options for creating or updating a customer profile.
  */
-export interface CreateCustomerProfileDto {
+export interface SupportCreateCustomerProfileDto {
   /** Associated workspace identifier. */
   workspaceId: string;
   /** User ID of the customer. */
@@ -1135,98 +1135,143 @@ export class ScrymeSDK {
        */
       message: {
         /**
-         * Lists messages in a channel with cursor pagination support.
+         * Lists messages in a channel with cursor pagination support via V3 API.
+         * @param slug The unique workspace slug.
          * @param channelId Unique identifier of the channel.
          * @param params Query parameters for limiting, sorting, or pagination cursors.
          * @param options Optional request config override.
-         * @returns Object containing the messages array and next pagination cursor exactly from the endpoint.
          */
         list: async (
+          slug: string,
           channelId: string,
-          params?: ChannelsControllerGetMessagesParams,
+          params?: { cursor?: string; limit?: string },
           options?: AxiosRequestConfig
         ): Promise<{ messages: ChannelMessage[]; nextCursor?: string }> => {
-          return this.raw.channelsControllerGetMessages(channelId, params, options) as unknown as { messages: ChannelMessage[]; nextCursor?: string };
+          const queryParams: any = {};
+          if (params?.cursor) queryParams.cursor = params.cursor;
+          if (params?.limit) queryParams.limit = params.limit;
+
+          const res = (await this.raw.v3WorkspacesControllerGetChannelMessages(
+            slug,
+            channelId,
+            queryParams,
+            options
+          )) as unknown as { success: boolean; data: { messages: ChannelMessage[]; nextCursor?: string } };
+          return res?.data ?? (res as unknown as { messages: ChannelMessage[]; nextCursor?: string });
         },
         /**
-         * Sends a new message to a channel.
+         * Sends a new message to a channel via V3 API.
+         * @param slug The unique workspace slug.
          * @param channelId Unique identifier of the target channel.
-         * @param data The message content string or structured CreateMessageDto object.
+         * @param data The message content string or structured payload object.
          * @param options Optional request config override.
-         * @returns The created message exactly from the endpoint.
          */
         create: async (
+          slug: string,
           channelId: string,
           data: CreateMessageDto | string,
           options?: AxiosRequestConfig
         ): Promise<ChannelMessage> => {
           const payload = typeof data === 'string' ? { content: data } : data;
-          return this.raw.channelsControllerCreateMessage(channelId, {
-            ...options,
-            data: payload,
-          }) as unknown as ChannelMessage;
+          const mergedConfig = { ...options, data: payload };
+          const res = (await this.raw.v3WorkspacesControllerCreateChannelMessage(slug, channelId, mergedConfig)) as unknown as {
+            success: boolean;
+            data: { message: ChannelMessage };
+          };
+          return res?.data?.message ?? (res as unknown as ChannelMessage);
         },
         /**
-         * Updates the content of a previously sent message in a channel.
+         * Updates the content of a previously sent message in a channel via V3 API.
+         * @param slug The unique workspace slug.
          * @param channelId Unique identifier of the channel containing the message.
          * @param messageId Unique identifier of the message to update.
          * @param data The new content payload.
          * @param options Optional request config override.
-         * @returns The updated message details exactly from the endpoint.
          */
         update: async (
+          slug: string,
           channelId: string,
           messageId: string,
           data: ChannelsControllerUpdateMessageBody,
           options?: AxiosRequestConfig
         ): Promise<ChannelMessage> => {
-          return this.raw.channelsControllerUpdateMessage(channelId, messageId, data, options) as unknown as ChannelMessage;
+          const mergedConfig = { ...options, data };
+          const res = (await this.raw.v3WorkspacesControllerUpdateChannelMessage(
+            slug,
+            channelId,
+            messageId,
+            mergedConfig
+          )) as unknown as { success: boolean; data: { message: ChannelMessage } };
+          return res?.data?.message ?? (res as unknown as ChannelMessage);
         },
         /**
-         * Permanently deletes a message in a channel.
+         * Permanently deletes a message in a channel via V3 API.
+         * @param slug The unique workspace slug.
          * @param channelId Unique identifier of the channel containing the message.
          * @param messageId Unique identifier of the message to delete.
          * @param options Optional request config override.
-         * @returns Success status indicating that the message was deleted exactly from the endpoint.
          */
         delete: async (
+          slug: string,
           channelId: string,
           messageId: string,
           options?: AxiosRequestConfig
         ): Promise<{ success: boolean }> => {
-          return this.raw.channelsControllerDeleteMessage(channelId, messageId, options) as unknown as { success: boolean };
+          const res = (await this.raw.v3WorkspacesControllerDeleteChannelMessage(
+            slug,
+            channelId,
+            messageId,
+            options
+          )) as unknown as { success: boolean; data?: { success: boolean } };
+          return res?.data ?? res;
         },
         /**
-         * Adds a reaction (emoji) to a message in a channel.
+         * Adds a reaction (emoji) to a message in a channel via V3 API.
+         * @param slug The unique workspace slug.
          * @param channelId Unique identifier of the channel containing the message.
          * @param messageId Unique identifier of the message.
          * @param data Object containing the target emoji character.
          * @param options Optional request config override.
-         * @returns The reaction response returned exactly from the endpoint.
          */
         addReaction: async (
+          slug: string,
           channelId: string,
           messageId: string,
           data: ChannelsControllerAddReactionBody,
           options?: AxiosRequestConfig
-        ): Promise<ChannelsControllerAddReactionResult> => {
-          return this.raw.channelsControllerAddReaction(channelId, messageId, data, options) as unknown as ChannelsControllerAddReactionResult;
+        ): Promise<any> => {
+          const mergedConfig = { ...options, data };
+          const res = (await this.raw.v3WorkspacesControllerAddChannelMessageReaction(
+            slug,
+            channelId,
+            messageId,
+            mergedConfig
+          )) as unknown as { success: boolean; data: { reaction: any } };
+          return res?.data?.reaction ?? res;
         },
         /**
-         * Removes a reaction (emoji) from a message in a channel.
+         * Removes a reaction (emoji) from a message in a channel via V3 API.
+         * @param slug The unique workspace slug.
          * @param channelId Unique identifier of the channel containing the message.
          * @param messageId Unique identifier of the message.
          * @param emoji The emoji character to remove.
          * @param options Optional request config override.
-         * @returns The reaction removal response returned exactly from the endpoint.
          */
         removeReaction: async (
+          slug: string,
           channelId: string,
           messageId: string,
           emoji: string,
           options?: AxiosRequestConfig
-        ): Promise<ChannelsControllerRemoveReactionResult> => {
-          return this.raw.channelsControllerRemoveReaction(channelId, messageId, emoji, options) as unknown as ChannelsControllerRemoveReactionResult;
+        ): Promise<{ success: boolean }> => {
+          const res = (await this.raw.v3WorkspacesControllerRemoveChannelMessageReaction(
+            slug,
+            channelId,
+            messageId,
+            emoji,
+            options
+          )) as unknown as { success: boolean; data?: { success: boolean } };
+          return res?.data ?? res;
         },
       },
     };
@@ -1316,69 +1361,83 @@ export class ScrymeSDK {
   }
 
   /**
-   * Operations for managing direct messages (DMs) and direct message conversations.
+   * Operations for managing direct messages (DMs) and direct message conversations via V3 API.
    */
   public get dm() {
     return {
       /**
-       * Lists all active direct message conversations for the authenticated user.
+       * Lists all active direct message conversations for the authenticated user/bot via V3 API.
        * @param options Optional request config override.
-       * @returns List of active DM conversations returned exactly from the endpoint.
        */
       list: async (options?: AxiosRequestConfig): Promise<DmConversation[]> => {
-        return this.raw.dmsControllerGetDms(options) as unknown as DmConversation[];
+        const res = (await this.raw.v3DmsControllerGetDms(options)) as unknown as {
+          success: boolean;
+          data: { conversations: DmConversation[] };
+        };
+        return res?.data?.conversations ?? (res as unknown as DmConversation[]);
       },
       /**
-       * Creates/initiates a direct message conversation with specified users.
+       * Creates/initiates a direct message conversation via V3 API.
        * @param data Create direct message details containing target participant IDs.
        * @param options Optional request config override.
-       * @returns Details of the created DM conversation exactly from the endpoint.
        */
-      create: async (data: CreateDmDto, options?: AxiosRequestConfig): Promise<DmConversation> => {
-        return this.raw.dmsControllerCreateDm(data, options) as unknown as DmConversation;
+      create: async (data: CreateDmDto | { targetUserId?: string; userId?: string }, options?: AxiosRequestConfig): Promise<DmConversation> => {
+        const res = (await this.raw.v3DmsControllerCreateDm(data as any, options)) as unknown as {
+          success: boolean;
+          data: { conversation: DmConversation };
+        };
+        return res?.data?.conversation ?? (res as unknown as DmConversation);
       },
       /**
-       * Retrieves details of a specific direct message conversation.
+       * Retrieves details of a specific direct message conversation via V3 API.
        * @param dmId Unique identifier of the direct message conversation.
        * @param options Optional request config override.
-       * @returns Detailed direct message conversation object exactly from the endpoint.
        */
       get: async (dmId: string, options?: AxiosRequestConfig): Promise<DmConversation> => {
-        return this.raw.dmsControllerGetDm(dmId, options) as unknown as DmConversation;
+        const res = (await this.raw.v3DmsControllerGetDm(dmId, options)) as unknown as {
+          success: boolean;
+          data: { conversation: DmConversation };
+        };
+        return res?.data?.conversation ?? (res as unknown as DmConversation);
       },
       /**
-       * Deletes/closes an active direct message conversation.
+       * Deletes/closes an active direct message conversation via V3 API.
        * @param dmId Unique identifier of the direct message conversation to close.
        * @param options Optional request config override.
-       * @returns Success status indicating that the DM conversation was deleted exactly from the endpoint.
        */
       delete: async (dmId: string, options?: AxiosRequestConfig): Promise<{ success: boolean }> => {
-        return this.raw.dmsControllerDeleteDm(dmId, options) as unknown as { success: boolean };
+        const res = (await this.raw.v3DmsControllerDeleteDm(dmId, options)) as unknown as {
+          success: boolean;
+          data?: { success: boolean };
+        };
+        return res?.data ?? res;
       },
       /**
-       * Sub-namespace for managing direct messages in a specific DM conversation.
+       * Sub-namespace for managing direct messages in a specific DM conversation via V3 API.
        */
       message: {
         /**
-         * Lists messages in a direct message conversation with cursor pagination.
+         * Lists messages in a direct message conversation with cursor pagination via V3 API.
          * @param dmId Unique identifier of the direct message conversation.
          * @param params Query parameters for pagination limits, cursors or search filters.
          * @param options Optional request config override.
-         * @returns List of direct messages and next pagination cursor exactly from the endpoint.
          */
         list: async (
           dmId: string,
           params?: DmsControllerGetMessagesParams,
           options?: AxiosRequestConfig
         ): Promise<{ messages: ChannelMessage[]; nextCursor?: string }> => {
-          return this.raw.dmsControllerGetMessages(dmId, params, options) as unknown as { messages: ChannelMessage[]; nextCursor?: string };
+          const res = (await this.raw.v3DmsControllerGetMessages(dmId, params, options)) as unknown as {
+            success: boolean;
+            data: { messages: ChannelMessage[]; nextCursor?: string };
+          };
+          return res?.data ?? (res as unknown as { messages: ChannelMessage[]; nextCursor?: string });
         },
         /**
-         * Sends a new message in a direct message conversation.
+         * Sends a new message in a direct message conversation via V3 API.
          * @param dmId Unique identifier of the direct message conversation.
          * @param data The message content string or structured CreateMessageDto object.
          * @param options Optional request config override.
-         * @returns The sent message exactly from the endpoint.
          */
         create: async (
           dmId: string,
@@ -1386,18 +1445,19 @@ export class ScrymeSDK {
           options?: AxiosRequestConfig
         ): Promise<ChannelMessage> => {
           const payload = typeof data === 'string' ? { content: data } : data;
-          return this.raw.dmsControllerCreateMessage(dmId, {
-            ...options,
-            data: payload,
-          }) as unknown as ChannelMessage;
+          const mergedConfig = { ...options, data: payload };
+          const res = (await this.raw.v3DmsControllerCreateMessage(dmId, mergedConfig)) as unknown as {
+            success: boolean;
+            data: { message: ChannelMessage };
+          };
+          return res?.data?.message ?? (res as unknown as ChannelMessage);
         },
         /**
-         * Updates the content of a previously sent direct message.
+         * Updates the content of a previously sent direct message via V3 API.
          * @param dmId Unique identifier of the direct message conversation.
          * @param messageId Unique identifier of the message to update.
          * @param data The new content payload.
          * @param options Optional request config override.
-         * @returns The updated message details exactly from the endpoint.
          */
         update: async (
           dmId: string,
@@ -1405,53 +1465,68 @@ export class ScrymeSDK {
           data: UpdateDmMessageDto,
           options?: AxiosRequestConfig
         ): Promise<ChannelMessage> => {
-          return this.raw.dmsControllerUpdateMessage(dmId, messageId, data, options) as unknown as ChannelMessage;
+          const mergedConfig = { ...options, data };
+          const res = (await this.raw.v3DmsControllerUpdateMessage(dmId, messageId, mergedConfig)) as unknown as {
+            success: boolean;
+            data: { message: ChannelMessage };
+          };
+          return res?.data?.message ?? (res as unknown as ChannelMessage);
         },
         /**
-         * Permanently deletes a direct message.
+         * Permanently deletes a direct message via V3 API.
          * @param dmId Unique identifier of the direct message conversation.
          * @param messageId Unique identifier of the message to delete.
          * @param options Optional request config override.
-         * @returns Success status indicating that the message was deleted exactly from the endpoint.
          */
         delete: async (
           dmId: string,
           messageId: string,
           options?: AxiosRequestConfig
         ): Promise<{ success: boolean }> => {
-          return this.raw.dmsControllerDeleteMessage(dmId, messageId, options) as unknown as { success: boolean };
+          const res = (await this.raw.v3DmsControllerDeleteMessage(dmId, messageId, options)) as unknown as {
+            success: boolean;
+            data?: { success: boolean };
+          };
+          return res?.data ?? res;
         },
         /**
-         * Adds a reaction (emoji) to a direct message.
+         * Adds a reaction (emoji) to a direct message via V3 API.
          * @param dmId Unique identifier of the direct message conversation.
          * @param messageId Unique identifier of the message.
          * @param data Object containing the target emoji character.
          * @param options Optional request config override.
-         * @returns The reaction response returned exactly from the endpoint.
          */
         addReaction: async (
           dmId: string,
           messageId: string,
           data: DmsControllerAddReactionBody,
           options?: AxiosRequestConfig
-        ): Promise<DmsControllerAddReactionResult> => {
-          return this.raw.dmsControllerAddReaction(dmId, messageId, data, options) as unknown as DmsControllerAddReactionResult;
+        ): Promise<any> => {
+          const mergedConfig = { ...options, data };
+          const res = (await this.raw.v3DmsControllerAddReaction(dmId, messageId, mergedConfig)) as unknown as {
+            success: boolean;
+            data: { reaction: any };
+          };
+          return res?.data?.reaction ?? res;
         },
         /**
-         * Removes a reaction (emoji) from a direct message.
+         * Removes a reaction (emoji) from a direct message via V3 API.
          * @param dmId Unique identifier of the direct message conversation.
          * @param messageId Unique identifier of the message.
          * @param emoji The emoji character to remove.
          * @param options Optional request config override.
-         * @returns The reaction removal response returned exactly from the endpoint.
          */
         removeReaction: async (
           dmId: string,
           messageId: string,
           emoji: string,
           options?: AxiosRequestConfig
-        ): Promise<DmsControllerRemoveReactionResult> => {
-          return this.raw.dmsControllerRemoveReaction(dmId, messageId, emoji, options) as unknown as DmsControllerRemoveReactionResult;
+        ): Promise<{ success: boolean }> => {
+          const res = (await this.raw.v3DmsControllerRemoveReaction(dmId, messageId, emoji, options)) as unknown as {
+            success: boolean;
+            data?: { success: boolean };
+          };
+          return res?.data ?? res;
         },
       },
     };
@@ -1797,7 +1872,7 @@ export class ScrymeSDK {
          * @param options Optional request config override.
          */
         start: async (
-          data: StartLiveChatDto,
+          data: SupportStartLiveChatDto,
           options?: AxiosRequestConfig
         ): Promise<LiveChatSession> => {
           return this.raw.supportControllerStartLiveChat({
@@ -1828,7 +1903,7 @@ export class ScrymeSDK {
          * @param options Optional request config override.
          */
         createProfile: async (
-          data: CreateCustomerProfileDto,
+          data: SupportCreateCustomerProfileDto,
           options?: AxiosRequestConfig
         ): Promise<CustomerProfile> => {
           return this.raw.supportControllerCreateCustomerProfile({
