@@ -1,3 +1,9 @@
+## 2026-09-06 - [Prisma/Performance] O(1) Short-Circuiting Point Lookups for Channel Member Update in V3 Workspaces API
+
+**Learning:** In `V3WorkspacesController.updateChannelMember`, resolving channel members by user ID, workspace member ID, or user email address previously executed `prisma.channelMember.findFirst` with a multi-column/multi-relation `OR` query spanning `channelMember`, `user`, and `workspaceMemberships`. This forced PostgreSQL to perform multi-table JOINs and index union scans. Replacing this `findFirst` query with serial short-circuiting `findUnique` point lookups targeting the compound unique index `@@unique([channelId, userId])` on `ChannelMember` (and using `findWorkspaceMemberByIdentifier` helper point lookups) leverages direct O(1) B-tree indexes, eliminating multi-table join overhead and index union scans.
+
+**Action:** Replace `findFirst` queries containing multi-column `OR` filters on channel members with serial `findUnique` point lookups on `channelId_userId`.
+
 ## 2026-09-04 - [Prisma/Performance] O(1) Short-Circuiting Point Lookups for Workspace Member Identifiers in V3 Enterprise API
 
 **Learning:** In `V3WorkspacesController` (`getWorkspaceMember`, `updateWorkspaceMember`, and `deleteWorkspaceMember`), resolving workspace members by member ID, user ID, or user email previously executed `prisma.workspaceMember.findFirst` with multi-column `OR` filters across `workspaceMember` and `user` relations. This forced PostgreSQL to execute multi-table JOINs and index union scans. Replacing multi-column `OR` queries with serial `findUnique` point lookups (by primary key `id`, compound unique index `workspaceId_userId`, or `user.email`) leverages direct O(1) B-tree indexes, eliminating join overhead and multi-index scans.
