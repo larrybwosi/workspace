@@ -1046,69 +1046,122 @@ When provisioned via M2M:
       throw new BadRequestException(validatedData.error.issues);
     }
 
+    const workspace = await this.resolveWorkspaceAndCheckAccess(context, slug);
+
     const { email, userId, memberId, role } = validatedData.data;
 
-    let targetUserId: string | null = null;
-    let targetEmail: string | null = null;
+    let existingUser: { id: string; email: string; name: string | null } | null = null;
+    let targetEmail: string | null = email || null;
 
     if (userId) {
-      targetUserId = userId;
+      existingUser = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { id: true, email: true, name: true },
+      });
     } else if (email) {
-      targetEmail = email;
+      existingUser = await prisma.user.findUnique({
+        where: { email },
+        select: { id: true, email: true, name: true },
+      });
     } else if (memberId) {
       const existingWsm = await prisma.workspaceMember.findUnique({
         where: { id: memberId },
-        select: { userId: true },
+        select: { user: { select: { id: true, email: true, name: true } } },
       });
-      if (existingWsm) {
-        targetUserId = existingWsm.userId;
+      if (existingWsm?.user) {
+        existingUser = existingWsm.user;
       } else {
-        const user = await prisma.user.findFirst({
+        existingUser = await prisma.user.findFirst({
           where: { OR: [{ id: memberId }, { email: memberId }] },
-          select: { id: true },
+          select: { id: true, email: true, name: true },
         });
-        if (!user) {
-          throw new NotFoundException('User not found');
+        if (!existingUser && memberId.includes('@')) {
+          targetEmail = memberId;
         }
-        targetUserId = user.id;
       }
     }
 
-    try {
-      const membership = await prisma.workspaceMember.create({
-        data: {
-          workspace: {
-            connect: { id: workspaceId },
+    if (existingUser) {
+      try {
+        const membership = await prisma.workspaceMember.create({
+          data: {
+            workspace: { connect: { id: workspace.id } },
+            user: { connect: { id: existingUser.id } },
+            role: role || 'member',
           },
-          role,
-          user: targetUserId
-            ? { connect: { id: targetUserId } }
-            : { connect: { email: targetEmail! } },
-        },
-        include: {
-          user: {
-            select: { id: true, name: true, email: true },
+          include: {
+            user: {
+              select: { id: true, name: true, email: true, avatar: true },
+            },
           },
+        });
+
+        // Invalidate caches
+        try {
+          await this.redis.del(`v3:members:${workspace.id}`);
+          await this.redis.del(`v2:members:${workspace.id}`);
+        } catch (err) {
+          this.logger.warn('Redis error in addWorkspaceMember (del):', err);
+        }
+
+        return this.formatResponse({ member: membership });
+      } catch (error: any) {
+        if (error.code === 'P2002') {
+          throw new BadRequestException('User is already a member of this workspace');
+        }
+        throw error;
+      }
+    } else if (targetEmail) {
+      // Check if user is already a pending invitee
+      const existingInvite = await prisma.workspaceInvitation.findFirst({
+        where: {
+          workspaceId: workspace.id,
+          email: targetEmail,
+          status: 'pending',
         },
       });
 
-      // Invalidate caches
-      try {
-        await this.redis.del(`v3:members:${workspaceId}`);
-        await this.redis.del(`v2:members:${workspaceId}`);
-      } catch (err) {
-        this.logger.warn('Redis error in addWorkspaceMember (del):', err);
+      const token = existingInvite?.token || `inv_${crypto.randomBytes(16).toString('hex')}`;
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
+      let inviterId = context.userId;
+      if (!inviterId || inviterId.startsWith('m2m:')) {
+        inviterId = workspace.ownerId;
       }
 
-      return this.formatResponse({ member: membership });
-    } catch (error: any) {
-      if (error.code === 'P2025') {
-        throw new NotFoundException('User not found');
-      }
-      if (error.code === 'P2002') {
-        throw new BadRequestException('User is already a member of this workspace');
-      }
-      throw error;
+      const invitation = existingInvite
+        ? await prisma.workspaceInvitation.update({
+            where: { id: existingInvite.id },
+            data: { role: role || 'member', expiresAt },
+          })
+        : await prisma.workspaceInvitation.create({
+            data: {
+              workspaceId: workspace.id,
+              email: targetEmail,
+              token,
+              role: role || 'member',
+              invitedBy: inviterId,
+              expiresAt,
+            },
+          });
+
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.BETTER_AUTH_URL || 'http://localhost:3001';
+      const invitationUrl = `${baseUrl}/invite/${invitation.token}`;
+
+      return this.formatResponse({
+        invitation: {
+          id: invitation.id,
+          email: invitation.email,
+          token: invitation.token,
+          role: invitation.role,
+          status: invitation.status,
+          expiresAt: invitation.expiresAt,
+          createdAt: invitation.createdAt,
+        },
+        invitationUrl,
+      });
+    } else {
+      throw new NotFoundException('User not found and no valid email provided for invitation');
     }
   }
 
