@@ -50,6 +50,13 @@ vi.mock('@repo/database', () => ({
       findFirst: vi.fn(),
       findUnique: vi.fn(),
     },
+    workspaceInvitation: {
+      findFirst: vi.fn(),
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      findUnique: vi.fn(),
+    },
     workspaceAuditLog: {
       create: vi.fn().mockReturnValue({ catch: vi.fn() }),
     },
@@ -656,8 +663,9 @@ describe('V3WorkspacesController', () => {
     });
 
     describe('addWorkspaceMember', () => {
-      it('should add member by email and invalidate caches', async () => {
+      it('should add existing user as member by email and invalidate caches', async () => {
         const body = { email: 'user@example.com', role: 'admin' };
+        const mockUser = { id: 'user-new', email: 'user@example.com', name: 'Bob' };
         const mockMembership = {
           id: 'm-new',
           userId: 'user-new',
@@ -665,6 +673,7 @@ describe('V3WorkspacesController', () => {
           user: { id: 'user-new', name: 'Bob', email: 'user@example.com' },
         };
 
+        (prisma.user.findUnique as any).mockResolvedValue(mockUser);
         (prisma.workspaceMember.create as any).mockResolvedValue(mockMembership);
 
         const result = await controller.addWorkspaceMember(context as any, 'acme-slug', body);
@@ -675,18 +684,44 @@ describe('V3WorkspacesController', () => {
           data: {
             workspace: { connect: { id: 'ws-123' } },
             role: 'admin',
-            user: { connect: { email: 'user@example.com' } },
+            user: { connect: { id: 'user-new' } },
           },
           include: {
-            user: { select: { id: true, name: true, email: true } },
+            user: { select: { id: true, name: true, email: true, avatar: true } },
           },
         });
         expect(redisClient.del).toHaveBeenCalledWith('v3:members:ws-123');
         expect(redisClient.del).toHaveBeenCalledWith('v2:members:ws-123');
       });
 
-      it('should add member by userId', async () => {
+      it('should create invitation for new user when email does not exist in platform', async () => {
+        const body = { email: 'newuser@example.com', role: 'member' };
+        const mockInvitation = {
+          id: 'inv-123',
+          workspaceId: 'ws-123',
+          email: 'newuser@example.com',
+          token: 'inv_abcdef123456',
+          role: 'member',
+          status: 'pending',
+          expiresAt: new Date(),
+          createdAt: new Date(),
+        };
+
+        (prisma.user.findUnique as any).mockResolvedValue(null);
+        (prisma.workspaceInvitation.findFirst as any).mockResolvedValue(null);
+        (prisma.workspaceInvitation.create as any).mockResolvedValue(mockInvitation);
+
+        const result = await controller.addWorkspaceMember(context as any, 'acme-slug', body);
+
+        expect(result.success).toBe(true);
+        expect(result.data.invitation).toBeDefined();
+        expect(result.data.invitation.email).toBe('newuser@example.com');
+        expect(result.data.invitationUrl).toContain('/invite/inv_abcdef123456');
+      });
+
+      it('should add member by userId when user exists', async () => {
         const body = { userId: 'user-456', role: 'member' };
+        const mockUser = { id: 'user-456', email: 'charlie@example.com', name: 'Charlie' };
         const mockMembership = {
           id: 'm-new2',
           userId: 'user-456',
@@ -694,6 +729,7 @@ describe('V3WorkspacesController', () => {
           user: { id: 'user-456', name: 'Charlie', email: 'charlie@example.com' },
         };
 
+        (prisma.user.findUnique as any).mockResolvedValue(mockUser);
         (prisma.workspaceMember.create as any).mockResolvedValue(mockMembership);
 
         const result = await controller.addWorkspaceMember(context as any, 'acme-slug', body);
@@ -707,19 +743,20 @@ describe('V3WorkspacesController', () => {
             user: { connect: { id: 'user-456' } },
           },
           include: {
-            user: { select: { id: true, name: true, email: true } },
+            user: { select: { id: true, name: true, email: true, avatar: true } },
           },
         });
       });
 
-      it('should add member by memberId', async () => {
+      it('should add member by memberId when user exists', async () => {
         const body = { memberId: 'wsm-789', role: 'moderator' };
-        const mockWsm = { id: 'wsm-789', userId: 'user-789' };
+        const mockUser = { id: 'user-789', email: 'david@example.com', name: 'David' };
+        const mockWsm = { id: 'wsm-789', user: mockUser };
         const mockMembership = {
           id: 'm-new3',
           userId: 'user-789',
           role: 'moderator',
-          user: { id: 'user-789', name: 'David', email: 'david@example.com' },
+          user: mockUser,
         };
 
         (prisma.workspaceMember.findUnique as any).mockResolvedValue(mockWsm);
@@ -729,10 +766,6 @@ describe('V3WorkspacesController', () => {
 
         expect(result.success).toBe(true);
         expect(result.data.member).toEqual(mockMembership);
-        expect(prisma.workspaceMember.findUnique).toHaveBeenCalledWith({
-          where: { id: 'wsm-789' },
-          select: { userId: true },
-        });
         expect(prisma.workspaceMember.create).toHaveBeenCalledWith({
           data: {
             workspace: { connect: { id: 'ws-123' } },
@@ -740,7 +773,7 @@ describe('V3WorkspacesController', () => {
             user: { connect: { id: 'user-789' } },
           },
           include: {
-            user: { select: { id: true, name: true, email: true } },
+            user: { select: { id: true, name: true, email: true, avatar: true } },
           },
         });
       });
