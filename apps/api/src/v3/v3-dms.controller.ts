@@ -154,7 +154,8 @@ export class V3DmsController {
       throw new ForbiddenException('Missing messages:send scope');
     }
 
-    const result = await this.dmsService.deleteDm(dmId);
+    const user = await this.resolveEffectiveUserId(context);
+    const result = await this.dmsService.deleteDm(dmId, user.id);
     return this.formatResponse(result);
   }
 
@@ -235,7 +236,8 @@ export class V3DmsController {
       throw new ForbiddenException('Missing messages:send scope');
     }
 
-    const result = await this.dmsService.deleteMessage(dmId, messageId);
+    const user = await this.resolveEffectiveUserId(context);
+    const result = await this.dmsService.deleteMessage(dmId, messageId, user.id);
     return this.formatResponse(result);
   }
 
