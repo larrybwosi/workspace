@@ -804,6 +804,16 @@ export class MessagesService {
       dispatchWebhook().catch(err => this.logger.error('Failed to send webhook callback:', err));
     }
 
+    if (message.channel?.workspace?.id && this.webhooksService) {
+      this.webhooksService
+        .dispatch(message.channel.workspace.id, 'message.action_response', {
+          messageId: message.id,
+          actionId: data.actionId,
+          response,
+        })
+        .catch(err => this.logger.error('Failed to dispatch workspace action response webhook:', err));
+    }
+
     prisma.workspaceAuditLog
       .create({
         data: {

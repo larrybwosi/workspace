@@ -288,9 +288,54 @@ func VerifySignature(rawPayload []byte, secret string, headerSignature string) b
 
 ---
 
-## 4. Delivery Behavior & Caching
+## 4. Interactive Message Action Response Webhooks
+
+When users interact with custom or interactive messages in chat (such as clicking **Approve** or submitting a form), Scrymechat records the response and dispatches an HTTP POST webhook to the message's configured `callbackUrl` (as well as any workspace webhooks subscribed to `message.action_response`).
+
+### Trigger & Execution
+
+1. **Trigger**: User submits a message action via `POST /workspaces/:slug/channels/:channelId/messages/:messageId/actions` or `/v2/workspaces/:slug/messages/:messageId/actions/:actionId`.
+2. **Dispatch**: Scrymechat sends a signed HTTP POST request to the message's `metadata.callbackUrl`.
+3. **Verification**: The request includes header `X-Webhook-Signature: sha256=<hex_digest>` and `X-Webhook-Event: message.action_response`.
+
+### Action Response Webhook Payload Example
+
+```json
+{
+  "event": "message.action_response",
+  "timestamp": "2026-09-01T12:00:00.000Z",
+  "workspace": {
+    "id": "ws_acme_corp",
+    "name": "Acme Corp"
+  },
+  "message": {
+    "id": "msg_998877",
+    "content": "Approval Request #402",
+    "channelId": "ch_general"
+  },
+  "action": {
+    "id": "approve",
+    "label": "Approve"
+  },
+  "response": {
+    "userId": "usr_alice123",
+    "userName": "Alice Smith",
+    "userEmail": "alice@acme.com",
+    "actionValue": "approve",
+    "comment": "Looks good, approved!",
+    "metadata": {
+      "environment": "production"
+    },
+    "respondedAt": "2026-09-01T12:00:00.000Z"
+  }
+}
+```
+
+---
+
+## 5. Delivery Behavior & Caching
 
 - **Timeout**: Scrymechat enforces a 5-second HTTP request timeout per webhook dispatch.
-- **Async Non-Blocking Execution**: Webhook event dispatch is executed asynchronously in background background threads (`Promise.allSettled`), ensuring API response latency remains sub-10ms.
+- **Async Non-Blocking Execution**: Webhook event dispatch is executed asynchronously in background execution threads (`Promise.allSettled`), ensuring API response latency remains sub-10ms.
 - **Redis Caching**: Workspace webhooks are cached in Redis under key `v3:workspace:<workspaceId>:webhooks` with a **10-minute TTL**. Creating, updating, or deleting webhooks automatically invalidates the Redis cache instantly.
 - **Delivery Logging**: Outgoing webhooks record delivery status, status codes, and execution payloads in `WorkspaceWebhookLog` for diagnostic inspection.

@@ -81,6 +81,22 @@ class AddReactionDto {
   customEmojiId?: string;
 }
 
+class ActionResponseDto {
+  @IsString()
+  @ApiProperty({ example: 'approve' })
+  actionId: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ required: false, example: 'Looks good' })
+  comment?: string;
+
+  @IsObject()
+  @IsOptional()
+  @ApiProperty({ required: false })
+  metadata?: any;
+}
+
 @ApiTags('Channels & Messages')
 @ApiBearerAuth()
 @Controller('workspaces/:slug/channels/:channelId/messages')
@@ -235,6 +251,61 @@ export class MessagesController {
       ...body,
       channelId,
       replyToId: messageId,
+    });
+  }
+
+  @Post(':messageId/actions')
+  @ApiOperation({ summary: 'Submit response to a message action' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'channelId', description: 'The channel ID' })
+  @ApiParam({ name: 'messageId', description: 'The message ID' })
+  @ApiBody({ type: ActionResponseDto })
+  @ApiResponse({ status: 201, description: 'Action response recorded' })
+  async processActionResponse(
+    @CurrentUser() user: User,
+    @Param('slug') slug: string,
+    @Param('channelId') channelId: string,
+    @Param('messageId') messageId: string,
+    @Body() body: ActionResponseDto
+  ) {
+    await this.messagesService.verifyWorkspaceAccess(user.id, slug);
+    return this.messagesService.processActionResponse(user.id, messageId, body);
+  }
+
+  @Get(':messageId/actions')
+  @ApiOperation({ summary: 'Get responses for message actions' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'channelId', description: 'The channel ID' })
+  @ApiParam({ name: 'messageId', description: 'The message ID' })
+  @ApiResponse({ status: 200, description: 'List of action responses' })
+  async getActionResponses(
+    @CurrentUser() user: User,
+    @Param('slug') slug: string,
+    @Param('channelId') channelId: string,
+    @Param('messageId') messageId: string
+  ) {
+    await this.messagesService.verifyWorkspaceAccess(user.id, slug);
+    return this.messagesService.getActionResponses(messageId);
+  }
+
+  @Post('/v2/workspaces/:slug/messages/:messageId/actions/:actionId')
+  @ApiOperation({ summary: 'Trigger message action (V2 path)' })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'messageId', description: 'The message ID' })
+  @ApiParam({ name: 'actionId', description: 'The action identifier' })
+  @ApiResponse({ status: 201, description: 'Action triggered' })
+  async triggerActionV2(
+    @CurrentUser() user: User,
+    @Param('slug') slug: string,
+    @Param('messageId') messageId: string,
+    @Param('actionId') actionId: string,
+    @Body() body: any
+  ) {
+    await this.messagesService.verifyWorkspaceAccess(user.id, slug);
+    return this.messagesService.processActionResponse(user.id, messageId, {
+      actionId,
+      comment: body?.comment,
+      metadata: { ...(body?.payload || {}), formState: body?.formState },
     });
   }
 }
