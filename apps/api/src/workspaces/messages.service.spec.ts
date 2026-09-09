@@ -20,6 +20,15 @@ vi.mock('@repo/database', () => ({
       findUnique: vi.fn(),
       delete: vi.fn(),
     },
+    messageActionResponse: {
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      findMany: vi.fn(),
+      update: vi.fn(),
+    },
+    workspaceAuditLog: {
+      create: vi.fn(),
+    },
     workspace: {
       findUnique: vi.fn(),
     },
@@ -110,5 +119,67 @@ describe('MessagesService', () => {
     await expect(
       service.createMessage('user-1', { channelId: 'chan-2', content: 'hack' })
     ).rejects.toThrow('You do not have permission to send messages to this private channel');
+  });
+
+  describe('processActionResponse', () => {
+    it('should process action response and trigger webhooks', async () => {
+      const mockMessage = {
+        id: 'msg-100',
+        content: 'Approval required',
+        actions: [{ id: 'action-db-1', actionId: 'approve', label: 'Approve' }],
+        metadata: { callbackUrl: 'https://example.com/callback' },
+        channel: {
+          id: 'chan-1',
+          workspace: { id: 'ws-1', name: 'Acme' },
+        },
+      };
+
+      const mockResponse = {
+        id: 'resp-1',
+        actionId: 'action-db-1',
+        messageId: 'msg-100',
+        userId: 'user-1',
+        actionValue: 'approve',
+        respondedAt: new Date(),
+        user: { id: 'user-1', name: 'Alice', email: 'alice@example.com', avatar: null },
+        action: { id: 'action-db-1', actionId: 'approve', label: 'Approve' },
+      };
+
+      (prisma.message.findUnique as any).mockResolvedValue(mockMessage);
+      (prisma.messageActionResponse.findUnique as any).mockResolvedValue(null);
+      (prisma.messageActionResponse.create as any).mockResolvedValue(mockResponse);
+      (prisma.workspaceAuditLog.create as any).mockResolvedValue({});
+
+      const result = await service.processActionResponse('user-1', 'msg-100', {
+        actionId: 'approve',
+        comment: 'LGTM',
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.response).toEqual(mockResponse);
+    });
+
+    it('should throw NotFoundException if message is not found', async () => {
+      (prisma.message.findUnique as any).mockResolvedValue(null);
+
+      await expect(
+        service.processActionResponse('user-1', 'invalid-msg', { actionId: 'approve' })
+      ).rejects.toThrow('Message not found');
+    });
+
+    it('should throw BadRequestException if action was already responded', async () => {
+      const mockMessage = {
+        id: 'msg-100',
+        actions: [{ id: 'action-db-1', actionId: 'approve', label: 'Approve' }],
+        channel: { id: 'chan-1', workspace: { id: 'ws-1' } },
+      };
+
+      (prisma.message.findUnique as any).mockResolvedValue(mockMessage);
+      (prisma.messageActionResponse.findUnique as any).mockResolvedValue({ id: 'resp-existing' });
+
+      await expect(
+        service.processActionResponse('user-1', 'msg-100', { actionId: 'approve' })
+      ).rejects.toThrow('Action already responded');
+    });
   });
 });

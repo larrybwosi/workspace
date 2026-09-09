@@ -78,19 +78,23 @@ export class WebhooksService {
           });
         } catch (error: any) {
           // Log failure
-          await prisma.workspaceWebhookLog.create({
-            data: {
-              webhookId: webhook.id,
-              event: eventType,
-              payload: event as any,
-              response: {
-                status: error.response?.status,
-                message: error.message,
-                data: error.response?.data,
-              } as any,
-              success: false,
-            },
-          });
+          try {
+            await prisma.workspaceWebhookLog.create({
+              data: {
+                webhookId: webhook.id,
+                event: eventType,
+                payload: event as any,
+                response: {
+                  status: error.response?.status,
+                  message: error.message,
+                  data: error.response?.data,
+                } as any,
+                success: false,
+              },
+            });
+          } catch (logErr) {
+            this.logger.error('Failed to log workspace webhook delivery failure:', logErr);
+          }
         }
       });
 
