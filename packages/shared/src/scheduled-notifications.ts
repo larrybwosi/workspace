@@ -1,5 +1,5 @@
 import { prisma, Prisma } from '@repo/database';
-import { createNotification } from './notifications';
+import { createNotification, createNotifications, NotificationPayload } from './notifications';
 
 export interface ScheduledNotificationConfig {
   userId: string;
@@ -375,6 +375,13 @@ export async function processScheduledCalls() {
   }
 }
 
+/**
+ * ⚡ Performance Optimization:
+ * Batches scheduled call participant notifications and restricts workspace query selection.
+ * Replaces full model over-fetching with `select: { slug: true }`.
+ * Replaces O(N) sequential database writes and serial dispatches with `createNotifications`
+ * which performs O(1) batch creation (`createManyAndReturn`) and parallel real-time/push dispatches.
+ */
 async function notifyCallParticipants(call: any, timeLabel: string) {
   const { workspaceId, channelId, title, initiator } = call;
 
@@ -394,12 +401,18 @@ async function notifyCallParticipants(call: any, timeLabel: string) {
     userIds = members.map(m => m.userId);
   }
 
-  const workspace = workspaceId ? await prisma.workspace.findUnique({ where: { id: workspaceId } }) : null;
+  const workspace = workspaceId
+    ? await prisma.workspace.findUnique({
+        where: { id: workspaceId },
+        select: { slug: true },
+      })
+    : null;
 
+  const payloads: NotificationPayload[] = [];
   for (const userId of userIds) {
     if (userId === initiator?.id) continue;
 
-    await createNotification({
+    payloads.push({
       userId,
       type: 'system',
       title: `Call: ${title}`,
@@ -412,5 +425,9 @@ async function notifyCallParticipants(call: any, timeLabel: string) {
         type: call.type,
       },
     });
+  }
+
+  if (payloads.length > 0) {
+    await createNotifications(payloads);
   }
 }
