@@ -1,3 +1,7 @@
 ## 2026-09-07 - Enforcement of `isPublic` Authorization Check on Workspace Self-Join Endpoint
 **Learning:** `POST /workspaces/:slug/join` previously fetched the workspace and allowed any authenticated user to create a workspace membership (`role: member`), ignoring the `workspace.isPublic` flag. Existing members were returned directly, but non-members could bypass workspace invites for private workspaces simply by supplying the target slug (BOLA / Broken Object Level Authorization).
 **Action:** When implementing workspace/resource join operations, always explicitly verify public visibility (`isPublic: true`) or valid invitation tokens before instantiating resource membership records for non-members.
+
+## 2026-09-08 - Enforce Author Ownership and Channel Matching on Message Mutation and Deletion Routes
+**Learning:** `DELETE /channels/:channelId/messages/:messageId` in `ChannelsController` did not pass user context to `ChannelsService.deleteMessage`, allowing any authenticated user to delete any message by ID across channels. Additionally, `ChannelsService.updateMessage` performed direct updates without validating that `existingMessage.userId === userId` or `existingMessage.channelId === channelId` (BOLA / Broken Object Level Authorization).
+**Action:** When creating resource update or deletion endpoints, always extract `@CurrentUser()` and verify both resource-to-parent scoping (e.g. `message.channelId === channelId`) and ownership/admin authorization prior to performing mutations.
