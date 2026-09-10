@@ -13,12 +13,28 @@ import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { User } from '@repo/database';
 import { DmsService } from './dms.service';
-import { IsString, IsArray } from 'class-validator';
+import { IsString, IsArray, IsOptional } from 'class-validator';
 
 class CreateDmDto {
   @IsString()
   @ApiProperty({ example: 'user_123', description: 'The ID of the user to start a DM with' })
   userId: string;
+}
+
+class CreateDmMessageDto {
+  @IsString()
+  @ApiProperty({ example: 'Hello there!', description: 'The content of the direct message' })
+  content: string;
+
+  @IsOptional()
+  @IsString()
+  @ApiProperty({ example: 'msg_123', required: false, description: 'Optional message ID being replied to' })
+  replyToId?: string;
+
+  @IsOptional()
+  @IsArray()
+  @ApiProperty({ required: false, description: 'Optional list of file attachments' })
+  attachments?: any[];
 }
 
 class UpdateDmMessageDto {
@@ -73,8 +89,9 @@ export class DmsController {
   @ApiOperation({ summary: 'Delete a DM conversation' })
   @ApiParam({ name: 'conversationId', description: 'The conversation ID' })
   @ApiResponse({ status: 200, description: 'Conversation deleted successfully' })
-  async deleteDm(@Param('conversationId') conversationId: string) {
-    return this.dmsService.deleteDm(conversationId);
+  async deleteDm(@Param('conversationId') conversationId: string, @CurrentUser() user: User) {
+    // Security: Pass requesting user ID to prevent Broken Object Level Authorization (BOLA/IDOR)
+    return this.dmsService.deleteDm(conversationId, user.id);
   }
 
   @Get(':conversationId/messages')
@@ -95,8 +112,13 @@ export class DmsController {
   @Post(':conversationId/messages')
   @ApiOperation({ summary: 'Send a message in a DM' })
   @ApiParam({ name: 'conversationId', description: 'The conversation ID' })
+  @ApiBody({ type: CreateDmMessageDto })
   @ApiResponse({ status: 201, description: 'Message sent' })
-  async createMessage(@Param('conversationId') conversationId: string, @CurrentUser() user: User, @Body() body: any) {
+  async createMessage(
+    @Param('conversationId') conversationId: string,
+    @CurrentUser() user: User,
+    @Body() body: CreateDmMessageDto
+  ) {
     return this.dmsService.createMessage(conversationId, user.id, body);
   }
 
@@ -120,8 +142,13 @@ export class DmsController {
   @ApiParam({ name: 'conversationId', description: 'The conversation ID' })
   @ApiParam({ name: 'messageId', description: 'The message ID' })
   @ApiResponse({ status: 200, description: 'Message deleted' })
-  async deleteMessage(@Param('conversationId') conversationId: string, @Param('messageId') messageId: string) {
-    return this.dmsService.deleteMessage(conversationId, messageId);
+  async deleteMessage(
+    @Param('conversationId') conversationId: string,
+    @Param('messageId') messageId: string,
+    @CurrentUser() user: User
+  ) {
+    // Security: Pass requesting user ID to enforce author ownership check and mitigate BOLA/IDOR
+    return this.dmsService.deleteMessage(conversationId, messageId, user.id);
   }
 
   @Post(':conversationId/messages/read')

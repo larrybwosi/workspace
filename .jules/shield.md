@@ -5,3 +5,7 @@
 ## 2026-09-08 - Enforce Author Ownership and Channel Matching on Message Mutation and Deletion Routes
 **Learning:** `DELETE /channels/:channelId/messages/:messageId` in `ChannelsController` did not pass user context to `ChannelsService.deleteMessage`, allowing any authenticated user to delete any message by ID across channels. Additionally, `ChannelsService.updateMessage` performed direct updates without validating that `existingMessage.userId === userId` or `existingMessage.channelId === channelId` (BOLA / Broken Object Level Authorization).
 **Action:** When creating resource update or deletion endpoints, always extract `@CurrentUser()` and verify both resource-to-parent scoping (e.g. `message.channelId === channelId`) and ownership/admin authorization prior to performing mutations.
+
+## 2026-09-09 - Direct Message (DM) Authorization and Scoping Enforcement
+**Learning:** `DELETE /dms/:conversationId` and `DELETE /dms/:conversationId/messages/:messageId` in `DmsController` allowed any authenticated user to delete DM conversations or messages without validating user participation or author ownership. Furthermore, `createMessage` and `updateMessage` lacked participant verification and conversation scoping (`message.dmId === conversationId`), exposing endpoints to BOLA/IDOR attacks.
+**Action:** Always extract requesting user ID in controller routes and explicitly verify participant membership (`participant1Id === userId || participant2Id === userId`) and author ownership (`senderId === userId`) in service methods before executing mutations.
