@@ -334,6 +334,17 @@ export class TeamsController {
       throw new ForbiddenException('Forbidden');
     }
 
+    // Security Mitigation (BOLA / IDOR):
+    // Ensure team exists and strictly belongs to the current workspace before mutating members.
+    const team = await prisma.workspaceTeam.findUnique({
+      where: { id: teamId },
+      select: { workspaceId: true },
+    });
+
+    if (!team || team.workspaceId !== workspace.id) {
+      throw new NotFoundException('Team not found in this workspace');
+    }
+
     const teamMember = await prisma.workspaceTeamMember.create({
       data: {
         teamId,
@@ -383,6 +394,17 @@ export class TeamsController {
 
     if (!member || !['owner', 'admin'].includes(member.role)) {
       throw new ForbiddenException('Forbidden');
+    }
+
+    // Security Mitigation (BOLA / IDOR):
+    // Ensure team exists and strictly belongs to the current workspace before deleting members.
+    const team = await prisma.workspaceTeam.findUnique({
+      where: { id: teamId },
+      select: { workspaceId: true },
+    });
+
+    if (!team || team.workspaceId !== workspace.id) {
+      throw new NotFoundException('Team not found in this workspace');
     }
 
     await prisma.workspaceTeamMember.delete({
