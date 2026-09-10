@@ -516,11 +516,17 @@ export class V3ApplicationsController {
 
         let teamId: string | null = null;
         if (def.teamName) {
-          let team = await prisma.workspaceTeam.findFirst({
-            where: { workspaceId, name: def.teamName },
+          const teamSlug = def.teamName.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
+          /**
+           * ⚡ Performance Optimization:
+           * Replaces `prisma.workspaceTeam.findFirst` with a direct O(1) point lookup on `workspaceId_slug`.
+           * Compound unique index `@@unique([workspaceId, slug])` enables direct B-tree point lookup
+           * instead of multi-column un-indexed field scans.
+           */
+          let team = await prisma.workspaceTeam.findUnique({
+            where: { workspaceId_slug: { workspaceId, slug: teamSlug } },
           });
           if (!team) {
-            const teamSlug = def.teamName.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
             team = await prisma.workspaceTeam.create({
               data: {
                 workspaceId,
@@ -535,12 +541,18 @@ export class V3ApplicationsController {
           teamId = team.id;
         }
 
-        let channel = await prisma.channel.findFirst({
-          where: { workspaceId, name: def.channelName },
+        const channelSlug = def.channelName.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
+        /**
+         * ⚡ Performance Optimization:
+         * Replaces `prisma.channel.findFirst` with a direct O(1) point lookup on `workspaceId_slug`.
+         * Compound unique index `@@unique([workspaceId, slug])` enables direct B-tree point lookup
+         * instead of multi-column un-indexed field scans.
+         */
+        let channel = await prisma.channel.findUnique({
+          where: { workspaceId_slug: { workspaceId, slug: channelSlug } },
         });
 
         if (!channel) {
-          const channelSlug = def.channelName.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
           channel = await prisma.channel.create({
             data: {
               workspaceId,
