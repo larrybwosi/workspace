@@ -1,5 +1,6 @@
-import { Injectable, ForbiddenException, NotFoundException, Logger } from '@nestjs/common';
+import { Injectable, ForbiddenException, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { prisma } from '@repo/database';
+import { CustomMessageSchema } from '@repo/shared';
 import {
   extractUserMentions,
   extractChannelMentions,
@@ -187,6 +188,17 @@ export class ChannelsService {
             mention: true,
           },
         },
+        actions: {
+          select: {
+            id: true,
+            actionId: true,
+            label: true,
+            style: true,
+            value: true,
+            disabled: true,
+            order: true,
+          },
+        },
         readBy: {
           where: {
             userId,
@@ -263,7 +275,34 @@ export class ChannelsService {
   }
 
   async createMessage(channelId: string, userId: string, body: any) {
-    const { content, messageType, metadata, replyToId, attachments, stickerId } = body;
+    const { content, messageType, metadata, customMessage, actions, replyToId, attachments, stickerId } = body;
+
+    // Validate custom message schema if customMessage object is provided
+    const schemaToValidate = customMessage || (['custom', 'approval', 'report', 'form', 'survey', 'task_card'].includes(messageType) ? metadata?.customMessage || metadata : null);
+    if (schemaToValidate && typeof schemaToValidate === 'object' && schemaToValidate.root && schemaToValidate.type) {
+      const validationResult = CustomMessageSchema.safeParse(schemaToValidate);
+      if (!validationResult.success) {
+        const errorMsgs = validationResult.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join(', ');
+        throw new BadRequestException(`Invalid CustomMessage schema: ${errorMsgs}`);
+      }
+    }
+
+    const mergedMetadata = {
+      ...(metadata || {}),
+      ...(customMessage ? { customMessage } : {}),
+      stickerId,
+    };
+
+    const actionsToCreateRaw = actions || customMessage?.actions || [];
+    const actionsToCreate = Array.isArray(actionsToCreateRaw)
+      ? actionsToCreateRaw.map((act: any, idx: number) => ({
+          actionId: act.id || act.actionId,
+          label: act.label,
+          style: (act.style || act.type || 'default').toLowerCase(),
+          value: act.value || (act.handler?.payload ? JSON.stringify(act.handler.payload) : undefined),
+          order: act.order ?? idx,
+        }))
+      : [];
 
     const channel = await prisma.channel.findUnique({
       where: { id: channelId },
@@ -349,9 +388,9 @@ export class ChannelsService {
         data: {
           channelId,
           userId,
-          content,
-          messageType: messageType || 'standard',
-          metadata: { ...metadata, stickerId },
+          content: content || customMessage?.context?.title || 'Custom Message',
+          messageType: messageType || (customMessage ? 'custom' : 'standard'),
+          metadata: mergedMetadata,
           replyToId,
           depth: replyToId ? 1 : 0,
           mentions: {
@@ -362,6 +401,9 @@ export class ChannelsService {
               ...(mentionsHere ? [{ mention: '@here' }] : []),
             ],
           },
+          actions: actionsToCreate.length > 0 ? {
+            create: actionsToCreate,
+          } : undefined,
           attachments: attachments
             ? {
                 create: attachments.map((att: any) => ({
@@ -378,6 +420,7 @@ export class ChannelsService {
           reactions: true,
           attachments: true,
           mentions: true,
+          actions: true,
         },
       });
 

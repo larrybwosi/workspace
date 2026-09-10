@@ -28,6 +28,8 @@ import { z } from 'zod';
 import { IsString, IsOptional, IsEmail, IsArray, IsEnum } from 'class-validator';
 import Redis from 'ioredis';
 import * as crypto from 'crypto';
+import axios from 'axios';
+import { AblyChannels, publishRealtime } from '@repo/shared/server';
 
 export class V3UpdateWorkspaceDto {
   @IsString()
@@ -356,6 +358,74 @@ const v3UpdateChannelMemberSchema = z.object({
   permissions: z.union([z.string(), z.number()]).optional(),
 });
 
+export class V3MessageActionDto {
+  @IsString()
+  @ApiProperty({ example: 'approve', description: 'Unique action identifier' })
+  id: string;
+
+  @IsString()
+  @ApiProperty({ example: 'Approve', description: 'Button text label' })
+  label: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ example: 'PRIMARY', enum: ['PRIMARY', 'SECONDARY', 'DESTRUCTIVE', 'GHOST'], required: false })
+  type?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ example: 'Check', required: false })
+  icon?: string;
+
+  @IsOptional()
+  @ApiProperty({ required: false, description: 'Action handler configuration' })
+  handler?: any;
+}
+
+export class V3CreateCustomMessageDto {
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ example: 'Approval Request', description: 'Plain text fallback or message title content', required: false })
+  content?: string;
+
+  @IsOptional()
+  @ApiProperty({
+    description: 'Custom message schema object conforming to CustomMessageSchema',
+    example: {
+      version: 'v1',
+      type: 'APPROVAL',
+      context: { title: 'Expense Claim', priority: 'high' },
+      root: { type: 'Layout.Card', children: [] },
+      actions: [{ id: 'approve', label: 'Approve', type: 'PRIMARY' }],
+    },
+  })
+  customMessage?: any;
+
+  @IsArray()
+  @IsOptional()
+  @ApiProperty({ type: [V3MessageActionDto], required: false, description: 'Interactive action buttons' })
+  actions?: V3MessageActionDto[];
+
+  @IsOptional()
+  @ApiProperty({ required: false, description: 'Additional message metadata such as callbackUrl' })
+  metadata?: any;
+}
+
+export class V3ActionResponseDto {
+  @IsString()
+  @ApiProperty({ example: 'approve', description: 'Action identifier string' })
+  actionId: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ example: 'Approved for deployment', required: false })
+  comment?: string;
+
+  @IsOptional()
+  @ApiProperty({ required: false, description: 'Optional form state or payload metadata' })
+  metadata?: any;
+}
+
 @ApiTags('V3 Workspaces')
 @ApiBearerAuth()
 @AllowAnonymous()
@@ -430,6 +500,189 @@ export class V3WorkspacesController {
       data,
       timestamp: new Date().toISOString(),
     };
+  }
+
+  private async processActionTrigger(
+    workspaceId: string,
+    workspaceName: string,
+    workspaceSlug: string,
+    channelId: string,
+    messageId: string,
+    userId: string,
+    actionIdParam: string,
+    comment?: string,
+    metadataPayload?: any
+  ) {
+    const message = await prisma.message.findUnique({
+      where: { id: messageId },
+      include: {
+        actions: true,
+        channel: true,
+      },
+    });
+
+    if (!message || message.channelId !== channelId || message.channel.workspaceId !== workspaceId) {
+      throw new NotFoundException('Message not found in this channel');
+    }
+
+    let action = message.actions.find(a => a.actionId === actionIdParam || a.id === actionIdParam);
+
+    if (!action) {
+      // Auto-upsert action if specified in metadata or customMessage
+      const customMsgActions = (message.metadata as any)?.customMessage?.actions || (message.metadata as any)?.actions;
+      if (Array.isArray(customMsgActions)) {
+        const metaAct = customMsgActions.find((a: any) => a.id === actionIdParam || a.actionId === actionIdParam);
+        if (metaAct) {
+          action = await prisma.messageAction.upsert({
+            where: { messageId_actionId: { messageId: message.id, actionId: metaAct.id || metaAct.actionId } },
+            update: {},
+            create: {
+              messageId: message.id,
+              actionId: metaAct.id || metaAct.actionId,
+              label: metaAct.label || metaAct.id || 'Action',
+              style: (metaAct.type || metaAct.style || 'default').toLowerCase(),
+              value: metaAct.value || (metaAct.handler?.payload ? JSON.stringify(metaAct.handler.payload) : undefined),
+            },
+          });
+        }
+      }
+    }
+
+    if (!action) {
+      throw new NotFoundException(`Action "${actionIdParam}" not found on message`);
+    }
+
+    const existingResponse = await prisma.messageActionResponse.findUnique({
+      where: {
+        actionId_userId: {
+          actionId: action.id,
+          userId,
+        },
+      },
+    });
+
+    if (existingResponse) {
+      throw new BadRequestException('Action already responded by this user');
+    }
+
+    const callbackUrl =
+      (message.metadata as any)?.callbackUrl ||
+      (message.metadata as any)?.customMessage?.metadata?.callbackUrl ||
+      (action as any)?.handler?.url;
+
+    const response = await prisma.messageActionResponse.create({
+      data: {
+        actionId: action.id,
+        messageId: message.id,
+        userId,
+        actionValue: actionIdParam,
+        comment: comment || null,
+        metadata: metadataPayload || {},
+        webhookUrl: callbackUrl || null,
+        webhookSent: false,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatar: true,
+          },
+        },
+        action: true,
+      },
+    });
+
+    // Send callback webhook if callbackUrl is present
+    if (callbackUrl) {
+      const webhookPayload = {
+        event: 'message.action_response',
+        timestamp: new Date().toISOString(),
+        workspace: {
+          id: workspaceId,
+          name: workspaceName,
+          slug: workspaceSlug,
+        },
+        message: {
+          id: message.id,
+          content: message.content,
+          channelId: message.channelId,
+        },
+        action: {
+          id: actionIdParam,
+          label: action.label,
+        },
+        response: {
+          id: response.id,
+          userId,
+          userName: response.user?.name,
+          userEmail: response.user?.email,
+          actionValue: actionIdParam,
+          comment,
+          metadata: metadataPayload,
+          respondedAt: response.respondedAt.toISOString(),
+        },
+      };
+
+      const secret = process.env.WEBHOOK_SECRET || 'default_secret';
+      const signature = crypto.createHmac('sha256', secret).update(JSON.stringify(webhookPayload)).digest('hex');
+
+      axios
+        .post(callbackUrl, webhookPayload, {
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Webhook-Event': 'message.action_response',
+            'X-Webhook-Signature': `sha256=${signature}`,
+          },
+          timeout: 5000,
+        })
+        .then(async () => {
+          await prisma.messageActionResponse.update({
+            where: { id: response.id },
+            data: { webhookSent: true },
+          });
+        })
+        .catch(err => this.logger.error('Failed to send message action callback webhook:', err));
+    }
+
+    // Dispatch event to workspace webhooks
+    if (this.webhooksService) {
+      this.webhooksService
+        .dispatch(workspaceId, 'message.action_response', {
+          messageId: message.id,
+          actionId: actionIdParam,
+          response,
+        })
+        .catch(err => this.logger.error('Failed to dispatch workspace action response webhook:', err));
+    }
+
+    // Broadcast realtime event
+    publishRealtime(AblyChannels.channel(channelId), 'message.action_response', {
+      messageId: message.id,
+      actionId: actionIdParam,
+      response,
+    }).catch(err => this.logger.error('Failed to publish action response realtime event:', err));
+
+    // Audit log
+    prisma.workspaceAuditLog
+      .create({
+        data: {
+          workspaceId,
+          userId,
+          action: 'message.action_responded',
+          resource: 'message_action',
+          resourceId: response.id,
+          metadata: {
+            messageId: message.id,
+            actionId: actionIdParam,
+            channelId,
+          },
+        },
+      })
+      .catch(err => this.logger.error('Failed to create action response audit log:', err));
+
+    return response;
   }
 
   @Get()
@@ -2157,6 +2410,37 @@ When provisioned via M2M:
     return this.formatResponse({ message });
   }
 
+  @Post(':slug/channels/:channelId/messages/custom')
+  @ApiOperation({
+    summary: 'Send a custom message to a channel (Enterprise M2M V3)',
+    description: 'Send a structured custom message conforming to CustomMessageSchema to a channel. Requires messages:send scope.',
+  })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'channelId', description: 'The channel ID' })
+  @ApiBody({ type: V3CreateCustomMessageDto })
+  @ApiResponse({ status: 201, description: 'Custom message created successfully.' })
+  async createChannelCustomMessage(
+    @V3Context() context: ApiV3Context,
+    @Param('slug') slug: string,
+    @Param('channelId') channelId: string,
+    @Body() body: V3CreateCustomMessageDto
+  ) {
+    if (!context.scopes.includes('messages:send') && !context.scopes.includes('messages:write') && !context.scopes.includes('*')) {
+      throw new ForbiddenException('Missing messages:send scope');
+    }
+
+    const workspace = await this.resolveWorkspaceAndCheckAccess(context, slug);
+    const userId = await this.resolveEffectiveUserId(context, workspace.id);
+
+    const payload = {
+      ...body,
+      messageType: body.customMessage?.type ? body.customMessage.type.toLowerCase() : 'custom',
+    };
+
+    const message = await this.channelsService.createMessage(channelId, userId, payload);
+    return this.formatResponse({ message });
+  }
+
   @Patch(':slug/channels/:channelId/messages/:messageId')
   @ApiOperation({
     summary: 'Update a channel message (Enterprise M2M)',
@@ -2262,5 +2546,139 @@ When provisioned via M2M:
 
     const result = await this.channelsService.removeReaction(channelId, messageId, userId, emoji);
     return this.formatResponse(result);
+  }
+
+  @Post(':slug/channels/:channelId/messages/:messageId/actions')
+  @ApiOperation({
+    summary: 'Submit response to a message action (Enterprise M2M V3)',
+    description: 'Trigger an action on a message and submit user response or form state. Dispatches callback webhooks if configured. Requires messages:send scope.',
+  })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'channelId', description: 'The channel ID' })
+  @ApiParam({ name: 'messageId', description: 'The message ID' })
+  @ApiBody({ type: V3ActionResponseDto })
+  @ApiResponse({ status: 201, description: 'Action response recorded successfully.' })
+  async triggerMessageAction(
+    @V3Context() context: ApiV3Context,
+    @Param('slug') slug: string,
+    @Param('channelId') channelId: string,
+    @Param('messageId') messageId: string,
+    @Body() body: V3ActionResponseDto
+  ) {
+    if (!context.scopes.includes('messages:send') && !context.scopes.includes('messages:write') && !context.scopes.includes('*')) {
+      throw new ForbiddenException('Missing messages:send scope');
+    }
+
+    const workspace = await this.resolveWorkspaceAndCheckAccess(context, slug);
+    const userId = await this.resolveEffectiveUserId(context, workspace.id);
+
+    const response = await this.processActionTrigger(
+      workspace.id,
+      workspace.name,
+      workspace.slug,
+      channelId,
+      messageId,
+      userId,
+      body.actionId,
+      body.comment,
+      body.metadata
+    );
+
+    return this.formatResponse({ response });
+  }
+
+  @Post(':slug/channels/:channelId/messages/:messageId/actions/:actionId')
+  @ApiOperation({
+    summary: 'Trigger specific message action by action ID (Enterprise M2M V3)',
+    description: 'Trigger a specific action on a message by action ID in path. Dispatches callback webhooks. Requires messages:send scope.',
+  })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'channelId', description: 'The channel ID' })
+  @ApiParam({ name: 'messageId', description: 'The message ID' })
+  @ApiParam({ name: 'actionId', description: 'The action ID string' })
+  @ApiResponse({ status: 201, description: 'Action triggered and response recorded.' })
+  async triggerSpecificMessageAction(
+    @V3Context() context: ApiV3Context,
+    @Param('slug') slug: string,
+    @Param('channelId') channelId: string,
+    @Param('messageId') messageId: string,
+    @Param('actionId') actionIdParam: string,
+    @Body() body: any
+  ) {
+    if (!context.scopes.includes('messages:send') && !context.scopes.includes('messages:write') && !context.scopes.includes('*')) {
+      throw new ForbiddenException('Missing messages:send scope');
+    }
+
+    const workspace = await this.resolveWorkspaceAndCheckAccess(context, slug);
+    const userId = await this.resolveEffectiveUserId(context, workspace.id);
+
+    const metadataPayload = {
+      ...(body?.payload || {}),
+      ...(body?.formState ? { formState: body.formState } : {}),
+      ...(body?.metadata || {}),
+    };
+
+    const response = await this.processActionTrigger(
+      workspace.id,
+      workspace.name,
+      workspace.slug,
+      channelId,
+      messageId,
+      userId,
+      actionIdParam,
+      body?.comment,
+      metadataPayload
+    );
+
+    return this.formatResponse({ response });
+  }
+
+  @Get(':slug/channels/:channelId/messages/:messageId/actions')
+  @ApiOperation({
+    summary: 'Get responses for message actions (Enterprise M2M V3)',
+    description: 'Retrieve all recorded user responses and form submissions for a message. Requires messages:read scope.',
+  })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiParam({ name: 'channelId', description: 'The channel ID' })
+  @ApiParam({ name: 'messageId', description: 'The message ID' })
+  @ApiResponse({ status: 200, description: 'List of action responses returned successfully.' })
+  async getMessageActionResponses(
+    @V3Context() context: ApiV3Context,
+    @Param('slug') slug: string,
+    @Param('channelId') channelId: string,
+    @Param('messageId') messageId: string
+  ) {
+    if (!context.scopes.includes('messages:read') && !context.scopes.includes('*')) {
+      throw new ForbiddenException('Missing messages:read scope');
+    }
+
+    const workspace = await this.resolveWorkspaceAndCheckAccess(context, slug);
+
+    const message = await prisma.message.findUnique({
+      where: { id: messageId },
+      select: { id: true, channelId: true, channel: { select: { workspaceId: true } } },
+    });
+
+    if (!message || message.channelId !== channelId || message.channel.workspaceId !== workspace.id) {
+      throw new NotFoundException('Message not found in this channel');
+    }
+
+    const responses = await prisma.messageActionResponse.findMany({
+      where: { messageId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatar: true,
+          },
+        },
+        action: true,
+      },
+      orderBy: { respondedAt: 'desc' },
+    });
+
+    return this.formatResponse({ responses });
   }
 }

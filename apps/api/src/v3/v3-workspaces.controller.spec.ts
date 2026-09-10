@@ -60,6 +60,26 @@ vi.mock('@repo/database', () => ({
     workspaceAuditLog: {
       create: vi.fn().mockReturnValue({ catch: vi.fn() }),
     },
+    message: {
+      findUnique: vi.fn(),
+      findMany: vi.fn(),
+      create: vi.fn(),
+    },
+    messageAction: {
+      findUnique: vi.fn(),
+      upsert: vi.fn(),
+      create: vi.fn(),
+    },
+    messageActionResponse: {
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      findMany: vi.fn(),
+    },
+    botApplication: {
+      findFirst: vi.fn(),
+      create: vi.fn(),
+    },
   },
 }));
 
@@ -1102,6 +1122,184 @@ describe('V3WorkspacesController', () => {
               { user: { workspaceMemberships: { some: { id: 'wsm-123', workspaceId: mockWorkspace.id } } } },
             ],
           },
+        });
+      });
+    });
+  });
+
+  describe('custom messages and action responses (V3 M2M)', () => {
+    const context = {
+      scopes: ['messages:send', 'messages:read'],
+      workspaceId: 'ws-123',
+      userId: 'usr-123',
+    };
+
+    const mockWorkspace = {
+      id: 'ws-123',
+      name: 'Acme Workspace',
+      slug: 'acme-slug',
+      organizationId: 'org-abc',
+      ownerId: 'usr-123',
+    };
+
+    describe('createChannelCustomMessage', () => {
+      it('should create custom message with valid CustomMessageSchema and actions', async () => {
+        const body = {
+          content: 'Approval Request',
+          customMessage: {
+            version: 'v1',
+            type: 'APPROVAL',
+            context: { title: 'Expense Claim', priority: 'high' },
+            root: { type: 'Layout.Card', children: [] },
+            actions: [
+              { id: 'approve', label: 'Approve', type: 'PRIMARY' },
+              { id: 'reject', label: 'Reject', type: 'DESTRUCTIVE' },
+            ],
+          },
+        };
+
+        (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
+
+        const result = await controller.createChannelCustomMessage(context as any, 'acme-slug', 'ch-1', body as any);
+
+        expect(result.success).toBe(true);
+        expect(result.data.message).toBeDefined();
+      });
+
+      it('should throw ForbiddenException if missing messages:send scope', async () => {
+        const restrictedContext = { ...context, scopes: ['channels:read'] };
+
+        await expect(
+          controller.createChannelCustomMessage(restrictedContext as any, 'acme-slug', 'ch-1', {} as any)
+        ).rejects.toThrow('Missing messages:send scope');
+      });
+    });
+
+    describe('triggerMessageAction & getMessageActionResponses', () => {
+      it('should record response to an action and dispatch webhooks', async () => {
+        const mockMessage = {
+          id: 'msg-1',
+          content: 'Approval Request',
+          channelId: 'ch-1',
+          metadata: { callbackUrl: 'https://example.com/webhook-callback' },
+          actions: [
+            { id: 'act-db-1', actionId: 'approve', label: 'Approve', style: 'primary' },
+          ],
+          channel: { id: 'ch-1', workspaceId: 'ws-123' },
+        };
+
+        const mockResponse = {
+          id: 'resp-1',
+          actionId: 'act-db-1',
+          messageId: 'msg-1',
+          userId: 'usr-123',
+          actionValue: 'approve',
+          comment: 'Approved!',
+          metadata: {},
+          respondedAt: new Date(),
+          user: { id: 'usr-123', name: 'Alice', email: 'alice@acme.com', avatar: null },
+          action: { id: 'act-db-1', actionId: 'approve', label: 'Approve' },
+        };
+
+        (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
+        (prisma.message.findUnique as any).mockResolvedValue(mockMessage);
+        (prisma.messageActionResponse.findUnique as any).mockResolvedValue(null);
+        (prisma.messageActionResponse.create as any).mockResolvedValue(mockResponse);
+
+        const result = await controller.triggerMessageAction(context as any, 'acme-slug', 'ch-1', 'msg-1', {
+          actionId: 'approve',
+          comment: 'Approved!',
+        });
+
+        expect(result.success).toBe(true);
+        expect(result.data.response).toEqual(mockResponse);
+        expect(prisma.messageActionResponse.create).toHaveBeenCalledWith({
+          data: expect.objectContaining({
+            actionId: 'act-db-1',
+            messageId: 'msg-1',
+            userId: 'usr-123',
+            actionValue: 'approve',
+            comment: 'Approved!',
+          }),
+          include: expect.any(Object),
+        });
+      });
+
+      it('should trigger specific action via path param', async () => {
+        const mockMessage = {
+          id: 'msg-1',
+          content: 'Approval Request',
+          channelId: 'ch-1',
+          metadata: {},
+          actions: [
+            { id: 'act-db-1', actionId: 'reject', label: 'Reject', style: 'danger' },
+          ],
+          channel: { id: 'ch-1', workspaceId: 'ws-123' },
+        };
+
+        const mockResponse = {
+          id: 'resp-2',
+          actionId: 'act-db-1',
+          messageId: 'msg-1',
+          userId: 'usr-123',
+          actionValue: 'reject',
+          comment: 'Rejected',
+          metadata: {},
+          respondedAt: new Date(),
+          user: { id: 'usr-123', name: 'Alice', email: 'alice@acme.com', avatar: null },
+          action: { id: 'act-db-1', actionId: 'reject', label: 'Reject' },
+        };
+
+        (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
+        (prisma.message.findUnique as any).mockResolvedValue(mockMessage);
+        (prisma.messageActionResponse.findUnique as any).mockResolvedValue(null);
+        (prisma.messageActionResponse.create as any).mockResolvedValue(mockResponse);
+
+        const result = await controller.triggerSpecificMessageAction(
+          context as any,
+          'acme-slug',
+          'ch-1',
+          'msg-1',
+          'reject',
+          { comment: 'Rejected' }
+        );
+
+        expect(result.success).toBe(true);
+        expect(result.data.response).toEqual(mockResponse);
+      });
+
+      it('should retrieve action responses for a message', async () => {
+        const mockMessage = {
+          id: 'msg-1',
+          channelId: 'ch-1',
+          channel: { workspaceId: 'ws-123' },
+        };
+
+        const mockResponses = [
+          {
+            id: 'resp-1',
+            actionId: 'act-db-1',
+            messageId: 'msg-1',
+            userId: 'usr-123',
+            actionValue: 'approve',
+            comment: 'Approved!',
+            respondedAt: new Date(),
+            user: { id: 'usr-123', name: 'Alice', email: 'alice@acme.com', avatar: null },
+          },
+        ];
+
+        (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
+        (prisma.message.findUnique as any).mockResolvedValue(mockMessage);
+        (prisma.messageActionResponse.findMany as any).mockResolvedValue(mockResponses);
+
+        const result = await controller.getMessageActionResponses(context as any, 'acme-slug', 'ch-1', 'msg-1');
+
+        expect(result.success).toBe(true);
+        expect(result.data.responses).toEqual(mockResponses);
+        expect(prisma.messageActionResponse.findMany).toHaveBeenCalledWith({
+          where: { messageId: 'msg-1' },
+          include: expect.any(Object),
+          orderBy: { respondedAt: 'desc' },
         });
       });
     });

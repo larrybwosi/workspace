@@ -144,6 +144,7 @@ Scrymechat dispatches JSON payloads to registered URLs for subscribed events. Ev
 | Event Type | Description | Trigger Context |
 | :--- | :--- | :--- |
 | `message.sent` | A new message was posted in a channel or DM. | Message object, channel ID, author details. |
+| `message.action_response` | A user responded to an interactive custom message action button or form submission. | Message ID, action ID, user response, comment, form state. |
 | `channel.created` | A new channel was created in the workspace. | Channel ID, channel name, team, creator ID. |
 | `member.added` | A user joined or was added to the workspace. | Workspace ID, user ID, assigned role. |
 

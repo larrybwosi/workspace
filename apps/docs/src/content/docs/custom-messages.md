@@ -1,6 +1,8 @@
-# Custom Messages (v1)
+# Custom Messages (v1) & Schema Reference
 
 Scrymechat's Custom Message system allows you to build rich, interactive, and dynamic user interfaces directly within the chat. Inspired by GraphQL and Block-based UI systems, it provides an "enterprise-grade" way to extend chat functionality.
+
+Custom messages are validated using `CustomMessageSchema` in `@repo/shared` and `@scryme/chat`, enabling strict type safety, node-based component rendering, form validation, and automated webhook callbacks.
 
 ## Core Concepts
 
@@ -15,33 +17,74 @@ Scrymechat's Custom Message system allows you to build rich, interactive, and dy
 
 ## Schema Overview
 
-A custom message is defined in the message's `metadata` field.
+A custom message can be created via the V3 API `POST /v3/workspaces/:slug/channels/:channelId/messages/custom` endpoint or included in `metadata.customMessage`.
 
 ```json
 {
   "version": "v1",
-  "type": "SURVEY",
+  "type": "APPROVAL",
   "context": {
-    "title": "Feedback Survey",
-    "description": "Tell us what you think",
-    "icon": "Info",
-    "priority": "normal"
+    "title": "Expense Reimbursement Request",
+    "description": "Submitted by Jane Doe for $450.00",
+    "icon": "CheckSquare",
+    "priority": "urgent"
+  },
+  "theme": {
+    "accentColor": "#6366f1",
+    "backgroundColor": "#1e1e2e"
   },
   "root": {
     "type": "Layout.Card",
-    "children": [ ... ]
+    "children": [
+      {
+        "type": "Layout.Grid",
+        "properties": { "columns": 2 },
+        "children": [
+          { "type": "Display.Field", "properties": { "label": "Category", "value": "Travel" } },
+          { "type": "Display.Field", "properties": { "label": "Amount", "value": "$450.00" } }
+        ]
+      }
+    ]
   },
-  "actions": [ ... ],
-  "data": { ... }
+  "actions": [
+    {
+      "id": "approve",
+      "label": "Approve",
+      "type": "PRIMARY",
+      "icon": "Check",
+      "handler": {
+        "type": "CALLBACK",
+        "callbackId": "expense-approval-101",
+        "payload": { "action": "approve" },
+        "includeFormState": true
+      }
+    },
+    {
+      "id": "reject",
+      "label": "Reject",
+      "type": "DESTRUCTIVE",
+      "icon": "X",
+      "handler": {
+        "type": "CALLBACK",
+        "callbackId": "expense-approval-101",
+        "payload": { "action": "reject" },
+        "includeFormState": true
+      }
+    }
+  ],
+  "data": {
+    "claimId": "EXP-101"
+  }
 }
 ```
 
-### Context
-Defines the header of the custom message card.
-- `title`: (Required) The main heading.
-- `description`: Optional sub-heading.
-- `icon`: Optional Lucide icon name.
-- `priority`: `low`, `normal`, `high`, or `urgent`.
+### Context Object
+Defines header branding and contextual details:
+- `title`: (Required) The main card header text.
+- `description`: (Optional) Secondary subtitle or explanation.
+- `icon`: (Optional) Lucide icon name (e.g. `CheckSquare`, `FileText`, `BarChart`).
+- `color`: (Optional) Hex or CSS color string for priority accent.
+- `priority`: Priority badge level (`low`, `normal`, `high`, `urgent`).
 
 ### Variables & Interpolation
 You can use `{{variable.path}}` in most string properties. Variables are resolved from the `data` object and the current `formState`.
@@ -157,13 +200,52 @@ Actions are rendered as interactive buttons at the bottom of the card.
 }
 ```
 
-### Response Execution Flow
+## Schema Builders
 
-1. **User Interaction**: When a user clicks an action button, the client validates all active inputs on the form.
-2. **Action Dispatch**: The client sends a `POST /workspaces/:slug/messages/:messageId/actions` request with the selected `actionId`, optional user `comment`, and accumulated `formState`.
-3. **Database Log**: Scrymechat records the submission in `MessageActionResponse`.
-4. **Real-time Sync**: Broadcasts `message.action_response` over WebSocket/Ably to instantly reflect user input on all open workspace clients.
-5. **Webhook Notification**: If the custom message includes a `callbackUrl` in its `metadata`, an HTTP POST request is dispatched asynchronously to your service with an HMAC SHA-256 signature (`X-Webhook-Signature`).
+For TypeScript and SDK developers (`@repo/shared` or `@scryme/chat`), pre-built message generators facilitate type-safe card creation:
+
+### 1. `createApprovalMessage`
+Generates a standard two-action approval card:
+```typescript
+import { createApprovalMessage } from '@scryme/chat';
+
+const approval = createApprovalMessage({
+  title: 'Expense Reimbursement',
+  description: 'Requested by Jane Doe',
+  fields: [
+    { label: 'Category', value: 'Travel' },
+    { label: 'Amount', value: '$450.00' }
+  ],
+  callbackId: 'expense-auth-99'
+});
+```
+
+### 2. `createFormMessage`
+Generates interactive forms, surveys, or feedback collection cards:
+```typescript
+import { createFormMessage } from '@scryme/chat';
+
+const form = createFormMessage({
+  title: 'Quarterly Survey',
+  description: 'Tell us how we are doing',
+  fields: [
+    { id: 'rating', label: 'Satisfaction Score (1-5)', type: 'text', required: true },
+    { id: 'feedback', label: 'Comments', type: 'textarea' }
+  ],
+  submitCallbackId: 'survey-collector-v1'
+});
+```
+
+---
+
+## Response Execution & Webhook Pipeline
+
+1. **User Action**: When a user clicks an action button or submits a form, client-side input validation runs automatically.
+2. **V3 API Submission**: The client dispatches a `POST /v3/workspaces/:slug/channels/:channelId/messages/:messageId/actions` request containing `actionId`, optional `comment`, and form state.
+3. **Database Persistence**: Scrymechat records the response in `MessageActionResponse` linked to the user and message.
+4. **Callback Webhook Dispatch**: If `callbackUrl` is present in message metadata or action handler, an HTTP POST request with HMAC SHA-256 signature (`X-Webhook-Signature`) is sent to your webhook endpoint.
+5. **Workspace Event Broadcast**: A `message.action_response` event is dispatched to all workspace webhooks registered for the event.
+6. **Real-time Broadcast**: The `message.action_response` event is published over Ably / WebSockets for live UI updates across connected clients.
 
 ---
 
