@@ -11,13 +11,53 @@ interface LinkPreviewData {
   url: string;
 }
 
+const memoryCache = new Map<string, LinkPreviewData>();
+
+function getCachedPreview(url: string): LinkPreviewData | null {
+  if (memoryCache.has(url)) {
+    return memoryCache.get(url)!;
+  }
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      const stored = localStorage.getItem(`lp_${url}`);
+      if (stored) {
+        const parsed = JSON.parse(stored) as LinkPreviewData;
+        memoryCache.set(url, parsed);
+        return parsed;
+      }
+    } catch {
+      // Ignore localStorage errors
+    }
+  }
+  return null;
+}
+
+function setCachedPreview(url: string, data: LinkPreviewData) {
+  memoryCache.set(url, data);
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      localStorage.setItem(`lp_${url}`, JSON.stringify(data));
+    } catch {
+      // Ignore localStorage write quota errors
+    }
+  }
+}
+
 export function LinkPreview({ url }: { url: string }) {
-  const [preview, setPreview] = useState<LinkPreviewData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const cached = getCachedPreview(url);
+  const [preview, setPreview] = useState<LinkPreviewData | null>(cached);
+  const [loading, setLoading] = useState(!cached);
   const [error, setError] = useState(false);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
+    if (cached) {
+      setPreview(cached);
+      setLoading(false);
+      return;
+    }
+
+    let isMounted = true;
     const fetchPreview = async () => {
       try {
         let response = await fetch(`/api/link-preview?url=${encodeURIComponent(url)}`);
@@ -29,17 +69,21 @@ export function LinkPreview({ url }: { url: string }) {
         if (!response.ok) throw new Error('Failed to fetch');
         const data = await response.json();
         if (data.title || data.description || data.image) {
-          setPreview(data);
+          setCachedPreview(url, data);
+          if (isMounted) setPreview(data);
         }
       } catch (err) {
-        setError(true);
+        if (isMounted) setError(true);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
 
     fetchPreview();
-  }, [url]);
+    return () => {
+      isMounted = false;
+    };
+  }, [url, cached]);
 
   const handleCopy = (e: React.MouseEvent) => {
     e.preventDefault();

@@ -33,6 +33,10 @@ export class AppController {
     };
   }
 
+  private static linkPreviewCache = new Map<string, { data: any; expiresAt: number }>();
+  private static readonly CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+  private static readonly MAX_CACHE_SIZE = 1000;
+
   @AllowAnonymous()
   @Get('link-preview')
   @ApiOperation({ summary: 'Get link preview metadata for a URL' })
@@ -40,6 +44,11 @@ export class AppController {
   async getLinkPreview(@Query('url') url: string) {
     if (!url) {
       throw new BadRequestException('URL is required');
+    }
+
+    const cached = AppController.linkPreviewCache.get(url);
+    if (cached && cached.expiresAt > Date.now()) {
+      return cached.data;
     }
 
     try {
@@ -68,7 +77,9 @@ export class AppController {
       });
 
       if (!response.ok) {
-        return { url, title: null, description: null, image: null, siteName: null };
+        const fallbackResult = { url, title: null, description: null, image: null, siteName: null };
+        AppController.setCache(url, fallbackResult);
+        return fallbackResult;
       }
 
       const html = await response.text();
@@ -86,15 +97,33 @@ export class AppController {
       const image = getMetaTag('og:image') || getMetaTag('twitter:image');
       const siteName = getMetaTag('og:site_name');
 
-      return {
+      const result = {
         title,
         description,
         image,
         siteName,
         url,
       };
+
+      AppController.setCache(url, result);
+      return result;
     } catch (error) {
-      return { url, title: null, description: null, image: null, siteName: null };
+      const fallbackResult = { url, title: null, description: null, image: null, siteName: null };
+      AppController.setCache(url, fallbackResult);
+      return fallbackResult;
     }
+  }
+
+  private static setCache(url: string, data: any) {
+    if (AppController.linkPreviewCache.size >= AppController.MAX_CACHE_SIZE) {
+      const oldestKey = AppController.linkPreviewCache.keys().next().value;
+      if (oldestKey) {
+        AppController.linkPreviewCache.delete(oldestKey);
+      }
+    }
+    AppController.linkPreviewCache.set(url, {
+      data,
+      expiresAt: Date.now() + AppController.CACHE_TTL_MS,
+    });
   }
 }
