@@ -287,7 +287,7 @@ func VerifySignature(rawPayload []byte, secret string, headerSignature string) b
 }
 ```
 
----
+Your application **must** verify this signature using your webhook secret before processing event payloads.
 
 ## 4. Interactive Message Action Response Webhooks
 
@@ -329,10 +329,15 @@ When users interact with custom or interactive messages in chat (such as clickin
     },
     "respondedAt": "2026-09-01T12:00:00.000Z"
   }
+
+  return crypto.timingSafeEqual(expectedBuffer, actualBuffer);
 }
 ```
 
----
+#### Python (Flask / FastAPI)
+```python
+import hmac
+import hashlib
 
 ## 5. Delivery Behavior & Caching
 
