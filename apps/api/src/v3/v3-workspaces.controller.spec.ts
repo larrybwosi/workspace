@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { V3WorkspacesController } from './v3-workspaces.controller';
 import { ProvisioningService } from '../provisioning/provisioning.service';
 import { WebhooksService } from '../webhooks/webhooks.service';
+import { ChannelsService } from '../channels/channels.service';
 import { ApiV3Guard } from '../auth/api-v3.guard';
 import { ConfigService } from '@nestjs/config';
 import { vi, describe, beforeEach, it, expect } from 'vitest';
@@ -30,6 +31,7 @@ vi.mock('@repo/database', () => ({
     channelMember: {
       findMany: vi.fn(),
       findFirst: vi.fn(),
+      findUnique: vi.fn(),
       createMany: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
@@ -48,8 +50,35 @@ vi.mock('@repo/database', () => ({
       findFirst: vi.fn(),
       findUnique: vi.fn(),
     },
+    workspaceInvitation: {
+      findFirst: vi.fn(),
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      findUnique: vi.fn(),
+    },
     workspaceAuditLog: {
       create: vi.fn().mockReturnValue({ catch: vi.fn() }),
+    },
+    message: {
+      findUnique: vi.fn(),
+      findMany: vi.fn(),
+      create: vi.fn(),
+    },
+    messageAction: {
+      findUnique: vi.fn(),
+      upsert: vi.fn(),
+      create: vi.fn(),
+    },
+    messageActionResponse: {
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      findMany: vi.fn(),
+    },
+    botApplication: {
+      findFirst: vi.fn(),
+      create: vi.fn(),
     },
   },
 }));
@@ -76,10 +105,20 @@ describe('V3WorkspacesController', () => {
       pipeline: vi.fn().mockReturnValue(mockPipeline),
     };
 
+    const mockChannelsService = {
+      getMessages: vi.fn().mockResolvedValue({ messages: [], nextCursor: null }),
+      createMessage: vi.fn().mockResolvedValue({ id: 'msg_1', content: 'hello' }),
+      updateMessage: vi.fn().mockResolvedValue({ id: 'msg_1', content: 'updated' }),
+      deleteMessage: vi.fn().mockResolvedValue({ success: true }),
+      addReaction: vi.fn().mockResolvedValue({ id: 'react_1', emoji: '👍' }),
+      removeReaction: vi.fn().mockResolvedValue({ success: true }),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [V3WorkspacesController],
       providers: [
         { provide: ProvisioningService, useValue: mockProvisioningService },
+        { provide: ChannelsService, useValue: mockChannelsService },
         { provide: 'REDIS_CLIENT', useValue: redisClient },
         { provide: ConfigService, useValue: {} },
         { provide: WebhooksService, useValue: { dispatch: vi.fn().mockResolvedValue(undefined) } },
@@ -644,8 +683,9 @@ describe('V3WorkspacesController', () => {
     });
 
     describe('addWorkspaceMember', () => {
-      it('should add member by email and invalidate caches', async () => {
+      it('should add existing user as member by email and invalidate caches', async () => {
         const body = { email: 'user@example.com', role: 'admin' };
+        const mockUser = { id: 'user-new', email: 'user@example.com', name: 'Bob' };
         const mockMembership = {
           id: 'm-new',
           userId: 'user-new',
@@ -653,6 +693,7 @@ describe('V3WorkspacesController', () => {
           user: { id: 'user-new', name: 'Bob', email: 'user@example.com' },
         };
 
+        (prisma.user.findUnique as any).mockResolvedValue(mockUser);
         (prisma.workspaceMember.create as any).mockResolvedValue(mockMembership);
 
         const result = await controller.addWorkspaceMember(context as any, 'acme-slug', body);
@@ -663,18 +704,44 @@ describe('V3WorkspacesController', () => {
           data: {
             workspace: { connect: { id: 'ws-123' } },
             role: 'admin',
-            user: { connect: { email: 'user@example.com' } },
+            user: { connect: { id: 'user-new' } },
           },
           include: {
-            user: { select: { id: true, name: true, email: true } },
+            user: { select: { id: true, name: true, email: true, avatar: true } },
           },
         });
         expect(redisClient.del).toHaveBeenCalledWith('v3:members:ws-123');
         expect(redisClient.del).toHaveBeenCalledWith('v2:members:ws-123');
       });
 
-      it('should add member by userId', async () => {
+      it('should create invitation for new user when email does not exist in platform', async () => {
+        const body = { email: 'newuser@example.com', role: 'member' };
+        const mockInvitation = {
+          id: 'inv-123',
+          workspaceId: 'ws-123',
+          email: 'newuser@example.com',
+          token: 'inv_abcdef123456',
+          role: 'member',
+          status: 'pending',
+          expiresAt: new Date(),
+          createdAt: new Date(),
+        };
+
+        (prisma.user.findUnique as any).mockResolvedValue(null);
+        (prisma.workspaceInvitation.findFirst as any).mockResolvedValue(null);
+        (prisma.workspaceInvitation.create as any).mockResolvedValue(mockInvitation);
+
+        const result = await controller.addWorkspaceMember(context as any, 'acme-slug', body);
+
+        expect(result.success).toBe(true);
+        expect(result.data.invitation).toBeDefined();
+        expect(result.data.invitation.email).toBe('newuser@example.com');
+        expect(result.data.invitationUrl).toContain('/invite/inv_abcdef123456');
+      });
+
+      it('should add member by userId when user exists', async () => {
         const body = { userId: 'user-456', role: 'member' };
+        const mockUser = { id: 'user-456', email: 'charlie@example.com', name: 'Charlie' };
         const mockMembership = {
           id: 'm-new2',
           userId: 'user-456',
@@ -682,6 +749,7 @@ describe('V3WorkspacesController', () => {
           user: { id: 'user-456', name: 'Charlie', email: 'charlie@example.com' },
         };
 
+        (prisma.user.findUnique as any).mockResolvedValue(mockUser);
         (prisma.workspaceMember.create as any).mockResolvedValue(mockMembership);
 
         const result = await controller.addWorkspaceMember(context as any, 'acme-slug', body);
@@ -695,19 +763,20 @@ describe('V3WorkspacesController', () => {
             user: { connect: { id: 'user-456' } },
           },
           include: {
-            user: { select: { id: true, name: true, email: true } },
+            user: { select: { id: true, name: true, email: true, avatar: true } },
           },
         });
       });
 
-      it('should add member by memberId', async () => {
+      it('should add member by memberId when user exists', async () => {
         const body = { memberId: 'wsm-789', role: 'moderator' };
-        const mockWsm = { id: 'wsm-789', userId: 'user-789' };
+        const mockUser = { id: 'user-789', email: 'david@example.com', name: 'David' };
+        const mockWsm = { id: 'wsm-789', user: mockUser };
         const mockMembership = {
           id: 'm-new3',
           userId: 'user-789',
           role: 'moderator',
-          user: { id: 'user-789', name: 'David', email: 'david@example.com' },
+          user: mockUser,
         };
 
         (prisma.workspaceMember.findUnique as any).mockResolvedValue(mockWsm);
@@ -717,10 +786,6 @@ describe('V3WorkspacesController', () => {
 
         expect(result.success).toBe(true);
         expect(result.data.member).toEqual(mockMembership);
-        expect(prisma.workspaceMember.findUnique).toHaveBeenCalledWith({
-          where: { id: 'wsm-789' },
-          select: { userId: true },
-        });
         expect(prisma.workspaceMember.create).toHaveBeenCalledWith({
           data: {
             workspace: { connect: { id: 'ws-123' } },
@@ -728,7 +793,7 @@ describe('V3WorkspacesController', () => {
             user: { connect: { id: 'user-789' } },
           },
           include: {
-            user: { select: { id: true, name: true, email: true } },
+            user: { select: { id: true, name: true, email: true, avatar: true } },
           },
         });
       });
@@ -743,28 +808,25 @@ describe('V3WorkspacesController', () => {
 
     describe('getWorkspaceMember', () => {
       it('should return member details when queried by userId, memberId, or email', async () => {
-        const mockMember = { id: 'm-1', userId: 'user-1', role: 'member' };
-        (prisma.workspaceMember.findFirst as any).mockResolvedValue(mockMember);
+        const mockMember = { id: 'm-1', workspaceId: 'ws-123', userId: 'user-1', role: 'member' };
+        (prisma.workspaceMember.findUnique as any)
+          .mockResolvedValueOnce(null)
+          .mockResolvedValueOnce(mockMember);
 
         const result = await controller.getWorkspaceMember(context as any, 'acme-slug', 'user-1');
 
         expect(result.success).toBe(true);
         expect(result.data.member).toEqual(mockMember);
-        expect(prisma.workspaceMember.findFirst).toHaveBeenCalledWith({
+        expect(prisma.workspaceMember.findUnique).toHaveBeenCalledWith({
           where: {
-            workspaceId: 'ws-123',
-            OR: [
-              { id: 'user-1' },
-              { userId: 'user-1' },
-              { user: { email: 'user-1' } },
-            ],
+            workspaceId_userId: { workspaceId: 'ws-123', userId: 'user-1' },
           },
           select: expect.any(Object),
         });
       });
 
       it('should throw NotFoundException if member does not exist', async () => {
-        (prisma.workspaceMember.findFirst as any).mockResolvedValue(null);
+        (prisma.workspaceMember.findUnique as any).mockResolvedValue(null);
         await expect(controller.getWorkspaceMember(context as any, 'acme-slug', 'user-none')).rejects.toThrow(
           'Member not found in this workspace'
         );
@@ -774,27 +836,20 @@ describe('V3WorkspacesController', () => {
     describe('updateWorkspaceMember', () => {
       it('should update member role by member identifier (userId, memberId, email)', async () => {
         const body = { role: 'moderator' as const };
-        const mockExistingMember = { id: 'wsm-1' };
+        const mockExistingMember = { id: 'wsm-1', workspaceId: 'ws-123' };
+        const mockUser = { id: 'user-1' };
         const mockUpdatedMember = { id: 'wsm-1', userId: 'user-1', role: 'moderator' };
 
-        (prisma.workspaceMember.findFirst as any).mockResolvedValue(mockExistingMember);
+        (prisma.workspaceMember.findUnique as any).mockResolvedValueOnce(null);
+        (prisma.workspaceMember.findUnique as any).mockResolvedValueOnce(null);
+        (prisma.user.findUnique as any).mockResolvedValueOnce(mockUser);
+        (prisma.workspaceMember.findUnique as any).mockResolvedValueOnce(mockExistingMember);
         (prisma.workspaceMember.update as any).mockResolvedValue(mockUpdatedMember);
 
         const result = await controller.updateWorkspaceMember(context as any, 'acme-slug', 'user-1@example.com', body);
 
         expect(result.success).toBe(true);
         expect(result.data.member).toEqual(mockUpdatedMember);
-        expect(prisma.workspaceMember.findFirst).toHaveBeenCalledWith({
-          where: {
-            workspaceId: 'ws-123',
-            OR: [
-              { id: 'user-1@example.com' },
-              { userId: 'user-1@example.com' },
-              { user: { email: 'user-1@example.com' } },
-            ],
-          },
-          select: { id: true },
-        });
         expect(prisma.workspaceMember.update).toHaveBeenCalledWith({
           where: { id: 'wsm-1' },
           data: { role: 'moderator' },
@@ -808,7 +863,7 @@ describe('V3WorkspacesController', () => {
 
       it('should throw NotFoundException if workspace member is not found', async () => {
         const body = { role: 'moderator' as const };
-        (prisma.workspaceMember.findFirst as any).mockResolvedValue(null);
+        (prisma.workspaceMember.findUnique as any).mockResolvedValue(null);
 
         await expect(
           controller.updateWorkspaceMember(context as any, 'acme-slug', 'nonexistent', body)
@@ -818,12 +873,15 @@ describe('V3WorkspacesController', () => {
 
     describe('deleteWorkspaceMember', () => {
       it('should delete member by member identifier and invalidate caches', async () => {
-        const mockWorkspace = {
-          ownerId: 'owner-id',
-          members: [{ id: 'wsm-1', userId: 'user-1' }],
-        };
+        const mockWorkspace = { ownerId: 'owner-id' };
+        const mockMember = { id: 'wsm-1', userId: 'user-1', workspaceId: 'ws-123' };
+        const mockUser = { id: 'user-1' };
 
         (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
+        (prisma.workspaceMember.findUnique as any).mockResolvedValueOnce(null);
+        (prisma.workspaceMember.findUnique as any).mockResolvedValueOnce(null);
+        (prisma.user.findUnique as any).mockResolvedValueOnce(mockUser);
+        (prisma.workspaceMember.findUnique as any).mockResolvedValueOnce(mockMember);
         (prisma.workspaceMember.delete as any).mockResolvedValue({ id: 'wsm-1' });
 
         const result = await controller.deleteWorkspaceMember(context as any, 'acme-slug', 'user-1@example.com');
@@ -831,19 +889,7 @@ describe('V3WorkspacesController', () => {
         expect(result.success).toBe(true);
         expect(prisma.workspace.findUnique).toHaveBeenCalledWith({
           where: { id: 'ws-123' },
-          select: {
-            ownerId: true,
-            members: {
-              where: {
-                OR: [
-                  { id: 'user-1@example.com' },
-                  { userId: 'user-1@example.com' },
-                  { user: { email: 'user-1@example.com' } },
-                ],
-              },
-              select: { id: true, userId: true },
-            },
-          },
+          select: { ownerId: true },
         });
         expect(prisma.workspaceMember.delete).toHaveBeenCalledWith({
           where: { id: 'wsm-1' },
@@ -853,11 +899,12 @@ describe('V3WorkspacesController', () => {
       });
 
       it('should throw BadRequestException if member to delete is the owner', async () => {
-        const mockWorkspace = {
-          ownerId: 'owner-id',
-          members: [{ id: 'wsm-owner', userId: 'owner-id' }],
-        };
+        const mockWorkspace = { ownerId: 'owner-id' };
+        const mockMember = { id: 'wsm-owner', userId: 'owner-id', workspaceId: 'ws-123' };
+
         (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
+        (prisma.workspaceMember.findUnique as any).mockResolvedValueOnce(null);
+        (prisma.workspaceMember.findUnique as any).mockResolvedValueOnce(mockMember);
 
         await expect(controller.deleteWorkspaceMember(context as any, 'acme-slug', 'owner-id')).rejects.toThrow(
           'Cannot remove workspace owner'
@@ -1013,7 +1060,7 @@ describe('V3WorkspacesController', () => {
     });
 
     describe('updateChannelMember', () => {
-      it('should update channel member role and permissions using member identifier', async () => {
+      it('should update channel member role and permissions using member identifier via findUnique point lookups', async () => {
         const body = { role: 'admin', permissions: '4096' };
         const mockExistingChannelMember = { id: 'cm-1' };
         const mockUpdatedMember = {
@@ -1024,9 +1071,17 @@ describe('V3WorkspacesController', () => {
           permissions: 4096n,
           user: { id: 'usr-1', name: 'Dev' },
         };
+        const mockUser = { id: 'usr-1' };
 
+        const mockChannel = { id: 'ch-1', workspaceId: 'ws-123' };
         (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
-        (prisma.channelMember.findFirst as any).mockResolvedValue(mockExistingChannelMember);
+        (prisma.channel.findUnique as any).mockResolvedValue(mockChannel);
+        (prisma.channelMember.findUnique as any).mockResolvedValueOnce(null); // Direct userId lookup
+        (prisma.workspaceMember.findUnique as any).mockResolvedValueOnce(null); // Direct WSM id lookup
+        (prisma.workspaceMember.findUnique as any).mockResolvedValueOnce(null); // Direct WSM compound lookup
+        (prisma.user.findUnique as any).mockResolvedValueOnce(mockUser); // User email lookup
+        (prisma.workspaceMember.findUnique as any).mockResolvedValueOnce({ userId: 'usr-1' }); // Resolved WSM
+        (prisma.channelMember.findUnique as any).mockResolvedValueOnce(mockExistingChannelMember); // Resolved ChannelMember
         (prisma.channelMember.update as any).mockResolvedValue(mockUpdatedMember);
 
         const result = await controller.updateChannelMember(context as any, 'acme-slug', 'ch-1', 'usr-1@example.com', body);
@@ -1034,15 +1089,15 @@ describe('V3WorkspacesController', () => {
         expect(result.success).toBe(true);
         expect(result.data.member.role).toBe('admin');
         expect(result.data.member.permissions).toBe('4096');
-        expect(prisma.channelMember.findFirst).toHaveBeenCalledWith({
+        expect(prisma.channelMember.findUnique).toHaveBeenCalledWith({
           where: {
-            channelId: 'ch-1',
-            channel: { workspaceId: 'ws-123' },
-            OR: [
-              { userId: 'usr-1@example.com' },
-              { user: { email: 'usr-1@example.com' } },
-              { user: { workspaceMemberships: { some: { id: 'usr-1@example.com', workspaceId: 'ws-123' } } } },
-            ],
+            channelId_userId: { channelId: 'ch-1', userId: 'usr-1@example.com' },
+          },
+          select: { id: true },
+        });
+        expect(prisma.channelMember.findUnique).toHaveBeenCalledWith({
+          where: {
+            channelId_userId: { channelId: 'ch-1', userId: 'usr-1' },
           },
           select: { id: true },
         });
@@ -1067,6 +1122,184 @@ describe('V3WorkspacesController', () => {
               { user: { workspaceMemberships: { some: { id: 'wsm-123', workspaceId: mockWorkspace.id } } } },
             ],
           },
+        });
+      });
+    });
+  });
+
+  describe('custom messages and action responses (V3 M2M)', () => {
+    const context = {
+      scopes: ['messages:send', 'messages:read'],
+      workspaceId: 'ws-123',
+      userId: 'usr-123',
+    };
+
+    const mockWorkspace = {
+      id: 'ws-123',
+      name: 'Acme Workspace',
+      slug: 'acme-slug',
+      organizationId: 'org-abc',
+      ownerId: 'usr-123',
+    };
+
+    describe('createChannelCustomMessage', () => {
+      it('should create custom message with valid CustomMessageSchema and actions', async () => {
+        const body = {
+          content: 'Approval Request',
+          customMessage: {
+            version: 'v1',
+            type: 'APPROVAL',
+            context: { title: 'Expense Claim', priority: 'high' },
+            root: { type: 'Layout.Card', children: [] },
+            actions: [
+              { id: 'approve', label: 'Approve', type: 'PRIMARY' },
+              { id: 'reject', label: 'Reject', type: 'DESTRUCTIVE' },
+            ],
+          },
+        };
+
+        (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
+
+        const result = await controller.createChannelCustomMessage(context as any, 'acme-slug', 'ch-1', body as any);
+
+        expect(result.success).toBe(true);
+        expect(result.data.message).toBeDefined();
+      });
+
+      it('should throw ForbiddenException if missing messages:send scope', async () => {
+        const restrictedContext = { ...context, scopes: ['channels:read'] };
+
+        await expect(
+          controller.createChannelCustomMessage(restrictedContext as any, 'acme-slug', 'ch-1', {} as any)
+        ).rejects.toThrow('Missing messages:send scope');
+      });
+    });
+
+    describe('triggerMessageAction & getMessageActionResponses', () => {
+      it('should record response to an action and dispatch webhooks', async () => {
+        const mockMessage = {
+          id: 'msg-1',
+          content: 'Approval Request',
+          channelId: 'ch-1',
+          metadata: { callbackUrl: 'https://example.com/webhook-callback' },
+          actions: [
+            { id: 'act-db-1', actionId: 'approve', label: 'Approve', style: 'primary' },
+          ],
+          channel: { id: 'ch-1', workspaceId: 'ws-123' },
+        };
+
+        const mockResponse = {
+          id: 'resp-1',
+          actionId: 'act-db-1',
+          messageId: 'msg-1',
+          userId: 'usr-123',
+          actionValue: 'approve',
+          comment: 'Approved!',
+          metadata: {},
+          respondedAt: new Date(),
+          user: { id: 'usr-123', name: 'Alice', email: 'alice@acme.com', avatar: null },
+          action: { id: 'act-db-1', actionId: 'approve', label: 'Approve' },
+        };
+
+        (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
+        (prisma.message.findUnique as any).mockResolvedValue(mockMessage);
+        (prisma.messageActionResponse.findUnique as any).mockResolvedValue(null);
+        (prisma.messageActionResponse.create as any).mockResolvedValue(mockResponse);
+
+        const result = await controller.triggerMessageAction(context as any, 'acme-slug', 'ch-1', 'msg-1', {
+          actionId: 'approve',
+          comment: 'Approved!',
+        });
+
+        expect(result.success).toBe(true);
+        expect(result.data.response).toEqual(mockResponse);
+        expect(prisma.messageActionResponse.create).toHaveBeenCalledWith({
+          data: expect.objectContaining({
+            actionId: 'act-db-1',
+            messageId: 'msg-1',
+            userId: 'usr-123',
+            actionValue: 'approve',
+            comment: 'Approved!',
+          }),
+          include: expect.any(Object),
+        });
+      });
+
+      it('should trigger specific action via path param', async () => {
+        const mockMessage = {
+          id: 'msg-1',
+          content: 'Approval Request',
+          channelId: 'ch-1',
+          metadata: {},
+          actions: [
+            { id: 'act-db-1', actionId: 'reject', label: 'Reject', style: 'danger' },
+          ],
+          channel: { id: 'ch-1', workspaceId: 'ws-123' },
+        };
+
+        const mockResponse = {
+          id: 'resp-2',
+          actionId: 'act-db-1',
+          messageId: 'msg-1',
+          userId: 'usr-123',
+          actionValue: 'reject',
+          comment: 'Rejected',
+          metadata: {},
+          respondedAt: new Date(),
+          user: { id: 'usr-123', name: 'Alice', email: 'alice@acme.com', avatar: null },
+          action: { id: 'act-db-1', actionId: 'reject', label: 'Reject' },
+        };
+
+        (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
+        (prisma.message.findUnique as any).mockResolvedValue(mockMessage);
+        (prisma.messageActionResponse.findUnique as any).mockResolvedValue(null);
+        (prisma.messageActionResponse.create as any).mockResolvedValue(mockResponse);
+
+        const result = await controller.triggerSpecificMessageAction(
+          context as any,
+          'acme-slug',
+          'ch-1',
+          'msg-1',
+          'reject',
+          { comment: 'Rejected' }
+        );
+
+        expect(result.success).toBe(true);
+        expect(result.data.response).toEqual(mockResponse);
+      });
+
+      it('should retrieve action responses for a message', async () => {
+        const mockMessage = {
+          id: 'msg-1',
+          channelId: 'ch-1',
+          channel: { workspaceId: 'ws-123' },
+        };
+
+        const mockResponses = [
+          {
+            id: 'resp-1',
+            actionId: 'act-db-1',
+            messageId: 'msg-1',
+            userId: 'usr-123',
+            actionValue: 'approve',
+            comment: 'Approved!',
+            respondedAt: new Date(),
+            user: { id: 'usr-123', name: 'Alice', email: 'alice@acme.com', avatar: null },
+          },
+        ];
+
+        (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
+        (prisma.message.findUnique as any).mockResolvedValue(mockMessage);
+        (prisma.messageActionResponse.findMany as any).mockResolvedValue(mockResponses);
+
+        const result = await controller.getMessageActionResponses(context as any, 'acme-slug', 'ch-1', 'msg-1');
+
+        expect(result.success).toBe(true);
+        expect(result.data.responses).toEqual(mockResponses);
+        expect(prisma.messageActionResponse.findMany).toHaveBeenCalledWith({
+          where: { messageId: 'msg-1' },
+          include: expect.any(Object),
+          orderBy: { respondedAt: 'desc' },
         });
       });
     });

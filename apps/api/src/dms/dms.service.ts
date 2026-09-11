@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { prisma } from '@repo/database';
 import { AblyChannels, AblyEvents, publishRealtime } from '@repo/shared/server';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -210,7 +210,21 @@ export class DmsService {
     return formattedDm;
   }
 
-  async deleteDm(conversationId: string) {
+  async deleteDm(conversationId: string, userId: string) {
+    // Security: Verify user is a participant in the direct message conversation to mitigate BOLA/IDOR
+    const dm = await prisma.directMessage.findUnique({
+      where: { id: conversationId },
+      select: { participant1Id: true, participant2Id: true },
+    });
+
+    if (!dm) {
+      throw new NotFoundException('DM conversation not found');
+    }
+
+    if (dm.participant1Id !== userId && dm.participant2Id !== userId) {
+      throw new ForbiddenException('You do not have access to delete this DM conversation');
+    }
+
     await prisma.directMessage.delete({
       where: { id: conversationId },
     });
@@ -321,6 +335,20 @@ export class DmsService {
   }
 
   async createMessage(dmId: string, userId: string, body: any) {
+    // Security: Verify user is a participant in the conversation before creating message
+    const existingDm = await prisma.directMessage.findUnique({
+      where: { id: dmId },
+      select: { participant1Id: true, participant2Id: true },
+    });
+
+    if (!existingDm) {
+      throw new NotFoundException('DM conversation not found');
+    }
+
+    if (existingDm.participant1Id !== userId && existingDm.participant2Id !== userId) {
+      throw new ForbiddenException('You do not have access to send messages in this DM conversation');
+    }
+
     const { content, replyToId, attachments } = body;
     const [message, dm] = await prisma.$transaction([
       prisma.dMMessage.create({
@@ -394,6 +422,24 @@ export class DmsService {
   }
 
   async updateMessage(dmId: string, messageId: string, userId: string, content: string) {
+    // Security: Verify message exists, belongs to dmId, and requester is author (BOLA/IDOR check)
+    const existingMessage = await prisma.dMMessage.findUnique({
+      where: { id: messageId },
+      select: { dmId: true, senderId: true },
+    });
+
+    if (!existingMessage) {
+      throw new NotFoundException('Message not found');
+    }
+
+    if (existingMessage.dmId !== dmId) {
+      throw new NotFoundException('Message not found in this conversation');
+    }
+
+    if (existingMessage.senderId !== userId) {
+      throw new ForbiddenException('You can only update your own messages');
+    }
+
     const message = await prisma.dMMessage.update({
       where: { id: messageId },
       data: {
@@ -422,7 +468,25 @@ export class DmsService {
     return formattedMessage;
   }
 
-  async deleteMessage(dmId: string, messageId: string) {
+  async deleteMessage(dmId: string, messageId: string, userId: string) {
+    // Security: Verify message exists, belongs to dmId, and requester is author (BOLA/IDOR check)
+    const existingMessage = await prisma.dMMessage.findUnique({
+      where: { id: messageId },
+      select: { dmId: true, senderId: true },
+    });
+
+    if (!existingMessage) {
+      throw new NotFoundException('Message not found');
+    }
+
+    if (existingMessage.dmId !== dmId) {
+      throw new NotFoundException('Message not found in this conversation');
+    }
+
+    if (existingMessage.senderId !== userId) {
+      throw new ForbiddenException('You can only delete your own messages');
+    }
+
     await prisma.dMMessage.delete({
       where: { id: messageId },
     });

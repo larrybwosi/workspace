@@ -30,10 +30,12 @@ vi.mock('@repo/database', () => ({
     },
     workspaceTeam: {
       findFirst: vi.fn(),
+      findUnique: vi.fn(),
       create: vi.fn(),
     },
     channel: {
       findFirst: vi.fn(),
+      findUnique: vi.fn(),
       create: vi.fn(),
     },
     channelMember: {
@@ -235,9 +237,9 @@ describe('V3ApplicationsController', () => {
       (prisma.botApplication.findUnique as any).mockResolvedValue(mockApp);
       (prisma.workspaceMember.upsert as any).mockResolvedValue({});
       (prisma.botApplication.update as any).mockResolvedValue({});
-      (prisma.workspaceTeam.findFirst as any).mockResolvedValue(null);
+      (prisma.workspaceTeam.findUnique as any).mockResolvedValue(null);
       (prisma.workspaceTeam.create as any).mockResolvedValue({ id: 'team-1', name: 'DevOps' });
-      (prisma.channel.findFirst as any).mockResolvedValue(null);
+      (prisma.channel.findUnique as any).mockResolvedValue(null);
       (prisma.channel.create as any).mockResolvedValue({ id: 'chan-1', name: 'deploys' });
       (prisma.channelMember.upsert as any).mockResolvedValue({});
       (prisma.channelMember.createMany as any).mockResolvedValue({ count: 1 });

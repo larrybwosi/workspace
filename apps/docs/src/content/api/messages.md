@@ -36,84 +36,131 @@ Upload a new icon for a channel using `multipart/form-data`.
 
 ---
 
-## Messaging
+## Messaging (V3 Enterprise API)
 
-### Send a Message
+### Send Channel Message
 
-Send a message to a channel or a specific user.
+Send a standard message to a specific channel.
 
-**Endpoint:** `POST /v3/workspaces/:slug/messages`
+**Endpoint:** `POST /v3/workspaces/:slug/channels/:channelId/messages`
+**Required Scope:** `messages:send` or `*`
 
 **Body Fields:**
 
 | Field         | Type     | Description                                              |
 | :------------ | :------- | :------------------------------------------------------- |
-| `channelId`   | `string` | Target channel ID.                                       |
-| `recipientId` | `string` | Target user ID (for DMs).                                |
 | `content`     | `string` | The text content of the message.                         |
-| `threadId`    | `string` | (Optional) ID of a message to reply to.                  |
-| `contextId`   | `string` | (Optional) A custom tag to group messages into a thread. |
-| `messageType` | `string` | `standard`, `custom`, `approval`, or `report`.           |
-| `metadata`    | `object` | (Optional) Custom JSON data for `custom` message types.  |
+| `replyToId`   | `string` | (Optional) ID of a message to reply to.                  |
+| `messageType` | `string` | `standard`, `custom`, `approval`, `report`, or `form`.   |
+| `metadata`    | `object` | (Optional) Custom JSON data or metadata for the message.  |
 | `actions`     | `array`  | (Optional) Interactive buttons to attach to the message. |
 
-**Example (Interactive Message):**
+---
+
+### Send Custom Message
+
+Send a structured, node-based interactive message conforming to `CustomMessageSchema`.
+
+**Endpoint:** `POST /v3/workspaces/:slug/channels/:channelId/messages/custom`
+**Required Scope:** `messages:send` or `*`
+
+**Request Body:**
 
 ```json
 {
-  "channelId": "chan_123",
-  "content": "New deployment request",
-  "messageType": "approval",
-  "metadata": {
-    "callbackUrl": "https://your-bot.example.com/api/actions/callback"
-  },
-  "actions": [
-    { "actionId": "approve", "label": "Approve", "style": "primary", "value": "deploy_prod_123" },
-    { "actionId": "deny", "label": "Deny", "style": "danger", "value": "deploy_prod_123" }
-  ]
+  "content": "Deployment Approval Request",
+  "customMessage": {
+    "version": "v1",
+    "type": "APPROVAL",
+    "context": {
+      "title": "Production Deployment #8042",
+      "description": "Triggered by CI/CD Pipeline",
+      "icon": "Rocket",
+      "priority": "urgent"
+    },
+    "root": {
+      "type": "Layout.Card",
+      "children": [
+        {
+          "type": "Display.Field",
+          "properties": { "label": "Environment", "value": "Production (us-east-1)" }
+        }
+      ]
+    },
+    "actions": [
+      {
+        "id": "approve",
+        "label": "Approve Deployment",
+        "type": "PRIMARY",
+        "icon": "Check",
+        "handler": {
+          "type": "CALLBACK",
+          "callbackId": "deploy-pipeline-8042",
+          "payload": { "buildId": "8042" }
+        }
+      },
+      {
+        "id": "reject",
+        "label": "Reject",
+        "type": "DESTRUCTIVE",
+        "icon": "X",
+        "handler": {
+          "type": "CALLBACK",
+          "callbackId": "deploy-pipeline-8042",
+          "payload": { "buildId": "8042" }
+        }
+      }
+    ],
+    "metadata": {
+      "callbackUrl": "https://ci.acme.com/api/webhooks/deploy-callback"
+    }
+  }
 }
 ```
 
 ---
 
-## Interactive Actions & Response Triggers
+## Interactive Actions & Response Triggers (V3 API)
 
-Interactive actions enable in-chat workflows where clicking a button or submitting a form in a message dispatches structured data back to your backend.
+Interactive actions enable in-chat workflows where clicking a button or submitting form inputs dispatches structured data back to your backend service.
 
 ### Triggering an Interactive Action
 
-When a client clicks a button or submits form data, the client sends a request to trigger the action:
+When a user clicks an action button or submits form data, send an HTTP POST request to record the response and trigger webhooks:
 
-**Endpoint:** `POST /workspaces/:slug/messages/:messageId/actions`
+**Endpoint:** `POST /v3/workspaces/:slug/channels/:channelId/messages/:messageId/actions`
+**Or Path Parameter Variant:** `POST /v3/workspaces/:slug/channels/:channelId/messages/:messageId/actions/:actionId`
+**Required Scope:** `messages:send` or `*`
 
-**Headers:**
-```http
-Authorization: Bearer <token>
-```
-
-**Body:**
+**Request Body:**
 ```json
 {
   "actionId": "approve",
-  "comment": "Approved for deployment",
+  "comment": "Deployment verified in staging, approving for prod.",
   "metadata": {
-    "environment": "staging"
+    "environment": "production",
+    "formState": {
+      "reason": "Security patch passed QA"
+    }
   }
 }
 ```
 
 **Execution Pipeline:**
 
-1. **Database Logging**: Scrymechat logs the action response (`MessageActionResponse`) linked to the message and user.
-2. **Realtime Broadcast**: Broadcasts a `message.action_response` event over WebSocket/Ably to update UI across all active workspace clients.
-3. **Webhook Dispatch**: If `metadata.callbackUrl` is specified on the message, an HTTP POST request containing the response details is dispatched to the callback URL with an HMAC SHA-256 signature (`X-Webhook-Signature`).
-4. **Audit Logging**: Creates a `workspaceAuditLog` entry tracking the action execution for enterprise compliance.
+1. **Validation & Resolution**: Resolves message, user context, and action definition.
+2. **Database Logging**: Saves a `MessageActionResponse` entry recording user identity, action selected, comment, and form state.
+3. **Webhook Callback Dispatch**: If `callbackUrl` is present in message metadata or action handler, sends an HTTP POST request with HMAC SHA-256 signature (`X-Webhook-Signature`).
+4. **Workspace Event Broadcast**: Dispatches a `message.action_response` event to all workspace webhooks registered for the event.
+5. **Real-time Sync**: Broadcasts `message.action_response` over Ably / WebSocket to instantly reflect user actions across open clients.
+6. **Audit Logging**: Creates a `workspaceAuditLog` entry tracking the action execution for enterprise compliance.
 
 ### Fetch Action Responses
 
 Retrieve all recorded user responses and form submissions for a specific message.
 
-**Endpoint:** `GET /workspaces/:slug/messages/:messageId/actions`
+**Endpoint:** `GET /v3/workspaces/:slug/channels/:channelId/messages/:messageId/actions`
+**Required Scope:** `messages:read` or `*`
 
 **Response:**
 ```json

@@ -1,5 +1,5 @@
 import { prisma, Prisma } from '@repo/database';
-import { createNotification } from './notifications';
+import { createNotification, createNotifications, NotificationPayload } from './notifications';
 
 export interface ScheduledNotificationConfig {
   userId: string;
@@ -40,7 +40,21 @@ export async function createScheduledNotification(config: ScheduledNotificationC
   return scheduledNotification;
 }
 
-export async function updateScheduledNotification(id: string, updates: Partial<ScheduledNotificationConfig>) {
+/**
+ * THREAT MITIGATION: BOLA/IDOR Prevention
+ * Verifies that the scheduled notification belongs to the specified userId before modifying.
+ */
+export async function updateScheduledNotification(id: string, updates: Partial<ScheduledNotificationConfig>, userId?: string) {
+  if (userId) {
+    const existing = await prisma.scheduledNotification.findFirst({
+      where: { id, userId },
+      select: { id: true },
+    });
+    if (!existing) {
+      throw new Error('Scheduled notification not found or access denied');
+    }
+  }
+
   return await prisma.scheduledNotification.update({
     where: { id },
     data: {
@@ -50,20 +64,62 @@ export async function updateScheduledNotification(id: string, updates: Partial<S
   });
 }
 
-export async function deleteScheduledNotification(id: string) {
+/**
+ * THREAT MITIGATION: BOLA/IDOR Prevention
+ * Verifies that the scheduled notification belongs to the specified userId before deleting.
+ */
+export async function deleteScheduledNotification(id: string, userId?: string) {
+  if (userId) {
+    const existing = await prisma.scheduledNotification.findFirst({
+      where: { id, userId },
+      select: { id: true },
+    });
+    if (!existing) {
+      throw new Error('Scheduled notification not found or access denied');
+    }
+  }
+
   return await prisma.scheduledNotification.delete({
     where: { id },
   });
 }
 
-export async function pauseScheduledNotification(id: string) {
+/**
+ * THREAT MITIGATION: BOLA/IDOR Prevention
+ * Verifies that the scheduled notification belongs to the specified userId before pausing.
+ */
+export async function pauseScheduledNotification(id: string, userId?: string) {
+  if (userId) {
+    const existing = await prisma.scheduledNotification.findFirst({
+      where: { id, userId },
+      select: { id: true },
+    });
+    if (!existing) {
+      throw new Error('Scheduled notification not found or access denied');
+    }
+  }
+
   return await prisma.scheduledNotification.update({
     where: { id },
     data: { isActive: false },
   });
 }
 
-export async function resumeScheduledNotification(id: string) {
+/**
+ * THREAT MITIGATION: BOLA/IDOR Prevention
+ * Verifies that the scheduled notification belongs to the specified userId before resuming.
+ */
+export async function resumeScheduledNotification(id: string, userId?: string) {
+  if (userId) {
+    const existing = await prisma.scheduledNotification.findFirst({
+      where: { id, userId },
+      select: { id: true },
+    });
+    if (!existing) {
+      throw new Error('Scheduled notification not found or access denied');
+    }
+  }
+
   return await prisma.scheduledNotification.update({
     where: { id },
     data: { isActive: true },
@@ -319,6 +375,13 @@ export async function processScheduledCalls() {
   }
 }
 
+/**
+ * ⚡ Performance Optimization:
+ * Batches scheduled call participant notifications and restricts workspace query selection.
+ * Replaces full model over-fetching with `select: { slug: true }`.
+ * Replaces O(N) sequential database writes and serial dispatches with `createNotifications`
+ * which performs O(1) batch creation (`createManyAndReturn`) and parallel real-time/push dispatches.
+ */
 async function notifyCallParticipants(call: any, timeLabel: string) {
   const { workspaceId, channelId, title, initiator } = call;
 
@@ -338,12 +401,18 @@ async function notifyCallParticipants(call: any, timeLabel: string) {
     userIds = members.map(m => m.userId);
   }
 
-  const workspace = workspaceId ? await prisma.workspace.findUnique({ where: { id: workspaceId } }) : null;
+  const workspace = workspaceId
+    ? await prisma.workspace.findUnique({
+        where: { id: workspaceId },
+        select: { slug: true },
+      })
+    : null;
 
+  const payloads: NotificationPayload[] = [];
   for (const userId of userIds) {
     if (userId === initiator?.id) continue;
 
-    await createNotification({
+    payloads.push({
       userId,
       type: 'system',
       title: `Call: ${title}`,
@@ -356,5 +425,9 @@ async function notifyCallParticipants(call: any, timeLabel: string) {
         type: call.type,
       },
     });
+  }
+
+  if (payloads.length > 0) {
+    await createNotifications(payloads);
   }
 }

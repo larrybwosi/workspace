@@ -28,21 +28,6 @@ export type SupportControllerGetTicketsParams = {
 workspaceId: string;
 };
 
-export type ScheduledNotificationsControllerUpdateNotificationBodyAction = typeof ScheduledNotificationsControllerUpdateNotificationBodyAction[keyof typeof ScheduledNotificationsControllerUpdateNotificationBodyAction];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ScheduledNotificationsControllerUpdateNotificationBodyAction = {
-  pause: 'pause',
-  resume: 'resume',
-} as const;
-
-export type ScheduledNotificationsControllerUpdateNotificationBody = {
-  action?: ScheduledNotificationsControllerUpdateNotificationBodyAction;
-  message?: string;
-  title?: string;
-};
-
 export type ScheduledNotificationsControllerGetNotificationsParams = {
 /**
  * Return stats instead of list
@@ -166,21 +151,6 @@ export type FriendsControllerGetFriendsParams = {
 search?: string;
 };
 
-export type DmsControllerAddReactionBody = {
-  emoji?: string;
-};
-
-export type DmsControllerGetMessagesParams = {
-/**
- * Pagination cursor
- */
-cursor?: string;
-/**
- * Number of messages to return
- */
-limit?: unknown;
-};
-
 export type AdminControllerUploadFileBody = {
   file?: Blob;
 };
@@ -205,23 +175,6 @@ role: string;
 status: string;
 };
 
-export type ChannelsControllerAddReactionBody = {
-  emoji?: string;
-};
-
-export type ChannelsControllerMarkAsReadBody = {
-  messageIds?: string[];
-};
-
-export type ChannelsControllerUpdateMessageBody = {
-  content?: string;
-};
-
-export type ChannelsControllerGetMessagesParams = {
-cursor?: string;
-limit?: unknown;
-};
-
 export type CallsControllerGetScheduledCallsParams = {
 /**
  * The workspace ID
@@ -242,6 +195,21 @@ export type InvitationsControllerGetInvitationsParams = {
  * Filter by workspace ID
  */
 workspaceId?: string;
+};
+
+export type DmsControllerAddReactionBody = {
+  emoji?: string;
+};
+
+export type DmsControllerGetMessagesParams = {
+/**
+ * Pagination cursor
+ */
+cursor?: string;
+/**
+ * Number of messages to return
+ */
+limit?: unknown;
 };
 
 export type NotificationsControllerGetChannelSettingsParams = {
@@ -269,11 +237,37 @@ unreadOnly?: string;
 limit?: string;
 };
 
+export type ChannelsControllerAddReactionBody = {
+  emoji?: string;
+};
+
+export type ChannelsControllerMarkAsReadBody = {
+  messageIds?: string[];
+};
+
+export type ChannelsControllerUpdateMessageBody = {
+  content?: string;
+};
+
+export type ChannelsControllerGetMessagesParams = {
+cursor?: string;
+limit?: unknown;
+};
+
+export type V3DmsControllerGetMessagesParams = {
+cursor?: string;
+limit?: unknown;
+};
+
 export type V3ChannelIncomingWebhooksControllerExecuteWebhookByChannelIdParams = {
 /**
  * The unique webhook token (can alternatively use x-webhook-token header)
  */
 token?: string;
+};
+
+export type V3WorkspacesControllerGetChannelMessagesParams = {
+cursor: string;
 };
 
 export type V3WorkspacesControllerDeleteWorkspace200Data = {
@@ -285,6 +279,11 @@ export type V3WorkspacesControllerDeleteWorkspace200 = {
   success?: boolean;
   timestamp?: string;
 };
+
+/**
+ * @nullable
+ */
+export type V3WorkspacesControllerUpdateWorkspace200DataWorkspaceBrandingConfig = { [key: string]: unknown } | null;
 
 export type V3WorkspacesControllerUpdateWorkspace200DataWorkspace = {
   /** @nullable */
@@ -311,10 +310,15 @@ export type V3WorkspacesControllerUpdateWorkspace200 = {
   timestamp?: string;
 };
 
-/**
- * @nullable
- */
-export type V3WorkspacesControllerUpdateWorkspace200DataWorkspaceBrandingConfig = { [key: string]: unknown } | null;
+export type V3WorkspacesControllerGetWorkspaceBySlug200Data = {
+  workspace?: V3WorkspacesControllerGetWorkspaceBySlug200DataWorkspace;
+};
+
+export type V3WorkspacesControllerGetWorkspaceBySlug200 = {
+  data?: V3WorkspacesControllerGetWorkspaceBySlug200Data;
+  success?: boolean;
+  timestamp?: string;
+};
 
 /**
  * @nullable
@@ -334,16 +338,6 @@ export type V3WorkspacesControllerGetWorkspaceBySlug200DataWorkspace = {
   industry?: string | null;
   name?: string;
   slug?: string;
-};
-
-export type V3WorkspacesControllerGetWorkspaceBySlug200Data = {
-  workspace?: V3WorkspacesControllerGetWorkspaceBySlug200DataWorkspace;
-};
-
-export type V3WorkspacesControllerGetWorkspaceBySlug200 = {
-  data?: V3WorkspacesControllerGetWorkspaceBySlug200Data;
-  success?: boolean;
-  timestamp?: string;
 };
 
 export type V3WorkspacesControllerProvisionWorkspace201DataWorkspace = {
@@ -413,26 +407,7 @@ after?: string;
 };
 
 export type UsersControllerDeleteDeviceTokenParams = {
-token: string;
-};
-
-export type UsersControllerRegisterDeviceTokenBodyPlatform = typeof UsersControllerRegisterDeviceTokenBodyPlatform[keyof typeof UsersControllerRegisterDeviceTokenBodyPlatform];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const UsersControllerRegisterDeviceTokenBodyPlatform = {
-  web: 'web',
-  ios: 'ios',
-  android: 'android',
-  desktop: 'desktop',
-} as const;
-
-export type UsersControllerRegisterDeviceTokenBodyDeviceInfo = { [key: string]: unknown };
-
-export type UsersControllerRegisterDeviceTokenBody = {
-  deviceInfo?: UsersControllerRegisterDeviceTokenBodyDeviceInfo;
-  platform: UsersControllerRegisterDeviceTokenBodyPlatform;
-  token: string;
+token?: string;
 };
 
 export type UsersControllerSearchUsersParams = {
@@ -442,6 +417,46 @@ query: string;
 export type AppControllerGetLinkPreviewParams = {
 url: string;
 };
+
+export interface CreateCustomerProfileDto { [key: string]: unknown }
+
+export interface AssignTicketDto { [key: string]: unknown }
+
+export interface UpdateTicketStatusDto { [key: string]: unknown }
+
+export interface StartLiveChatDto { [key: string]: unknown }
+
+export interface CreateTicketDto { [key: string]: unknown }
+
+export type UpdateScheduledNotificationDtoScheduleType = typeof UpdateScheduledNotificationDtoScheduleType[keyof typeof UpdateScheduledNotificationDtoScheduleType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UpdateScheduledNotificationDtoScheduleType = {
+  custom: 'custom',
+  once: 'once',
+  daily: 'daily',
+  weekly: 'weekly',
+  monthly: 'monthly',
+} as const;
+
+export type UpdateScheduledNotificationDtoAction = typeof UpdateScheduledNotificationDtoAction[keyof typeof UpdateScheduledNotificationDtoAction];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UpdateScheduledNotificationDtoAction = {
+  pause: 'pause',
+  resume: 'resume',
+} as const;
+
+export interface UpdateScheduledNotificationDto {
+  action?: UpdateScheduledNotificationDtoAction;
+  message?: string;
+  /** ISO format datetime */
+  scheduledFor?: string;
+  scheduleType?: UpdateScheduledNotificationDtoScheduleType;
+  title?: string;
+}
 
 export type CreateScheduledNotificationDtoScheduleType = typeof CreateScheduledNotificationDtoScheduleType[keyof typeof CreateScheduledNotificationDtoScheduleType];
 
@@ -807,19 +822,6 @@ export interface SendFriendRequestDto {
   receiverId: string;
 }
 
-export interface MarkAsReadDto {
-  messageIds: string[];
-}
-
-export interface UpdateDmMessageDto {
-  content: string;
-}
-
-export interface CreateDmDto {
-  /** The ID of the user to start a DM with */
-  userId: string;
-}
-
 export interface SoundboardSoundDto { [key: string]: unknown }
 
 export interface ScheduleCallDto { [key: string]: unknown }
@@ -899,6 +901,19 @@ export interface CreateInvitationDto {
   workspaceId?: string;
 }
 
+export interface MarkAsReadDto {
+  messageIds: string[];
+}
+
+export interface UpdateDmMessageDto {
+  content: string;
+}
+
+export interface CreateDmDto {
+  /** The ID of the user to start a DM with */
+  userId: string;
+}
+
 export interface UpdateNotificationDto {
   isRead: boolean;
 }
@@ -932,6 +947,13 @@ export const WorkspaceSettingsDtoPreference = {
 export interface WorkspaceSettingsDto {
   preference: WorkspaceSettingsDtoPreference;
   workspaceId: string;
+}
+
+export interface V3CreateDmDto {
+  /** Target user ID to start direct message conversation with */
+  targetUserId?: string;
+  /** Target user ID (alias) */
+  userId?: string;
 }
 
 export interface V3UpdateM2mApplicationDto {
@@ -1015,13 +1037,21 @@ export interface V3UpdateChannelMemberDto {
 export type V3AddChannelMemberDtoPermissions = { [key: string]: unknown };
 
 export interface V3AddChannelMemberDto {
+  /** Email address of user to add to channel */
+  email?: string;
+  /** Array of user emails to add */
+  emails?: string[];
+  /** Workspace member ID to add to channel */
+  memberId?: string;
+  /** Array of workspace member IDs to add */
+  memberIds?: string[];
   /** Bitwise permission string or integer value */
   permissions?: V3AddChannelMemberDtoPermissions;
   /** Channel role */
   role?: string;
-  /** User ID to add to channel */
+  /** User ID, Member ID, or Email to add to channel */
   userId?: string;
-  /** Array of user IDs to add */
+  /** Array of user IDs, member IDs, or emails to add */
   userIds?: string[];
 }
 
@@ -1108,9 +1138,13 @@ export interface V3UpdateMemberRoleDto {
 
 export interface V3AddMemberDto {
   /** The email of the user to add */
-  email: string;
+  email?: string;
+  /** The workspace member ID of the user to add */
+  memberId?: string;
   /** The role of the member */
   role?: string;
+  /** The user ID of the user to add */
+  userId?: string;
 }
 
 /**
@@ -1191,6 +1225,100 @@ export interface V3TokenRequestDto {
   grant_type: V3TokenRequestDtoGrantType;
   /** Space-separated list of scopes requested. */
   scope?: string;
+}
+
+export interface DeleteDeviceTokenDto {
+  /** Push notification device token to deactivate */
+  token?: string;
+}
+
+/**
+ * Device platform
+ */
+export type RegisterDeviceTokenDtoPlatform = typeof RegisterDeviceTokenDtoPlatform[keyof typeof RegisterDeviceTokenDtoPlatform];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const RegisterDeviceTokenDtoPlatform = {
+  web: 'web',
+  ios: 'ios',
+  android: 'android',
+  desktop: 'desktop',
+} as const;
+
+/**
+ * Metadata regarding the target device
+ */
+export type RegisterDeviceTokenDtoDeviceInfo = { [key: string]: unknown };
+
+export interface RegisterDeviceTokenDto {
+  /** Metadata regarding the target device */
+  deviceInfo?: RegisterDeviceTokenDtoDeviceInfo;
+  /** Device platform */
+  platform: RegisterDeviceTokenDtoPlatform;
+  /** Push notification device token */
+  token: string;
+}
+
+/**
+ * Online presence status
+ */
+export type UpdateUserProfileDtoStatus = typeof UpdateUserProfileDtoStatus[keyof typeof UpdateUserProfileDtoStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UpdateUserProfileDtoStatus = {
+  online: 'online',
+  offline: 'offline',
+  away: 'away',
+  dnd: 'dnd',
+} as const;
+
+/**
+ * Notification settings object
+ */
+export type UpdateUserProfileDtoNotificationPreferences = { [key: string]: unknown };
+
+export interface UpdateUserProfileDto {
+  /** Avatar image URL */
+  avatar?: string;
+  /** Banner image URL */
+  banner?: string;
+  /** User biography */
+  bio?: string;
+  /** Profile image URL */
+  image?: string;
+  /** Full display name */
+  name?: string;
+  /** Notification settings object */
+  notificationPreferences?: UpdateUserProfileDtoNotificationPreferences;
+  /** Online presence status */
+  status?: UpdateUserProfileDtoStatus;
+  /** Custom status emoji */
+  statusEmoji?: string;
+  /** Custom status text */
+  statusText?: string;
+  /** Unique handle/username */
+  username?: string;
+}
+
+/**
+ * User online status
+ */
+export type UpdateUserStatusDtoStatus = typeof UpdateUserStatusDtoStatus[keyof typeof UpdateUserStatusDtoStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UpdateUserStatusDtoStatus = {
+  online: 'online',
+  offline: 'offline',
+  away: 'away',
+  dnd: 'dnd',
+} as const;
+
+export interface UpdateUserStatusDto {
+  /** User online status */
+  status: UpdateUserStatusDtoStatus;
 }
 
 
@@ -1639,12 +1767,14 @@ export const useUsersControllerGetMe = <TData = Awaited<ReturnType<typeof usersC
  * @summary Update current user profile
  */
 export const usersControllerPatchMe = (
-
+    updateUserProfileDto: BodyType<UpdateUserProfileDto>,
  options?: SecondParameter<typeof customInstance>,) => {
 
 
       return customInstance<void>(
-      {url: `/api/users/me`, method: 'PATCH'
+      {url: `/api/users/me`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateUserProfileDto
     },
       options);
     }
@@ -1652,17 +1782,17 @@ export const usersControllerPatchMe = (
 
 
 export const getUsersControllerPatchMeMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersControllerPatchMe>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof usersControllerPatchMe>>, TError,void, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersControllerPatchMe>>, TError,{data: BodyType<UpdateUserProfileDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof usersControllerPatchMe>>, TError,{data: BodyType<UpdateUserProfileDto>}, TContext> => {
 const {mutation: mutationOptions, request: requestOptions} = options ?? {};
 
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof usersControllerPatchMe>>, void> = () => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof usersControllerPatchMe>>, {data: BodyType<UpdateUserProfileDto>}> = (props) => {
+          const {data} = props ?? {};
 
-
-          return  usersControllerPatchMe(requestOptions)
+          return  usersControllerPatchMe(data,requestOptions)
         }
 
 
@@ -1671,18 +1801,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?? {};
   return  { mutationFn, ...mutationOptions }}
 
     export type UsersControllerPatchMeMutationResult = NonNullable<Awaited<ReturnType<typeof usersControllerPatchMe>>>
-
+    export type UsersControllerPatchMeMutationBody = BodyType<UpdateUserProfileDto>
     export type UsersControllerPatchMeMutationError = ErrorType<unknown>
 
     /**
  * @summary Update current user profile
  */
 export const useUsersControllerPatchMe = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersControllerPatchMe>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersControllerPatchMe>>, TError,{data: BodyType<UpdateUserProfileDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
 ): UseMutationResult<
         Awaited<ReturnType<typeof usersControllerPatchMe>>,
         TError,
-        void,
+        {data: BodyType<UpdateUserProfileDto>},
         TContext
       > => {
 
@@ -1695,12 +1825,14 @@ export const useUsersControllerPatchMe = <TError = ErrorType<unknown>,
  * @summary Update current user profile
  */
 export const usersControllerUpdateMe = (
-
+    updateUserProfileDto: BodyType<UpdateUserProfileDto>,
  options?: SecondParameter<typeof customInstance>,) => {
 
 
       return customInstance<void>(
-      {url: `/api/users/me`, method: 'POST'
+      {url: `/api/users/me`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: updateUserProfileDto
     },
       options);
     }
@@ -1708,17 +1840,17 @@ export const usersControllerUpdateMe = (
 
 
 export const getUsersControllerUpdateMeMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersControllerUpdateMe>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof usersControllerUpdateMe>>, TError,void, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersControllerUpdateMe>>, TError,{data: BodyType<UpdateUserProfileDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof usersControllerUpdateMe>>, TError,{data: BodyType<UpdateUserProfileDto>}, TContext> => {
 const {mutation: mutationOptions, request: requestOptions} = options ?? {};
 
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof usersControllerUpdateMe>>, void> = () => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof usersControllerUpdateMe>>, {data: BodyType<UpdateUserProfileDto>}> = (props) => {
+          const {data} = props ?? {};
 
-
-          return  usersControllerUpdateMe(requestOptions)
+          return  usersControllerUpdateMe(data,requestOptions)
         }
 
 
@@ -1727,18 +1859,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?? {};
   return  { mutationFn, ...mutationOptions }}
 
     export type UsersControllerUpdateMeMutationResult = NonNullable<Awaited<ReturnType<typeof usersControllerUpdateMe>>>
-
+    export type UsersControllerUpdateMeMutationBody = BodyType<UpdateUserProfileDto>
     export type UsersControllerUpdateMeMutationError = ErrorType<unknown>
 
     /**
  * @summary Update current user profile
  */
 export const useUsersControllerUpdateMe = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersControllerUpdateMe>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersControllerUpdateMe>>, TError,{data: BodyType<UpdateUserProfileDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
 ): UseMutationResult<
         Awaited<ReturnType<typeof usersControllerUpdateMe>>,
         TError,
-        void,
+        {data: BodyType<UpdateUserProfileDto>},
         TContext
       > => {
 
@@ -1814,11 +1946,14 @@ export const useUsersControllerGetUser = <TData = Awaited<ReturnType<typeof user
  */
 export const usersControllerPatchUser = (
     id: string,
+    updateUserProfileDto: BodyType<UpdateUserProfileDto>,
  options?: SecondParameter<typeof customInstance>,) => {
 
 
       return customInstance<void>(
-      {url: `/api/users/${id}`, method: 'PATCH'
+      {url: `/api/users/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateUserProfileDto
     },
       options);
     }
@@ -1826,17 +1961,17 @@ export const usersControllerPatchUser = (
 
 
 export const getUsersControllerPatchUserMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersControllerPatchUser>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof usersControllerPatchUser>>, TError,{id: string}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersControllerPatchUser>>, TError,{id: string;data: BodyType<UpdateUserProfileDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof usersControllerPatchUser>>, TError,{id: string;data: BodyType<UpdateUserProfileDto>}, TContext> => {
 const {mutation: mutationOptions, request: requestOptions} = options ?? {};
 
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof usersControllerPatchUser>>, {id: string}> = (props) => {
-          const {id} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof usersControllerPatchUser>>, {id: string;data: BodyType<UpdateUserProfileDto>}> = (props) => {
+          const {id,data} = props ?? {};
 
-          return  usersControllerPatchUser(id,requestOptions)
+          return  usersControllerPatchUser(id,data,requestOptions)
         }
 
 
@@ -1845,18 +1980,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?? {};
   return  { mutationFn, ...mutationOptions }}
 
     export type UsersControllerPatchUserMutationResult = NonNullable<Awaited<ReturnType<typeof usersControllerPatchUser>>>
-
+    export type UsersControllerPatchUserMutationBody = BodyType<UpdateUserProfileDto>
     export type UsersControllerPatchUserMutationError = ErrorType<unknown>
 
     /**
  * @summary Update user profile by ID
  */
 export const useUsersControllerPatchUser = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersControllerPatchUser>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersControllerPatchUser>>, TError,{id: string;data: BodyType<UpdateUserProfileDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
 ): UseMutationResult<
         Awaited<ReturnType<typeof usersControllerPatchUser>>,
         TError,
-        {id: string},
+        {id: string;data: BodyType<UpdateUserProfileDto>},
         TContext
       > => {
 
@@ -2043,12 +2178,14 @@ export const useUsersControllerUnblockUser = <TError = ErrorType<unknown>,
  * @summary Update current user status
  */
 export const usersControllerUpdateMyStatus = (
-
+    updateUserStatusDto: BodyType<UpdateUserStatusDto>,
  options?: SecondParameter<typeof customInstance>,) => {
 
 
       return customInstance<void>(
-      {url: `/api/users/me/status`, method: 'PATCH'
+      {url: `/api/users/me/status`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateUserStatusDto
     },
       options);
     }
@@ -2056,17 +2193,17 @@ export const usersControllerUpdateMyStatus = (
 
 
 export const getUsersControllerUpdateMyStatusMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersControllerUpdateMyStatus>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof usersControllerUpdateMyStatus>>, TError,void, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersControllerUpdateMyStatus>>, TError,{data: BodyType<UpdateUserStatusDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof usersControllerUpdateMyStatus>>, TError,{data: BodyType<UpdateUserStatusDto>}, TContext> => {
 const {mutation: mutationOptions, request: requestOptions} = options ?? {};
 
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof usersControllerUpdateMyStatus>>, void> = () => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof usersControllerUpdateMyStatus>>, {data: BodyType<UpdateUserStatusDto>}> = (props) => {
+          const {data} = props ?? {};
 
-
-          return  usersControllerUpdateMyStatus(requestOptions)
+          return  usersControllerUpdateMyStatus(data,requestOptions)
         }
 
 
@@ -2075,18 +2212,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?? {};
   return  { mutationFn, ...mutationOptions }}
 
     export type UsersControllerUpdateMyStatusMutationResult = NonNullable<Awaited<ReturnType<typeof usersControllerUpdateMyStatus>>>
-
+    export type UsersControllerUpdateMyStatusMutationBody = BodyType<UpdateUserStatusDto>
     export type UsersControllerUpdateMyStatusMutationError = ErrorType<unknown>
 
     /**
  * @summary Update current user status
  */
 export const useUsersControllerUpdateMyStatus = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersControllerUpdateMyStatus>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersControllerUpdateMyStatus>>, TError,{data: BodyType<UpdateUserStatusDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
 ): UseMutationResult<
         Awaited<ReturnType<typeof usersControllerUpdateMyStatus>>,
         TError,
-        void,
+        {data: BodyType<UpdateUserStatusDto>},
         TContext
       > => {
 
@@ -2099,14 +2236,14 @@ export const useUsersControllerUpdateMyStatus = <TError = ErrorType<unknown>,
  * @summary Register a device token for push notifications
  */
 export const usersControllerRegisterDeviceToken = (
-    usersControllerRegisterDeviceTokenBody: BodyType<UsersControllerRegisterDeviceTokenBody>,
+    registerDeviceTokenDto: BodyType<RegisterDeviceTokenDto>,
  options?: SecondParameter<typeof customInstance>,) => {
 
 
       return customInstance<void>(
       {url: `/api/users/me/device-tokens`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
-      data: usersControllerRegisterDeviceTokenBody
+      data: registerDeviceTokenDto
     },
       options);
     }
@@ -2114,14 +2251,14 @@ export const usersControllerRegisterDeviceToken = (
 
 
 export const getUsersControllerRegisterDeviceTokenMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersControllerRegisterDeviceToken>>, TError,{data: BodyType<UsersControllerRegisterDeviceTokenBody>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof usersControllerRegisterDeviceToken>>, TError,{data: BodyType<UsersControllerRegisterDeviceTokenBody>}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersControllerRegisterDeviceToken>>, TError,{data: BodyType<RegisterDeviceTokenDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof usersControllerRegisterDeviceToken>>, TError,{data: BodyType<RegisterDeviceTokenDto>}, TContext> => {
 const {mutation: mutationOptions, request: requestOptions} = options ?? {};
 
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof usersControllerRegisterDeviceToken>>, {data: BodyType<UsersControllerRegisterDeviceTokenBody>}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof usersControllerRegisterDeviceToken>>, {data: BodyType<RegisterDeviceTokenDto>}> = (props) => {
           const {data} = props ?? {};
 
           return  usersControllerRegisterDeviceToken(data,requestOptions)
@@ -2133,18 +2270,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?? {};
   return  { mutationFn, ...mutationOptions }}
 
     export type UsersControllerRegisterDeviceTokenMutationResult = NonNullable<Awaited<ReturnType<typeof usersControllerRegisterDeviceToken>>>
-    export type UsersControllerRegisterDeviceTokenMutationBody = BodyType<UsersControllerRegisterDeviceTokenBody>
+    export type UsersControllerRegisterDeviceTokenMutationBody = BodyType<RegisterDeviceTokenDto>
     export type UsersControllerRegisterDeviceTokenMutationError = ErrorType<unknown>
 
     /**
  * @summary Register a device token for push notifications
  */
 export const useUsersControllerRegisterDeviceToken = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersControllerRegisterDeviceToken>>, TError,{data: BodyType<UsersControllerRegisterDeviceTokenBody>}, TContext>, request?: SecondParameter<typeof customInstance>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersControllerRegisterDeviceToken>>, TError,{data: BodyType<RegisterDeviceTokenDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
 ): UseMutationResult<
         Awaited<ReturnType<typeof usersControllerRegisterDeviceToken>>,
         TError,
-        {data: BodyType<UsersControllerRegisterDeviceTokenBody>},
+        {data: BodyType<RegisterDeviceTokenDto>},
         TContext
       > => {
 
@@ -2219,12 +2356,15 @@ export const useUsersControllerGetDeviceTokens = <TData = Awaited<ReturnType<typ
  * @summary Deactivate a device token
  */
 export const usersControllerDeleteDeviceToken = (
-    params: UsersControllerDeleteDeviceTokenParams,
+    deleteDeviceTokenDto?: BodyType<DeleteDeviceTokenDto>,
+    params?: UsersControllerDeleteDeviceTokenParams,
  options?: SecondParameter<typeof customInstance>,) => {
 
 
       return customInstance<void>(
       {url: `/api/users/me/device-tokens`, method: 'DELETE',
+      headers: {'Content-Type': 'application/json', },
+      data: deleteDeviceTokenDto,
         params
     },
       options);
@@ -2233,17 +2373,17 @@ export const usersControllerDeleteDeviceToken = (
 
 
 export const getUsersControllerDeleteDeviceTokenMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersControllerDeleteDeviceToken>>, TError,{params: UsersControllerDeleteDeviceTokenParams}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof usersControllerDeleteDeviceToken>>, TError,{params: UsersControllerDeleteDeviceTokenParams}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersControllerDeleteDeviceToken>>, TError,{data: BodyType<DeleteDeviceTokenDto>;params?: UsersControllerDeleteDeviceTokenParams}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof usersControllerDeleteDeviceToken>>, TError,{data: BodyType<DeleteDeviceTokenDto>;params?: UsersControllerDeleteDeviceTokenParams}, TContext> => {
 const {mutation: mutationOptions, request: requestOptions} = options ?? {};
 
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof usersControllerDeleteDeviceToken>>, {params: UsersControllerDeleteDeviceTokenParams}> = (props) => {
-          const {params} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof usersControllerDeleteDeviceToken>>, {data: BodyType<DeleteDeviceTokenDto>;params?: UsersControllerDeleteDeviceTokenParams}> = (props) => {
+          const {data,params} = props ?? {};
 
-          return  usersControllerDeleteDeviceToken(params,requestOptions)
+          return  usersControllerDeleteDeviceToken(data,params,requestOptions)
         }
 
 
@@ -2252,18 +2392,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?? {};
   return  { mutationFn, ...mutationOptions }}
 
     export type UsersControllerDeleteDeviceTokenMutationResult = NonNullable<Awaited<ReturnType<typeof usersControllerDeleteDeviceToken>>>
-
+    export type UsersControllerDeleteDeviceTokenMutationBody = BodyType<DeleteDeviceTokenDto>
     export type UsersControllerDeleteDeviceTokenMutationError = ErrorType<unknown>
 
     /**
  * @summary Deactivate a device token
  */
 export const useUsersControllerDeleteDeviceToken = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersControllerDeleteDeviceToken>>, TError,{params: UsersControllerDeleteDeviceTokenParams}, TContext>, request?: SecondParameter<typeof customInstance>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersControllerDeleteDeviceToken>>, TError,{data: BodyType<DeleteDeviceTokenDto>;params?: UsersControllerDeleteDeviceTokenParams}, TContext>, request?: SecondParameter<typeof customInstance>}
 ): UseMutationResult<
         Awaited<ReturnType<typeof usersControllerDeleteDeviceToken>>,
         TError,
-        {params: UsersControllerDeleteDeviceTokenParams},
+        {data: BodyType<DeleteDeviceTokenDto>;params?: UsersControllerDeleteDeviceTokenParams},
         TContext
       > => {
 
@@ -3883,7 +4023,7 @@ export const useV3WorkspacesControllerGetWorkspaceMembers = <TData = Awaited<Ret
 
 
 /**
- * Add a new member to a specific workspace. Requires members:write scope.
+ * Add a new member to a specific workspace using user email, user ID, or workspace member ID. Requires members:write scope.
  * @summary Add a member to the workspace (Enterprise M2M)
  */
 export const v3WorkspacesControllerAddWorkspaceMember = (
@@ -3943,46 +4083,46 @@ export const useV3WorkspacesControllerAddWorkspaceMember = <TError = ErrorType<v
     }
 
 /**
- * Retrieve details of a specific workspace member by userId. Requires members:read scope.
+ * Retrieve details of a specific workspace member by member ID, user ID, or user email address. Requires members:read scope.
  * @summary Get details of a specific workspace member (Enterprise M2M)
  */
 export const v3WorkspacesControllerGetWorkspaceMember = (
     slug: string,
-    userId: string,
+    memberId: string,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
 
 
       return customInstance<void>(
-      {url: `/api/v3/workspaces/${slug}/members/${userId}`, method: 'GET', signal
+      {url: `/api/v3/workspaces/${slug}/members/${memberId}`, method: 'GET', signal
     },
       options);
     }
 
 
 export const getV3WorkspacesControllerGetWorkspaceMemberQueryKey = (slug: string,
-    userId: string,) => {
-    return [`/api/v3/workspaces/${slug}/members/${userId}`] as const;
+    memberId: string,) => {
+    return [`/api/v3/workspaces/${slug}/members/${memberId}`] as const;
     }
 
 
 export const getV3WorkspacesControllerGetWorkspaceMemberQueryOptions = <TData = Awaited<ReturnType<typeof v3WorkspacesControllerGetWorkspaceMember>>, TError = ErrorType<void>>(slug: string,
-    userId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v3WorkspacesControllerGetWorkspaceMember>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+    memberId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v3WorkspacesControllerGetWorkspaceMember>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getV3WorkspacesControllerGetWorkspaceMemberQueryKey(slug,userId);
+  const queryKey =  queryOptions?.queryKey ?? getV3WorkspacesControllerGetWorkspaceMemberQueryKey(slug,memberId);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof v3WorkspacesControllerGetWorkspaceMember>>> = ({ signal }) => v3WorkspacesControllerGetWorkspaceMember(slug,userId, requestOptions, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof v3WorkspacesControllerGetWorkspaceMember>>> = ({ signal }) => v3WorkspacesControllerGetWorkspaceMember(slug,memberId, requestOptions, signal);
 
 
 
 
 
-   return  { queryKey, queryFn, enabled: !!(slug && userId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof v3WorkspacesControllerGetWorkspaceMember>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, enabled: !!(slug && memberId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof v3WorkspacesControllerGetWorkspaceMember>>, TError, TData> & { queryKey: QueryKey }
 }
 
 export type V3WorkspacesControllerGetWorkspaceMemberQueryResult = NonNullable<Awaited<ReturnType<typeof v3WorkspacesControllerGetWorkspaceMember>>>
@@ -3993,11 +4133,11 @@ export type V3WorkspacesControllerGetWorkspaceMemberQueryError = ErrorType<void>
  */
 export const useV3WorkspacesControllerGetWorkspaceMember = <TData = Awaited<ReturnType<typeof v3WorkspacesControllerGetWorkspaceMember>>, TError = ErrorType<void>>(
  slug: string,
-    userId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v3WorkspacesControllerGetWorkspaceMember>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+    memberId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v3WorkspacesControllerGetWorkspaceMember>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
 
   ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
 
-  const queryOptions = getV3WorkspacesControllerGetWorkspaceMemberQueryOptions(slug,userId,options)
+  const queryOptions = getV3WorkspacesControllerGetWorkspaceMemberQueryOptions(slug,memberId,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
@@ -4010,18 +4150,18 @@ export const useV3WorkspacesControllerGetWorkspaceMember = <TData = Awaited<Retu
 
 
 /**
- * Update the role of a specific workspace member. Requires members:write scope.
+ * Update the role of a specific workspace member by member ID, user ID, or user email address. Requires members:write scope.
  * @summary Update a workspace member role (Enterprise M2M)
  */
 export const v3WorkspacesControllerUpdateWorkspaceMember = (
     slug: string,
-    userId: string,
+    memberId: string,
     v3UpdateMemberRoleDto: BodyType<V3UpdateMemberRoleDto>,
  options?: SecondParameter<typeof customInstance>,) => {
 
 
       return customInstance<void>(
-      {url: `/api/v3/workspaces/${slug}/members/${userId}`, method: 'PATCH',
+      {url: `/api/v3/workspaces/${slug}/members/${memberId}`, method: 'PATCH',
       headers: {'Content-Type': 'application/json', },
       data: v3UpdateMemberRoleDto
     },
@@ -4031,17 +4171,17 @@ export const v3WorkspacesControllerUpdateWorkspaceMember = (
 
 
 export const getV3WorkspacesControllerUpdateWorkspaceMemberMutationOptions = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerUpdateWorkspaceMember>>, TError,{slug: string;userId: string;data: BodyType<V3UpdateMemberRoleDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerUpdateWorkspaceMember>>, TError,{slug: string;userId: string;data: BodyType<V3UpdateMemberRoleDto>}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerUpdateWorkspaceMember>>, TError,{slug: string;memberId: string;data: BodyType<V3UpdateMemberRoleDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerUpdateWorkspaceMember>>, TError,{slug: string;memberId: string;data: BodyType<V3UpdateMemberRoleDto>}, TContext> => {
 const {mutation: mutationOptions, request: requestOptions} = options ?? {};
 
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v3WorkspacesControllerUpdateWorkspaceMember>>, {slug: string;userId: string;data: BodyType<V3UpdateMemberRoleDto>}> = (props) => {
-          const {slug,userId,data} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v3WorkspacesControllerUpdateWorkspaceMember>>, {slug: string;memberId: string;data: BodyType<V3UpdateMemberRoleDto>}> = (props) => {
+          const {slug,memberId,data} = props ?? {};
 
-          return  v3WorkspacesControllerUpdateWorkspaceMember(slug,userId,data,requestOptions)
+          return  v3WorkspacesControllerUpdateWorkspaceMember(slug,memberId,data,requestOptions)
         }
 
 
@@ -4057,11 +4197,11 @@ const {mutation: mutationOptions, request: requestOptions} = options ?? {};
  * @summary Update a workspace member role (Enterprise M2M)
  */
 export const useV3WorkspacesControllerUpdateWorkspaceMember = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerUpdateWorkspaceMember>>, TError,{slug: string;userId: string;data: BodyType<V3UpdateMemberRoleDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerUpdateWorkspaceMember>>, TError,{slug: string;memberId: string;data: BodyType<V3UpdateMemberRoleDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
 ): UseMutationResult<
         Awaited<ReturnType<typeof v3WorkspacesControllerUpdateWorkspaceMember>>,
         TError,
-        {slug: string;userId: string;data: BodyType<V3UpdateMemberRoleDto>},
+        {slug: string;memberId: string;data: BodyType<V3UpdateMemberRoleDto>},
         TContext
       > => {
 
@@ -4071,17 +4211,17 @@ export const useV3WorkspacesControllerUpdateWorkspaceMember = <TError = ErrorTyp
     }
 
 /**
- * Remove a workspace member by userId. Requires members:write scope.
+ * Remove a workspace member by member ID, user ID, or user email address. Requires members:write scope.
  * @summary Remove a member from the workspace (Enterprise M2M)
  */
 export const v3WorkspacesControllerDeleteWorkspaceMember = (
     slug: string,
-    userId: string,
+    memberId: string,
  options?: SecondParameter<typeof customInstance>,) => {
 
 
       return customInstance<void>(
-      {url: `/api/v3/workspaces/${slug}/members/${userId}`, method: 'DELETE'
+      {url: `/api/v3/workspaces/${slug}/members/${memberId}`, method: 'DELETE'
     },
       options);
     }
@@ -4089,17 +4229,17 @@ export const v3WorkspacesControllerDeleteWorkspaceMember = (
 
 
 export const getV3WorkspacesControllerDeleteWorkspaceMemberMutationOptions = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerDeleteWorkspaceMember>>, TError,{slug: string;userId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerDeleteWorkspaceMember>>, TError,{slug: string;userId: string}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerDeleteWorkspaceMember>>, TError,{slug: string;memberId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerDeleteWorkspaceMember>>, TError,{slug: string;memberId: string}, TContext> => {
 const {mutation: mutationOptions, request: requestOptions} = options ?? {};
 
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v3WorkspacesControllerDeleteWorkspaceMember>>, {slug: string;userId: string}> = (props) => {
-          const {slug,userId} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v3WorkspacesControllerDeleteWorkspaceMember>>, {slug: string;memberId: string}> = (props) => {
+          const {slug,memberId} = props ?? {};
 
-          return  v3WorkspacesControllerDeleteWorkspaceMember(slug,userId,requestOptions)
+          return  v3WorkspacesControllerDeleteWorkspaceMember(slug,memberId,requestOptions)
         }
 
 
@@ -4115,11 +4255,11 @@ const {mutation: mutationOptions, request: requestOptions} = options ?? {};
  * @summary Remove a member from the workspace (Enterprise M2M)
  */
 export const useV3WorkspacesControllerDeleteWorkspaceMember = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerDeleteWorkspaceMember>>, TError,{slug: string;userId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerDeleteWorkspaceMember>>, TError,{slug: string;memberId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
 ): UseMutationResult<
         Awaited<ReturnType<typeof v3WorkspacesControllerDeleteWorkspaceMember>>,
         TError,
-        {slug: string;userId: string},
+        {slug: string;memberId: string},
         TContext
       > => {
 
@@ -4505,7 +4645,7 @@ export const useV3WorkspacesControllerGetChannelMembers = <TData = Awaited<Retur
 
 
 /**
- * Add user(s) to a channel with customizable role and permissions. Requires channels:write scope.
+ * Add user(s) to a channel using user IDs, member IDs, or email addresses with customizable role and permissions. Requires channels:write scope.
  * @summary Add members to a channel (Enterprise M2M)
  */
 export const v3WorkspacesControllerAddChannelMembers = (
@@ -4566,19 +4706,19 @@ export const useV3WorkspacesControllerAddChannelMembers = <TError = ErrorType<un
     }
 
 /**
- * Update the role or bitwise permissions of a channel member. Requires channels:write scope.
+ * Update the role or bitwise permissions of a channel member using user ID, member ID, or email address. Requires channels:write scope.
  * @summary Update channel member role and permissions (Enterprise M2M)
  */
 export const v3WorkspacesControllerUpdateChannelMember = (
     slug: string,
     channelId: string,
-    userId: string,
+    memberId: string,
     v3UpdateChannelMemberDto: BodyType<V3UpdateChannelMemberDto>,
  options?: SecondParameter<typeof customInstance>,) => {
 
 
       return customInstance<void>(
-      {url: `/api/v3/workspaces/${slug}/channels/${channelId}/members/${userId}`, method: 'PATCH',
+      {url: `/api/v3/workspaces/${slug}/channels/${channelId}/members/${memberId}`, method: 'PATCH',
       headers: {'Content-Type': 'application/json', },
       data: v3UpdateChannelMemberDto
     },
@@ -4588,17 +4728,17 @@ export const v3WorkspacesControllerUpdateChannelMember = (
 
 
 export const getV3WorkspacesControllerUpdateChannelMemberMutationOptions = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerUpdateChannelMember>>, TError,{slug: string;channelId: string;userId: string;data: BodyType<V3UpdateChannelMemberDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerUpdateChannelMember>>, TError,{slug: string;channelId: string;userId: string;data: BodyType<V3UpdateChannelMemberDto>}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerUpdateChannelMember>>, TError,{slug: string;channelId: string;memberId: string;data: BodyType<V3UpdateChannelMemberDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerUpdateChannelMember>>, TError,{slug: string;channelId: string;memberId: string;data: BodyType<V3UpdateChannelMemberDto>}, TContext> => {
 const {mutation: mutationOptions, request: requestOptions} = options ?? {};
 
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v3WorkspacesControllerUpdateChannelMember>>, {slug: string;channelId: string;userId: string;data: BodyType<V3UpdateChannelMemberDto>}> = (props) => {
-          const {slug,channelId,userId,data} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v3WorkspacesControllerUpdateChannelMember>>, {slug: string;channelId: string;memberId: string;data: BodyType<V3UpdateChannelMemberDto>}> = (props) => {
+          const {slug,channelId,memberId,data} = props ?? {};
 
-          return  v3WorkspacesControllerUpdateChannelMember(slug,channelId,userId,data,requestOptions)
+          return  v3WorkspacesControllerUpdateChannelMember(slug,channelId,memberId,data,requestOptions)
         }
 
 
@@ -4614,11 +4754,11 @@ const {mutation: mutationOptions, request: requestOptions} = options ?? {};
  * @summary Update channel member role and permissions (Enterprise M2M)
  */
 export const useV3WorkspacesControllerUpdateChannelMember = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerUpdateChannelMember>>, TError,{slug: string;channelId: string;userId: string;data: BodyType<V3UpdateChannelMemberDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerUpdateChannelMember>>, TError,{slug: string;channelId: string;memberId: string;data: BodyType<V3UpdateChannelMemberDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
 ): UseMutationResult<
         Awaited<ReturnType<typeof v3WorkspacesControllerUpdateChannelMember>>,
         TError,
-        {slug: string;channelId: string;userId: string;data: BodyType<V3UpdateChannelMemberDto>},
+        {slug: string;channelId: string;memberId: string;data: BodyType<V3UpdateChannelMemberDto>},
         TContext
       > => {
 
@@ -4628,18 +4768,18 @@ export const useV3WorkspacesControllerUpdateChannelMember = <TError = ErrorType<
     }
 
 /**
- * Remove a specific member from a channel. Requires channels:write scope.
+ * Remove a specific member from a channel using user ID, workspace member ID, or email address. Requires channels:write scope.
  * @summary Remove a member from a channel (Enterprise M2M)
  */
 export const v3WorkspacesControllerDeleteChannelMember = (
     slug: string,
     channelId: string,
-    userId: string,
+    memberId: string,
  options?: SecondParameter<typeof customInstance>,) => {
 
 
       return customInstance<void>(
-      {url: `/api/v3/workspaces/${slug}/channels/${channelId}/members/${userId}`, method: 'DELETE'
+      {url: `/api/v3/workspaces/${slug}/channels/${channelId}/members/${memberId}`, method: 'DELETE'
     },
       options);
     }
@@ -4647,17 +4787,17 @@ export const v3WorkspacesControllerDeleteChannelMember = (
 
 
 export const getV3WorkspacesControllerDeleteChannelMemberMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerDeleteChannelMember>>, TError,{slug: string;channelId: string;userId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerDeleteChannelMember>>, TError,{slug: string;channelId: string;userId: string}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerDeleteChannelMember>>, TError,{slug: string;channelId: string;memberId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerDeleteChannelMember>>, TError,{slug: string;channelId: string;memberId: string}, TContext> => {
 const {mutation: mutationOptions, request: requestOptions} = options ?? {};
 
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v3WorkspacesControllerDeleteChannelMember>>, {slug: string;channelId: string;userId: string}> = (props) => {
-          const {slug,channelId,userId} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v3WorkspacesControllerDeleteChannelMember>>, {slug: string;channelId: string;memberId: string}> = (props) => {
+          const {slug,channelId,memberId} = props ?? {};
 
-          return  v3WorkspacesControllerDeleteChannelMember(slug,channelId,userId,requestOptions)
+          return  v3WorkspacesControllerDeleteChannelMember(slug,channelId,memberId,requestOptions)
         }
 
 
@@ -4673,15 +4813,382 @@ const {mutation: mutationOptions, request: requestOptions} = options ?? {};
  * @summary Remove a member from a channel (Enterprise M2M)
  */
 export const useV3WorkspacesControllerDeleteChannelMember = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerDeleteChannelMember>>, TError,{slug: string;channelId: string;userId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerDeleteChannelMember>>, TError,{slug: string;channelId: string;memberId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
 ): UseMutationResult<
         Awaited<ReturnType<typeof v3WorkspacesControllerDeleteChannelMember>>,
         TError,
-        {slug: string;channelId: string;userId: string},
+        {slug: string;channelId: string;memberId: string},
         TContext
       > => {
 
       const mutationOptions = getV3WorkspacesControllerDeleteChannelMemberMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * Retrieve message history for a channel in a workspace. Requires messages:read scope.
+ * @summary Get channel messages (Enterprise M2M)
+ */
+export const v3WorkspacesControllerGetChannelMessages = (
+    slug: string,
+    channelId: string,
+    params: V3WorkspacesControllerGetChannelMessagesParams,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/channels/${channelId}/messages`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+
+
+export const getV3WorkspacesControllerGetChannelMessagesQueryKey = (slug: string,
+    channelId: string,
+    params: V3WorkspacesControllerGetChannelMessagesParams,) => {
+    return [`/api/v3/workspaces/${slug}/channels/${channelId}/messages`, ...(params ? [params]: [])] as const;
+    }
+
+
+export const getV3WorkspacesControllerGetChannelMessagesQueryOptions = <TData = Awaited<ReturnType<typeof v3WorkspacesControllerGetChannelMessages>>, TError = ErrorType<unknown>>(slug: string,
+    channelId: string,
+    params: V3WorkspacesControllerGetChannelMessagesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v3WorkspacesControllerGetChannelMessages>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getV3WorkspacesControllerGetChannelMessagesQueryKey(slug,channelId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof v3WorkspacesControllerGetChannelMessages>>> = ({ signal }) => v3WorkspacesControllerGetChannelMessages(slug,channelId,params, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(slug && channelId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof v3WorkspacesControllerGetChannelMessages>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type V3WorkspacesControllerGetChannelMessagesQueryResult = NonNullable<Awaited<ReturnType<typeof v3WorkspacesControllerGetChannelMessages>>>
+export type V3WorkspacesControllerGetChannelMessagesQueryError = ErrorType<unknown>
+
+/**
+ * @summary Get channel messages (Enterprise M2M)
+ */
+export const useV3WorkspacesControllerGetChannelMessages = <TData = Awaited<ReturnType<typeof v3WorkspacesControllerGetChannelMessages>>, TError = ErrorType<unknown>>(
+ slug: string,
+    channelId: string,
+    params: V3WorkspacesControllerGetChannelMessagesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v3WorkspacesControllerGetChannelMessages>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+
+  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+
+  const queryOptions = getV3WorkspacesControllerGetChannelMessagesQueryOptions(slug,channelId,params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Send a message to a channel. Requires messages:send scope.
+ * @summary Send a message to a channel (Enterprise M2M)
+ */
+export const v3WorkspacesControllerCreateChannelMessage = (
+    slug: string,
+    channelId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/channels/${channelId}/messages`, method: 'POST'
+    },
+      options);
+    }
+
+
+
+export const getV3WorkspacesControllerCreateChannelMessageMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerCreateChannelMessage>>, TError,{slug: string;channelId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerCreateChannelMessage>>, TError,{slug: string;channelId: string}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v3WorkspacesControllerCreateChannelMessage>>, {slug: string;channelId: string}> = (props) => {
+          const {slug,channelId} = props ?? {};
+
+          return  v3WorkspacesControllerCreateChannelMessage(slug,channelId,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type V3WorkspacesControllerCreateChannelMessageMutationResult = NonNullable<Awaited<ReturnType<typeof v3WorkspacesControllerCreateChannelMessage>>>
+
+    export type V3WorkspacesControllerCreateChannelMessageMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Send a message to a channel (Enterprise M2M)
+ */
+export const useV3WorkspacesControllerCreateChannelMessage = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerCreateChannelMessage>>, TError,{slug: string;channelId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof v3WorkspacesControllerCreateChannelMessage>>,
+        TError,
+        {slug: string;channelId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getV3WorkspacesControllerCreateChannelMessageMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * Update content of a message. Requires messages:send scope.
+ * @summary Update a channel message (Enterprise M2M)
+ */
+export const v3WorkspacesControllerUpdateChannelMessage = (
+    slug: string,
+    channelId: string,
+    messageId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/channels/${channelId}/messages/${messageId}`, method: 'PATCH'
+    },
+      options);
+    }
+
+
+
+export const getV3WorkspacesControllerUpdateChannelMessageMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerUpdateChannelMessage>>, TError,{slug: string;channelId: string;messageId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerUpdateChannelMessage>>, TError,{slug: string;channelId: string;messageId: string}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v3WorkspacesControllerUpdateChannelMessage>>, {slug: string;channelId: string;messageId: string}> = (props) => {
+          const {slug,channelId,messageId} = props ?? {};
+
+          return  v3WorkspacesControllerUpdateChannelMessage(slug,channelId,messageId,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type V3WorkspacesControllerUpdateChannelMessageMutationResult = NonNullable<Awaited<ReturnType<typeof v3WorkspacesControllerUpdateChannelMessage>>>
+
+    export type V3WorkspacesControllerUpdateChannelMessageMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update a channel message (Enterprise M2M)
+ */
+export const useV3WorkspacesControllerUpdateChannelMessage = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerUpdateChannelMessage>>, TError,{slug: string;channelId: string;messageId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof v3WorkspacesControllerUpdateChannelMessage>>,
+        TError,
+        {slug: string;channelId: string;messageId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getV3WorkspacesControllerUpdateChannelMessageMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * Delete a message. Requires messages:send scope.
+ * @summary Delete a channel message (Enterprise M2M)
+ */
+export const v3WorkspacesControllerDeleteChannelMessage = (
+    slug: string,
+    channelId: string,
+    messageId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/channels/${channelId}/messages/${messageId}`, method: 'DELETE'
+    },
+      options);
+    }
+
+
+
+export const getV3WorkspacesControllerDeleteChannelMessageMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerDeleteChannelMessage>>, TError,{slug: string;channelId: string;messageId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerDeleteChannelMessage>>, TError,{slug: string;channelId: string;messageId: string}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v3WorkspacesControllerDeleteChannelMessage>>, {slug: string;channelId: string;messageId: string}> = (props) => {
+          const {slug,channelId,messageId} = props ?? {};
+
+          return  v3WorkspacesControllerDeleteChannelMessage(slug,channelId,messageId,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type V3WorkspacesControllerDeleteChannelMessageMutationResult = NonNullable<Awaited<ReturnType<typeof v3WorkspacesControllerDeleteChannelMessage>>>
+
+    export type V3WorkspacesControllerDeleteChannelMessageMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete a channel message (Enterprise M2M)
+ */
+export const useV3WorkspacesControllerDeleteChannelMessage = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerDeleteChannelMessage>>, TError,{slug: string;channelId: string;messageId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof v3WorkspacesControllerDeleteChannelMessage>>,
+        TError,
+        {slug: string;channelId: string;messageId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getV3WorkspacesControllerDeleteChannelMessageMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * Add an emoji reaction to a message. Requires messages:send scope.
+ * @summary Add a reaction to a channel message (Enterprise M2M)
+ */
+export const v3WorkspacesControllerAddChannelMessageReaction = (
+    slug: string,
+    channelId: string,
+    messageId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/channels/${channelId}/messages/${messageId}/reactions`, method: 'POST'
+    },
+      options);
+    }
+
+
+
+export const getV3WorkspacesControllerAddChannelMessageReactionMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerAddChannelMessageReaction>>, TError,{slug: string;channelId: string;messageId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerAddChannelMessageReaction>>, TError,{slug: string;channelId: string;messageId: string}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v3WorkspacesControllerAddChannelMessageReaction>>, {slug: string;channelId: string;messageId: string}> = (props) => {
+          const {slug,channelId,messageId} = props ?? {};
+
+          return  v3WorkspacesControllerAddChannelMessageReaction(slug,channelId,messageId,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type V3WorkspacesControllerAddChannelMessageReactionMutationResult = NonNullable<Awaited<ReturnType<typeof v3WorkspacesControllerAddChannelMessageReaction>>>
+
+    export type V3WorkspacesControllerAddChannelMessageReactionMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Add a reaction to a channel message (Enterprise M2M)
+ */
+export const useV3WorkspacesControllerAddChannelMessageReaction = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerAddChannelMessageReaction>>, TError,{slug: string;channelId: string;messageId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof v3WorkspacesControllerAddChannelMessageReaction>>,
+        TError,
+        {slug: string;channelId: string;messageId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getV3WorkspacesControllerAddChannelMessageReactionMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * Remove an emoji reaction from a message. Requires messages:send scope.
+ * @summary Remove a reaction from a channel message (Enterprise M2M)
+ */
+export const v3WorkspacesControllerRemoveChannelMessageReaction = (
+    slug: string,
+    channelId: string,
+    messageId: string,
+    emoji: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/channels/${channelId}/messages/${messageId}/reactions/${emoji}`, method: 'DELETE'
+    },
+      options);
+    }
+
+
+
+export const getV3WorkspacesControllerRemoveChannelMessageReactionMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerRemoveChannelMessageReaction>>, TError,{slug: string;channelId: string;messageId: string;emoji: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerRemoveChannelMessageReaction>>, TError,{slug: string;channelId: string;messageId: string;emoji: string}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v3WorkspacesControllerRemoveChannelMessageReaction>>, {slug: string;channelId: string;messageId: string;emoji: string}> = (props) => {
+          const {slug,channelId,messageId,emoji} = props ?? {};
+
+          return  v3WorkspacesControllerRemoveChannelMessageReaction(slug,channelId,messageId,emoji,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type V3WorkspacesControllerRemoveChannelMessageReactionMutationResult = NonNullable<Awaited<ReturnType<typeof v3WorkspacesControllerRemoveChannelMessageReaction>>>
+
+    export type V3WorkspacesControllerRemoveChannelMessageReactionMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Remove a reaction from a channel message (Enterprise M2M)
+ */
+export const useV3WorkspacesControllerRemoveChannelMessageReaction = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3WorkspacesControllerRemoveChannelMessageReaction>>, TError,{slug: string;channelId: string;messageId: string;emoji: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof v3WorkspacesControllerRemoveChannelMessageReaction>>,
+        TError,
+        {slug: string;channelId: string;messageId: string;emoji: string},
+        TContext
+      > => {
+
+      const mutationOptions = getV3WorkspacesControllerRemoveChannelMessageReactionMutationOptions(options);
 
       return useMutation(mutationOptions);
     }
@@ -4994,6 +5501,69 @@ export const useV3WebhooksControllerDeleteWebhook = <TError = ErrorType<unknown>
 
       return useMutation(mutationOptions);
     }
+
+/**
+ * Requires webhooks:read scope. Retrieves all incoming webhooks configured across all channels in this workspace.
+ * @summary List all incoming webhooks in a workspace
+ */
+export const v3ChannelIncomingWebhooksControllerGetWorkspaceIncomingWebhooks = (
+    slug: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/incoming-webhooks`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+export const getV3ChannelIncomingWebhooksControllerGetWorkspaceIncomingWebhooksQueryKey = (slug: string,) => {
+    return [`/api/v3/workspaces/${slug}/incoming-webhooks`] as const;
+    }
+
+
+export const getV3ChannelIncomingWebhooksControllerGetWorkspaceIncomingWebhooksQueryOptions = <TData = Awaited<ReturnType<typeof v3ChannelIncomingWebhooksControllerGetWorkspaceIncomingWebhooks>>, TError = ErrorType<unknown>>(slug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v3ChannelIncomingWebhooksControllerGetWorkspaceIncomingWebhooks>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getV3ChannelIncomingWebhooksControllerGetWorkspaceIncomingWebhooksQueryKey(slug);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof v3ChannelIncomingWebhooksControllerGetWorkspaceIncomingWebhooks>>> = ({ signal }) => v3ChannelIncomingWebhooksControllerGetWorkspaceIncomingWebhooks(slug, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(slug), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof v3ChannelIncomingWebhooksControllerGetWorkspaceIncomingWebhooks>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type V3ChannelIncomingWebhooksControllerGetWorkspaceIncomingWebhooksQueryResult = NonNullable<Awaited<ReturnType<typeof v3ChannelIncomingWebhooksControllerGetWorkspaceIncomingWebhooks>>>
+export type V3ChannelIncomingWebhooksControllerGetWorkspaceIncomingWebhooksQueryError = ErrorType<unknown>
+
+/**
+ * @summary List all incoming webhooks in a workspace
+ */
+export const useV3ChannelIncomingWebhooksControllerGetWorkspaceIncomingWebhooks = <TData = Awaited<ReturnType<typeof v3ChannelIncomingWebhooksControllerGetWorkspaceIncomingWebhooks>>, TError = ErrorType<unknown>>(
+ slug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v3ChannelIncomingWebhooksControllerGetWorkspaceIncomingWebhooks>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+
+  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+
+  const queryOptions = getV3ChannelIncomingWebhooksControllerGetWorkspaceIncomingWebhooksQueryOptions(slug,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
 
 /**
  * Requires webhooks:read scope. Retrieves all incoming webhooks configured for this channel.
@@ -5859,6 +6429,2071 @@ export const useV3OrganizationsControllerDeleteM2mApplication = <TError = ErrorT
     }
 
 /**
+ * @summary List bot applications
+ */
+export const v3ApplicationsControllerListApplications0 = (
+
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/applications`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+export const getV3ApplicationsControllerListApplications0QueryKey = () => {
+    return [`/api/v3/applications`] as const;
+    }
+
+
+export const getV3ApplicationsControllerListApplications0QueryOptions = <TData = Awaited<ReturnType<typeof v3ApplicationsControllerListApplications0>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v3ApplicationsControllerListApplications0>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getV3ApplicationsControllerListApplications0QueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof v3ApplicationsControllerListApplications0>>> = ({ signal }) => v3ApplicationsControllerListApplications0(requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof v3ApplicationsControllerListApplications0>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type V3ApplicationsControllerListApplications0QueryResult = NonNullable<Awaited<ReturnType<typeof v3ApplicationsControllerListApplications0>>>
+export type V3ApplicationsControllerListApplications0QueryError = ErrorType<unknown>
+
+/**
+ * @summary List bot applications
+ */
+export const useV3ApplicationsControllerListApplications0 = <TData = Awaited<ReturnType<typeof v3ApplicationsControllerListApplications0>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v3ApplicationsControllerListApplications0>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+
+  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+
+  const queryOptions = getV3ApplicationsControllerListApplications0QueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Create a bot application
+ */
+export const v3ApplicationsControllerCreateApplication0 = (
+
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/applications`, method: 'POST'
+    },
+      options);
+    }
+
+
+
+export const getV3ApplicationsControllerCreateApplication0MutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3ApplicationsControllerCreateApplication0>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof v3ApplicationsControllerCreateApplication0>>, TError,void, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v3ApplicationsControllerCreateApplication0>>, void> = () => {
+
+
+          return  v3ApplicationsControllerCreateApplication0(requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type V3ApplicationsControllerCreateApplication0MutationResult = NonNullable<Awaited<ReturnType<typeof v3ApplicationsControllerCreateApplication0>>>
+
+    export type V3ApplicationsControllerCreateApplication0MutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create a bot application
+ */
+export const useV3ApplicationsControllerCreateApplication0 = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3ApplicationsControllerCreateApplication0>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof v3ApplicationsControllerCreateApplication0>>,
+        TError,
+        void,
+        TContext
+      > => {
+
+      const mutationOptions = getV3ApplicationsControllerCreateApplication0MutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary List bot applications
+ */
+export const v3ApplicationsControllerListApplications1 = (
+
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v2/applications`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+export const getV3ApplicationsControllerListApplications1QueryKey = () => {
+    return [`/api/v2/applications`] as const;
+    }
+
+
+export const getV3ApplicationsControllerListApplications1QueryOptions = <TData = Awaited<ReturnType<typeof v3ApplicationsControllerListApplications1>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v3ApplicationsControllerListApplications1>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getV3ApplicationsControllerListApplications1QueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof v3ApplicationsControllerListApplications1>>> = ({ signal }) => v3ApplicationsControllerListApplications1(requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof v3ApplicationsControllerListApplications1>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type V3ApplicationsControllerListApplications1QueryResult = NonNullable<Awaited<ReturnType<typeof v3ApplicationsControllerListApplications1>>>
+export type V3ApplicationsControllerListApplications1QueryError = ErrorType<unknown>
+
+/**
+ * @summary List bot applications
+ */
+export const useV3ApplicationsControllerListApplications1 = <TData = Awaited<ReturnType<typeof v3ApplicationsControllerListApplications1>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v3ApplicationsControllerListApplications1>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+
+  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+
+  const queryOptions = getV3ApplicationsControllerListApplications1QueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Create a bot application
+ */
+export const v3ApplicationsControllerCreateApplication1 = (
+
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v2/applications`, method: 'POST'
+    },
+      options);
+    }
+
+
+
+export const getV3ApplicationsControllerCreateApplication1MutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3ApplicationsControllerCreateApplication1>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof v3ApplicationsControllerCreateApplication1>>, TError,void, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v3ApplicationsControllerCreateApplication1>>, void> = () => {
+
+
+          return  v3ApplicationsControllerCreateApplication1(requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type V3ApplicationsControllerCreateApplication1MutationResult = NonNullable<Awaited<ReturnType<typeof v3ApplicationsControllerCreateApplication1>>>
+
+    export type V3ApplicationsControllerCreateApplication1MutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create a bot application
+ */
+export const useV3ApplicationsControllerCreateApplication1 = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3ApplicationsControllerCreateApplication1>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof v3ApplicationsControllerCreateApplication1>>,
+        TError,
+        void,
+        TContext
+      > => {
+
+      const mutationOptions = getV3ApplicationsControllerCreateApplication1MutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary Get application details
+ */
+export const v3ApplicationsControllerGetApplication0 = (
+    id: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/applications/${id}`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+export const getV3ApplicationsControllerGetApplication0QueryKey = (id: string,) => {
+    return [`/api/v3/applications/${id}`] as const;
+    }
+
+
+export const getV3ApplicationsControllerGetApplication0QueryOptions = <TData = Awaited<ReturnType<typeof v3ApplicationsControllerGetApplication0>>, TError = ErrorType<unknown>>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v3ApplicationsControllerGetApplication0>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getV3ApplicationsControllerGetApplication0QueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof v3ApplicationsControllerGetApplication0>>> = ({ signal }) => v3ApplicationsControllerGetApplication0(id, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof v3ApplicationsControllerGetApplication0>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type V3ApplicationsControllerGetApplication0QueryResult = NonNullable<Awaited<ReturnType<typeof v3ApplicationsControllerGetApplication0>>>
+export type V3ApplicationsControllerGetApplication0QueryError = ErrorType<unknown>
+
+/**
+ * @summary Get application details
+ */
+export const useV3ApplicationsControllerGetApplication0 = <TData = Awaited<ReturnType<typeof v3ApplicationsControllerGetApplication0>>, TError = ErrorType<unknown>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v3ApplicationsControllerGetApplication0>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+
+  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+
+  const queryOptions = getV3ApplicationsControllerGetApplication0QueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Update bot application
+ */
+export const v3ApplicationsControllerUpdateApplication = (
+    id: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/applications/${id}`, method: 'PATCH'
+    },
+      options);
+    }
+
+
+
+export const getV3ApplicationsControllerUpdateApplicationMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3ApplicationsControllerUpdateApplication>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof v3ApplicationsControllerUpdateApplication>>, TError,{id: string}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v3ApplicationsControllerUpdateApplication>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  v3ApplicationsControllerUpdateApplication(id,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type V3ApplicationsControllerUpdateApplicationMutationResult = NonNullable<Awaited<ReturnType<typeof v3ApplicationsControllerUpdateApplication>>>
+
+    export type V3ApplicationsControllerUpdateApplicationMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update bot application
+ */
+export const useV3ApplicationsControllerUpdateApplication = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3ApplicationsControllerUpdateApplication>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof v3ApplicationsControllerUpdateApplication>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getV3ApplicationsControllerUpdateApplicationMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary Delete bot application
+ */
+export const v3ApplicationsControllerDeleteApplication = (
+    id: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/applications/${id}`, method: 'DELETE'
+    },
+      options);
+    }
+
+
+
+export const getV3ApplicationsControllerDeleteApplicationMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3ApplicationsControllerDeleteApplication>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof v3ApplicationsControllerDeleteApplication>>, TError,{id: string}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v3ApplicationsControllerDeleteApplication>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  v3ApplicationsControllerDeleteApplication(id,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type V3ApplicationsControllerDeleteApplicationMutationResult = NonNullable<Awaited<ReturnType<typeof v3ApplicationsControllerDeleteApplication>>>
+
+    export type V3ApplicationsControllerDeleteApplicationMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete bot application
+ */
+export const useV3ApplicationsControllerDeleteApplication = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3ApplicationsControllerDeleteApplication>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof v3ApplicationsControllerDeleteApplication>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getV3ApplicationsControllerDeleteApplicationMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary Get application details
+ */
+export const v3ApplicationsControllerGetApplication1 = (
+    id: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v2/applications/${id}`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+export const getV3ApplicationsControllerGetApplication1QueryKey = (id: string,) => {
+    return [`/api/v2/applications/${id}`] as const;
+    }
+
+
+export const getV3ApplicationsControllerGetApplication1QueryOptions = <TData = Awaited<ReturnType<typeof v3ApplicationsControllerGetApplication1>>, TError = ErrorType<unknown>>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v3ApplicationsControllerGetApplication1>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getV3ApplicationsControllerGetApplication1QueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof v3ApplicationsControllerGetApplication1>>> = ({ signal }) => v3ApplicationsControllerGetApplication1(id, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof v3ApplicationsControllerGetApplication1>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type V3ApplicationsControllerGetApplication1QueryResult = NonNullable<Awaited<ReturnType<typeof v3ApplicationsControllerGetApplication1>>>
+export type V3ApplicationsControllerGetApplication1QueryError = ErrorType<unknown>
+
+/**
+ * @summary Get application details
+ */
+export const useV3ApplicationsControllerGetApplication1 = <TData = Awaited<ReturnType<typeof v3ApplicationsControllerGetApplication1>>, TError = ErrorType<unknown>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v3ApplicationsControllerGetApplication1>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+
+  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+
+  const queryOptions = getV3ApplicationsControllerGetApplication1QueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Reset bot token
+ */
+export const v3ApplicationsControllerResetToken0 = (
+    id: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/applications/${id}/reset-token`, method: 'POST'
+    },
+      options);
+    }
+
+
+
+export const getV3ApplicationsControllerResetToken0MutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3ApplicationsControllerResetToken0>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof v3ApplicationsControllerResetToken0>>, TError,{id: string}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v3ApplicationsControllerResetToken0>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  v3ApplicationsControllerResetToken0(id,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type V3ApplicationsControllerResetToken0MutationResult = NonNullable<Awaited<ReturnType<typeof v3ApplicationsControllerResetToken0>>>
+
+    export type V3ApplicationsControllerResetToken0MutationError = ErrorType<unknown>
+
+    /**
+ * @summary Reset bot token
+ */
+export const useV3ApplicationsControllerResetToken0 = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3ApplicationsControllerResetToken0>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof v3ApplicationsControllerResetToken0>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getV3ApplicationsControllerResetToken0MutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary Reset bot token
+ */
+export const v3ApplicationsControllerResetToken1 = (
+    id: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v2/applications/${id}/reset-token`, method: 'POST'
+    },
+      options);
+    }
+
+
+
+export const getV3ApplicationsControllerResetToken1MutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3ApplicationsControllerResetToken1>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof v3ApplicationsControllerResetToken1>>, TError,{id: string}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v3ApplicationsControllerResetToken1>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  v3ApplicationsControllerResetToken1(id,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type V3ApplicationsControllerResetToken1MutationResult = NonNullable<Awaited<ReturnType<typeof v3ApplicationsControllerResetToken1>>>
+
+    export type V3ApplicationsControllerResetToken1MutationError = ErrorType<unknown>
+
+    /**
+ * @summary Reset bot token
+ */
+export const useV3ApplicationsControllerResetToken1 = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3ApplicationsControllerResetToken1>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof v3ApplicationsControllerResetToken1>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getV3ApplicationsControllerResetToken1MutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary Install bot application to a workspace
+ */
+export const v3ApplicationsControllerInstallApplication0 = (
+    id: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/applications/${id}/install`, method: 'POST'
+    },
+      options);
+    }
+
+
+
+export const getV3ApplicationsControllerInstallApplication0MutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3ApplicationsControllerInstallApplication0>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof v3ApplicationsControllerInstallApplication0>>, TError,{id: string}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v3ApplicationsControllerInstallApplication0>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  v3ApplicationsControllerInstallApplication0(id,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type V3ApplicationsControllerInstallApplication0MutationResult = NonNullable<Awaited<ReturnType<typeof v3ApplicationsControllerInstallApplication0>>>
+
+    export type V3ApplicationsControllerInstallApplication0MutationError = ErrorType<unknown>
+
+    /**
+ * @summary Install bot application to a workspace
+ */
+export const useV3ApplicationsControllerInstallApplication0 = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3ApplicationsControllerInstallApplication0>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof v3ApplicationsControllerInstallApplication0>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getV3ApplicationsControllerInstallApplication0MutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary Install bot application to a workspace
+ */
+export const v3ApplicationsControllerInstallApplication1 = (
+    id: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v2/applications/${id}/install`, method: 'POST'
+    },
+      options);
+    }
+
+
+
+export const getV3ApplicationsControllerInstallApplication1MutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3ApplicationsControllerInstallApplication1>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof v3ApplicationsControllerInstallApplication1>>, TError,{id: string}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v3ApplicationsControllerInstallApplication1>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  v3ApplicationsControllerInstallApplication1(id,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type V3ApplicationsControllerInstallApplication1MutationResult = NonNullable<Awaited<ReturnType<typeof v3ApplicationsControllerInstallApplication1>>>
+
+    export type V3ApplicationsControllerInstallApplication1MutationError = ErrorType<unknown>
+
+    /**
+ * @summary Install bot application to a workspace
+ */
+export const useV3ApplicationsControllerInstallApplication1 = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3ApplicationsControllerInstallApplication1>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof v3ApplicationsControllerInstallApplication1>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getV3ApplicationsControllerInstallApplication1MutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary List installed bots in workspace
+ */
+export const v3ApplicationsControllerListWorkspaceBots = (
+    slug: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/bots`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+export const getV3ApplicationsControllerListWorkspaceBotsQueryKey = (slug: string,) => {
+    return [`/api/v3/workspaces/${slug}/bots`] as const;
+    }
+
+
+export const getV3ApplicationsControllerListWorkspaceBotsQueryOptions = <TData = Awaited<ReturnType<typeof v3ApplicationsControllerListWorkspaceBots>>, TError = ErrorType<unknown>>(slug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v3ApplicationsControllerListWorkspaceBots>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getV3ApplicationsControllerListWorkspaceBotsQueryKey(slug);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof v3ApplicationsControllerListWorkspaceBots>>> = ({ signal }) => v3ApplicationsControllerListWorkspaceBots(slug, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(slug), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof v3ApplicationsControllerListWorkspaceBots>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type V3ApplicationsControllerListWorkspaceBotsQueryResult = NonNullable<Awaited<ReturnType<typeof v3ApplicationsControllerListWorkspaceBots>>>
+export type V3ApplicationsControllerListWorkspaceBotsQueryError = ErrorType<unknown>
+
+/**
+ * @summary List installed bots in workspace
+ */
+export const useV3ApplicationsControllerListWorkspaceBots = <TData = Awaited<ReturnType<typeof v3ApplicationsControllerListWorkspaceBots>>, TError = ErrorType<unknown>>(
+ slug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v3ApplicationsControllerListWorkspaceBots>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+
+  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+
+  const queryOptions = getV3ApplicationsControllerListWorkspaceBotsQueryOptions(slug,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Add a bot to a workspace
+ */
+export const v3ApplicationsControllerAddBotToWorkspace = (
+    slug: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/workspaces/${slug}/bots`, method: 'POST'
+    },
+      options);
+    }
+
+
+
+export const getV3ApplicationsControllerAddBotToWorkspaceMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3ApplicationsControllerAddBotToWorkspace>>, TError,{slug: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof v3ApplicationsControllerAddBotToWorkspace>>, TError,{slug: string}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v3ApplicationsControllerAddBotToWorkspace>>, {slug: string}> = (props) => {
+          const {slug} = props ?? {};
+
+          return  v3ApplicationsControllerAddBotToWorkspace(slug,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type V3ApplicationsControllerAddBotToWorkspaceMutationResult = NonNullable<Awaited<ReturnType<typeof v3ApplicationsControllerAddBotToWorkspace>>>
+
+    export type V3ApplicationsControllerAddBotToWorkspaceMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Add a bot to a workspace
+ */
+export const useV3ApplicationsControllerAddBotToWorkspace = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3ApplicationsControllerAddBotToWorkspace>>, TError,{slug: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof v3ApplicationsControllerAddBotToWorkspace>>,
+        TError,
+        {slug: string},
+        TContext
+      > => {
+
+      const mutationOptions = getV3ApplicationsControllerAddBotToWorkspaceMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * Retrieve active direct message conversations for the authenticated user/bot. Requires messages:read scope.
+ * @summary List direct message conversations (Enterprise M2M V3)
+ */
+export const v3DmsControllerGetDms = (
+
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/dms`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+export const getV3DmsControllerGetDmsQueryKey = () => {
+    return [`/api/v3/dms`] as const;
+    }
+
+
+export const getV3DmsControllerGetDmsQueryOptions = <TData = Awaited<ReturnType<typeof v3DmsControllerGetDms>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v3DmsControllerGetDms>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getV3DmsControllerGetDmsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof v3DmsControllerGetDms>>> = ({ signal }) => v3DmsControllerGetDms(requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof v3DmsControllerGetDms>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type V3DmsControllerGetDmsQueryResult = NonNullable<Awaited<ReturnType<typeof v3DmsControllerGetDms>>>
+export type V3DmsControllerGetDmsQueryError = ErrorType<unknown>
+
+/**
+ * @summary List direct message conversations (Enterprise M2M V3)
+ */
+export const useV3DmsControllerGetDms = <TData = Awaited<ReturnType<typeof v3DmsControllerGetDms>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v3DmsControllerGetDms>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+
+  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+
+  const queryOptions = getV3DmsControllerGetDmsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Create a new DM conversation with a target user. Requires messages:send scope.
+ * @summary Create or retrieve a direct message conversation (Enterprise M2M V3)
+ */
+export const v3DmsControllerCreateDm = (
+    v3CreateDmDto: BodyType<V3CreateDmDto>,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/dms`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: v3CreateDmDto
+    },
+      options);
+    }
+
+
+
+export const getV3DmsControllerCreateDmMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3DmsControllerCreateDm>>, TError,{data: BodyType<V3CreateDmDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof v3DmsControllerCreateDm>>, TError,{data: BodyType<V3CreateDmDto>}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v3DmsControllerCreateDm>>, {data: BodyType<V3CreateDmDto>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  v3DmsControllerCreateDm(data,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type V3DmsControllerCreateDmMutationResult = NonNullable<Awaited<ReturnType<typeof v3DmsControllerCreateDm>>>
+    export type V3DmsControllerCreateDmMutationBody = BodyType<V3CreateDmDto>
+    export type V3DmsControllerCreateDmMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create or retrieve a direct message conversation (Enterprise M2M V3)
+ */
+export const useV3DmsControllerCreateDm = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3DmsControllerCreateDm>>, TError,{data: BodyType<V3CreateDmDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof v3DmsControllerCreateDm>>,
+        TError,
+        {data: BodyType<V3CreateDmDto>},
+        TContext
+      > => {
+
+      const mutationOptions = getV3DmsControllerCreateDmMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * Retrieve specific direct message conversation details. Requires messages:read scope.
+ * @summary Get details of a direct message conversation (Enterprise M2M V3)
+ */
+export const v3DmsControllerGetDm = (
+    dmId: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/dms/${dmId}`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+export const getV3DmsControllerGetDmQueryKey = (dmId: string,) => {
+    return [`/api/v3/dms/${dmId}`] as const;
+    }
+
+
+export const getV3DmsControllerGetDmQueryOptions = <TData = Awaited<ReturnType<typeof v3DmsControllerGetDm>>, TError = ErrorType<unknown>>(dmId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v3DmsControllerGetDm>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getV3DmsControllerGetDmQueryKey(dmId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof v3DmsControllerGetDm>>> = ({ signal }) => v3DmsControllerGetDm(dmId, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(dmId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof v3DmsControllerGetDm>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type V3DmsControllerGetDmQueryResult = NonNullable<Awaited<ReturnType<typeof v3DmsControllerGetDm>>>
+export type V3DmsControllerGetDmQueryError = ErrorType<unknown>
+
+/**
+ * @summary Get details of a direct message conversation (Enterprise M2M V3)
+ */
+export const useV3DmsControllerGetDm = <TData = Awaited<ReturnType<typeof v3DmsControllerGetDm>>, TError = ErrorType<unknown>>(
+ dmId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v3DmsControllerGetDm>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+
+  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+
+  const queryOptions = getV3DmsControllerGetDmQueryOptions(dmId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Delete a direct message conversation. Requires messages:send scope.
+ * @summary Delete a direct message conversation (Enterprise M2M V3)
+ */
+export const v3DmsControllerDeleteDm = (
+    dmId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/dms/${dmId}`, method: 'DELETE'
+    },
+      options);
+    }
+
+
+
+export const getV3DmsControllerDeleteDmMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3DmsControllerDeleteDm>>, TError,{dmId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof v3DmsControllerDeleteDm>>, TError,{dmId: string}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v3DmsControllerDeleteDm>>, {dmId: string}> = (props) => {
+          const {dmId} = props ?? {};
+
+          return  v3DmsControllerDeleteDm(dmId,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type V3DmsControllerDeleteDmMutationResult = NonNullable<Awaited<ReturnType<typeof v3DmsControllerDeleteDm>>>
+
+    export type V3DmsControllerDeleteDmMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete a direct message conversation (Enterprise M2M V3)
+ */
+export const useV3DmsControllerDeleteDm = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3DmsControllerDeleteDm>>, TError,{dmId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof v3DmsControllerDeleteDm>>,
+        TError,
+        {dmId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getV3DmsControllerDeleteDmMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * Retrieve message history for a direct message conversation. Requires messages:read scope.
+ * @summary Get direct message conversation messages (Enterprise M2M V3)
+ */
+export const v3DmsControllerGetMessages = (
+    dmId: string,
+    params?: V3DmsControllerGetMessagesParams,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/dms/${dmId}/messages`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+
+
+export const getV3DmsControllerGetMessagesQueryKey = (dmId: string,
+    params?: V3DmsControllerGetMessagesParams,) => {
+    return [`/api/v3/dms/${dmId}/messages`, ...(params ? [params]: [])] as const;
+    }
+
+
+export const getV3DmsControllerGetMessagesQueryOptions = <TData = Awaited<ReturnType<typeof v3DmsControllerGetMessages>>, TError = ErrorType<unknown>>(dmId: string,
+    params?: V3DmsControllerGetMessagesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v3DmsControllerGetMessages>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getV3DmsControllerGetMessagesQueryKey(dmId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof v3DmsControllerGetMessages>>> = ({ signal }) => v3DmsControllerGetMessages(dmId,params, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(dmId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof v3DmsControllerGetMessages>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type V3DmsControllerGetMessagesQueryResult = NonNullable<Awaited<ReturnType<typeof v3DmsControllerGetMessages>>>
+export type V3DmsControllerGetMessagesQueryError = ErrorType<unknown>
+
+/**
+ * @summary Get direct message conversation messages (Enterprise M2M V3)
+ */
+export const useV3DmsControllerGetMessages = <TData = Awaited<ReturnType<typeof v3DmsControllerGetMessages>>, TError = ErrorType<unknown>>(
+ dmId: string,
+    params?: V3DmsControllerGetMessagesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof v3DmsControllerGetMessages>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+
+  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+
+  const queryOptions = getV3DmsControllerGetMessagesQueryOptions(dmId,params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Send a message in a DM conversation. Requires messages:send scope.
+ * @summary Send a message in a direct message conversation (Enterprise M2M V3)
+ */
+export const v3DmsControllerCreateMessage = (
+    dmId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/dms/${dmId}/messages`, method: 'POST'
+    },
+      options);
+    }
+
+
+
+export const getV3DmsControllerCreateMessageMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3DmsControllerCreateMessage>>, TError,{dmId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof v3DmsControllerCreateMessage>>, TError,{dmId: string}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v3DmsControllerCreateMessage>>, {dmId: string}> = (props) => {
+          const {dmId} = props ?? {};
+
+          return  v3DmsControllerCreateMessage(dmId,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type V3DmsControllerCreateMessageMutationResult = NonNullable<Awaited<ReturnType<typeof v3DmsControllerCreateMessage>>>
+
+    export type V3DmsControllerCreateMessageMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Send a message in a direct message conversation (Enterprise M2M V3)
+ */
+export const useV3DmsControllerCreateMessage = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3DmsControllerCreateMessage>>, TError,{dmId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof v3DmsControllerCreateMessage>>,
+        TError,
+        {dmId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getV3DmsControllerCreateMessageMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * Update content of a direct message. Requires messages:send scope.
+ * @summary Update a direct message (Enterprise M2M V3)
+ */
+export const v3DmsControllerUpdateMessage = (
+    dmId: string,
+    messageId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/dms/${dmId}/messages/${messageId}`, method: 'PATCH'
+    },
+      options);
+    }
+
+
+
+export const getV3DmsControllerUpdateMessageMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3DmsControllerUpdateMessage>>, TError,{dmId: string;messageId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof v3DmsControllerUpdateMessage>>, TError,{dmId: string;messageId: string}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v3DmsControllerUpdateMessage>>, {dmId: string;messageId: string}> = (props) => {
+          const {dmId,messageId} = props ?? {};
+
+          return  v3DmsControllerUpdateMessage(dmId,messageId,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type V3DmsControllerUpdateMessageMutationResult = NonNullable<Awaited<ReturnType<typeof v3DmsControllerUpdateMessage>>>
+
+    export type V3DmsControllerUpdateMessageMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update a direct message (Enterprise M2M V3)
+ */
+export const useV3DmsControllerUpdateMessage = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3DmsControllerUpdateMessage>>, TError,{dmId: string;messageId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof v3DmsControllerUpdateMessage>>,
+        TError,
+        {dmId: string;messageId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getV3DmsControllerUpdateMessageMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * Delete a direct message. Requires messages:send scope.
+ * @summary Delete a direct message (Enterprise M2M V3)
+ */
+export const v3DmsControllerDeleteMessage = (
+    dmId: string,
+    messageId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/dms/${dmId}/messages/${messageId}`, method: 'DELETE'
+    },
+      options);
+    }
+
+
+
+export const getV3DmsControllerDeleteMessageMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3DmsControllerDeleteMessage>>, TError,{dmId: string;messageId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof v3DmsControllerDeleteMessage>>, TError,{dmId: string;messageId: string}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v3DmsControllerDeleteMessage>>, {dmId: string;messageId: string}> = (props) => {
+          const {dmId,messageId} = props ?? {};
+
+          return  v3DmsControllerDeleteMessage(dmId,messageId,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type V3DmsControllerDeleteMessageMutationResult = NonNullable<Awaited<ReturnType<typeof v3DmsControllerDeleteMessage>>>
+
+    export type V3DmsControllerDeleteMessageMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete a direct message (Enterprise M2M V3)
+ */
+export const useV3DmsControllerDeleteMessage = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3DmsControllerDeleteMessage>>, TError,{dmId: string;messageId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof v3DmsControllerDeleteMessage>>,
+        TError,
+        {dmId: string;messageId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getV3DmsControllerDeleteMessageMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * Add an emoji reaction to a DM message. Requires messages:send scope.
+ * @summary Add a reaction to a direct message (Enterprise M2M V3)
+ */
+export const v3DmsControllerAddReaction = (
+    dmId: string,
+    messageId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/dms/${dmId}/messages/${messageId}/reactions`, method: 'POST'
+    },
+      options);
+    }
+
+
+
+export const getV3DmsControllerAddReactionMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3DmsControllerAddReaction>>, TError,{dmId: string;messageId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof v3DmsControllerAddReaction>>, TError,{dmId: string;messageId: string}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v3DmsControllerAddReaction>>, {dmId: string;messageId: string}> = (props) => {
+          const {dmId,messageId} = props ?? {};
+
+          return  v3DmsControllerAddReaction(dmId,messageId,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type V3DmsControllerAddReactionMutationResult = NonNullable<Awaited<ReturnType<typeof v3DmsControllerAddReaction>>>
+
+    export type V3DmsControllerAddReactionMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Add a reaction to a direct message (Enterprise M2M V3)
+ */
+export const useV3DmsControllerAddReaction = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3DmsControllerAddReaction>>, TError,{dmId: string;messageId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof v3DmsControllerAddReaction>>,
+        TError,
+        {dmId: string;messageId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getV3DmsControllerAddReactionMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * Remove an emoji reaction from a DM message. Requires messages:send scope.
+ * @summary Remove a reaction from a direct message (Enterprise M2M V3)
+ */
+export const v3DmsControllerRemoveReaction = (
+    dmId: string,
+    messageId: string,
+    emoji: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/v3/dms/${dmId}/messages/${messageId}/reactions/${emoji}`, method: 'DELETE'
+    },
+      options);
+    }
+
+
+
+export const getV3DmsControllerRemoveReactionMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3DmsControllerRemoveReaction>>, TError,{dmId: string;messageId: string;emoji: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof v3DmsControllerRemoveReaction>>, TError,{dmId: string;messageId: string;emoji: string}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof v3DmsControllerRemoveReaction>>, {dmId: string;messageId: string;emoji: string}> = (props) => {
+          const {dmId,messageId,emoji} = props ?? {};
+
+          return  v3DmsControllerRemoveReaction(dmId,messageId,emoji,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type V3DmsControllerRemoveReactionMutationResult = NonNullable<Awaited<ReturnType<typeof v3DmsControllerRemoveReaction>>>
+
+    export type V3DmsControllerRemoveReactionMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Remove a reaction from a direct message (Enterprise M2M V3)
+ */
+export const useV3DmsControllerRemoveReaction = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof v3DmsControllerRemoveReaction>>, TError,{dmId: string;messageId: string;emoji: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof v3DmsControllerRemoveReaction>>,
+        TError,
+        {dmId: string;messageId: string;emoji: string},
+        TContext
+      > => {
+
+      const mutationOptions = getV3DmsControllerRemoveReactionMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary Get global channels
+ */
+export const channelsControllerGetGlobalChannels = (
+
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/api/channels`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+export const getChannelsControllerGetGlobalChannelsQueryKey = () => {
+    return [`/api/channels`] as const;
+    }
+
+
+export const getChannelsControllerGetGlobalChannelsQueryOptions = <TData = Awaited<ReturnType<typeof channelsControllerGetGlobalChannels>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof channelsControllerGetGlobalChannels>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getChannelsControllerGetGlobalChannelsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof channelsControllerGetGlobalChannels>>> = ({ signal }) => channelsControllerGetGlobalChannels(requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof channelsControllerGetGlobalChannels>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ChannelsControllerGetGlobalChannelsQueryResult = NonNullable<Awaited<ReturnType<typeof channelsControllerGetGlobalChannels>>>
+export type ChannelsControllerGetGlobalChannelsQueryError = ErrorType<unknown>
+
+/**
+ * @summary Get global channels
+ */
+export const useChannelsControllerGetGlobalChannels = <TData = Awaited<ReturnType<typeof channelsControllerGetGlobalChannels>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof channelsControllerGetGlobalChannels>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+
+  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+
+  const queryOptions = getChannelsControllerGetGlobalChannelsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Create a new channel in a workspace
+ */
+export const channelsControllerCreateChannel = (
+    slug: string,
+    createWorkspaceChannelDto: BodyType<CreateWorkspaceChannelDto>,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/workspaces/${slug}/channels`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createWorkspaceChannelDto
+    },
+      options);
+    }
+
+
+
+export const getChannelsControllerCreateChannelMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof channelsControllerCreateChannel>>, TError,{slug: string;data: BodyType<CreateWorkspaceChannelDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof channelsControllerCreateChannel>>, TError,{slug: string;data: BodyType<CreateWorkspaceChannelDto>}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof channelsControllerCreateChannel>>, {slug: string;data: BodyType<CreateWorkspaceChannelDto>}> = (props) => {
+          const {slug,data} = props ?? {};
+
+          return  channelsControllerCreateChannel(slug,data,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ChannelsControllerCreateChannelMutationResult = NonNullable<Awaited<ReturnType<typeof channelsControllerCreateChannel>>>
+    export type ChannelsControllerCreateChannelMutationBody = BodyType<CreateWorkspaceChannelDto>
+    export type ChannelsControllerCreateChannelMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create a new channel in a workspace
+ */
+export const useChannelsControllerCreateChannel = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof channelsControllerCreateChannel>>, TError,{slug: string;data: BodyType<CreateWorkspaceChannelDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof channelsControllerCreateChannel>>,
+        TError,
+        {slug: string;data: BodyType<CreateWorkspaceChannelDto>},
+        TContext
+      > => {
+
+      const mutationOptions = getChannelsControllerCreateChannelMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary Get messages from a channel
+ */
+export const channelsControllerGetMessages = (
+    channelId: string,
+    params?: ChannelsControllerGetMessagesParams,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/api/channels/${channelId}/messages`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+
+
+export const getChannelsControllerGetMessagesQueryKey = (channelId: string,
+    params?: ChannelsControllerGetMessagesParams,) => {
+    return [`/api/channels/${channelId}/messages`, ...(params ? [params]: [])] as const;
+    }
+
+
+export const getChannelsControllerGetMessagesQueryOptions = <TData = Awaited<ReturnType<typeof channelsControllerGetMessages>>, TError = ErrorType<unknown>>(channelId: string,
+    params?: ChannelsControllerGetMessagesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof channelsControllerGetMessages>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getChannelsControllerGetMessagesQueryKey(channelId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof channelsControllerGetMessages>>> = ({ signal }) => channelsControllerGetMessages(channelId,params, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(channelId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof channelsControllerGetMessages>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ChannelsControllerGetMessagesQueryResult = NonNullable<Awaited<ReturnType<typeof channelsControllerGetMessages>>>
+export type ChannelsControllerGetMessagesQueryError = ErrorType<unknown>
+
+/**
+ * @summary Get messages from a channel
+ */
+export const useChannelsControllerGetMessages = <TData = Awaited<ReturnType<typeof channelsControllerGetMessages>>, TError = ErrorType<unknown>>(
+ channelId: string,
+    params?: ChannelsControllerGetMessagesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof channelsControllerGetMessages>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+
+  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+
+  const queryOptions = getChannelsControllerGetMessagesQueryOptions(channelId,params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Send a message to a channel
+ */
+export const channelsControllerCreateMessage = (
+    channelId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/channels/${channelId}/messages`, method: 'POST'
+    },
+      options);
+    }
+
+
+
+export const getChannelsControllerCreateMessageMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof channelsControllerCreateMessage>>, TError,{channelId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof channelsControllerCreateMessage>>, TError,{channelId: string}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof channelsControllerCreateMessage>>, {channelId: string}> = (props) => {
+          const {channelId} = props ?? {};
+
+          return  channelsControllerCreateMessage(channelId,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ChannelsControllerCreateMessageMutationResult = NonNullable<Awaited<ReturnType<typeof channelsControllerCreateMessage>>>
+
+    export type ChannelsControllerCreateMessageMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Send a message to a channel
+ */
+export const useChannelsControllerCreateMessage = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof channelsControllerCreateMessage>>, TError,{channelId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof channelsControllerCreateMessage>>,
+        TError,
+        {channelId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getChannelsControllerCreateMessageMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary Update a message
+ */
+export const channelsControllerUpdateMessage = (
+    channelId: string,
+    messageId: string,
+    channelsControllerUpdateMessageBody: BodyType<ChannelsControllerUpdateMessageBody>,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/channels/${channelId}/messages/${messageId}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: channelsControllerUpdateMessageBody
+    },
+      options);
+    }
+
+
+
+export const getChannelsControllerUpdateMessageMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof channelsControllerUpdateMessage>>, TError,{channelId: string;messageId: string;data: BodyType<ChannelsControllerUpdateMessageBody>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof channelsControllerUpdateMessage>>, TError,{channelId: string;messageId: string;data: BodyType<ChannelsControllerUpdateMessageBody>}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof channelsControllerUpdateMessage>>, {channelId: string;messageId: string;data: BodyType<ChannelsControllerUpdateMessageBody>}> = (props) => {
+          const {channelId,messageId,data} = props ?? {};
+
+          return  channelsControllerUpdateMessage(channelId,messageId,data,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ChannelsControllerUpdateMessageMutationResult = NonNullable<Awaited<ReturnType<typeof channelsControllerUpdateMessage>>>
+    export type ChannelsControllerUpdateMessageMutationBody = BodyType<ChannelsControllerUpdateMessageBody>
+    export type ChannelsControllerUpdateMessageMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update a message
+ */
+export const useChannelsControllerUpdateMessage = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof channelsControllerUpdateMessage>>, TError,{channelId: string;messageId: string;data: BodyType<ChannelsControllerUpdateMessageBody>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof channelsControllerUpdateMessage>>,
+        TError,
+        {channelId: string;messageId: string;data: BodyType<ChannelsControllerUpdateMessageBody>},
+        TContext
+      > => {
+
+      const mutationOptions = getChannelsControllerUpdateMessageMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary Delete a message
+ */
+export const channelsControllerDeleteMessage = (
+    channelId: string,
+    messageId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/channels/${channelId}/messages/${messageId}`, method: 'DELETE'
+    },
+      options);
+    }
+
+
+
+export const getChannelsControllerDeleteMessageMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof channelsControllerDeleteMessage>>, TError,{channelId: string;messageId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof channelsControllerDeleteMessage>>, TError,{channelId: string;messageId: string}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof channelsControllerDeleteMessage>>, {channelId: string;messageId: string}> = (props) => {
+          const {channelId,messageId} = props ?? {};
+
+          return  channelsControllerDeleteMessage(channelId,messageId,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ChannelsControllerDeleteMessageMutationResult = NonNullable<Awaited<ReturnType<typeof channelsControllerDeleteMessage>>>
+
+    export type ChannelsControllerDeleteMessageMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete a message
+ */
+export const useChannelsControllerDeleteMessage = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof channelsControllerDeleteMessage>>, TError,{channelId: string;messageId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof channelsControllerDeleteMessage>>,
+        TError,
+        {channelId: string;messageId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getChannelsControllerDeleteMessageMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary Mark messages as read
+ */
+export const channelsControllerMarkAsRead = (
+    channelId: string,
+    channelsControllerMarkAsReadBody: BodyType<ChannelsControllerMarkAsReadBody>,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/channels/${channelId}/messages/read`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: channelsControllerMarkAsReadBody
+    },
+      options);
+    }
+
+
+
+export const getChannelsControllerMarkAsReadMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof channelsControllerMarkAsRead>>, TError,{channelId: string;data: BodyType<ChannelsControllerMarkAsReadBody>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof channelsControllerMarkAsRead>>, TError,{channelId: string;data: BodyType<ChannelsControllerMarkAsReadBody>}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof channelsControllerMarkAsRead>>, {channelId: string;data: BodyType<ChannelsControllerMarkAsReadBody>}> = (props) => {
+          const {channelId,data} = props ?? {};
+
+          return  channelsControllerMarkAsRead(channelId,data,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ChannelsControllerMarkAsReadMutationResult = NonNullable<Awaited<ReturnType<typeof channelsControllerMarkAsRead>>>
+    export type ChannelsControllerMarkAsReadMutationBody = BodyType<ChannelsControllerMarkAsReadBody>
+    export type ChannelsControllerMarkAsReadMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Mark messages as read
+ */
+export const useChannelsControllerMarkAsRead = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof channelsControllerMarkAsRead>>, TError,{channelId: string;data: BodyType<ChannelsControllerMarkAsReadBody>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof channelsControllerMarkAsRead>>,
+        TError,
+        {channelId: string;data: BodyType<ChannelsControllerMarkAsReadBody>},
+        TContext
+      > => {
+
+      const mutationOptions = getChannelsControllerMarkAsReadMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary Add a reaction to a message
+ */
+export const channelsControllerAddReaction = (
+    channelId: string,
+    messageId: string,
+    channelsControllerAddReactionBody: BodyType<ChannelsControllerAddReactionBody>,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/channels/${channelId}/messages/${messageId}/reactions`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: channelsControllerAddReactionBody
+    },
+      options);
+    }
+
+
+
+export const getChannelsControllerAddReactionMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof channelsControllerAddReaction>>, TError,{channelId: string;messageId: string;data: BodyType<ChannelsControllerAddReactionBody>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof channelsControllerAddReaction>>, TError,{channelId: string;messageId: string;data: BodyType<ChannelsControllerAddReactionBody>}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof channelsControllerAddReaction>>, {channelId: string;messageId: string;data: BodyType<ChannelsControllerAddReactionBody>}> = (props) => {
+          const {channelId,messageId,data} = props ?? {};
+
+          return  channelsControllerAddReaction(channelId,messageId,data,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ChannelsControllerAddReactionMutationResult = NonNullable<Awaited<ReturnType<typeof channelsControllerAddReaction>>>
+    export type ChannelsControllerAddReactionMutationBody = BodyType<ChannelsControllerAddReactionBody>
+    export type ChannelsControllerAddReactionMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Add a reaction to a message
+ */
+export const useChannelsControllerAddReaction = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof channelsControllerAddReaction>>, TError,{channelId: string;messageId: string;data: BodyType<ChannelsControllerAddReactionBody>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof channelsControllerAddReaction>>,
+        TError,
+        {channelId: string;messageId: string;data: BodyType<ChannelsControllerAddReactionBody>},
+        TContext
+      > => {
+
+      const mutationOptions = getChannelsControllerAddReactionMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary Remove a reaction from a message
+ */
+export const channelsControllerRemoveReaction = (
+    channelId: string,
+    messageId: string,
+    emoji: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/channels/${channelId}/messages/${messageId}/reactions/${emoji}`, method: 'DELETE'
+    },
+      options);
+    }
+
+
+
+export const getChannelsControllerRemoveReactionMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof channelsControllerRemoveReaction>>, TError,{channelId: string;messageId: string;emoji: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof channelsControllerRemoveReaction>>, TError,{channelId: string;messageId: string;emoji: string}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof channelsControllerRemoveReaction>>, {channelId: string;messageId: string;emoji: string}> = (props) => {
+          const {channelId,messageId,emoji} = props ?? {};
+
+          return  channelsControllerRemoveReaction(channelId,messageId,emoji,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ChannelsControllerRemoveReactionMutationResult = NonNullable<Awaited<ReturnType<typeof channelsControllerRemoveReaction>>>
+
+    export type ChannelsControllerRemoveReactionMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Remove a reaction from a message
+ */
+export const useChannelsControllerRemoveReaction = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof channelsControllerRemoveReaction>>, TError,{channelId: string;messageId: string;emoji: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof channelsControllerRemoveReaction>>,
+        TError,
+        {channelId: string;messageId: string;emoji: string},
+        TContext
+      > => {
+
+      const mutationOptions = getChannelsControllerRemoveReactionMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary Share a channel with another workspace
+ */
+export const channelsControllerShareChannel = (
+    channelId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/channels/${channelId}/share`, method: 'POST'
+    },
+      options);
+    }
+
+
+
+export const getChannelsControllerShareChannelMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof channelsControllerShareChannel>>, TError,{channelId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof channelsControllerShareChannel>>, TError,{channelId: string}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof channelsControllerShareChannel>>, {channelId: string}> = (props) => {
+          const {channelId} = props ?? {};
+
+          return  channelsControllerShareChannel(channelId,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ChannelsControllerShareChannelMutationResult = NonNullable<Awaited<ReturnType<typeof channelsControllerShareChannel>>>
+
+    export type ChannelsControllerShareChannelMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Share a channel with another workspace
+ */
+export const useChannelsControllerShareChannel = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof channelsControllerShareChannel>>, TError,{channelId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof channelsControllerShareChannel>>,
+        TError,
+        {channelId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getChannelsControllerShareChannelMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary Reply to a message
+ */
+export const channelsControllerCreateReply = (
+    channelId: string,
+    messageId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/channels/${channelId}/messages/${messageId}/reply`, method: 'POST'
+    },
+      options);
+    }
+
+
+
+export const getChannelsControllerCreateReplyMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof channelsControllerCreateReply>>, TError,{channelId: string;messageId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof channelsControllerCreateReply>>, TError,{channelId: string;messageId: string}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof channelsControllerCreateReply>>, {channelId: string;messageId: string}> = (props) => {
+          const {channelId,messageId} = props ?? {};
+
+          return  channelsControllerCreateReply(channelId,messageId,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ChannelsControllerCreateReplyMutationResult = NonNullable<Awaited<ReturnType<typeof channelsControllerCreateReply>>>
+
+    export type ChannelsControllerCreateReplyMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Reply to a message
+ */
+export const useChannelsControllerCreateReply = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof channelsControllerCreateReply>>, TError,{channelId: string;messageId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof channelsControllerCreateReply>>,
+        TError,
+        {channelId: string;messageId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getChannelsControllerCreateReplyMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
  * @summary Get notifications for the current user
  */
 export const notificationsControllerGetNotifications = (
@@ -6392,6 +9027,661 @@ export const useNotificationsControllerUpdateChannelSettings = <TError = ErrorTy
       > => {
 
       const mutationOptions = getNotificationsControllerUpdateChannelSettingsMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary Get all DM conversations for the current user
+ */
+export const dmsControllerGetDms = (
+
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/api/dms`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+export const getDmsControllerGetDmsQueryKey = () => {
+    return [`/api/dms`] as const;
+    }
+
+
+export const getDmsControllerGetDmsQueryOptions = <TData = Awaited<ReturnType<typeof dmsControllerGetDms>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof dmsControllerGetDms>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getDmsControllerGetDmsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof dmsControllerGetDms>>> = ({ signal }) => dmsControllerGetDms(requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof dmsControllerGetDms>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type DmsControllerGetDmsQueryResult = NonNullable<Awaited<ReturnType<typeof dmsControllerGetDms>>>
+export type DmsControllerGetDmsQueryError = ErrorType<unknown>
+
+/**
+ * @summary Get all DM conversations for the current user
+ */
+export const useDmsControllerGetDms = <TData = Awaited<ReturnType<typeof dmsControllerGetDms>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof dmsControllerGetDms>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+
+  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+
+  const queryOptions = getDmsControllerGetDmsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Start a new DM conversation
+ */
+export const dmsControllerCreateDm = (
+    createDmDto: BodyType<CreateDmDto>,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/dms`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createDmDto
+    },
+      options);
+    }
+
+
+
+export const getDmsControllerCreateDmMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dmsControllerCreateDm>>, TError,{data: BodyType<CreateDmDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof dmsControllerCreateDm>>, TError,{data: BodyType<CreateDmDto>}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof dmsControllerCreateDm>>, {data: BodyType<CreateDmDto>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  dmsControllerCreateDm(data,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DmsControllerCreateDmMutationResult = NonNullable<Awaited<ReturnType<typeof dmsControllerCreateDm>>>
+    export type DmsControllerCreateDmMutationBody = BodyType<CreateDmDto>
+    export type DmsControllerCreateDmMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Start a new DM conversation
+ */
+export const useDmsControllerCreateDm = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dmsControllerCreateDm>>, TError,{data: BodyType<CreateDmDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof dmsControllerCreateDm>>,
+        TError,
+        {data: BodyType<CreateDmDto>},
+        TContext
+      > => {
+
+      const mutationOptions = getDmsControllerCreateDmMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary Get DM conversation details
+ */
+export const dmsControllerGetDm = (
+    conversationId: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/api/dms/${conversationId}`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+export const getDmsControllerGetDmQueryKey = (conversationId: string,) => {
+    return [`/api/dms/${conversationId}`] as const;
+    }
+
+
+export const getDmsControllerGetDmQueryOptions = <TData = Awaited<ReturnType<typeof dmsControllerGetDm>>, TError = ErrorType<void>>(conversationId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof dmsControllerGetDm>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getDmsControllerGetDmQueryKey(conversationId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof dmsControllerGetDm>>> = ({ signal }) => dmsControllerGetDm(conversationId, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(conversationId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof dmsControllerGetDm>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type DmsControllerGetDmQueryResult = NonNullable<Awaited<ReturnType<typeof dmsControllerGetDm>>>
+export type DmsControllerGetDmQueryError = ErrorType<void>
+
+/**
+ * @summary Get DM conversation details
+ */
+export const useDmsControllerGetDm = <TData = Awaited<ReturnType<typeof dmsControllerGetDm>>, TError = ErrorType<void>>(
+ conversationId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof dmsControllerGetDm>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+
+  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+
+  const queryOptions = getDmsControllerGetDmQueryOptions(conversationId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Delete a DM conversation
+ */
+export const dmsControllerDeleteDm = (
+    conversationId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/dms/${conversationId}`, method: 'DELETE'
+    },
+      options);
+    }
+
+
+
+export const getDmsControllerDeleteDmMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dmsControllerDeleteDm>>, TError,{conversationId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof dmsControllerDeleteDm>>, TError,{conversationId: string}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof dmsControllerDeleteDm>>, {conversationId: string}> = (props) => {
+          const {conversationId} = props ?? {};
+
+          return  dmsControllerDeleteDm(conversationId,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DmsControllerDeleteDmMutationResult = NonNullable<Awaited<ReturnType<typeof dmsControllerDeleteDm>>>
+
+    export type DmsControllerDeleteDmMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete a DM conversation
+ */
+export const useDmsControllerDeleteDm = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dmsControllerDeleteDm>>, TError,{conversationId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof dmsControllerDeleteDm>>,
+        TError,
+        {conversationId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getDmsControllerDeleteDmMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary Get messages in a DM conversation
+ */
+export const dmsControllerGetMessages = (
+    conversationId: string,
+    params?: DmsControllerGetMessagesParams,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/api/dms/${conversationId}/messages`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+
+
+export const getDmsControllerGetMessagesQueryKey = (conversationId: string,
+    params?: DmsControllerGetMessagesParams,) => {
+    return [`/api/dms/${conversationId}/messages`, ...(params ? [params]: [])] as const;
+    }
+
+
+export const getDmsControllerGetMessagesQueryOptions = <TData = Awaited<ReturnType<typeof dmsControllerGetMessages>>, TError = ErrorType<unknown>>(conversationId: string,
+    params?: DmsControllerGetMessagesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof dmsControllerGetMessages>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getDmsControllerGetMessagesQueryKey(conversationId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof dmsControllerGetMessages>>> = ({ signal }) => dmsControllerGetMessages(conversationId,params, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(conversationId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof dmsControllerGetMessages>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type DmsControllerGetMessagesQueryResult = NonNullable<Awaited<ReturnType<typeof dmsControllerGetMessages>>>
+export type DmsControllerGetMessagesQueryError = ErrorType<unknown>
+
+/**
+ * @summary Get messages in a DM conversation
+ */
+export const useDmsControllerGetMessages = <TData = Awaited<ReturnType<typeof dmsControllerGetMessages>>, TError = ErrorType<unknown>>(
+ conversationId: string,
+    params?: DmsControllerGetMessagesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof dmsControllerGetMessages>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+
+  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+
+  const queryOptions = getDmsControllerGetMessagesQueryOptions(conversationId,params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Send a message in a DM
+ */
+export const dmsControllerCreateMessage = (
+    conversationId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/dms/${conversationId}/messages`, method: 'POST'
+    },
+      options);
+    }
+
+
+
+export const getDmsControllerCreateMessageMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dmsControllerCreateMessage>>, TError,{conversationId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof dmsControllerCreateMessage>>, TError,{conversationId: string}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof dmsControllerCreateMessage>>, {conversationId: string}> = (props) => {
+          const {conversationId} = props ?? {};
+
+          return  dmsControllerCreateMessage(conversationId,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DmsControllerCreateMessageMutationResult = NonNullable<Awaited<ReturnType<typeof dmsControllerCreateMessage>>>
+
+    export type DmsControllerCreateMessageMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Send a message in a DM
+ */
+export const useDmsControllerCreateMessage = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dmsControllerCreateMessage>>, TError,{conversationId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof dmsControllerCreateMessage>>,
+        TError,
+        {conversationId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getDmsControllerCreateMessageMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary Update a DM message
+ */
+export const dmsControllerUpdateMessage = (
+    conversationId: string,
+    messageId: string,
+    updateDmMessageDto: BodyType<UpdateDmMessageDto>,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/dms/${conversationId}/messages/${messageId}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateDmMessageDto
+    },
+      options);
+    }
+
+
+
+export const getDmsControllerUpdateMessageMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dmsControllerUpdateMessage>>, TError,{conversationId: string;messageId: string;data: BodyType<UpdateDmMessageDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof dmsControllerUpdateMessage>>, TError,{conversationId: string;messageId: string;data: BodyType<UpdateDmMessageDto>}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof dmsControllerUpdateMessage>>, {conversationId: string;messageId: string;data: BodyType<UpdateDmMessageDto>}> = (props) => {
+          const {conversationId,messageId,data} = props ?? {};
+
+          return  dmsControllerUpdateMessage(conversationId,messageId,data,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DmsControllerUpdateMessageMutationResult = NonNullable<Awaited<ReturnType<typeof dmsControllerUpdateMessage>>>
+    export type DmsControllerUpdateMessageMutationBody = BodyType<UpdateDmMessageDto>
+    export type DmsControllerUpdateMessageMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update a DM message
+ */
+export const useDmsControllerUpdateMessage = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dmsControllerUpdateMessage>>, TError,{conversationId: string;messageId: string;data: BodyType<UpdateDmMessageDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof dmsControllerUpdateMessage>>,
+        TError,
+        {conversationId: string;messageId: string;data: BodyType<UpdateDmMessageDto>},
+        TContext
+      > => {
+
+      const mutationOptions = getDmsControllerUpdateMessageMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary Delete a DM message
+ */
+export const dmsControllerDeleteMessage = (
+    conversationId: string,
+    messageId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/dms/${conversationId}/messages/${messageId}`, method: 'DELETE'
+    },
+      options);
+    }
+
+
+
+export const getDmsControllerDeleteMessageMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dmsControllerDeleteMessage>>, TError,{conversationId: string;messageId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof dmsControllerDeleteMessage>>, TError,{conversationId: string;messageId: string}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof dmsControllerDeleteMessage>>, {conversationId: string;messageId: string}> = (props) => {
+          const {conversationId,messageId} = props ?? {};
+
+          return  dmsControllerDeleteMessage(conversationId,messageId,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DmsControllerDeleteMessageMutationResult = NonNullable<Awaited<ReturnType<typeof dmsControllerDeleteMessage>>>
+
+    export type DmsControllerDeleteMessageMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete a DM message
+ */
+export const useDmsControllerDeleteMessage = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dmsControllerDeleteMessage>>, TError,{conversationId: string;messageId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof dmsControllerDeleteMessage>>,
+        TError,
+        {conversationId: string;messageId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getDmsControllerDeleteMessageMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary Mark messages as read in a DM
+ */
+export const dmsControllerMarkAsRead = (
+    conversationId: string,
+    markAsReadDto: BodyType<MarkAsReadDto>,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/dms/${conversationId}/messages/read`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: markAsReadDto
+    },
+      options);
+    }
+
+
+
+export const getDmsControllerMarkAsReadMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dmsControllerMarkAsRead>>, TError,{conversationId: string;data: BodyType<MarkAsReadDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof dmsControllerMarkAsRead>>, TError,{conversationId: string;data: BodyType<MarkAsReadDto>}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof dmsControllerMarkAsRead>>, {conversationId: string;data: BodyType<MarkAsReadDto>}> = (props) => {
+          const {conversationId,data} = props ?? {};
+
+          return  dmsControllerMarkAsRead(conversationId,data,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DmsControllerMarkAsReadMutationResult = NonNullable<Awaited<ReturnType<typeof dmsControllerMarkAsRead>>>
+    export type DmsControllerMarkAsReadMutationBody = BodyType<MarkAsReadDto>
+    export type DmsControllerMarkAsReadMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Mark messages as read in a DM
+ */
+export const useDmsControllerMarkAsRead = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dmsControllerMarkAsRead>>, TError,{conversationId: string;data: BodyType<MarkAsReadDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof dmsControllerMarkAsRead>>,
+        TError,
+        {conversationId: string;data: BodyType<MarkAsReadDto>},
+        TContext
+      > => {
+
+      const mutationOptions = getDmsControllerMarkAsReadMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary Add a reaction to a DM message
+ */
+export const dmsControllerAddReaction = (
+    conversationId: string,
+    messageId: string,
+    dmsControllerAddReactionBody: BodyType<DmsControllerAddReactionBody>,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/dms/${conversationId}/messages/${messageId}/reactions`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: dmsControllerAddReactionBody
+    },
+      options);
+    }
+
+
+
+export const getDmsControllerAddReactionMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dmsControllerAddReaction>>, TError,{conversationId: string;messageId: string;data: BodyType<DmsControllerAddReactionBody>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof dmsControllerAddReaction>>, TError,{conversationId: string;messageId: string;data: BodyType<DmsControllerAddReactionBody>}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof dmsControllerAddReaction>>, {conversationId: string;messageId: string;data: BodyType<DmsControllerAddReactionBody>}> = (props) => {
+          const {conversationId,messageId,data} = props ?? {};
+
+          return  dmsControllerAddReaction(conversationId,messageId,data,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DmsControllerAddReactionMutationResult = NonNullable<Awaited<ReturnType<typeof dmsControllerAddReaction>>>
+    export type DmsControllerAddReactionMutationBody = BodyType<DmsControllerAddReactionBody>
+    export type DmsControllerAddReactionMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Add a reaction to a DM message
+ */
+export const useDmsControllerAddReaction = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dmsControllerAddReaction>>, TError,{conversationId: string;messageId: string;data: BodyType<DmsControllerAddReactionBody>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof dmsControllerAddReaction>>,
+        TError,
+        {conversationId: string;messageId: string;data: BodyType<DmsControllerAddReactionBody>},
+        TContext
+      > => {
+
+      const mutationOptions = getDmsControllerAddReactionMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+
+/**
+ * @summary Remove a reaction from a DM message
+ */
+export const dmsControllerRemoveReaction = (
+    conversationId: string,
+    messageId: string,
+    emoji: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+
+
+      return customInstance<void>(
+      {url: `/api/dms/${conversationId}/messages/${messageId}/reactions/${emoji}`, method: 'DELETE'
+    },
+      options);
+    }
+
+
+
+export const getDmsControllerRemoveReactionMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dmsControllerRemoveReaction>>, TError,{conversationId: string;messageId: string;emoji: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof dmsControllerRemoveReaction>>, TError,{conversationId: string;messageId: string;emoji: string}, TContext> => {
+const {mutation: mutationOptions, request: requestOptions} = options ?? {};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof dmsControllerRemoveReaction>>, {conversationId: string;messageId: string;emoji: string}> = (props) => {
+          const {conversationId,messageId,emoji} = props ?? {};
+
+          return  dmsControllerRemoveReaction(conversationId,messageId,emoji,requestOptions)
+        }
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DmsControllerRemoveReactionMutationResult = NonNullable<Awaited<ReturnType<typeof dmsControllerRemoveReaction>>>
+
+    export type DmsControllerRemoveReactionMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Remove a reaction from a DM message
+ */
+export const useDmsControllerRemoveReaction = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dmsControllerRemoveReaction>>, TError,{conversationId: string;messageId: string;emoji: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof dmsControllerRemoveReaction>>,
+        TError,
+        {conversationId: string;messageId: string;emoji: string},
+        TContext
+      > => {
+
+      const mutationOptions = getDmsControllerRemoveReactionMutationOptions(options);
 
       return useMutation(mutationOptions);
     }
@@ -8345,657 +11635,6 @@ export const useCallsControllerPlaySoundboardSound = <TError = ErrorType<unknown
     }
 
 /**
- * @summary Get global channels
- */
-export const channelsControllerGetGlobalChannels = (
-
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-
-
-      return customInstance<void>(
-      {url: `/api/channels`, method: 'GET', signal
-    },
-      options);
-    }
-
-
-export const getChannelsControllerGetGlobalChannelsQueryKey = () => {
-    return [`/api/channels`] as const;
-    }
-
-
-export const getChannelsControllerGetGlobalChannelsQueryOptions = <TData = Awaited<ReturnType<typeof channelsControllerGetGlobalChannels>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof channelsControllerGetGlobalChannels>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getChannelsControllerGetGlobalChannelsQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof channelsControllerGetGlobalChannels>>> = ({ signal }) => channelsControllerGetGlobalChannels(requestOptions, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof channelsControllerGetGlobalChannels>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type ChannelsControllerGetGlobalChannelsQueryResult = NonNullable<Awaited<ReturnType<typeof channelsControllerGetGlobalChannels>>>
-export type ChannelsControllerGetGlobalChannelsQueryError = ErrorType<unknown>
-
-/**
- * @summary Get global channels
- */
-export const useChannelsControllerGetGlobalChannels = <TData = Awaited<ReturnType<typeof channelsControllerGetGlobalChannels>>, TError = ErrorType<unknown>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof channelsControllerGetGlobalChannels>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-
-  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-
-  const queryOptions = getChannelsControllerGetGlobalChannelsQueryOptions(options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * @summary Create a new channel in a workspace
- */
-export const channelsControllerCreateChannel = (
-    slug: string,
-    createWorkspaceChannelDto: BodyType<CreateWorkspaceChannelDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/workspaces/${slug}/channels`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createWorkspaceChannelDto
-    },
-      options);
-    }
-
-
-
-export const getChannelsControllerCreateChannelMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof channelsControllerCreateChannel>>, TError,{slug: string;data: BodyType<CreateWorkspaceChannelDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof channelsControllerCreateChannel>>, TError,{slug: string;data: BodyType<CreateWorkspaceChannelDto>}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof channelsControllerCreateChannel>>, {slug: string;data: BodyType<CreateWorkspaceChannelDto>}> = (props) => {
-          const {slug,data} = props ?? {};
-
-          return  channelsControllerCreateChannel(slug,data,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ChannelsControllerCreateChannelMutationResult = NonNullable<Awaited<ReturnType<typeof channelsControllerCreateChannel>>>
-    export type ChannelsControllerCreateChannelMutationBody = BodyType<CreateWorkspaceChannelDto>
-    export type ChannelsControllerCreateChannelMutationError = ErrorType<unknown>
-
-    /**
- * @summary Create a new channel in a workspace
- */
-export const useChannelsControllerCreateChannel = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof channelsControllerCreateChannel>>, TError,{slug: string;data: BodyType<CreateWorkspaceChannelDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof channelsControllerCreateChannel>>,
-        TError,
-        {slug: string;data: BodyType<CreateWorkspaceChannelDto>},
-        TContext
-      > => {
-
-      const mutationOptions = getChannelsControllerCreateChannelMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * @summary Get messages from a channel
- */
-export const channelsControllerGetMessages = (
-    channelId: string,
-    params?: ChannelsControllerGetMessagesParams,
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-
-
-      return customInstance<void>(
-      {url: `/api/channels/${channelId}/messages`, method: 'GET',
-        params, signal
-    },
-      options);
-    }
-
-
-export const getChannelsControllerGetMessagesQueryKey = (channelId: string,
-    params?: ChannelsControllerGetMessagesParams,) => {
-    return [`/api/channels/${channelId}/messages`, ...(params ? [params]: [])] as const;
-    }
-
-
-export const getChannelsControllerGetMessagesQueryOptions = <TData = Awaited<ReturnType<typeof channelsControllerGetMessages>>, TError = ErrorType<unknown>>(channelId: string,
-    params?: ChannelsControllerGetMessagesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof channelsControllerGetMessages>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getChannelsControllerGetMessagesQueryKey(channelId,params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof channelsControllerGetMessages>>> = ({ signal }) => channelsControllerGetMessages(channelId,params, requestOptions, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: !!(channelId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof channelsControllerGetMessages>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type ChannelsControllerGetMessagesQueryResult = NonNullable<Awaited<ReturnType<typeof channelsControllerGetMessages>>>
-export type ChannelsControllerGetMessagesQueryError = ErrorType<unknown>
-
-/**
- * @summary Get messages from a channel
- */
-export const useChannelsControllerGetMessages = <TData = Awaited<ReturnType<typeof channelsControllerGetMessages>>, TError = ErrorType<unknown>>(
- channelId: string,
-    params?: ChannelsControllerGetMessagesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof channelsControllerGetMessages>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-
-  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-
-  const queryOptions = getChannelsControllerGetMessagesQueryOptions(channelId,params,options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * @summary Send a message to a channel
- */
-export const channelsControllerCreateMessage = (
-    channelId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/channels/${channelId}/messages`, method: 'POST'
-    },
-      options);
-    }
-
-
-
-export const getChannelsControllerCreateMessageMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof channelsControllerCreateMessage>>, TError,{channelId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof channelsControllerCreateMessage>>, TError,{channelId: string}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof channelsControllerCreateMessage>>, {channelId: string}> = (props) => {
-          const {channelId} = props ?? {};
-
-          return  channelsControllerCreateMessage(channelId,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ChannelsControllerCreateMessageMutationResult = NonNullable<Awaited<ReturnType<typeof channelsControllerCreateMessage>>>
-
-    export type ChannelsControllerCreateMessageMutationError = ErrorType<unknown>
-
-    /**
- * @summary Send a message to a channel
- */
-export const useChannelsControllerCreateMessage = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof channelsControllerCreateMessage>>, TError,{channelId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof channelsControllerCreateMessage>>,
-        TError,
-        {channelId: string},
-        TContext
-      > => {
-
-      const mutationOptions = getChannelsControllerCreateMessageMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * @summary Update a message
- */
-export const channelsControllerUpdateMessage = (
-    channelId: string,
-    messageId: string,
-    channelsControllerUpdateMessageBody: BodyType<ChannelsControllerUpdateMessageBody>,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/channels/${channelId}/messages/${messageId}`, method: 'PATCH',
-      headers: {'Content-Type': 'application/json', },
-      data: channelsControllerUpdateMessageBody
-    },
-      options);
-    }
-
-
-
-export const getChannelsControllerUpdateMessageMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof channelsControllerUpdateMessage>>, TError,{channelId: string;messageId: string;data: BodyType<ChannelsControllerUpdateMessageBody>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof channelsControllerUpdateMessage>>, TError,{channelId: string;messageId: string;data: BodyType<ChannelsControllerUpdateMessageBody>}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof channelsControllerUpdateMessage>>, {channelId: string;messageId: string;data: BodyType<ChannelsControllerUpdateMessageBody>}> = (props) => {
-          const {channelId,messageId,data} = props ?? {};
-
-          return  channelsControllerUpdateMessage(channelId,messageId,data,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ChannelsControllerUpdateMessageMutationResult = NonNullable<Awaited<ReturnType<typeof channelsControllerUpdateMessage>>>
-    export type ChannelsControllerUpdateMessageMutationBody = BodyType<ChannelsControllerUpdateMessageBody>
-    export type ChannelsControllerUpdateMessageMutationError = ErrorType<unknown>
-
-    /**
- * @summary Update a message
- */
-export const useChannelsControllerUpdateMessage = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof channelsControllerUpdateMessage>>, TError,{channelId: string;messageId: string;data: BodyType<ChannelsControllerUpdateMessageBody>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof channelsControllerUpdateMessage>>,
-        TError,
-        {channelId: string;messageId: string;data: BodyType<ChannelsControllerUpdateMessageBody>},
-        TContext
-      > => {
-
-      const mutationOptions = getChannelsControllerUpdateMessageMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * @summary Delete a message
- */
-export const channelsControllerDeleteMessage = (
-    channelId: string,
-    messageId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/channels/${channelId}/messages/${messageId}`, method: 'DELETE'
-    },
-      options);
-    }
-
-
-
-export const getChannelsControllerDeleteMessageMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof channelsControllerDeleteMessage>>, TError,{channelId: string;messageId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof channelsControllerDeleteMessage>>, TError,{channelId: string;messageId: string}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof channelsControllerDeleteMessage>>, {channelId: string;messageId: string}> = (props) => {
-          const {channelId,messageId} = props ?? {};
-
-          return  channelsControllerDeleteMessage(channelId,messageId,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ChannelsControllerDeleteMessageMutationResult = NonNullable<Awaited<ReturnType<typeof channelsControllerDeleteMessage>>>
-
-    export type ChannelsControllerDeleteMessageMutationError = ErrorType<unknown>
-
-    /**
- * @summary Delete a message
- */
-export const useChannelsControllerDeleteMessage = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof channelsControllerDeleteMessage>>, TError,{channelId: string;messageId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof channelsControllerDeleteMessage>>,
-        TError,
-        {channelId: string;messageId: string},
-        TContext
-      > => {
-
-      const mutationOptions = getChannelsControllerDeleteMessageMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * @summary Mark messages as read
- */
-export const channelsControllerMarkAsRead = (
-    channelId: string,
-    channelsControllerMarkAsReadBody: BodyType<ChannelsControllerMarkAsReadBody>,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/channels/${channelId}/messages/read`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: channelsControllerMarkAsReadBody
-    },
-      options);
-    }
-
-
-
-export const getChannelsControllerMarkAsReadMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof channelsControllerMarkAsRead>>, TError,{channelId: string;data: BodyType<ChannelsControllerMarkAsReadBody>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof channelsControllerMarkAsRead>>, TError,{channelId: string;data: BodyType<ChannelsControllerMarkAsReadBody>}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof channelsControllerMarkAsRead>>, {channelId: string;data: BodyType<ChannelsControllerMarkAsReadBody>}> = (props) => {
-          const {channelId,data} = props ?? {};
-
-          return  channelsControllerMarkAsRead(channelId,data,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ChannelsControllerMarkAsReadMutationResult = NonNullable<Awaited<ReturnType<typeof channelsControllerMarkAsRead>>>
-    export type ChannelsControllerMarkAsReadMutationBody = BodyType<ChannelsControllerMarkAsReadBody>
-    export type ChannelsControllerMarkAsReadMutationError = ErrorType<unknown>
-
-    /**
- * @summary Mark messages as read
- */
-export const useChannelsControllerMarkAsRead = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof channelsControllerMarkAsRead>>, TError,{channelId: string;data: BodyType<ChannelsControllerMarkAsReadBody>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof channelsControllerMarkAsRead>>,
-        TError,
-        {channelId: string;data: BodyType<ChannelsControllerMarkAsReadBody>},
-        TContext
-      > => {
-
-      const mutationOptions = getChannelsControllerMarkAsReadMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * @summary Add a reaction to a message
- */
-export const channelsControllerAddReaction = (
-    channelId: string,
-    messageId: string,
-    channelsControllerAddReactionBody: BodyType<ChannelsControllerAddReactionBody>,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/channels/${channelId}/messages/${messageId}/reactions`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: channelsControllerAddReactionBody
-    },
-      options);
-    }
-
-
-
-export const getChannelsControllerAddReactionMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof channelsControllerAddReaction>>, TError,{channelId: string;messageId: string;data: BodyType<ChannelsControllerAddReactionBody>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof channelsControllerAddReaction>>, TError,{channelId: string;messageId: string;data: BodyType<ChannelsControllerAddReactionBody>}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof channelsControllerAddReaction>>, {channelId: string;messageId: string;data: BodyType<ChannelsControllerAddReactionBody>}> = (props) => {
-          const {channelId,messageId,data} = props ?? {};
-
-          return  channelsControllerAddReaction(channelId,messageId,data,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ChannelsControllerAddReactionMutationResult = NonNullable<Awaited<ReturnType<typeof channelsControllerAddReaction>>>
-    export type ChannelsControllerAddReactionMutationBody = BodyType<ChannelsControllerAddReactionBody>
-    export type ChannelsControllerAddReactionMutationError = ErrorType<unknown>
-
-    /**
- * @summary Add a reaction to a message
- */
-export const useChannelsControllerAddReaction = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof channelsControllerAddReaction>>, TError,{channelId: string;messageId: string;data: BodyType<ChannelsControllerAddReactionBody>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof channelsControllerAddReaction>>,
-        TError,
-        {channelId: string;messageId: string;data: BodyType<ChannelsControllerAddReactionBody>},
-        TContext
-      > => {
-
-      const mutationOptions = getChannelsControllerAddReactionMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * @summary Remove a reaction from a message
- */
-export const channelsControllerRemoveReaction = (
-    channelId: string,
-    messageId: string,
-    emoji: string,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/channels/${channelId}/messages/${messageId}/reactions/${emoji}`, method: 'DELETE'
-    },
-      options);
-    }
-
-
-
-export const getChannelsControllerRemoveReactionMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof channelsControllerRemoveReaction>>, TError,{channelId: string;messageId: string;emoji: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof channelsControllerRemoveReaction>>, TError,{channelId: string;messageId: string;emoji: string}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof channelsControllerRemoveReaction>>, {channelId: string;messageId: string;emoji: string}> = (props) => {
-          const {channelId,messageId,emoji} = props ?? {};
-
-          return  channelsControllerRemoveReaction(channelId,messageId,emoji,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ChannelsControllerRemoveReactionMutationResult = NonNullable<Awaited<ReturnType<typeof channelsControllerRemoveReaction>>>
-
-    export type ChannelsControllerRemoveReactionMutationError = ErrorType<unknown>
-
-    /**
- * @summary Remove a reaction from a message
- */
-export const useChannelsControllerRemoveReaction = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof channelsControllerRemoveReaction>>, TError,{channelId: string;messageId: string;emoji: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof channelsControllerRemoveReaction>>,
-        TError,
-        {channelId: string;messageId: string;emoji: string},
-        TContext
-      > => {
-
-      const mutationOptions = getChannelsControllerRemoveReactionMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * @summary Share a channel with another workspace
- */
-export const channelsControllerShareChannel = (
-    channelId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/channels/${channelId}/share`, method: 'POST'
-    },
-      options);
-    }
-
-
-
-export const getChannelsControllerShareChannelMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof channelsControllerShareChannel>>, TError,{channelId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof channelsControllerShareChannel>>, TError,{channelId: string}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof channelsControllerShareChannel>>, {channelId: string}> = (props) => {
-          const {channelId} = props ?? {};
-
-          return  channelsControllerShareChannel(channelId,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ChannelsControllerShareChannelMutationResult = NonNullable<Awaited<ReturnType<typeof channelsControllerShareChannel>>>
-
-    export type ChannelsControllerShareChannelMutationError = ErrorType<unknown>
-
-    /**
- * @summary Share a channel with another workspace
- */
-export const useChannelsControllerShareChannel = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof channelsControllerShareChannel>>, TError,{channelId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof channelsControllerShareChannel>>,
-        TError,
-        {channelId: string},
-        TContext
-      > => {
-
-      const mutationOptions = getChannelsControllerShareChannelMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * @summary Reply to a message
- */
-export const channelsControllerCreateReply = (
-    channelId: string,
-    messageId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/channels/${channelId}/messages/${messageId}/reply`, method: 'POST'
-    },
-      options);
-    }
-
-
-
-export const getChannelsControllerCreateReplyMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof channelsControllerCreateReply>>, TError,{channelId: string;messageId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof channelsControllerCreateReply>>, TError,{channelId: string;messageId: string}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof channelsControllerCreateReply>>, {channelId: string;messageId: string}> = (props) => {
-          const {channelId,messageId} = props ?? {};
-
-          return  channelsControllerCreateReply(channelId,messageId,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ChannelsControllerCreateReplyMutationResult = NonNullable<Awaited<ReturnType<typeof channelsControllerCreateReply>>>
-
-    export type ChannelsControllerCreateReplyMutationError = ErrorType<unknown>
-
-    /**
- * @summary Reply to a message
- */
-export const useChannelsControllerCreateReply = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof channelsControllerCreateReply>>, TError,{channelId: string;messageId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof channelsControllerCreateReply>>,
-        TError,
-        {channelId: string;messageId: string},
-        TContext
-      > => {
-
-      const mutationOptions = getChannelsControllerCreateReplyMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
  * @summary Get global system statistics
  */
 export const adminControllerGetStats = (
@@ -9647,661 +12286,6 @@ export const useAdminControllerUploadFile = <TError = ErrorType<unknown>,
       > => {
 
       const mutationOptions = getAdminControllerUploadFileMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * @summary Get all DM conversations for the current user
- */
-export const dmsControllerGetDms = (
-
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-
-
-      return customInstance<void>(
-      {url: `/api/dms`, method: 'GET', signal
-    },
-      options);
-    }
-
-
-export const getDmsControllerGetDmsQueryKey = () => {
-    return [`/api/dms`] as const;
-    }
-
-
-export const getDmsControllerGetDmsQueryOptions = <TData = Awaited<ReturnType<typeof dmsControllerGetDms>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof dmsControllerGetDms>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getDmsControllerGetDmsQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof dmsControllerGetDms>>> = ({ signal }) => dmsControllerGetDms(requestOptions, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof dmsControllerGetDms>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type DmsControllerGetDmsQueryResult = NonNullable<Awaited<ReturnType<typeof dmsControllerGetDms>>>
-export type DmsControllerGetDmsQueryError = ErrorType<unknown>
-
-/**
- * @summary Get all DM conversations for the current user
- */
-export const useDmsControllerGetDms = <TData = Awaited<ReturnType<typeof dmsControllerGetDms>>, TError = ErrorType<unknown>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof dmsControllerGetDms>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-
-  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-
-  const queryOptions = getDmsControllerGetDmsQueryOptions(options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * @summary Start a new DM conversation
- */
-export const dmsControllerCreateDm = (
-    createDmDto: BodyType<CreateDmDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/dms`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createDmDto
-    },
-      options);
-    }
-
-
-
-export const getDmsControllerCreateDmMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dmsControllerCreateDm>>, TError,{data: BodyType<CreateDmDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof dmsControllerCreateDm>>, TError,{data: BodyType<CreateDmDto>}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof dmsControllerCreateDm>>, {data: BodyType<CreateDmDto>}> = (props) => {
-          const {data} = props ?? {};
-
-          return  dmsControllerCreateDm(data,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type DmsControllerCreateDmMutationResult = NonNullable<Awaited<ReturnType<typeof dmsControllerCreateDm>>>
-    export type DmsControllerCreateDmMutationBody = BodyType<CreateDmDto>
-    export type DmsControllerCreateDmMutationError = ErrorType<unknown>
-
-    /**
- * @summary Start a new DM conversation
- */
-export const useDmsControllerCreateDm = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dmsControllerCreateDm>>, TError,{data: BodyType<CreateDmDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof dmsControllerCreateDm>>,
-        TError,
-        {data: BodyType<CreateDmDto>},
-        TContext
-      > => {
-
-      const mutationOptions = getDmsControllerCreateDmMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * @summary Get DM conversation details
- */
-export const dmsControllerGetDm = (
-    conversationId: string,
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-
-
-      return customInstance<void>(
-      {url: `/api/dms/${conversationId}`, method: 'GET', signal
-    },
-      options);
-    }
-
-
-export const getDmsControllerGetDmQueryKey = (conversationId: string,) => {
-    return [`/api/dms/${conversationId}`] as const;
-    }
-
-
-export const getDmsControllerGetDmQueryOptions = <TData = Awaited<ReturnType<typeof dmsControllerGetDm>>, TError = ErrorType<void>>(conversationId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof dmsControllerGetDm>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getDmsControllerGetDmQueryKey(conversationId);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof dmsControllerGetDm>>> = ({ signal }) => dmsControllerGetDm(conversationId, requestOptions, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: !!(conversationId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof dmsControllerGetDm>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type DmsControllerGetDmQueryResult = NonNullable<Awaited<ReturnType<typeof dmsControllerGetDm>>>
-export type DmsControllerGetDmQueryError = ErrorType<void>
-
-/**
- * @summary Get DM conversation details
- */
-export const useDmsControllerGetDm = <TData = Awaited<ReturnType<typeof dmsControllerGetDm>>, TError = ErrorType<void>>(
- conversationId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof dmsControllerGetDm>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-
-  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-
-  const queryOptions = getDmsControllerGetDmQueryOptions(conversationId,options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * @summary Delete a DM conversation
- */
-export const dmsControllerDeleteDm = (
-    conversationId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/dms/${conversationId}`, method: 'DELETE'
-    },
-      options);
-    }
-
-
-
-export const getDmsControllerDeleteDmMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dmsControllerDeleteDm>>, TError,{conversationId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof dmsControllerDeleteDm>>, TError,{conversationId: string}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof dmsControllerDeleteDm>>, {conversationId: string}> = (props) => {
-          const {conversationId} = props ?? {};
-
-          return  dmsControllerDeleteDm(conversationId,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type DmsControllerDeleteDmMutationResult = NonNullable<Awaited<ReturnType<typeof dmsControllerDeleteDm>>>
-
-    export type DmsControllerDeleteDmMutationError = ErrorType<unknown>
-
-    /**
- * @summary Delete a DM conversation
- */
-export const useDmsControllerDeleteDm = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dmsControllerDeleteDm>>, TError,{conversationId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof dmsControllerDeleteDm>>,
-        TError,
-        {conversationId: string},
-        TContext
-      > => {
-
-      const mutationOptions = getDmsControllerDeleteDmMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * @summary Get messages in a DM conversation
- */
-export const dmsControllerGetMessages = (
-    conversationId: string,
-    params?: DmsControllerGetMessagesParams,
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-
-
-      return customInstance<void>(
-      {url: `/api/dms/${conversationId}/messages`, method: 'GET',
-        params, signal
-    },
-      options);
-    }
-
-
-export const getDmsControllerGetMessagesQueryKey = (conversationId: string,
-    params?: DmsControllerGetMessagesParams,) => {
-    return [`/api/dms/${conversationId}/messages`, ...(params ? [params]: [])] as const;
-    }
-
-
-export const getDmsControllerGetMessagesQueryOptions = <TData = Awaited<ReturnType<typeof dmsControllerGetMessages>>, TError = ErrorType<unknown>>(conversationId: string,
-    params?: DmsControllerGetMessagesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof dmsControllerGetMessages>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getDmsControllerGetMessagesQueryKey(conversationId,params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof dmsControllerGetMessages>>> = ({ signal }) => dmsControllerGetMessages(conversationId,params, requestOptions, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: !!(conversationId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof dmsControllerGetMessages>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type DmsControllerGetMessagesQueryResult = NonNullable<Awaited<ReturnType<typeof dmsControllerGetMessages>>>
-export type DmsControllerGetMessagesQueryError = ErrorType<unknown>
-
-/**
- * @summary Get messages in a DM conversation
- */
-export const useDmsControllerGetMessages = <TData = Awaited<ReturnType<typeof dmsControllerGetMessages>>, TError = ErrorType<unknown>>(
- conversationId: string,
-    params?: DmsControllerGetMessagesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof dmsControllerGetMessages>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
-
-  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-
-  const queryOptions = getDmsControllerGetMessagesQueryOptions(conversationId,params,options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * @summary Send a message in a DM
- */
-export const dmsControllerCreateMessage = (
-    conversationId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/dms/${conversationId}/messages`, method: 'POST'
-    },
-      options);
-    }
-
-
-
-export const getDmsControllerCreateMessageMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dmsControllerCreateMessage>>, TError,{conversationId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof dmsControllerCreateMessage>>, TError,{conversationId: string}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof dmsControllerCreateMessage>>, {conversationId: string}> = (props) => {
-          const {conversationId} = props ?? {};
-
-          return  dmsControllerCreateMessage(conversationId,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type DmsControllerCreateMessageMutationResult = NonNullable<Awaited<ReturnType<typeof dmsControllerCreateMessage>>>
-
-    export type DmsControllerCreateMessageMutationError = ErrorType<unknown>
-
-    /**
- * @summary Send a message in a DM
- */
-export const useDmsControllerCreateMessage = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dmsControllerCreateMessage>>, TError,{conversationId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof dmsControllerCreateMessage>>,
-        TError,
-        {conversationId: string},
-        TContext
-      > => {
-
-      const mutationOptions = getDmsControllerCreateMessageMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * @summary Update a DM message
- */
-export const dmsControllerUpdateMessage = (
-    conversationId: string,
-    messageId: string,
-    updateDmMessageDto: BodyType<UpdateDmMessageDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/dms/${conversationId}/messages/${messageId}`, method: 'PATCH',
-      headers: {'Content-Type': 'application/json', },
-      data: updateDmMessageDto
-    },
-      options);
-    }
-
-
-
-export const getDmsControllerUpdateMessageMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dmsControllerUpdateMessage>>, TError,{conversationId: string;messageId: string;data: BodyType<UpdateDmMessageDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof dmsControllerUpdateMessage>>, TError,{conversationId: string;messageId: string;data: BodyType<UpdateDmMessageDto>}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof dmsControllerUpdateMessage>>, {conversationId: string;messageId: string;data: BodyType<UpdateDmMessageDto>}> = (props) => {
-          const {conversationId,messageId,data} = props ?? {};
-
-          return  dmsControllerUpdateMessage(conversationId,messageId,data,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type DmsControllerUpdateMessageMutationResult = NonNullable<Awaited<ReturnType<typeof dmsControllerUpdateMessage>>>
-    export type DmsControllerUpdateMessageMutationBody = BodyType<UpdateDmMessageDto>
-    export type DmsControllerUpdateMessageMutationError = ErrorType<unknown>
-
-    /**
- * @summary Update a DM message
- */
-export const useDmsControllerUpdateMessage = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dmsControllerUpdateMessage>>, TError,{conversationId: string;messageId: string;data: BodyType<UpdateDmMessageDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof dmsControllerUpdateMessage>>,
-        TError,
-        {conversationId: string;messageId: string;data: BodyType<UpdateDmMessageDto>},
-        TContext
-      > => {
-
-      const mutationOptions = getDmsControllerUpdateMessageMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * @summary Delete a DM message
- */
-export const dmsControllerDeleteMessage = (
-    conversationId: string,
-    messageId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/dms/${conversationId}/messages/${messageId}`, method: 'DELETE'
-    },
-      options);
-    }
-
-
-
-export const getDmsControllerDeleteMessageMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dmsControllerDeleteMessage>>, TError,{conversationId: string;messageId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof dmsControllerDeleteMessage>>, TError,{conversationId: string;messageId: string}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof dmsControllerDeleteMessage>>, {conversationId: string;messageId: string}> = (props) => {
-          const {conversationId,messageId} = props ?? {};
-
-          return  dmsControllerDeleteMessage(conversationId,messageId,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type DmsControllerDeleteMessageMutationResult = NonNullable<Awaited<ReturnType<typeof dmsControllerDeleteMessage>>>
-
-    export type DmsControllerDeleteMessageMutationError = ErrorType<unknown>
-
-    /**
- * @summary Delete a DM message
- */
-export const useDmsControllerDeleteMessage = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dmsControllerDeleteMessage>>, TError,{conversationId: string;messageId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof dmsControllerDeleteMessage>>,
-        TError,
-        {conversationId: string;messageId: string},
-        TContext
-      > => {
-
-      const mutationOptions = getDmsControllerDeleteMessageMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * @summary Mark messages as read in a DM
- */
-export const dmsControllerMarkAsRead = (
-    conversationId: string,
-    markAsReadDto: BodyType<MarkAsReadDto>,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/dms/${conversationId}/messages/read`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: markAsReadDto
-    },
-      options);
-    }
-
-
-
-export const getDmsControllerMarkAsReadMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dmsControllerMarkAsRead>>, TError,{conversationId: string;data: BodyType<MarkAsReadDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof dmsControllerMarkAsRead>>, TError,{conversationId: string;data: BodyType<MarkAsReadDto>}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof dmsControllerMarkAsRead>>, {conversationId: string;data: BodyType<MarkAsReadDto>}> = (props) => {
-          const {conversationId,data} = props ?? {};
-
-          return  dmsControllerMarkAsRead(conversationId,data,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type DmsControllerMarkAsReadMutationResult = NonNullable<Awaited<ReturnType<typeof dmsControllerMarkAsRead>>>
-    export type DmsControllerMarkAsReadMutationBody = BodyType<MarkAsReadDto>
-    export type DmsControllerMarkAsReadMutationError = ErrorType<unknown>
-
-    /**
- * @summary Mark messages as read in a DM
- */
-export const useDmsControllerMarkAsRead = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dmsControllerMarkAsRead>>, TError,{conversationId: string;data: BodyType<MarkAsReadDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof dmsControllerMarkAsRead>>,
-        TError,
-        {conversationId: string;data: BodyType<MarkAsReadDto>},
-        TContext
-      > => {
-
-      const mutationOptions = getDmsControllerMarkAsReadMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * @summary Add a reaction to a DM message
- */
-export const dmsControllerAddReaction = (
-    conversationId: string,
-    messageId: string,
-    dmsControllerAddReactionBody: BodyType<DmsControllerAddReactionBody>,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/dms/${conversationId}/messages/${messageId}/reactions`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: dmsControllerAddReactionBody
-    },
-      options);
-    }
-
-
-
-export const getDmsControllerAddReactionMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dmsControllerAddReaction>>, TError,{conversationId: string;messageId: string;data: BodyType<DmsControllerAddReactionBody>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof dmsControllerAddReaction>>, TError,{conversationId: string;messageId: string;data: BodyType<DmsControllerAddReactionBody>}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof dmsControllerAddReaction>>, {conversationId: string;messageId: string;data: BodyType<DmsControllerAddReactionBody>}> = (props) => {
-          const {conversationId,messageId,data} = props ?? {};
-
-          return  dmsControllerAddReaction(conversationId,messageId,data,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type DmsControllerAddReactionMutationResult = NonNullable<Awaited<ReturnType<typeof dmsControllerAddReaction>>>
-    export type DmsControllerAddReactionMutationBody = BodyType<DmsControllerAddReactionBody>
-    export type DmsControllerAddReactionMutationError = ErrorType<unknown>
-
-    /**
- * @summary Add a reaction to a DM message
- */
-export const useDmsControllerAddReaction = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dmsControllerAddReaction>>, TError,{conversationId: string;messageId: string;data: BodyType<DmsControllerAddReactionBody>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof dmsControllerAddReaction>>,
-        TError,
-        {conversationId: string;messageId: string;data: BodyType<DmsControllerAddReactionBody>},
-        TContext
-      > => {
-
-      const mutationOptions = getDmsControllerAddReactionMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-
-/**
- * @summary Remove a reaction from a DM message
- */
-export const dmsControllerRemoveReaction = (
-    conversationId: string,
-    messageId: string,
-    emoji: string,
- options?: SecondParameter<typeof customInstance>,) => {
-
-
-      return customInstance<void>(
-      {url: `/api/dms/${conversationId}/messages/${messageId}/reactions/${emoji}`, method: 'DELETE'
-    },
-      options);
-    }
-
-
-
-export const getDmsControllerRemoveReactionMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dmsControllerRemoveReaction>>, TError,{conversationId: string;messageId: string;emoji: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof dmsControllerRemoveReaction>>, TError,{conversationId: string;messageId: string;emoji: string}, TContext> => {
-const {mutation: mutationOptions, request: requestOptions} = options ?? {};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof dmsControllerRemoveReaction>>, {conversationId: string;messageId: string;emoji: string}> = (props) => {
-          const {conversationId,messageId,emoji} = props ?? {};
-
-          return  dmsControllerRemoveReaction(conversationId,messageId,emoji,requestOptions)
-        }
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type DmsControllerRemoveReactionMutationResult = NonNullable<Awaited<ReturnType<typeof dmsControllerRemoveReaction>>>
-
-    export type DmsControllerRemoveReactionMutationError = ErrorType<unknown>
-
-    /**
- * @summary Remove a reaction from a DM message
- */
-export const useDmsControllerRemoveReaction = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dmsControllerRemoveReaction>>, TError,{conversationId: string;messageId: string;emoji: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationResult<
-        Awaited<ReturnType<typeof dmsControllerRemoveReaction>>,
-        TError,
-        {conversationId: string;messageId: string;emoji: string},
-        TContext
-      > => {
-
-      const mutationOptions = getDmsControllerRemoveReactionMutationOptions(options);
 
       return useMutation(mutationOptions);
     }
@@ -14645,14 +16629,14 @@ export const useScheduledNotificationsControllerCreateNotification = <TError = E
  */
 export const scheduledNotificationsControllerUpdateNotification = (
     id: string,
-    scheduledNotificationsControllerUpdateNotificationBody: BodyType<ScheduledNotificationsControllerUpdateNotificationBody>,
+    updateScheduledNotificationDto: BodyType<UpdateScheduledNotificationDto>,
  options?: SecondParameter<typeof customInstance>,) => {
 
 
       return customInstance<void>(
       {url: `/api/scheduled-notifications/${id}`, method: 'PATCH',
       headers: {'Content-Type': 'application/json', },
-      data: scheduledNotificationsControllerUpdateNotificationBody
+      data: updateScheduledNotificationDto
     },
       options);
     }
@@ -14660,14 +16644,14 @@ export const scheduledNotificationsControllerUpdateNotification = (
 
 
 export const getScheduledNotificationsControllerUpdateNotificationMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof scheduledNotificationsControllerUpdateNotification>>, TError,{id: string;data: BodyType<ScheduledNotificationsControllerUpdateNotificationBody>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof scheduledNotificationsControllerUpdateNotification>>, TError,{id: string;data: BodyType<ScheduledNotificationsControllerUpdateNotificationBody>}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof scheduledNotificationsControllerUpdateNotification>>, TError,{id: string;data: BodyType<UpdateScheduledNotificationDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof scheduledNotificationsControllerUpdateNotification>>, TError,{id: string;data: BodyType<UpdateScheduledNotificationDto>}, TContext> => {
 const {mutation: mutationOptions, request: requestOptions} = options ?? {};
 
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof scheduledNotificationsControllerUpdateNotification>>, {id: string;data: BodyType<ScheduledNotificationsControllerUpdateNotificationBody>}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof scheduledNotificationsControllerUpdateNotification>>, {id: string;data: BodyType<UpdateScheduledNotificationDto>}> = (props) => {
           const {id,data} = props ?? {};
 
           return  scheduledNotificationsControllerUpdateNotification(id,data,requestOptions)
@@ -14679,18 +16663,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?? {};
   return  { mutationFn, ...mutationOptions }}
 
     export type ScheduledNotificationsControllerUpdateNotificationMutationResult = NonNullable<Awaited<ReturnType<typeof scheduledNotificationsControllerUpdateNotification>>>
-    export type ScheduledNotificationsControllerUpdateNotificationMutationBody = BodyType<ScheduledNotificationsControllerUpdateNotificationBody>
+    export type ScheduledNotificationsControllerUpdateNotificationMutationBody = BodyType<UpdateScheduledNotificationDto>
     export type ScheduledNotificationsControllerUpdateNotificationMutationError = ErrorType<unknown>
 
     /**
  * @summary Update a scheduled notification
  */
 export const useScheduledNotificationsControllerUpdateNotification = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof scheduledNotificationsControllerUpdateNotification>>, TError,{id: string;data: BodyType<ScheduledNotificationsControllerUpdateNotificationBody>}, TContext>, request?: SecondParameter<typeof customInstance>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof scheduledNotificationsControllerUpdateNotification>>, TError,{id: string;data: BodyType<UpdateScheduledNotificationDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
 ): UseMutationResult<
         Awaited<ReturnType<typeof scheduledNotificationsControllerUpdateNotification>>,
         TError,
-        {id: string;data: BodyType<ScheduledNotificationsControllerUpdateNotificationBody>},
+        {id: string;data: BodyType<UpdateScheduledNotificationDto>},
         TContext
       > => {
 
@@ -14821,12 +16805,14 @@ export const useAssetsControllerGetEligibleAssets = <TData = Awaited<ReturnType<
  * @summary Create a support ticket
  */
 export const supportControllerCreateTicket = (
-
+    createTicketDto: BodyType<CreateTicketDto>,
  options?: SecondParameter<typeof customInstance>,) => {
 
 
       return customInstance<void>(
-      {url: `/api/support/tickets`, method: 'POST'
+      {url: `/api/support/tickets`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createTicketDto
     },
       options);
     }
@@ -14834,17 +16820,17 @@ export const supportControllerCreateTicket = (
 
 
 export const getSupportControllerCreateTicketMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof supportControllerCreateTicket>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof supportControllerCreateTicket>>, TError,void, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof supportControllerCreateTicket>>, TError,{data: BodyType<CreateTicketDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof supportControllerCreateTicket>>, TError,{data: BodyType<CreateTicketDto>}, TContext> => {
 const {mutation: mutationOptions, request: requestOptions} = options ?? {};
 
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof supportControllerCreateTicket>>, void> = () => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof supportControllerCreateTicket>>, {data: BodyType<CreateTicketDto>}> = (props) => {
+          const {data} = props ?? {};
 
-
-          return  supportControllerCreateTicket(requestOptions)
+          return  supportControllerCreateTicket(data,requestOptions)
         }
 
 
@@ -14853,18 +16839,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?? {};
   return  { mutationFn, ...mutationOptions }}
 
     export type SupportControllerCreateTicketMutationResult = NonNullable<Awaited<ReturnType<typeof supportControllerCreateTicket>>>
-
+    export type SupportControllerCreateTicketMutationBody = BodyType<CreateTicketDto>
     export type SupportControllerCreateTicketMutationError = ErrorType<unknown>
 
     /**
  * @summary Create a support ticket
  */
 export const useSupportControllerCreateTicket = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof supportControllerCreateTicket>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof supportControllerCreateTicket>>, TError,{data: BodyType<CreateTicketDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
 ): UseMutationResult<
         Awaited<ReturnType<typeof supportControllerCreateTicket>>,
         TError,
-        void,
+        {data: BodyType<CreateTicketDto>},
         TContext
       > => {
 
@@ -14940,12 +16926,14 @@ export const useSupportControllerGetTickets = <TData = Awaited<ReturnType<typeof
  * @summary Start a live chat session
  */
 export const supportControllerStartLiveChat = (
-
+    startLiveChatDto: BodyType<StartLiveChatDto>,
  options?: SecondParameter<typeof customInstance>,) => {
 
 
       return customInstance<void>(
-      {url: `/api/support/live-chat`, method: 'POST'
+      {url: `/api/support/live-chat`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: startLiveChatDto
     },
       options);
     }
@@ -14953,17 +16941,17 @@ export const supportControllerStartLiveChat = (
 
 
 export const getSupportControllerStartLiveChatMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof supportControllerStartLiveChat>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof supportControllerStartLiveChat>>, TError,void, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof supportControllerStartLiveChat>>, TError,{data: BodyType<StartLiveChatDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof supportControllerStartLiveChat>>, TError,{data: BodyType<StartLiveChatDto>}, TContext> => {
 const {mutation: mutationOptions, request: requestOptions} = options ?? {};
 
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof supportControllerStartLiveChat>>, void> = () => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof supportControllerStartLiveChat>>, {data: BodyType<StartLiveChatDto>}> = (props) => {
+          const {data} = props ?? {};
 
-
-          return  supportControllerStartLiveChat(requestOptions)
+          return  supportControllerStartLiveChat(data,requestOptions)
         }
 
 
@@ -14972,18 +16960,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?? {};
   return  { mutationFn, ...mutationOptions }}
 
     export type SupportControllerStartLiveChatMutationResult = NonNullable<Awaited<ReturnType<typeof supportControllerStartLiveChat>>>
-
+    export type SupportControllerStartLiveChatMutationBody = BodyType<StartLiveChatDto>
     export type SupportControllerStartLiveChatMutationError = ErrorType<unknown>
 
     /**
  * @summary Start a live chat session
  */
 export const useSupportControllerStartLiveChat = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof supportControllerStartLiveChat>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof supportControllerStartLiveChat>>, TError,{data: BodyType<StartLiveChatDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
 ): UseMutationResult<
         Awaited<ReturnType<typeof supportControllerStartLiveChat>>,
         TError,
-        void,
+        {data: BodyType<StartLiveChatDto>},
         TContext
       > => {
 
@@ -15053,11 +17041,14 @@ export const useSupportControllerEndLiveChat = <TError = ErrorType<unknown>,
  */
 export const supportControllerUpdateTicketStatus = (
     ticketId: string,
+    updateTicketStatusDto: BodyType<UpdateTicketStatusDto>,
  options?: SecondParameter<typeof customInstance>,) => {
 
 
       return customInstance<void>(
-      {url: `/api/support/tickets/${ticketId}/status`, method: 'PATCH'
+      {url: `/api/support/tickets/${ticketId}/status`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateTicketStatusDto
     },
       options);
     }
@@ -15065,17 +17056,17 @@ export const supportControllerUpdateTicketStatus = (
 
 
 export const getSupportControllerUpdateTicketStatusMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof supportControllerUpdateTicketStatus>>, TError,{ticketId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof supportControllerUpdateTicketStatus>>, TError,{ticketId: string}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof supportControllerUpdateTicketStatus>>, TError,{ticketId: string;data: BodyType<UpdateTicketStatusDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof supportControllerUpdateTicketStatus>>, TError,{ticketId: string;data: BodyType<UpdateTicketStatusDto>}, TContext> => {
 const {mutation: mutationOptions, request: requestOptions} = options ?? {};
 
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof supportControllerUpdateTicketStatus>>, {ticketId: string}> = (props) => {
-          const {ticketId} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof supportControllerUpdateTicketStatus>>, {ticketId: string;data: BodyType<UpdateTicketStatusDto>}> = (props) => {
+          const {ticketId,data} = props ?? {};
 
-          return  supportControllerUpdateTicketStatus(ticketId,requestOptions)
+          return  supportControllerUpdateTicketStatus(ticketId,data,requestOptions)
         }
 
 
@@ -15084,18 +17075,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?? {};
   return  { mutationFn, ...mutationOptions }}
 
     export type SupportControllerUpdateTicketStatusMutationResult = NonNullable<Awaited<ReturnType<typeof supportControllerUpdateTicketStatus>>>
-
+    export type SupportControllerUpdateTicketStatusMutationBody = BodyType<UpdateTicketStatusDto>
     export type SupportControllerUpdateTicketStatusMutationError = ErrorType<unknown>
 
     /**
  * @summary Update ticket status
  */
 export const useSupportControllerUpdateTicketStatus = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof supportControllerUpdateTicketStatus>>, TError,{ticketId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof supportControllerUpdateTicketStatus>>, TError,{ticketId: string;data: BodyType<UpdateTicketStatusDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
 ): UseMutationResult<
         Awaited<ReturnType<typeof supportControllerUpdateTicketStatus>>,
         TError,
-        {ticketId: string},
+        {ticketId: string;data: BodyType<UpdateTicketStatusDto>},
         TContext
       > => {
 
@@ -15109,11 +17100,14 @@ export const useSupportControllerUpdateTicketStatus = <TError = ErrorType<unknow
  */
 export const supportControllerAssignTicket = (
     ticketId: string,
+    assignTicketDto: BodyType<AssignTicketDto>,
  options?: SecondParameter<typeof customInstance>,) => {
 
 
       return customInstance<void>(
-      {url: `/api/support/tickets/${ticketId}/assign`, method: 'PATCH'
+      {url: `/api/support/tickets/${ticketId}/assign`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: assignTicketDto
     },
       options);
     }
@@ -15121,17 +17115,17 @@ export const supportControllerAssignTicket = (
 
 
 export const getSupportControllerAssignTicketMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof supportControllerAssignTicket>>, TError,{ticketId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof supportControllerAssignTicket>>, TError,{ticketId: string}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof supportControllerAssignTicket>>, TError,{ticketId: string;data: BodyType<AssignTicketDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof supportControllerAssignTicket>>, TError,{ticketId: string;data: BodyType<AssignTicketDto>}, TContext> => {
 const {mutation: mutationOptions, request: requestOptions} = options ?? {};
 
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof supportControllerAssignTicket>>, {ticketId: string}> = (props) => {
-          const {ticketId} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof supportControllerAssignTicket>>, {ticketId: string;data: BodyType<AssignTicketDto>}> = (props) => {
+          const {ticketId,data} = props ?? {};
 
-          return  supportControllerAssignTicket(ticketId,requestOptions)
+          return  supportControllerAssignTicket(ticketId,data,requestOptions)
         }
 
 
@@ -15140,18 +17134,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?? {};
   return  { mutationFn, ...mutationOptions }}
 
     export type SupportControllerAssignTicketMutationResult = NonNullable<Awaited<ReturnType<typeof supportControllerAssignTicket>>>
-
+    export type SupportControllerAssignTicketMutationBody = BodyType<AssignTicketDto>
     export type SupportControllerAssignTicketMutationError = ErrorType<unknown>
 
     /**
  * @summary Assign ticket to an agent
  */
 export const useSupportControllerAssignTicket = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof supportControllerAssignTicket>>, TError,{ticketId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof supportControllerAssignTicket>>, TError,{ticketId: string;data: BodyType<AssignTicketDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
 ): UseMutationResult<
         Awaited<ReturnType<typeof supportControllerAssignTicket>>,
         TError,
-        {ticketId: string},
+        {ticketId: string;data: BodyType<AssignTicketDto>},
         TContext
       > => {
 
@@ -15164,12 +17158,14 @@ export const useSupportControllerAssignTicket = <TError = ErrorType<unknown>,
  * @summary Create or update customer profile
  */
 export const supportControllerCreateCustomerProfile = (
-
+    createCustomerProfileDto: BodyType<CreateCustomerProfileDto>,
  options?: SecondParameter<typeof customInstance>,) => {
 
 
       return customInstance<void>(
-      {url: `/api/support/customers`, method: 'POST'
+      {url: `/api/support/customers`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createCustomerProfileDto
     },
       options);
     }
@@ -15177,17 +17173,17 @@ export const supportControllerCreateCustomerProfile = (
 
 
 export const getSupportControllerCreateCustomerProfileMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof supportControllerCreateCustomerProfile>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof supportControllerCreateCustomerProfile>>, TError,void, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof supportControllerCreateCustomerProfile>>, TError,{data: BodyType<CreateCustomerProfileDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof supportControllerCreateCustomerProfile>>, TError,{data: BodyType<CreateCustomerProfileDto>}, TContext> => {
 const {mutation: mutationOptions, request: requestOptions} = options ?? {};
 
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof supportControllerCreateCustomerProfile>>, void> = () => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof supportControllerCreateCustomerProfile>>, {data: BodyType<CreateCustomerProfileDto>}> = (props) => {
+          const {data} = props ?? {};
 
-
-          return  supportControllerCreateCustomerProfile(requestOptions)
+          return  supportControllerCreateCustomerProfile(data,requestOptions)
         }
 
 
@@ -15196,18 +17192,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?? {};
   return  { mutationFn, ...mutationOptions }}
 
     export type SupportControllerCreateCustomerProfileMutationResult = NonNullable<Awaited<ReturnType<typeof supportControllerCreateCustomerProfile>>>
-
+    export type SupportControllerCreateCustomerProfileMutationBody = BodyType<CreateCustomerProfileDto>
     export type SupportControllerCreateCustomerProfileMutationError = ErrorType<unknown>
 
     /**
  * @summary Create or update customer profile
  */
 export const useSupportControllerCreateCustomerProfile = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof supportControllerCreateCustomerProfile>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof supportControllerCreateCustomerProfile>>, TError,{data: BodyType<CreateCustomerProfileDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
 ): UseMutationResult<
         Awaited<ReturnType<typeof supportControllerCreateCustomerProfile>>,
         TError,
-        void,
+        {data: BodyType<CreateCustomerProfileDto>},
         TContext
       > => {
 

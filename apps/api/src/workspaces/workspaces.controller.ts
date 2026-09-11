@@ -392,13 +392,14 @@ export class WorkspacesController {
   @ApiOperation({ summary: 'Join a workspace' })
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
   @ApiResponse({ status: 201, description: 'Joined successfully' })
+  @ApiResponse({ status: 403, description: 'Forbidden: Cannot join a private workspace' })
   @ApiResponse({ status: 404, description: 'Workspace not found' })
   async joinWorkspace(@CurrentUser() user: User, @Param('slug') slug: string) {
     /**
-     * ⚡ Performance Optimization:
-     * 1. Consolidates workspace lookup and membership verification into a single database query.
-     * 2. Uses 'include' to retrieve the workspace and the current user's membership in one round-trip.
-     * 3. Reduces database round-trips from 2 down to 1 while maintaining API response contracts.
+     * 🔒 Security Mitigation (BOLA / Authorization Enforcement):
+     * Ensures non-members cannot join private workspaces directly by guessing or passing
+     * a workspace slug. Only workspaces explicitly configured as `isPublic: true` can be joined
+     * without prior invitation.
      */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
@@ -417,6 +418,10 @@ export class WorkspacesController {
 
     if (existingMember) {
       return existingMember;
+    }
+
+    if (!workspace.isPublic) {
+      throw new ForbiddenException('Cannot join a private workspace');
     }
 
     return prisma.workspaceMember.create({

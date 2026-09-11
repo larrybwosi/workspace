@@ -20,11 +20,104 @@ import {
   ApiParam,
   ApiBody,
   ApiQuery,
+  ApiProperty,
+  ApiPropertyOptional,
 } from '@nestjs/swagger';
+import { IsString, IsOptional, IsObject, IsEnum, IsIn } from 'class-validator';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { prisma } from '@repo/database';
 import type { User } from '@repo/database';
+
+/**
+ * THREAT MITIGATION: Mass Assignment & Unvalidated Property Injection
+ * Using explicit NestJS DTO classes decorated with class-validator prevents users
+ * from injecting unauthorized database fields (e.g. role, email, emailVerified, id, createdAt)
+ * during user profile, status, or device token updates.
+ */
+
+export class UpdateUserStatusDto {
+  @ApiProperty({ description: 'User online status', example: 'online', enum: ['online', 'offline', 'away', 'dnd'] })
+  @IsString()
+  @IsIn(['online', 'offline', 'away', 'dnd'])
+  status!: User['status'];
+}
+
+export class UpdateUserProfileDto {
+  @ApiPropertyOptional({ description: 'Full display name' })
+  @IsOptional()
+  @IsString()
+  name?: string;
+
+  @ApiPropertyOptional({ description: 'Unique handle/username' })
+  @IsOptional()
+  @IsString()
+  username?: string;
+
+  @ApiPropertyOptional({ description: 'Avatar image URL' })
+  @IsOptional()
+  @IsString()
+  avatar?: string;
+
+  @ApiPropertyOptional({ description: 'Profile image URL' })
+  @IsOptional()
+  @IsString()
+  image?: string;
+
+  @ApiPropertyOptional({ description: 'Banner image URL' })
+  @IsOptional()
+  @IsString()
+  banner?: string;
+
+  @ApiPropertyOptional({ description: 'Custom status text' })
+  @IsOptional()
+  @IsString()
+  statusText?: string;
+
+  @ApiPropertyOptional({ description: 'Custom status emoji' })
+  @IsOptional()
+  @IsString()
+  statusEmoji?: string;
+
+  @ApiPropertyOptional({ description: 'User biography' })
+  @IsOptional()
+  @IsString()
+  bio?: string;
+
+  @ApiPropertyOptional({ description: 'Online presence status', enum: ['online', 'offline', 'away', 'dnd'] })
+  @IsOptional()
+  @IsString()
+  @IsIn(['online', 'offline', 'away', 'dnd'])
+  status?: string;
+
+  @ApiPropertyOptional({ description: 'Notification settings object' })
+  @IsOptional()
+  @IsObject()
+  notificationPreferences?: Record<string, any>;
+}
+
+export class RegisterDeviceTokenDto {
+  @ApiProperty({ description: 'Push notification device token' })
+  @IsString()
+  token!: string;
+
+  @ApiProperty({ description: 'Device platform', enum: ['web', 'ios', 'android', 'desktop'] })
+  @IsString()
+  @IsIn(['web', 'ios', 'android', 'desktop'])
+  platform!: string;
+
+  @ApiPropertyOptional({ description: 'Metadata regarding the target device' })
+  @IsOptional()
+  @IsObject()
+  deviceInfo?: Record<string, any>;
+}
+
+export class DeleteDeviceTokenDto {
+  @ApiPropertyOptional({ description: 'Push notification device token to deactivate' })
+  @IsOptional()
+  @IsString()
+  token?: string;
+}
 
 @ApiTags('Users')
 @ApiBearerAuth()
@@ -367,8 +460,9 @@ export class UsersController {
 
   @Patch('me/status')
   @ApiOperation({ summary: 'Update current user status' })
+  @ApiBody({ type: UpdateUserStatusDto })
   @ApiResponse({ status: 200, description: 'User status updated' })
-  async updateMyStatus(@CurrentUser() user: User, @Body() body: { status: User['status'] }) {
+  async updateMyStatus(@CurrentUser() user: User, @Body() body: UpdateUserStatusDto) {
     return prisma.user.update({
       where: { id: user.id },
       data: { status: body.status },
@@ -377,16 +471,18 @@ export class UsersController {
 
   @Patch('me')
   @ApiOperation({ summary: 'Update current user profile' })
+  @ApiBody({ type: UpdateUserProfileDto })
   @ApiResponse({ status: 200, description: 'Profile updated' })
-  async patchMe(@CurrentUser() user: User, @Body() body: any) {
+  async patchMe(@CurrentUser() user: User, @Body() body: UpdateUserProfileDto) {
     return this.updateMe(user, body);
   }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update user profile by ID' })
   @ApiParam({ name: 'id', description: 'The user ID or me' })
+  @ApiBody({ type: UpdateUserProfileDto })
   @ApiResponse({ status: 200, description: 'Profile updated' })
-  async patchUser(@CurrentUser() currentUser: User, @Param('id') id: string, @Body() body: any) {
+  async patchUser(@CurrentUser() currentUser: User, @Param('id') id: string, @Body() body: UpdateUserProfileDto) {
     if (id !== 'me' && id !== currentUser.id) {
       throw new ForbiddenException('Cannot update another user profile');
     }
@@ -395,8 +491,9 @@ export class UsersController {
 
   @Post('me')
   @ApiOperation({ summary: 'Update current user profile' })
+  @ApiBody({ type: UpdateUserProfileDto })
   @ApiResponse({ status: 200, description: 'Profile updated' })
-  async updateMe(@CurrentUser() user: User, @Body() body: any) {
+  async updateMe(@CurrentUser() user: User, @Body() body: UpdateUserProfileDto) {
     const {
       name,
       username,
@@ -434,19 +531,9 @@ export class UsersController {
 
   @Post('me/device-tokens')
   @ApiOperation({ summary: 'Register a device token for push notifications' })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      required: ['token', 'platform'],
-      properties: {
-        token: { type: 'string' },
-        platform: { type: 'string', enum: ['web', 'ios', 'android', 'desktop'] },
-        deviceInfo: { type: 'object' },
-      },
-    },
-  })
+  @ApiBody({ type: RegisterDeviceTokenDto })
   @ApiResponse({ status: 201, description: 'Device token registered' })
-  async registerDeviceToken(@CurrentUser() user: User, @Body() body: any) {
+  async registerDeviceToken(@CurrentUser() user: User, @Body() body: RegisterDeviceTokenDto) {
     const { token, platform, deviceInfo } = body;
 
     if (!token || !platform) {
@@ -494,9 +581,14 @@ export class UsersController {
 
   @Delete('me/device-tokens')
   @ApiOperation({ summary: 'Deactivate a device token' })
-  @ApiQuery({ name: 'token', required: true })
+  @ApiQuery({ name: 'token', required: false })
+  @ApiBody({ type: DeleteDeviceTokenDto, required: false })
   @ApiResponse({ status: 200, description: 'Device token deactivated' })
-  async deleteDeviceToken(@CurrentUser() user: User, @Query('token') tokenQuery: string, @Body() body: any) {
+  async deleteDeviceToken(
+    @CurrentUser() user: User,
+    @Query('token') tokenQuery?: string,
+    @Body() body?: DeleteDeviceTokenDto,
+  ) {
     // Check both query param and body for flexibility
     const token = tokenQuery || body?.token;
 

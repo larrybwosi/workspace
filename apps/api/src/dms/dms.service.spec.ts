@@ -3,6 +3,7 @@ import { DmsService } from './dms.service';
 import { prisma } from '@repo/database';
 import { AblyChannels, AblyEvents, publishRealtime } from '@repo/shared/server';
 import { NotificationsService } from '../notifications/notifications.service';
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { vi, describe, beforeEach, it, expect, afterEach } from 'vitest';
 
 vi.mock('@repo/database', () => ({
@@ -14,6 +15,7 @@ vi.mock('@repo/database', () => ({
       create: vi.fn(),
       update: vi.fn(),
       upsert: vi.fn(),
+      delete: vi.fn(),
     },
     dMMessage: {
       findMany: vi.fn(),
@@ -98,8 +100,53 @@ describe('DmsService', () => {
     });
   });
 
+  describe('deleteDm', () => {
+    it('should throw NotFoundException if DM conversation does not exist', async () => {
+      (prisma.directMessage.findUnique as any).mockResolvedValue(null);
+
+      await expect(service.deleteDm('dm-nonexistent', 'user-1')).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw ForbiddenException if user is not a participant', async () => {
+      (prisma.directMessage.findUnique as any).mockResolvedValue({
+        participant1Id: 'user-1',
+        participant2Id: 'user-2',
+      });
+
+      await expect(service.deleteDm('dm-1', 'user-attacker')).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should delete DM if user is a participant', async () => {
+      (prisma.directMessage.findUnique as any).mockResolvedValue({
+        participant1Id: 'user-1',
+        participant2Id: 'user-2',
+      });
+      (prisma.directMessage.delete as any).mockResolvedValue({ id: 'dm-1' });
+
+      const res = await service.deleteDm('dm-1', 'user-1');
+      expect(prisma.directMessage.delete).toHaveBeenCalledWith({ where: { id: 'dm-1' } });
+      expect(res).toEqual({ success: true });
+    });
+  });
+
   describe('createMessage', () => {
+    it('should throw NotFoundException if DM conversation does not exist', async () => {
+      (prisma.directMessage.findUnique as any).mockResolvedValue(null);
+
+      await expect(service.createMessage('dm-1', 'user-1', { content: 'hello' })).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw ForbiddenException if non-participant tries to send message', async () => {
+      (prisma.directMessage.findUnique as any).mockResolvedValue({
+        participant1Id: 'user-1',
+        participant2Id: 'user-2',
+      });
+
+      await expect(service.createMessage('dm-1', 'user-attacker', { content: 'hello' })).rejects.toThrow(ForbiddenException);
+    });
+
     it('should create a message, update DM timestamp, publish to Ably, and notify', async () => {
+      const mockDmParticipantCheck = { participant1Id: 'user-1', participant2Id: 'user-2' };
       const mockMessage = {
         id: 'msg-1',
         dmId: 'dm-1',
@@ -110,6 +157,7 @@ describe('DmsService', () => {
       };
       const mockDm = { id: 'dm-1', participant1Id: 'user-1', participant2Id: 'user-2' };
 
+      (prisma.directMessage.findUnique as any).mockResolvedValue(mockDmParticipantCheck);
       (prisma.dMMessage.create as any).mockResolvedValue(mockMessage);
       (prisma.directMessage.update as any).mockResolvedValue(mockDm);
 
@@ -131,6 +179,90 @@ describe('DmsService', () => {
         'hello'
       );
       expect(result.id).toBe('msg-1');
+    });
+  });
+
+  describe('updateMessage', () => {
+    it('should throw NotFoundException if message does not exist', async () => {
+      (prisma.dMMessage.findUnique as any).mockResolvedValue(null);
+
+      await expect(service.updateMessage('dm-1', 'msg-999', 'user-1', 'new content')).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw NotFoundException if message belongs to a different conversation', async () => {
+      (prisma.dMMessage.findUnique as any).mockResolvedValue({
+        dmId: 'dm-other',
+        senderId: 'user-1',
+      });
+
+      await expect(service.updateMessage('dm-1', 'msg-1', 'user-1', 'new content')).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw ForbiddenException if user is not the author of the message', async () => {
+      (prisma.dMMessage.findUnique as any).mockResolvedValue({
+        dmId: 'dm-1',
+        senderId: 'user-1',
+      });
+
+      await expect(service.updateMessage('dm-1', 'msg-1', 'user-attacker', 'new content')).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should update message successfully when user is author', async () => {
+      (prisma.dMMessage.findUnique as any).mockResolvedValue({
+        dmId: 'dm-1',
+        senderId: 'user-1',
+      });
+
+      const updatedMsg = {
+        id: 'msg-1',
+        dmId: 'dm-1',
+        senderId: 'user-1',
+        content: 'new content',
+        createdAt: new Date(),
+        sender: { id: 'user-1', name: 'User 1' },
+      };
+      (prisma.dMMessage.update as any).mockResolvedValue(updatedMsg);
+
+      const res = await service.updateMessage('dm-1', 'msg-1', 'user-1', 'new content');
+      expect(res.content).toBe('new content');
+    });
+  });
+
+  describe('deleteMessage', () => {
+    it('should throw NotFoundException if message does not exist', async () => {
+      (prisma.dMMessage.findUnique as any).mockResolvedValue(null);
+
+      await expect(service.deleteMessage('dm-1', 'msg-999', 'user-1')).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw NotFoundException if message belongs to another conversation', async () => {
+      (prisma.dMMessage.findUnique as any).mockResolvedValue({
+        dmId: 'dm-other',
+        senderId: 'user-1',
+      });
+
+      await expect(service.deleteMessage('dm-1', 'msg-1', 'user-1')).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw ForbiddenException if non-author attempts to delete message', async () => {
+      (prisma.dMMessage.findUnique as any).mockResolvedValue({
+        dmId: 'dm-1',
+        senderId: 'user-1',
+      });
+
+      await expect(service.deleteMessage('dm-1', 'msg-1', 'user-attacker')).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should delete message successfully when user is author', async () => {
+      (prisma.dMMessage.findUnique as any).mockResolvedValue({
+        dmId: 'dm-1',
+        senderId: 'user-1',
+      });
+      (prisma.dMMessage.delete as any).mockResolvedValue({ id: 'msg-1' });
+
+      const res = await service.deleteMessage('dm-1', 'msg-1', 'user-1');
+      expect(prisma.dMMessage.delete).toHaveBeenCalledWith({ where: { id: 'msg-1' } });
+      expect(res).toEqual({ success: true });
     });
   });
 
