@@ -45,6 +45,7 @@ export function CreateChannelDialog({
         name: form.name,
         description: form.description,
         type: form.type,
+        isPrivate: form.type === 'private',
       },
       {
         onSuccess: () => {

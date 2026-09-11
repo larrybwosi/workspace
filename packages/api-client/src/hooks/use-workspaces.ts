@@ -484,6 +484,7 @@ export function useCreateWorkspaceChannel(workspaceSlug: string) {
       name: string;
       description?: string;
       type?: 'public' | 'private';
+      isPrivate?: boolean;
       departmentId?: string;
       icon?: string;
     }) => {
