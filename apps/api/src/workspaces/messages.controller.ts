@@ -120,8 +120,8 @@ export class MessagesController {
     @Query('limit') limitNum = '50',
     @Query('threadId') threadId?: string
   ) {
-    await this.messagesService.verifyWorkspaceAccess(user.id, slug);
-    return this.messagesService.getMessages(channelId, user.id, cursor, parseInt(limitNum), threadId);
+    const workspace = await this.messagesService.verifyWorkspaceAccess(user.id, slug);
+    return this.messagesService.getMessages(channelId, user.id, cursor, parseInt(limitNum), threadId, workspace.id);
   }
 
   @Post()
@@ -136,8 +136,8 @@ export class MessagesController {
     @Param('channelId') channelId: string,
     @Body() body: CreateMessageDto
   ) {
-    await this.messagesService.verifyWorkspaceAccess(user.id, slug);
-    return this.messagesService.createMessage(user.id, { ...body, channelId });
+    const workspace = await this.messagesService.verifyWorkspaceAccess(user.id, slug);
+    return this.messagesService.createMessage(user.id, { ...body, channelId }, workspace.id);
   }
 
   @Patch(':messageId')
@@ -186,13 +186,13 @@ export class MessagesController {
     @Param('channelId') channelId: string,
     @Body() body: MarkMessagesAsReadDto
   ) {
-    await this.messagesService.verifyWorkspaceAccess(user.id, slug);
+    const workspace = await this.messagesService.verifyWorkspaceAccess(user.id, slug);
 
     if (!Array.isArray(body.messageIds)) {
       throw new BadRequestException('Invalid messageIds');
     }
 
-    return this.messagesService.batchMarkAsRead(user.id, body.messageIds, channelId);
+    return this.messagesService.batchMarkAsRead(user.id, body.messageIds, channelId, workspace.id);
   }
 
   @Post(':messageId/reactions')
@@ -209,8 +209,8 @@ export class MessagesController {
     @Param('messageId') messageId: string,
     @Body() body: AddReactionDto
   ) {
-    await this.messagesService.verifyWorkspaceAccess(user.id, slug);
-    return this.messagesService.addReaction(user.id, messageId, body.emoji, body.customEmojiId);
+    const workspace = await this.messagesService.verifyWorkspaceAccess(user.id, slug);
+    return this.messagesService.addReaction(user.id, messageId, body.emoji, body.customEmojiId, workspace.id);
   }
 
   @Delete(':messageId/reactions/:emoji')
@@ -227,8 +227,8 @@ export class MessagesController {
     @Param('messageId') messageId: string,
     @Param('emoji') emoji: string
   ) {
-    await this.messagesService.verifyWorkspaceAccess(user.id, slug);
-    return this.messagesService.removeReaction(user.id, messageId, emoji);
+    const workspace = await this.messagesService.verifyWorkspaceAccess(user.id, slug);
+    return this.messagesService.removeReaction(user.id, messageId, emoji, workspace.id);
   }
 
   @Post(':messageId/replies')
@@ -245,13 +245,13 @@ export class MessagesController {
     @Param('messageId') messageId: string,
     @Body() body: CreateMessageDto
   ) {
-    await this.messagesService.verifyWorkspaceAccess(user.id, slug);
+    const workspace = await this.messagesService.verifyWorkspaceAccess(user.id, slug);
     // Delegate entirely to createMessage so replies inherit mention, attachment, and sticker logic automatically
     return this.messagesService.createMessage(user.id, {
       ...body,
       channelId,
       replyToId: messageId,
-    });
+    }, workspace.id);
   }
 
   @Post(':messageId/actions')
@@ -268,8 +268,8 @@ export class MessagesController {
     @Param('messageId') messageId: string,
     @Body() body: ActionResponseDto
   ) {
-    await this.messagesService.verifyWorkspaceAccess(user.id, slug);
-    return this.messagesService.processActionResponse(user.id, messageId, body);
+    const workspace = await this.messagesService.verifyWorkspaceAccess(user.id, slug);
+    return this.messagesService.processActionResponse(user.id, messageId, body, workspace.id);
   }
 
   @Get(':messageId/actions')
@@ -284,8 +284,8 @@ export class MessagesController {
     @Param('channelId') channelId: string,
     @Param('messageId') messageId: string
   ) {
-    await this.messagesService.verifyWorkspaceAccess(user.id, slug);
-    return this.messagesService.getActionResponses(messageId);
+    const workspace = await this.messagesService.verifyWorkspaceAccess(user.id, slug);
+    return this.messagesService.getActionResponses(messageId, user.id, workspace.id);
   }
 
   @Post('/v2/workspaces/:slug/messages/:messageId/actions/:actionId')
@@ -301,11 +301,11 @@ export class MessagesController {
     @Param('actionId') actionId: string,
     @Body() body: any
   ) {
-    await this.messagesService.verifyWorkspaceAccess(user.id, slug);
+    const workspace = await this.messagesService.verifyWorkspaceAccess(user.id, slug);
     return this.messagesService.processActionResponse(user.id, messageId, {
       actionId,
       comment: body?.comment,
       metadata: { ...(body?.payload || {}), formState: body?.formState },
-    });
+    }, workspace.id);
   }
 }

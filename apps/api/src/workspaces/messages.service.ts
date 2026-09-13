@@ -51,10 +51,50 @@ export class MessagesService {
 
     return workspace;
   }
-  async getMessages(channelId: string, userId: string, cursor?: string, limit = 50, threadId?: string) {
+
+  /**
+   * 🛡️ Security Hardening (BOLA / IDOR Mitigation & Workspace/Channel Boundary Enforcement):
+   * Verifies that the target channel exists, strictly belongs to the requested workspace (workspaceId),
+   * and enforces membership checks if the channel is marked private.
+   */
+  async verifyChannelAccess(channelId: string, userId: string, workspaceId?: string) {
     if (!channelId) {
       throw new BadRequestException('Channel ID required');
     }
+
+    const channel = await prisma.channel.findUnique({
+      where: { id: channelId },
+      select: {
+        id: true,
+        workspaceId: true,
+        isPrivate: true,
+        type: true,
+        members: {
+          where: { userId },
+          select: { userId: true },
+        },
+      },
+    });
+
+    if (!channel) {
+      throw new NotFoundException('Channel not found');
+    }
+
+    if (workspaceId && channel.workspaceId !== workspaceId) {
+      throw new NotFoundException('Channel not found in this workspace');
+    }
+
+    if (channel.isPrivate || channel.type === 'private') {
+      const isMember = channel.members.length > 0;
+      if (!isMember) {
+        throw new ForbiddenException('You do not have permission to access this private channel');
+      }
+    }
+
+    return channel;
+  }
+  async getMessages(channelId: string, userId: string, cursor?: string, limit = 50, threadId?: string, workspaceId?: string) {
+    await this.verifyChannelAccess(channelId, userId, workspaceId);
 
     const messages = await prisma.message.findMany({
       where: {
@@ -198,37 +238,10 @@ export class MessagesService {
     };
   }
 
-  async createMessage(userId: string, body: any) {
+  async createMessage(userId: string, body: any, workspaceId?: string) {
     const { channelId, content, messageType, metadata, replyToId, threadId, attachments, stickerId } = body;
 
-    if (!channelId) {
-      throw new BadRequestException('Channel ID required');
-    }
-
-    const channel = await prisma.channel.findUnique({
-      where: { id: channelId },
-      select: {
-        id: true,
-        workspaceId: true,
-        isPrivate: true,
-        type: true,
-        members: {
-          where: { userId },
-          select: { userId: true },
-        },
-      },
-    });
-
-    if (!channel) {
-      throw new NotFoundException('Channel not found');
-    }
-
-    if (channel.isPrivate || channel.type === 'private') {
-      const isMember = channel.members.length > 0;
-      if (!isMember) {
-        throw new ForbiddenException('You do not have permission to send messages to this private channel');
-      }
-    }
+    const channel = await this.verifyChannelAccess(channelId, userId, workspaceId);
 
     const userMentions = extractUserMentions(content || '');
     const channelMentions = extractChannelMentions(content || '');
@@ -526,8 +539,12 @@ export class MessagesService {
     return { success: true };
   }
 
-  async batchMarkAsRead(userId: string, messageIds: string[], channelId?: string) {
+  async batchMarkAsRead(userId: string, messageIds: string[], channelId?: string, workspaceId?: string) {
     if (!messageIds.length) return { success: true };
+
+    if (channelId) {
+      await this.verifyChannelAccess(channelId, userId, workspaceId);
+    }
 
     // ⚡ Performance Optimization:
     // Replaces sequential upsert calls with a single batch 'createMany' operation.
@@ -566,7 +583,18 @@ export class MessagesService {
   }
 
   // --- Reactions ---
-  async addReaction(userId: string, messageId: string, emoji: string, customEmojiId?: string) {
+  async addReaction(userId: string, messageId: string, emoji: string, customEmojiId?: string, workspaceId?: string) {
+    const targetMessage = await prisma.message.findUnique({
+      where: { id: messageId },
+      select: { channelId: true },
+    });
+
+    if (!targetMessage) {
+      throw new NotFoundException('Message not found');
+    }
+
+    await this.verifyChannelAccess(targetMessage.channelId, userId, workspaceId);
+
     if (customEmojiId) {
       const customEmoji = await prisma.customEmoji.findUnique({
         where: { id: customEmojiId },
@@ -629,7 +657,18 @@ export class MessagesService {
     return reaction;
   }
 
-  async removeReaction(userId: string, messageId: string, emoji: string) {
+  async removeReaction(userId: string, messageId: string, emoji: string, workspaceId?: string) {
+    const targetMessage = await prisma.message.findUnique({
+      where: { id: messageId },
+      select: { channelId: true },
+    });
+
+    if (!targetMessage) {
+      throw new NotFoundException('Message not found');
+    }
+
+    await this.verifyChannelAccess(targetMessage.channelId, userId, workspaceId);
+
     try {
       const reaction = await prisma.reaction.delete({
         where: {
@@ -683,7 +722,7 @@ export class MessagesService {
   }
 
   // --- Actions ---
-  async processActionResponse(userId: string, messageId: string, data: any) {
+  async processActionResponse(userId: string, messageId: string, data: any, workspaceId?: string) {
     const message = await prisma.message.findUnique({
       where: { id: messageId },
       include: {
@@ -699,6 +738,8 @@ export class MessagesService {
     if (!message) {
       throw new NotFoundException('Message not found');
     }
+
+    await this.verifyChannelAccess(message.channelId, userId, workspaceId);
 
     const action = message.actions.find(a => a.actionId === data.actionId);
     if (!action) {
@@ -837,7 +878,20 @@ export class MessagesService {
     };
   }
 
-  async getActionResponses(messageId: string) {
+  async getActionResponses(messageId: string, userId?: string, workspaceId?: string) {
+    if (userId) {
+      const targetMessage = await prisma.message.findUnique({
+        where: { id: messageId },
+        select: { channelId: true },
+      });
+
+      if (!targetMessage) {
+        throw new NotFoundException('Message not found');
+      }
+
+      await this.verifyChannelAccess(targetMessage.channelId, userId, workspaceId);
+    }
+
     const responses = await prisma.messageActionResponse.findMany({
       where: { messageId },
       include: {
