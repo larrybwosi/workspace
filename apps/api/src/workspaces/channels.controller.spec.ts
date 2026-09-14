@@ -529,11 +529,16 @@ describe('ChannelsController - NestJS module', () => {
   });
 
   describe('updateChannelMember', () => {
-    it('should update member role and permissions in channel', async () => {
+    it('should update member role and permissions in channel when user is workspace admin', async () => {
       const mockPrisma = prisma as any;
       mockPrisma.workspace.findUnique.mockResolvedValue({
         id: 'ws-1',
         members: [{ role: 'admin' }],
+      });
+      mockPrisma.channel.findUnique.mockResolvedValue({
+        id: 'ch-1',
+        workspaceId: 'ws-1',
+        members: [],
       });
       mockPrisma.channelMember.update.mockResolvedValue({
         id: 'cm-1',
@@ -567,6 +572,71 @@ describe('ChannelsController - NestJS module', () => {
           user: { select: { id: true, name: true, email: true, avatar: true } },
         },
       });
+    });
+
+    it('should update member role and permissions when user is channel admin/moderator', async () => {
+      const mockPrisma = prisma as any;
+      mockPrisma.workspace.findUnique.mockResolvedValue({
+        id: 'ws-1',
+        members: [{ role: 'member' }], // workspace regular member
+      });
+      mockPrisma.channel.findUnique.mockResolvedValue({
+        id: 'ch-1',
+        workspaceId: 'ws-1',
+        members: [{ role: 'admin' }], // channel admin
+      });
+      mockPrisma.channelMember.update.mockResolvedValue({
+        id: 'cm-1',
+        channelId: 'ch-1',
+        userId: 'user-2',
+        role: 'moderator',
+        permissions: 1024n,
+        user: { id: 'user-2', name: 'Bob' },
+      });
+
+      const user = { id: 'user-1', name: 'Alice' } as any;
+      const result = await controller.updateChannelMember(user, 'my-workspace', 'ch-1', 'user-2', {
+        role: 'moderator',
+        permissions: '1024',
+      });
+
+      expect(result.role).toBe('moderator');
+    });
+
+    it('should throw ForbiddenException if user is neither workspace admin nor channel admin/moderator', async () => {
+      const mockPrisma = prisma as any;
+      mockPrisma.workspace.findUnique.mockResolvedValue({
+        id: 'ws-1',
+        members: [{ role: 'member' }],
+      });
+      mockPrisma.channel.findUnique.mockResolvedValue({
+        id: 'ch-1',
+        workspaceId: 'ws-1',
+        members: [{ role: 'member' }], // standard channel member
+      });
+
+      const user = { id: 'user-1', name: 'Alice' } as any;
+      await expect(
+        controller.updateChannelMember(user, 'my-workspace', 'ch-1', 'user-2', { role: 'moderator' })
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should throw NotFoundException if channel does not belong to target workspace', async () => {
+      const mockPrisma = prisma as any;
+      mockPrisma.workspace.findUnique.mockResolvedValue({
+        id: 'ws-1',
+        members: [{ role: 'admin' }],
+      });
+      mockPrisma.channel.findUnique.mockResolvedValue({
+        id: 'ch-1',
+        workspaceId: 'ws-2', // different workspace
+        members: [],
+      });
+
+      const user = { id: 'user-1', name: 'Alice' } as any;
+      await expect(
+        controller.updateChannelMember(user, 'my-workspace', 'ch-1', 'user-2', { role: 'moderator' })
+      ).rejects.toThrow(NotFoundException);
     });
   });
 });
