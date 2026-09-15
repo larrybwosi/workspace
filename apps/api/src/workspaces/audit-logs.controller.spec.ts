@@ -140,12 +140,27 @@ describe('AuditLogsController', () => {
       ).rejects.toThrow(ForbiddenException);
     });
 
-    it('should short-circuit user lookup when audit logs array is empty', async () => {
+    it('should throw ForbiddenException if user is regular member of the workspace', async () => {
       (prisma.workspace.findUnique as any).mockResolvedValue({
         id: 'ws-1',
         name: 'Workspace 1',
         slug: 'workspace-1',
         members: [{ role: 'member' }],
+        auditLogs: [],
+        _count: { auditLogs: 0 },
+      });
+
+      await expect(
+        controller.getAuditLogs(mockUser, 'workspace-1', '1', '50')
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should short-circuit user lookup when audit logs array is empty', async () => {
+      (prisma.workspace.findUnique as any).mockResolvedValue({
+        id: 'ws-1',
+        name: 'Workspace 1',
+        slug: 'workspace-1',
+        members: [{ role: 'admin' }],
         auditLogs: [],
         _count: { auditLogs: 0 },
       });
@@ -175,7 +190,7 @@ describe('AuditLogsController', () => {
         id: 'ws-1',
         name: 'Workspace 1',
         slug: 'workspace-1',
-        members: [{ role: 'member' }],
+        members: [{ role: 'owner' }],
         auditLogs: mockAuditLogs,
         _count: { auditLogs: 1 },
       });
