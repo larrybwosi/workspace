@@ -273,21 +273,33 @@ export class FriendsService {
   }
 
   async deleteFriendRequest(userId: string, requestId: string) {
-    const friendRequest = await prisma.friendRequest.findUnique({
-      where: { id: requestId },
+    /**
+     * ⚡ Performance Optimization:
+     * Replaces sequential 'findUnique' read followed by 'delete' mutation with a single atomic 'deleteMany'
+     * call using compound authorization filters (id, and OR: senderId / receiverId).
+     * This reduces database round-trips from 2 down to 1 on the happy path.
+     * When count is 0, a targeted O(1) point lookup ('findUnique') is executed to determine if the record
+     * is non-existent (NotFoundException) or belongs to another user (ForbiddenException).
+     */
+    const result = await prisma.friendRequest.deleteMany({
+      where: {
+        id: requestId,
+        OR: [{ senderId: userId }, { receiverId: userId }],
+      },
     });
 
-    if (!friendRequest) {
-      throw new NotFoundException('Friend request not found');
-    }
+    if (result.count === 0) {
+      const existing = await prisma.friendRequest.findUnique({
+        where: { id: requestId },
+        select: { id: true },
+      });
 
-    if (friendRequest.senderId !== userId && friendRequest.receiverId !== userId) {
+      if (!existing) {
+        throw new NotFoundException('Friend request not found');
+      }
+
       throw new ForbiddenException('Unauthorized to delete this request');
     }
-
-    await prisma.friendRequest.delete({
-      where: { id: requestId },
-    });
 
     return { success: true };
   }

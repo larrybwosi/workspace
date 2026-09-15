@@ -19,6 +19,7 @@ vi.mock('@repo/database', () => ({
       create: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
+      deleteMany: vi.fn(),
     },
     user: {
       findFirst: vi.fn(),
@@ -411,6 +412,60 @@ describe('FriendsService', () => {
           }),
         })
       );
+    });
+  });
+
+  describe('deleteFriendRequest - atomic deleteMany optimization', () => {
+    it('should delete request in 1 DB query when user is sender', async () => {
+      mockPrisma.friendRequest.deleteMany.mockResolvedValue({ count: 1 });
+
+      const res = await service.deleteFriendRequest('user-1', 'req-1');
+
+      expect(res).toEqual({ success: true });
+      expect(mockPrisma.friendRequest.deleteMany).toHaveBeenCalledWith({
+        where: {
+          id: 'req-1',
+          OR: [{ senderId: 'user-1' }, { receiverId: 'user-1' }],
+        },
+      });
+      expect(mockPrisma.friendRequest.findUnique).not.toHaveBeenCalled();
+    });
+
+    it('should delete request in 1 DB query when user is receiver', async () => {
+      mockPrisma.friendRequest.deleteMany.mockResolvedValue({ count: 1 });
+
+      const res = await service.deleteFriendRequest('user-2', 'req-1');
+
+      expect(res).toEqual({ success: true });
+      expect(mockPrisma.friendRequest.deleteMany).toHaveBeenCalledWith({
+        where: {
+          id: 'req-1',
+          OR: [{ senderId: 'user-2' }, { receiverId: 'user-2' }],
+        },
+      });
+      expect(mockPrisma.friendRequest.findUnique).not.toHaveBeenCalled();
+    });
+
+    it('should throw NotFoundException when request does not exist', async () => {
+      mockPrisma.friendRequest.deleteMany.mockResolvedValue({ count: 0 });
+      mockPrisma.friendRequest.findUnique.mockResolvedValue(null);
+
+      await expect(service.deleteFriendRequest('user-1', 'nonexistent')).rejects.toThrow(NotFoundException);
+      expect(mockPrisma.friendRequest.findUnique).toHaveBeenCalledWith({
+        where: { id: 'nonexistent' },
+        select: { id: true },
+      });
+    });
+
+    it('should throw ForbiddenException when request belongs to another user', async () => {
+      mockPrisma.friendRequest.deleteMany.mockResolvedValue({ count: 0 });
+      mockPrisma.friendRequest.findUnique.mockResolvedValue({ id: 'req-1' });
+
+      await expect(service.deleteFriendRequest('unauthorized-user', 'req-1')).rejects.toThrow(ForbiddenException);
+      expect(mockPrisma.friendRequest.findUnique).toHaveBeenCalledWith({
+        where: { id: 'req-1' },
+        select: { id: true },
+      });
     });
   });
 });
