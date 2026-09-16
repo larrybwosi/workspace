@@ -39,6 +39,7 @@ vi.mock('@repo/database', () => ({
 vi.mock('@repo/shared/server', () => ({
   AblyChannels: {
     channel: vi.fn((id) => `channel:${id}`),
+    workspace: vi.fn((id) => `workspace:${id}`),
     user: vi.fn((id) => `user:${id}`),
   },
   AblyEvents: {
@@ -96,6 +97,7 @@ describe('MessagesService', () => {
   it('should allow sending a message to a private channel if user is a member of that channel', async () => {
     (prisma.channel.findUnique as any).mockResolvedValue({
       id: 'chan-2',
+      workspaceId: 'ws-1',
       isPrivate: true,
       type: 'private',
       members: [{ userId: 'user-1' }],
@@ -104,27 +106,78 @@ describe('MessagesService', () => {
     (prisma.message.create as any).mockResolvedValue(mockMessage);
     (prisma.user.update as any).mockResolvedValue({});
 
-    const result = await service.createMessage('user-1', { channelId: 'chan-2', content: 'private hello' });
+    const result = await service.createMessage('user-1', { channelId: 'chan-2', content: 'private hello' }, 'ws-1');
     expect(result).toEqual(mockMessage);
   });
 
   it('should throw ForbiddenException when sending a message to a private channel if user is not a member', async () => {
     (prisma.channel.findUnique as any).mockResolvedValue({
       id: 'chan-2',
+      workspaceId: 'ws-1',
       isPrivate: true,
       type: 'private',
       members: [],
     });
 
     await expect(
-      service.createMessage('user-1', { channelId: 'chan-2', content: 'hack' })
-    ).rejects.toThrow('You do not have permission to send messages to this private channel');
+      service.createMessage('user-1', { channelId: 'chan-2', content: 'hack' }, 'ws-1')
+    ).rejects.toThrow('You do not have permission to access this private channel');
+  });
+
+  describe('verifyChannelAccess', () => {
+    it('should throw NotFoundException if channel does not exist', async () => {
+      (prisma.channel.findUnique as any).mockResolvedValue(null);
+
+      await expect(service.verifyChannelAccess('non-existent', 'user-1', 'ws-1')).rejects.toThrow('Channel not found');
+    });
+
+    it('should throw NotFoundException if channel does not belong to the requested workspace', async () => {
+      (prisma.channel.findUnique as any).mockResolvedValue({
+        id: 'chan-1',
+        workspaceId: 'ws-other',
+        isPrivate: false,
+        members: [],
+      });
+
+      await expect(service.verifyChannelAccess('chan-1', 'user-1', 'ws-1')).rejects.toThrow(
+        'Channel not found in this workspace'
+      );
+    });
+
+    it('should throw ForbiddenException if channel is private and user is not a member', async () => {
+      (prisma.channel.findUnique as any).mockResolvedValue({
+        id: 'chan-1',
+        workspaceId: 'ws-1',
+        isPrivate: true,
+        type: 'private',
+        members: [],
+      });
+
+      await expect(service.verifyChannelAccess('chan-1', 'user-1', 'ws-1')).rejects.toThrow(
+        'You do not have permission to access this private channel'
+      );
+    });
+
+    it('should return channel when user has access', async () => {
+      const mockChannel = {
+        id: 'chan-1',
+        workspaceId: 'ws-1',
+        isPrivate: false,
+        type: 'public',
+        members: [],
+      };
+      (prisma.channel.findUnique as any).mockResolvedValue(mockChannel);
+
+      const result = await service.verifyChannelAccess('chan-1', 'user-1', 'ws-1');
+      expect(result).toEqual(mockChannel);
+    });
   });
 
   describe('processActionResponse', () => {
     it('should process action response and trigger webhooks', async () => {
       const mockMessage = {
         id: 'msg-100',
+        channelId: 'chan-1',
         content: 'Approval required',
         actions: [{ id: 'action-db-1', actionId: 'approve', label: 'Approve' }],
         metadata: { callbackUrl: 'https://example.com/callback' },
@@ -133,6 +186,13 @@ describe('MessagesService', () => {
           workspace: { id: 'ws-1', name: 'Acme' },
         },
       };
+
+      (prisma.channel.findUnique as any).mockResolvedValue({
+        id: 'chan-1',
+        workspaceId: 'ws-1',
+        isPrivate: false,
+        members: [],
+      });
 
       const mockResponse = {
         id: 'resp-1',
@@ -170,9 +230,17 @@ describe('MessagesService', () => {
     it('should throw BadRequestException if action was already responded', async () => {
       const mockMessage = {
         id: 'msg-100',
+        channelId: 'chan-1',
         actions: [{ id: 'action-db-1', actionId: 'approve', label: 'Approve' }],
         channel: { id: 'chan-1', workspace: { id: 'ws-1' } },
       };
+
+      (prisma.channel.findUnique as any).mockResolvedValue({
+        id: 'chan-1',
+        workspaceId: 'ws-1',
+        isPrivate: false,
+        members: [],
+      });
 
       (prisma.message.findUnique as any).mockResolvedValue(mockMessage);
       (prisma.messageActionResponse.findUnique as any).mockResolvedValue({ id: 'resp-existing' });

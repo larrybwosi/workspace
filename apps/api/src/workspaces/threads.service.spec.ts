@@ -60,6 +60,12 @@ describe('MessagesService - Threads', () => {
   });
 
   it('should filter by threadId in getMessages', async () => {
+    (prisma.channel.findUnique as any).mockResolvedValue({
+      id: 'chan-1',
+      workspaceId: 'ws-1',
+      isPrivate: false,
+      members: [],
+    });
     (prisma.message.findMany as any).mockResolvedValue([]);
 
     await service.getMessages('chan-1', 'user-1', undefined, 50, 'thread-123');
@@ -73,6 +79,12 @@ describe('MessagesService - Threads', () => {
   });
 
   it('should use threadId: null when no threadId is provided in getMessages', async () => {
+    (prisma.channel.findUnique as any).mockResolvedValue({
+      id: 'chan-1',
+      workspaceId: 'ws-1',
+      isPrivate: false,
+      members: [],
+    });
     (prisma.message.findMany as any).mockResolvedValue([]);
 
     await service.getMessages('chan-1', 'user-1');
