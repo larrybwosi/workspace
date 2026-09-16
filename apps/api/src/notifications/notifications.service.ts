@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { prisma } from '@repo/database';
 import {
   AblyChannels,
@@ -221,11 +221,20 @@ export class NotificationsService {
   }
 
   async updateNotification(userId: string, notificationId: string, isRead: boolean) {
+    /**
+     * Security Mitigation (BOLA / IDOR Protection):
+     * Verify that the notification exists and belongs to the requesting user before performing the update.
+     */
+    const notification = await prisma.notification.findUnique({
+      where: { id: notificationId },
+    });
+
+    if (!notification || notification.userId !== userId) {
+      throw new NotFoundException('Notification not found');
+    }
+
     return prisma.notification.update({
-      where: {
-        id: notificationId,
-        userId,
-      },
+      where: { id: notificationId },
       data: {
         isRead: isRead !== undefined ? isRead : true,
       },
@@ -233,16 +242,29 @@ export class NotificationsService {
   }
 
   async deleteNotification(userId: string, notificationId: string) {
+    /**
+     * Security Mitigation (BOLA / IDOR Protection):
+     * Verify that the notification exists and belongs to the requesting user before performing deletion.
+     */
+    const notification = await prisma.notification.findUnique({
+      where: { id: notificationId },
+    });
+
+    if (!notification || notification.userId !== userId) {
+      throw new NotFoundException('Notification not found');
+    }
+
     await prisma.notification.delete({
-      where: {
-        id: notificationId,
-        userId,
-      },
+      where: { id: notificationId },
     });
     return { success: true };
   }
 
   async getWorkspaceSettings(userId: string, workspaceId: string) {
+    /**
+     * Security Mitigation (BOLA / IDOR Protection):
+     * Verify workspace membership before returning notification settings.
+     */
     const member = await prisma.workspaceMember.findUnique({
       where: {
         workspaceId_userId: {
@@ -254,10 +276,32 @@ export class NotificationsService {
         notificationPreference: true,
       },
     });
-    return member || { notificationPreference: 'all' };
+
+    if (!member) {
+      throw new NotFoundException('Workspace member not found');
+    }
+
+    return member;
   }
 
   async updateWorkspaceSettings(userId: string, workspaceId: string, preference: string) {
+    /**
+     * Security Mitigation (BOLA / IDOR Protection):
+     * Verify workspace membership before updating settings.
+     */
+    const member = await prisma.workspaceMember.findUnique({
+      where: {
+        workspaceId_userId: {
+          workspaceId,
+          userId,
+        },
+      },
+    });
+
+    if (!member) {
+      throw new NotFoundException('Workspace member not found');
+    }
+
     return prisma.workspaceMember.update({
       where: {
         workspaceId_userId: {
@@ -272,6 +316,10 @@ export class NotificationsService {
   }
 
   async getChannelSettings(userId: string, channelId: string) {
+    /**
+     * Security Mitigation (BOLA / IDOR Protection):
+     * Verify channel membership before returning notification settings.
+     */
     const member = await prisma.channelMember.findUnique({
       where: {
         channelId_userId: {
@@ -283,10 +331,32 @@ export class NotificationsService {
         notificationPreference: true,
       },
     });
-    return member || { notificationPreference: null };
+
+    if (!member) {
+      throw new NotFoundException('Channel member not found');
+    }
+
+    return member;
   }
 
   async updateChannelSettings(userId: string, channelId: string, preference: string) {
+    /**
+     * Security Mitigation (BOLA / IDOR Protection):
+     * Verify channel membership before updating notification settings.
+     */
+    const member = await prisma.channelMember.findUnique({
+      where: {
+        channelId_userId: {
+          channelId,
+          userId,
+        },
+      },
+    });
+
+    if (!member) {
+      throw new NotFoundException('Channel member not found');
+    }
+
     return prisma.channelMember.update({
       where: {
         channelId_userId: {
