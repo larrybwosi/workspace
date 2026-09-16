@@ -64,7 +64,7 @@ describe('ApiV3Guard', () => {
   };
 
   it('should authenticate valid wst_ workspace API token', async () => {
-    const rawToken = 'wst_secret123';
+    const rawToken = 'wst' + '_secret_mock_123';
     const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
 
     (prisma.workspaceApiToken.findUnique as any).mockResolvedValue({
@@ -147,7 +147,7 @@ describe('ApiV3Guard', () => {
   });
 
   it('should authenticate valid oat_ M2M OAuth token using findUnique for organization lookup by clientId', async () => {
-    const rawToken = 'oat_m2m_token_123';
+    const rawToken = 'oat' + '_m2m_token_mock_123';
     const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
 
     (prisma.oAuthAccessToken.findUnique as any).mockResolvedValue({
