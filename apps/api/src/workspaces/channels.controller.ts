@@ -692,6 +692,14 @@ export class ChannelsController {
     @Param('targetUserId') targetUserId: string,
     @Body() body: UpdateChannelMemberDto
   ) {
+    /**
+     * Threat Mitigation (BOLA / Cross-Tenant & Unauthorized Privilege Escalation):
+     * 1. Validate workspace existence and verify requesting user's workspace membership.
+     * 2. Verify target channel belongs to the current workspace scope (`channel.workspaceId === workspace.id`)
+     *    to prevent cross-tenant/cross-workspace channel member manipulation.
+     * 3. Enforce least privilege access control: requiring either workspace owner/admin role OR channel admin/moderator role
+     *    before granting permission to mutate member roles and permissions.
+     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
       select: {
@@ -707,8 +715,34 @@ export class ChannelsController {
       throw new NotFoundException('Workspace not found');
     }
 
-    if (workspace.members.length === 0) {
+    const workspaceMember = workspace.members[0];
+    if (!workspaceMember) {
       throw new ForbiddenException('Forbidden');
+    }
+
+    // Verify channel exists and belongs strictly to the requested workspace
+    const channel = await prisma.channel.findUnique({
+      where: { id: channelId },
+      select: {
+        id: true,
+        workspaceId: true,
+        members: {
+          where: { userId: user.id },
+          select: { role: true },
+        },
+      },
+    });
+
+    if (!channel || channel.workspaceId !== workspace.id) {
+      throw new NotFoundException('Channel not found');
+    }
+
+    const isWorkspaceAdmin = ['owner', 'admin'].includes(workspaceMember.role);
+    const channelMember = channel.members[0];
+    const isChannelAdminOrMod = channelMember && ['admin', 'moderator'].includes(channelMember.role);
+
+    if (!isWorkspaceAdmin && !isChannelAdminOrMod) {
+      throw new ForbiddenException('Only workspace admins or channel admins/moderators can update channel members');
     }
 
     const validatedData = updateChannelMemberSchema.safeParse(body);
@@ -730,7 +764,7 @@ export class ChannelsController {
       const updatedMember = await prisma.channelMember.update({
         where: {
           channelId_userId: {
-            channelId,
+            channelId: channel.id,
             userId: targetUserId,
           },
         },
