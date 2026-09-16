@@ -19,6 +19,7 @@ vi.mock('@repo/database', () => ({
       create: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
+      deleteMany: vi.fn(),
     },
     user: {
       findFirst: vi.fn(),
@@ -411,6 +412,28 @@ describe('FriendsService', () => {
           }),
         })
       );
+    });
+  });
+
+  describe('deleteFriendRequest', () => {
+    it('should delete friend request successfully using deleteMany', async () => {
+      mockPrisma.friendRequest.deleteMany.mockResolvedValue({ count: 1 });
+
+      const result = await service.deleteFriendRequest('user-1', 'req-1');
+
+      expect(result).toEqual({ success: true });
+      expect(mockPrisma.friendRequest.deleteMany).toHaveBeenCalledWith({
+        where: {
+          id: 'req-1',
+          OR: [{ senderId: 'user-1' }, { receiverId: 'user-1' }],
+        },
+      });
+    });
+
+    it('should throw NotFoundException if deleteMany returns count 0', async () => {
+      mockPrisma.friendRequest.deleteMany.mockResolvedValue({ count: 0 });
+
+      await expect(service.deleteFriendRequest('user-1', 'req-nonexistent')).rejects.toThrow(NotFoundException);
     });
   });
 });

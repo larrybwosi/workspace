@@ -43,7 +43,7 @@ vi.mock('@repo/database', () => ({
 
 // Mock NotificationsService
 const mockNotificationsService = {
-  createNotification: vi.fn(),
+  createNotification: vi.fn().mockReturnValue({ catch: vi.fn() }),
 };
 
 import { prisma } from '@repo/database';
