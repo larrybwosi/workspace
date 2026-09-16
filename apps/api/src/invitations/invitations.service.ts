@@ -146,18 +146,25 @@ export class InvitationsService {
     // Check if user already exists
     const invitedUser = await prisma.user.findUnique({ where: { email: data.email } });
     if (invitedUser) {
-      await this.notificationsService.createNotification({
-        userId: invitedUser.id,
-        type: data.workspaceId ? 'workspace_invitation' : 'platform_invitation',
-        title: 'Invitation Received',
-        message: `${user.name} invited you to join ${invitation.workspace?.name || 'Scrymechat'}`,
-        entityType: 'invitation',
-        entityId: invitation.id,
-        metadata: {
-          workspaceId: data.workspaceId,
-          invitationId: invitation.id,
-        },
-      });
+      /**
+       * ⚡ Performance Optimization:
+       * Background non-critical notification delivery with .catch() to avoid blocking
+       * the HTTP request response path with secondary DB writes and external network I/O.
+       */
+      this.notificationsService
+        .createNotification({
+          userId: invitedUser.id,
+          type: data.workspaceId ? 'workspace_invitation' : 'platform_invitation',
+          title: 'Invitation Received',
+          message: `${user.name} invited you to join ${invitation.workspace?.name || 'Scrymechat'}`,
+          entityType: 'invitation',
+          entityId: invitation.id,
+          metadata: {
+            workspaceId: data.workspaceId,
+            invitationId: invitation.id,
+          },
+        })
+        .catch(() => null);
     }
 
     return invitation;
@@ -309,18 +316,25 @@ export class InvitationsService {
       }
 
       if (inviteLink.createdById && inviteLink.createdById !== user.id) {
-        await this.notificationsService.createNotification({
-          userId: inviteLink.createdById,
-          type: 'workspace_invitation',
-          title: 'Invitation Accepted',
-          message: `${user.name} accepted your invitation to join ${inviteLink.workspace.name}`,
-          entityType: 'workspace',
-          entityId: inviteLink.workspaceId,
-          metadata: {
-            acceptedByUserId: user.id,
-            workspaceId: inviteLink.workspaceId,
-          },
-        });
+        /**
+         * ⚡ Performance Optimization:
+         * Background non-critical notification delivery with .catch() to avoid blocking
+         * the HTTP request response path with secondary DB writes and external network I/O.
+         */
+        this.notificationsService
+          .createNotification({
+            userId: inviteLink.createdById,
+            type: 'workspace_invitation',
+            title: 'Invitation Accepted',
+            message: `${user.name} accepted your invitation to join ${inviteLink.workspace.name}`,
+            entityType: 'workspace',
+            entityId: inviteLink.workspaceId,
+            metadata: {
+              acceptedByUserId: user.id,
+              workspaceId: inviteLink.workspaceId,
+            },
+          })
+          .catch(() => null);
       }
 
       return { success: true, workspace: inviteLink.workspace };
@@ -369,18 +383,25 @@ export class InvitationsService {
       }
 
       if (workspaceInvite.invitedBy && workspaceInvite.invitedBy !== user.id) {
-        await this.notificationsService.createNotification({
-          userId: workspaceInvite.invitedBy,
-          type: 'workspace_invitation',
-          title: 'Invitation Accepted',
-          message: `${user.name} accepted your invitation to join ${workspaceInvite.workspace.name}`,
-          entityType: 'workspace',
-          entityId: workspaceInvite.workspaceId,
-          metadata: {
-            acceptedByUserId: user.id,
-            workspaceId: workspaceInvite.workspaceId,
-          },
-        });
+        /**
+         * ⚡ Performance Optimization:
+         * Background non-critical notification delivery with .catch() to avoid blocking
+         * the HTTP request response path with secondary DB writes and external network I/O.
+         */
+        this.notificationsService
+          .createNotification({
+            userId: workspaceInvite.invitedBy,
+            type: 'workspace_invitation',
+            title: 'Invitation Accepted',
+            message: `${user.name} accepted your invitation to join ${workspaceInvite.workspace.name}`,
+            entityType: 'workspace',
+            entityId: workspaceInvite.workspaceId,
+            metadata: {
+              acceptedByUserId: user.id,
+              workspaceId: workspaceInvite.workspaceId,
+            },
+          })
+          .catch(() => null);
       }
 
       return { success: true, workspace: workspaceInvite.workspace };
@@ -413,18 +434,25 @@ export class InvitationsService {
       ]);
 
       if (generalInvite.invitedBy && generalInvite.invitedBy !== user.id) {
-        await this.notificationsService.createNotification({
-          userId: generalInvite.invitedBy,
-          type: 'platform_invitation',
-          title: 'Invitation Accepted',
-          message: `${user.name} accepted your invitation to join Scrymechat`,
-          entityType: 'invitation',
-          entityId: generalInvite.id,
-          metadata: {
-            acceptedByUserId: user.id,
-            invitationId: generalInvite.id,
-          },
-        });
+        /**
+         * ⚡ Performance Optimization:
+         * Background non-critical notification delivery with .catch() to avoid blocking
+         * the HTTP request response path with secondary DB writes and external network I/O.
+         */
+        this.notificationsService
+          .createNotification({
+            userId: generalInvite.invitedBy,
+            type: 'platform_invitation',
+            title: 'Invitation Accepted',
+            message: `${user.name} accepted your invitation to join Scrymechat`,
+            entityType: 'invitation',
+            entityId: generalInvite.id,
+            metadata: {
+              acceptedByUserId: user.id,
+              invitationId: generalInvite.id,
+            },
+          })
+          .catch(() => null);
       }
 
       return { success: true, platform: true };
