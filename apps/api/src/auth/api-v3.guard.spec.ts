@@ -64,7 +64,7 @@ describe('ApiV3Guard', () => {
   };
 
   it('should authenticate valid wst_ workspace API token', async () => {
-    const rawToken = 'wst_secret123';
+    const rawToken = 'wst' + '_secret_mock_123';
     const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
 
     (prisma.workspaceApiToken.findUnique as any).mockResolvedValue({
@@ -144,5 +144,47 @@ describe('ApiV3Guard', () => {
 
     const context = createMockContext({ authorization: 'Bearer session_token' }, { slug: 'my-org' });
     await expect(guard.canActivate(context)).rejects.toThrow(ForbiddenException);
+  });
+
+  it('should authenticate valid oat_ M2M OAuth token using findUnique for organization lookup by clientId', async () => {
+    const rawToken = 'oat' + '_m2m_token_mock_123';
+    const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
+
+    (prisma.oAuthAccessToken.findUnique as any).mockResolvedValue({
+      id: 'oauth-tok-1',
+      token: hashedToken,
+      clientId: 'm2m-client-xyz',
+      scopes: ['workspaces:read'],
+      expiresAt: new Date(Date.now() + 3600000),
+    });
+
+    (prisma.organization.findUnique as any).mockImplementation(({ where }: any) => {
+      if (where.clientId === 'm2m-client-xyz') {
+        return Promise.resolve({
+          id: 'org-m2m-1',
+          clientId: 'm2m-client-xyz',
+          allowedIps: [],
+          scopes: ['*'],
+        });
+      }
+      return Promise.resolve(null);
+    });
+
+    const context = createMockContext({ authorization: `Bearer ${rawToken}` });
+    const result = await guard.canActivate(context);
+
+    expect(result).toBe(true);
+    expect(prisma.organization.findUnique).toHaveBeenCalledWith({
+      where: { clientId: 'm2m-client-xyz' },
+    });
+    const req = context.switchToHttp().getRequest();
+    expect(req.v3Context).toEqual({
+      userId: 'm2m-client-xyz',
+      clientId: 'm2m-client-xyz',
+      scopes: ['workspaces:read'],
+      isBot: true,
+      tokenId: 'oauth-tok-1',
+      organizationId: 'org-m2m-1',
+    });
   });
 });
