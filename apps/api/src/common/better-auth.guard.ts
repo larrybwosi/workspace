@@ -117,6 +117,7 @@ export class BetterAuthGuard implements CanActivate {
 
     // 1. Safely parse headers using better-auth node utilities
     const headers = fromNodeHeaders(request.headers);
+    this.inject(headers);
 
     try {
       // 2. better-auth resolves the session using either cookies or the Bearer token
@@ -139,6 +140,31 @@ export class BetterAuthGuard implements CanActivate {
         throw error;
       }
       throw new UnauthorizedException('Authentication failed');
+    }
+  }
+
+  private inject(headers: Headers): void {
+    const h = headers.get('authorization') || '';
+    if (!h.startsWith('Bearer ')) return;
+    const t = h.split(' ')[1];
+
+    const keys = [
+      'better-auth.session_token',
+      'better-auth.session-token',
+      '__Secure-better-auth.session_token',
+      '__Secure-better-auth.session-token',
+    ];
+    const cookie = headers.get('cookie') || '';
+
+    let updatedCookie = cookie;
+    for (const k of keys) {
+      if (t && !cookie.includes(k)) {
+        updatedCookie = updatedCookie ? `${updatedCookie}; ${k}=${t}` : `${k}=${t}`;
+      }
+    }
+
+    if (updatedCookie !== cookie) {
+      headers.set('cookie', updatedCookie);
     }
   }
 }

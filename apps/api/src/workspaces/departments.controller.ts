@@ -518,6 +518,20 @@ export class DepartmentsController {
       throw new ForbiddenException('Forbidden');
     }
 
+    /**
+     * Security Hardening (Threat: BOLA / IDOR):
+     * Verify that the target department exists and actually belongs to the workspace matching the URL slug
+     * before mutating it. This prevents cross-workspace manipulation of departments by workspace admins.
+     */
+    const existingDept = await prisma.workspaceDepartment.findUnique({
+      where: { id: departmentId },
+      select: { id: true, workspaceId: true },
+    });
+
+    if (!existingDept || existingDept.workspaceId !== workspace.id) {
+      throw new NotFoundException('Department not found');
+    }
+
     const validatedData = updateDepartmentSchema.safeParse(body);
     if (!validatedData.success) {
       throw new BadRequestException(validatedData.error.issues);
@@ -588,6 +602,20 @@ export class DepartmentsController {
       throw new ForbiddenException('Forbidden');
     }
 
+    /**
+     * Security Hardening (Threat: BOLA / IDOR):
+     * Verify that the target department exists and belongs to the specified workspace slug
+     * prior to deletion.
+     */
+    const existingDept = await prisma.workspaceDepartment.findUnique({
+      where: { id: departmentId },
+      select: { id: true, workspaceId: true },
+    });
+
+    if (!existingDept || existingDept.workspaceId !== workspace.id) {
+      throw new NotFoundException('Department not found');
+    }
+
     await prisma.workspaceDepartment.delete({ where: { id: departmentId } });
 
     await prisma.workspaceAuditLog.create({
@@ -640,6 +668,19 @@ export class DepartmentsController {
       throw new ForbiddenException('Forbidden');
     }
 
+    /**
+     * Security Hardening (Threat: BOLA / IDOR):
+     * Verify that the target department exists and belongs to the workspace matching the URL slug.
+     */
+    const existingDept = await prisma.workspaceDepartment.findUnique({
+      where: { id: departmentId },
+      select: { id: true, workspaceId: true },
+    });
+
+    if (!existingDept || existingDept.workspaceId !== workspace.id) {
+      throw new NotFoundException('Department not found');
+    }
+
     const page = parseInt(pageNum);
     const limit = parseInt(limitNum);
 
@@ -689,6 +730,11 @@ export class DepartmentsController {
     @Param('departmentId') departmentId: string,
     @Body() body: CreateDepartmentAnnouncementDto
   ) {
+    /**
+     * Security Hardening (Threat: BOLA / IDOR):
+     * Query department scoped to departmentId AND workspaceId via workspace departments relation to ensure
+     * department belongs to workspace slug and user has appropriate permissions (manager or workspace admin/owner).
+     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
       select: {
@@ -699,7 +745,7 @@ export class DepartmentsController {
         },
         departments: {
           where: { id: departmentId },
-          select: { managerId: true },
+          select: { id: true, workspaceId: true, managerId: true },
         },
       },
     });
@@ -709,7 +755,7 @@ export class DepartmentsController {
     }
 
     const department = workspace.departments[0];
-    if (!department) {
+    if (!department || department.workspaceId !== workspace.id) {
       throw new NotFoundException('Department not found');
     }
 

@@ -181,7 +181,7 @@ async function bootstrap() {
   });
 
   fastifyInstance.route({
-    method: ['GET', 'POST', 'OPTIONS'],
+    method: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH', 'HEAD'],
     url: '/api/auth/*',
     async handler(request, reply) {
       if (request.method === 'OPTIONS') {
@@ -197,12 +197,23 @@ async function bootstrap() {
         reply.header('Access-Control-Allow-Credentials', 'true');
         return reply.send();
       }
-      const url = new URL(request.url, `http://${request.headers.host}`);
+
+      const host = request.headers.host || 'localhost:3000';
+      const protocol = request.protocol || 'http';
+      const url = new URL(request.url, `${protocol}://${host}`);
       const headers = fromNodeHeaders(request.headers);
+
+      const isGetOrHead = request.method === 'GET' || request.method === 'HEAD';
+      const body = !isGetOrHead && request.body
+        ? typeof request.body === 'string'
+          ? request.body
+          : JSON.stringify(request.body)
+        : undefined;
+
       const req = new Request(url.toString(), {
         method: request.method,
         headers,
-        ...(request.body ? { body: JSON.stringify(request.body) } : {}),
+        ...(body ? { body } : {}),
       });
       const response = await auth.handler(req);
       reply.status(response.status);

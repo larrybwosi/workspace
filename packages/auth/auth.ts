@@ -17,7 +17,12 @@ const getBaseURL = () => {
 
 const getBaseURLConfig = () => {
   const hosts = [
+    'localhost',
     'localhost:*',
+    '127.0.0.1',
+    '127.0.0.1:*',
+    '0.0.0.0',
+    '0.0.0.0:*',
     'scryme.tech',
     'app.scryme.tech',
     'crm.scryme.tech',
@@ -28,6 +33,7 @@ const getBaseURLConfig = () => {
     'scrymechat.local',
     'api.chat.scryme.tech',
     '*.scrymechat.local',
+    '*.local',
     'api',
     'api:*',
     'web',
@@ -78,6 +84,10 @@ export const auth = betterAuth({
   database: prismaAdapter(prisma, {
     provider: 'postgresql',
   }),
+  secret:
+    process.env.BETTER_AUTH_SECRET ||
+    env.BETTER_AUTH_SECRET ||
+    'a_very_long_and_secure_secret_at_least_32_chars',
   baseURL: getBaseURLConfig() as any,
 
   emailAndPassword: {
@@ -116,8 +126,14 @@ export const auth = betterAuth({
     'https://app.scryme.tech',
     'https://chat.scryme.tech',
     'https://api.chat.scryme.tech',
+    'http://localhost',
     'http://localhost:3000',
     'http://localhost:3001',
+    'http://127.0.0.1',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:3001',
+    'http://api:3000',
+    'http://web:3001',
   ],
 
   // Only keep fields NOT managed by plugins (like bio)

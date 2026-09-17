@@ -59,7 +59,13 @@ export function CreateWorkspaceDialog({ open, onOpenChange }: CreateWorkspaceDia
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const workspace = await createWorkspace.mutateAsync({ name, slug, icon, description });
+      const workspace = await createWorkspace.mutateAsync({
+        name,
+        slug,
+        icon,
+        description,
+        isPublic: visibility === 'public',
+      });
       toast.success('Workspace created successfully');
       onOpenChange(false);
       resetForm();

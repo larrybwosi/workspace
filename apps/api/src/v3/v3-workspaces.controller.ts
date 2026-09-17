@@ -1379,12 +1379,21 @@ When provisioned via M2M:
         throw error;
       }
     } else if (targetEmail) {
-      // Check if user is already a pending invitee
+      /**
+       * ⚡ Bolt Performance Optimization:
+       * Projecting only `id` and `token` via Prisma `select` avoids over-fetching unused scalar columns
+       * (`permissions`, `invitedBy`, `expiresAt`, `acceptedAt`, `createdAt`, `updatedAt`, `role`, `userId`)
+       * during pending invitation lookups in workspace member invitations.
+       */
       const existingInvite = await prisma.workspaceInvitation.findFirst({
         where: {
           workspaceId: workspace.id,
           email: targetEmail,
           status: 'pending',
+        },
+        select: {
+          id: true,
+          token: true,
         },
       });
 

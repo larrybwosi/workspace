@@ -137,4 +137,80 @@ describe('DepartmentsController', () => {
       await expect(controller.getDepartment(user, 'my-workspace', 'dept-1')).rejects.toThrow(ForbiddenException);
     });
   });
+
+  describe('updateDepartment workspace boundary enforcement', () => {
+    it('should throw NotFoundException if department does not belong to the target workspace', async () => {
+      const mockPrisma = prisma as any;
+      mockPrisma.workspace.findUnique.mockResolvedValue({
+        id: 'ws-1',
+        members: [{ role: 'admin' }],
+      });
+      mockPrisma.workspaceDepartment.findUnique.mockResolvedValue({
+        id: 'dept-1',
+        workspaceId: 'ws-OTHER', // mismatch
+      });
+
+      const user = { id: 'user-admin', name: 'Admin' } as any;
+      await expect(
+        controller.updateDepartment(user, 'my-workspace', 'dept-1', { name: 'New Name' })
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('deleteDepartment workspace boundary enforcement', () => {
+    it('should throw NotFoundException if department does not belong to the target workspace', async () => {
+      const mockPrisma = prisma as any;
+      mockPrisma.workspace.findUnique.mockResolvedValue({
+        id: 'ws-1',
+        members: [{ role: 'admin' }],
+      });
+      mockPrisma.workspaceDepartment.findUnique.mockResolvedValue({
+        id: 'dept-1',
+        workspaceId: 'ws-OTHER', // mismatch
+      });
+
+      const user = { id: 'user-admin', name: 'Admin' } as any;
+      await expect(controller.deleteDepartment(user, 'my-workspace', 'dept-1')).rejects.toThrow(
+        NotFoundException
+      );
+    });
+  });
+
+  describe('getAnnouncements workspace boundary enforcement', () => {
+    it('should throw NotFoundException if department does not belong to the target workspace', async () => {
+      const mockPrisma = prisma as any;
+      mockPrisma.workspace.findUnique.mockResolvedValue({
+        id: 'ws-1',
+        members: [{ role: 'member' }],
+      });
+      mockPrisma.workspaceDepartment.findUnique.mockResolvedValue({
+        id: 'dept-1',
+        workspaceId: 'ws-OTHER', // mismatch
+      });
+
+      const user = { id: 'user-1', name: 'Alice' } as any;
+      await expect(controller.getAnnouncements(user, 'my-workspace', 'dept-1')).rejects.toThrow(
+        NotFoundException
+      );
+    });
+  });
+
+  describe('createAnnouncement workspace boundary enforcement', () => {
+    it('should throw NotFoundException if department does not belong to the target workspace', async () => {
+      const mockPrisma = prisma as any;
+      mockPrisma.workspace.findUnique.mockResolvedValue({
+        id: 'ws-1',
+        members: [{ role: 'admin' }],
+        departments: [], // department not found under ws-1
+      });
+
+      const user = { id: 'user-admin', name: 'Admin' } as any;
+      await expect(
+        controller.createAnnouncement(user, 'my-workspace', 'dept-1', {
+          title: 'Test Announcement',
+          content: 'Test content',
+        })
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
 });

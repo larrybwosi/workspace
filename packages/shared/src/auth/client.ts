@@ -52,6 +52,10 @@ const getBaseURL = () => {
       (isProd ? 'https://api.chat.scryme.tech' : 'http://localhost:3000');
   }
 
+  if (typeof window !== 'undefined' && (url.includes('://api:') || url.includes('://api/'))) {
+    url = window.location.origin;
+  }
+
   if (url.includes('/api/auth')) {
     return url;
   }
