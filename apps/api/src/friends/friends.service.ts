@@ -292,4 +292,27 @@ export class FriendsService {
 
     return { success: true };
   }
+
+  /**
+   * THREAT MITIGATION: BOLA/IDOR Prevention & Atomic Least-Privilege Deletion
+   * Atomically removes reciprocal friendship entries (`userId` -> `friendId` and `friendId` -> `userId`)
+   * strictly scoping the operation to the requesting user's ID (`userId`).
+   * Throws `NotFoundException` if no friendship exists between the requesting user and `friendId`.
+   */
+  async unfriend(userId: string, friendId: string) {
+    const result = await prisma.friend.deleteMany({
+      where: {
+        OR: [
+          { userId, friendId },
+          { userId: friendId, friendId: userId },
+        ],
+      },
+    });
+
+    if (result.count === 0) {
+      throw new NotFoundException('Friendship not found');
+    }
+
+    return { success: true };
+  }
 }
