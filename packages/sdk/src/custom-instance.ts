@@ -49,11 +49,114 @@ export const setGlobalToken = (token: string | null) => {
 
 export const getGlobalToken = () => globalToken;
 
+/**
+ * Custom SDK Error class for meaningful, developer-friendly error messages and structured error details.
+ */
+export class ScrymeSDKError extends Error {
+  public readonly status?: number;
+  public readonly code?: string;
+  public readonly data?: any;
+  public readonly rawError?: any;
+
+  constructor(
+    message: string,
+    options?: {
+      status?: number;
+      code?: string;
+      data?: any;
+      rawError?: any;
+    }
+  ) {
+    super(message);
+    this.name = 'ScrymeSDKError';
+    this.status = options?.status;
+    this.code = options?.code;
+    this.data = options?.data;
+    this.rawError = options?.rawError;
+
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+}
+
+export { ScrymeSDKError as ScrymeError };
+
+/**
+ * Parses any error (AxiosError, Error, or unknown object) into a clean, meaningful ScrymeSDKError.
+ */
+export function parseSDKError(error: any): ScrymeSDKError {
+  if (error instanceof ScrymeSDKError) {
+    return error;
+  }
+
+  if (axios.isAxiosError(error)) {
+    const response = error.response;
+    const status = response?.status;
+    const responseData = response?.data;
+    const code = error.code || (responseData && typeof responseData === 'object' ? responseData.code : undefined);
+
+    let message: string | undefined;
+
+    if (responseData) {
+      if (typeof responseData === 'string' && responseData.trim()) {
+        message = responseData;
+      } else if (typeof responseData === 'object' && responseData !== null) {
+        if (Array.isArray(responseData.message)) {
+          message = responseData.message.filter(Boolean).join('; ');
+        } else if (typeof responseData.message === 'string' && responseData.message.trim()) {
+          message = responseData.message;
+        } else if (typeof responseData.error === 'string' && responseData.error.trim()) {
+          message = responseData.error;
+        } else if (responseData.error && typeof responseData.error === 'object' && typeof responseData.error.message === 'string') {
+          message = responseData.error.message;
+        } else if (typeof responseData.detail === 'string' && responseData.detail.trim()) {
+          message = responseData.detail;
+        }
+      }
+    }
+
+    if (!message) {
+      if (response?.statusText) {
+        message = `HTTP ${status}: ${response.statusText}`;
+      } else if (error.message && !error.message.startsWith('Request failed with status code')) {
+        message = error.message;
+      } else if (status) {
+        message = `Request failed with status code ${status}`;
+      } else if (error.message) {
+        message = error.message;
+      } else {
+        message = 'An unexpected error occurred during API request';
+      }
+    }
+
+    return new ScrymeSDKError(message, {
+      status,
+      code,
+      data: responseData,
+      rawError: error,
+    });
+  }
+
+  if (error instanceof Error) {
+    return new ScrymeSDKError(error.message, {
+      rawError: error,
+    });
+  }
+
+  return new ScrymeSDKError(typeof error === 'string' ? error : 'An unexpected error occurred', {
+    rawError: error,
+  });
+}
+
 export const AXIOS_INSTANCE = axios.create({
   baseURL: getBaseURL(),
   timeout: 10000,
   withCredentials: true,
 });
+
+AXIOS_INSTANCE.interceptors.response.use(
+  response => response,
+  error => Promise.reject(parseSDKError(error))
+);
 
 AXIOS_INSTANCE.interceptors.request.use(config => {
   if (!config.baseURL) {
@@ -144,7 +247,11 @@ export const customInstance = <T>(
     ...options,
     headers: mergedHeaders,
     cancelToken: source.token,
-  }).then(({ data }) => data);
+  })
+    .then(({ data }) => data)
+    .catch(error => {
+      throw parseSDKError(error);
+    });
 
   // @ts-ignore
   promise.cancel = () => {
@@ -154,5 +261,5 @@ export const customInstance = <T>(
   return promise;
 };
 
-export type ErrorType<Error> = AxiosError<Error>;
+export type ErrorType<Error> = ScrymeSDKError;
 export type BodyType<Body> = Body;
