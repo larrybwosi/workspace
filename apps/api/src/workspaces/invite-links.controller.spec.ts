@@ -56,7 +56,19 @@ describe('InviteLinksController', () => {
 
       await expect(
         controller.getInviteLinks(mockUser, 'my-workspace')
-      ).rejects.toThrow('Access denied');
+      ).rejects.toThrow('Forbidden - Only workspace owners and admins can view invite links');
+    });
+
+    it('should throw ForbiddenException when user is a standard member (not owner/admin)', async () => {
+      (prisma.workspace.findUnique as any).mockResolvedValue({
+        id: 'ws-1',
+        members: [{ role: 'member' }],
+        inviteLinks: [],
+      });
+
+      await expect(
+        controller.getInviteLinks(mockUser, 'my-workspace')
+      ).rejects.toThrow('Forbidden - Only workspace owners and admins can view invite links');
     });
 
     it('should return workspace invite links when user is a member', async () => {
@@ -110,7 +122,19 @@ describe('InviteLinksController', () => {
 
       await expect(
         controller.createInviteLink(mockUser, 'my-workspace', {})
-      ).rejects.toThrow('Access denied');
+      ).rejects.toThrow('Forbidden - Only workspace owners and admins can create invite links');
+    });
+
+    it('should throw ForbiddenException when user is a standard member (not owner/admin)', async () => {
+      (prisma.workspace.findUnique as any).mockResolvedValue({
+        id: 'ws-1',
+        members: [{ role: 'member' }],
+        inviteLinks: [],
+      });
+
+      await expect(
+        controller.createInviteLink(mockUser, 'my-workspace', {})
+      ).rejects.toThrow('Forbidden - Only workspace owners and admins can create invite links');
     });
 
     it('should return existing invite link if it already exists', async () => {
