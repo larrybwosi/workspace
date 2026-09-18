@@ -479,6 +479,12 @@ export class MessagesService {
       whereClause.userId = userId;
     }
 
+    /**
+     * ⚡ Performance & Correctness Optimization:
+     * Projects `image` alongside `avatar` in `select` to enable O(1) fallback (`avatar || image`)
+     * when `avatar` is null. Avoids returning null user avatars in search results without pulling
+     * unneeded scalar user columns from the database.
+     */
     const messages = await prisma.message.findMany({
       where: whereClause,
       select: {
@@ -490,6 +496,7 @@ export class MessagesService {
           select: {
             name: true,
             avatar: true,
+            image: true,
           },
         },
         channel: {
@@ -508,10 +515,10 @@ export class MessagesService {
       results: messages.map(msg => ({
         id: msg.id,
         content: msg.content,
-        userName: msg.user.name,
-        userAvatar: (msg.user as any).avatar,
+        userName: msg.user?.name,
+        userAvatar: msg.user?.avatar || msg.user?.image,
         timestamp: msg.timestamp,
-        channelName: msg.channel.name,
+        channelName: msg.channel?.name,
         channelId: msg.channelId,
       })),
     };
