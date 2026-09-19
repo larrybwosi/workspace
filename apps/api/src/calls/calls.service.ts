@@ -23,6 +23,58 @@ import {
 @Injectable()
 export class CallsService {
   private readonly logger = new Logger(CallsService.name);
+
+  /**
+   * Hardening / Defense in Depth:
+   * Validates call access authorization for the requesting user (BOLA/IDOR protection).
+   * Verifies ban status, workspace membership, private channel membership, and DM participation.
+   */
+  private async verifyCallAccess(user: User, callId: string) {
+    const call = await prisma.call.findUnique({
+      where: { id: callId },
+      include: {
+        participants: true,
+      },
+    });
+
+    if (!call) {
+      throw new NotFoundException('Call not found');
+    }
+
+    const currentParticipant = call.participants?.find(p => p.userId === user.id);
+    if (currentParticipant?.isBanned) {
+      throw new ForbiddenException('You are banned from this call');
+    }
+
+    const targetWorkspaceId = (call.metadata as any)?.workspaceId || call.workspaceId;
+    if (targetWorkspaceId) {
+      const isMember = await prisma.workspaceMember.findUnique({
+        where: { workspaceId_userId: { workspaceId: targetWorkspaceId, userId: user.id } },
+      });
+      if (!isMember) {
+        throw new ForbiddenException('Unauthorized: Not a workspace member');
+      }
+    }
+
+    const channelMatch = call.channelName?.match(/^channel-(.+)$/);
+    if (channelMatch) {
+      const channelIdMatch = channelMatch[1];
+      const channel = await prisma.channel.findUnique({
+        where: { id: channelIdMatch },
+        include: { members: { where: { userId: user.id } } },
+      });
+      if (channel?.isPrivate && channel.members.length === 0) {
+        throw new ForbiddenException('Unauthorized: Not a channel member');
+      }
+    }
+
+    if (call.channelName?.startsWith('dm-') && !call.channelName.includes(user.id)) {
+      throw new ForbiddenException('Unauthorized: Not a participant in this DM');
+    }
+
+    return call;
+  }
+
   private async resolveWorkspaceId(workspaceIdOrSlug: string): Promise<string> {
     const workspace =
       (await prisma.workspace.findUnique({
@@ -282,14 +334,8 @@ export class CallsService {
   async updateCall(user: User, callId: string, body: UpdateCallDto) {
     const { action, ...data } = body;
 
-    const call = await prisma.call.findUnique({
-      where: { id: callId },
-      include: { participants: true },
-    });
-
-    if (!call) {
-      throw new NotFoundException('Call not found');
-    }
+    // Hardening: Enforce call access authorization checks (workspace/channel/DM membership and ban status)
+    const call = await this.verifyCallAccess(user, callId);
 
     const currentParticipant = call.participants.find(p => p.userId === user.id);
 
@@ -559,13 +605,8 @@ export class CallsService {
       throw new BadRequestException('userId is required');
     }
 
-    const call = await prisma.call.findUnique({
-      where: { id: callId },
-    });
-
-    if (!call) {
-      throw new NotFoundException('Call not found');
-    }
+    // Hardening: Verify requesting user has access authorization to the call prior to inviting
+    const call = await this.verifyCallAccess(user, callId);
 
     // Find or create DM conversation
     // ⚡ Performance Optimization:
@@ -660,7 +701,12 @@ export class CallsService {
     return call;
   }
 
-  async getParticipants(callId: string) {
+  /**
+   * Hardening: Enforces call access authorization check prior to returning participant list (BOLA/IDOR mitigation).
+   */
+  async getParticipants(user: User, callId: string) {
+    await this.verifyCallAccess(user, callId);
+
     return prisma.callParticipant.findMany({
       where: {
         callId,
@@ -702,6 +748,14 @@ export class CallsService {
         select: { id: true },
       }));
     const workspaceId = workspace?.id || workspaceIdOrSlug;
+
+    // Hardening: Verify requesting user is a workspace member (BOLA/IDOR protection)
+    const member = await prisma.workspaceMember.findUnique({
+      where: { workspaceId_userId: { workspaceId, userId: user.id } },
+    });
+    if (!member) {
+      throw new ForbiddenException('Unauthorized: Not a workspace member');
+    }
 
     return prisma.call.findMany({
       where: {
@@ -757,6 +811,17 @@ export class CallsService {
 
     if (!workspace && workspaceSlug === 'resolved-slug') {
       workspaceId = 'resolved-id';
+    }
+
+    // Hardening: Verify requesting user is a workspace member before scheduling calls
+    const isMember =
+      workspace?.members?.some(m => m.userId === user.id) ||
+      (await prisma.workspaceMember.findUnique({
+        where: { workspaceId_userId: { workspaceId, userId: user.id } },
+      }));
+
+    if (!isMember) {
+      throw new ForbiddenException('Unauthorized: Not a workspace member');
     }
 
     let agoraChannelName = '';
