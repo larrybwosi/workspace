@@ -1,3 +1,9 @@
+## 2026-09-19 - [Prisma/Performance] Deterministic Primary Key Upsert for System Bot Context Resolution
+
+**Learning:** In `V3DmsController.resolveEffectiveUserId`, resolving the fallback system bot user for M2M contexts previously executed `prisma.user.findFirst({ where: { isBot: true } })`. Because `isBot` on `User` is a non-unique boolean flag, `findFirst` forced an index/table scan across the `User` table. Furthermore, if no bot existed, a random bot ID was created. Replacing `findFirst` with `prisma.user.upsert` using a deterministic primary key (`id: 'system_bot_v3_m2m'`) turns the query into a direct O(1) B-tree primary key point lookup and eliminates random ID generation for system bot context.
+
+**Action:** Replace `findFirst` on non-unique boolean or metadata columns with `upsert` or `findUnique` using deterministic primary key IDs for system entities.
+
 ## 2026-09-17 - [Prisma/Performance] Single-Query Primary Key Point Lookup with Nested Bot Application Selection
 
 **Learning:** In `V3WorkspacesController.resolveEffectiveUserId`, resolving the workspace default system bot user previously executed `prisma.botApplication.findFirst({ where: { workspaceId } })` followed by `prisma.workspace.findUnique({ where: { id: workspaceId } })` if no bot application was found. Because `workspaceId` on `botApplication` is not uniquely indexed, `findFirst` triggered an unindexed relation scan. Consolidating both operations into a single primary key point lookup on `prisma.workspace.findUnique` with nested `botApplications: { where: { botId: { not: null } }, select: { botId: true }, take: 1 }` selection leverages direct O(1) B-tree primary key indexing on `Workspace` and reduces database round-trips from 2 to 1 on the bot creation path.
