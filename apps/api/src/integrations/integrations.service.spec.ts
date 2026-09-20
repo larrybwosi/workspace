@@ -41,6 +41,14 @@ vi.mock('@repo/database', () => ({
     webhook: {
       count: vi.fn(),
       findUnique: vi.fn(),
+      update: vi.fn(),
+      deleteMany: vi.fn(),
+    },
+    apiKey: {
+      count: vi.fn(),
+      findUnique: vi.fn(),
+      update: vi.fn(),
+      deleteMany: vi.fn(),
     },
     webhookLog: {
       findMany: vi.fn(),
@@ -408,6 +416,102 @@ describe('IntegrationsService - GitHub integration (PR change)', () => {
 
       const result = await service.getStats('user-1');
       expect(result.webhookSuccessRate).toBe(0);
+    });
+  });
+
+  describe('updateWebhook', () => {
+    it('should update webhook when user owns the webhook', async () => {
+      mockPrisma.webhook.findUnique.mockResolvedValue({ id: 'wh-1', userId: 'user-1' });
+      mockPrisma.webhook.update.mockResolvedValue({ id: 'wh-1', name: 'Updated Name' });
+
+      const result = await service.updateWebhook('user-1', 'wh-1', { name: 'Updated Name' });
+
+      expect(mockPrisma.webhook.findUnique).toHaveBeenCalledWith({
+        where: { id: 'wh-1' },
+        select: { id: true, userId: true },
+      });
+      expect(mockPrisma.webhook.update).toHaveBeenCalledWith({
+        where: { id: 'wh-1' },
+        data: { name: 'Updated Name' },
+      });
+      expect(result).toEqual({ id: 'wh-1', name: 'Updated Name' });
+    });
+
+    it('should throw NotFoundException when webhook does not exist or user is not owner', async () => {
+      mockPrisma.webhook.findUnique.mockResolvedValue({ id: 'wh-1', userId: 'other-user' });
+
+      await expect(service.updateWebhook('user-1', 'wh-1', { name: 'Updated Name' })).rejects.toThrow(
+        NotFoundException
+      );
+    });
+  });
+
+  describe('deleteWebhook', () => {
+    it('should delete webhook when count > 0', async () => {
+      mockPrisma.webhook.deleteMany.mockResolvedValue({ count: 1 });
+
+      const result = await service.deleteWebhook('user-1', 'wh-1');
+
+      expect(mockPrisma.webhook.deleteMany).toHaveBeenCalledWith({
+        where: { id: 'wh-1', userId: 'user-1' },
+      });
+      expect(result).toEqual({ success: true });
+    });
+
+    it('should throw NotFoundException when count === 0', async () => {
+      mockPrisma.webhook.deleteMany.mockResolvedValue({ count: 0 });
+
+      await expect(service.deleteWebhook('user-1', 'nonexistent')).rejects.toThrow(
+        NotFoundException
+      );
+    });
+  });
+
+  describe('updateApiKey', () => {
+    it('should update API key when user owns the key', async () => {
+      mockPrisma.apiKey.findUnique.mockResolvedValue({ id: 'key-1', userId: 'user-1' });
+      mockPrisma.apiKey.update.mockResolvedValue({ id: 'key-1', name: 'Updated Key' });
+
+      const result = await service.updateApiKey('user-1', 'key-1', { name: 'Updated Key' });
+
+      expect(mockPrisma.apiKey.findUnique).toHaveBeenCalledWith({
+        where: { id: 'key-1' },
+        select: { id: true, userId: true },
+      });
+      expect(mockPrisma.apiKey.update).toHaveBeenCalledWith({
+        where: { id: 'key-1' },
+        data: { name: 'Updated Key' },
+      });
+      expect(result).toEqual({ id: 'key-1', name: 'Updated Key' });
+    });
+
+    it('should throw NotFoundException when API key does not exist or user is not owner', async () => {
+      mockPrisma.apiKey.findUnique.mockResolvedValue(null);
+
+      await expect(service.updateApiKey('user-1', 'key-1', { name: 'Updated Key' })).rejects.toThrow(
+        NotFoundException
+      );
+    });
+  });
+
+  describe('deleteApiKey', () => {
+    it('should delete API key when count > 0', async () => {
+      mockPrisma.apiKey.deleteMany.mockResolvedValue({ count: 1 });
+
+      const result = await service.deleteApiKey('user-1', 'key-1');
+
+      expect(mockPrisma.apiKey.deleteMany).toHaveBeenCalledWith({
+        where: { id: 'key-1', userId: 'user-1' },
+      });
+      expect(result).toEqual({ success: true });
+    });
+
+    it('should throw NotFoundException when count === 0', async () => {
+      mockPrisma.apiKey.deleteMany.mockResolvedValue({ count: 0 });
+
+      await expect(service.deleteApiKey('user-1', 'nonexistent')).rejects.toThrow(
+        NotFoundException
+      );
     });
   });
 

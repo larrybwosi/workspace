@@ -24,6 +24,19 @@ const createWebhookSchema = z.object({
   events: z.array(z.string()).min(1),
 });
 
+const updateWebhookSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  url: z.string().url().optional(),
+  events: z.array(z.string()).min(1).optional(),
+  isActive: z.boolean().optional(),
+});
+
+const updateApiKeySchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  isActive: z.boolean().optional(),
+  rateLimit: z.number().min(100).max(100000).optional(),
+});
+
 const createIntegrationSchema = z.object({
   service: z.enum([
     'slack',
@@ -71,6 +84,43 @@ class CreateIntegrationWebhookDto {
   @IsString({ each: true })
   @ApiProperty({ type: [String], example: ['event.name'] })
   events: string[];
+}
+
+class UpdateIntegrationWebhookDto {
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ required: false, example: 'Updated Webhook' })
+  name?: string;
+
+  @IsUrl()
+  @IsOptional()
+  @ApiProperty({ required: false, example: 'https://example.com/webhook' })
+  url?: string;
+
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  @ApiProperty({ required: false, type: [String], example: ['event.name'] })
+  events?: string[];
+
+  @IsOptional()
+  @ApiProperty({ required: false, example: true })
+  isActive?: boolean;
+}
+
+class UpdateApiKeyDto {
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ required: false, example: 'Updated API Key' })
+  name?: string;
+
+  @IsOptional()
+  @ApiProperty({ required: false, example: true })
+  isActive?: boolean;
+
+  @IsOptional()
+  @ApiProperty({ required: false, example: 1000 })
+  rateLimit?: number;
 }
 
 @ApiTags('Integrations')
@@ -125,9 +175,15 @@ export class IntegrationsController {
   @UseGuards(AuthGuard)
   @ApiOperation({ summary: 'Update an integration webhook' })
   @ApiParam({ name: 'webhookId', description: 'The webhook ID' })
+  @ApiBody({ type: UpdateIntegrationWebhookDto })
   @ApiResponse({ status: 200, description: 'Webhook updated' })
-  async updateWebhook(@CurrentUser() user: User, @Param('webhookId') webhookId: string, @Body() body: any) {
-    return this.integrationsService.updateWebhook(user.id, webhookId, body);
+  async updateWebhook(
+    @CurrentUser() user: User,
+    @Param('webhookId') webhookId: string,
+    @Body() body: UpdateIntegrationWebhookDto
+  ) {
+    const validatedData = updateWebhookSchema.parse(body);
+    return this.integrationsService.updateWebhook(user.id, webhookId, validatedData);
   }
 
   @Delete('webhooks/:webhookId')
@@ -164,9 +220,15 @@ export class IntegrationsController {
   @UseGuards(AuthGuard)
   @ApiOperation({ summary: 'Update an integration API key' })
   @ApiParam({ name: 'keyId', description: 'The key ID' })
+  @ApiBody({ type: UpdateApiKeyDto })
   @ApiResponse({ status: 200, description: 'API key updated' })
-  async updateApiKey(@CurrentUser() user: User, @Param('keyId') keyId: string, @Body() body: any) {
-    return this.integrationsService.updateApiKey(user.id, keyId, body);
+  async updateApiKey(
+    @CurrentUser() user: User,
+    @Param('keyId') keyId: string,
+    @Body() body: UpdateApiKeyDto
+  ) {
+    const validatedData = updateApiKeySchema.parse(body);
+    return this.integrationsService.updateApiKey(user.id, keyId, validatedData);
   }
 
   @Delete('api-keys/:keyId')
