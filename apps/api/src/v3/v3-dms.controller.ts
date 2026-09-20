@@ -56,24 +56,25 @@ export class V3DmsController {
       if (u) return { id: u.id, name: u.name };
     }
 
-    // Fallback system user or bot user for M2M context
-    const existingBot = await prisma.user.findFirst({
-      where: { isBot: true },
-      select: { id: true, name: true },
-    });
-    if (existingBot) return { id: existingBot.id, name: existingBot.name };
-
-    const botId = `bot_${crypto.randomBytes(8).toString('hex')}`;
-    const botUser = await prisma.user.create({
-      data: {
-        id: botId,
-        name: `System Bot`,
-        email: `system-bot-${botId}@system.internal`,
+    /**
+     * ⚡ Bolt Performance Optimization:
+     * Replaces `prisma.user.findFirst` on non-unique field `isBot` with a direct O(1) primary key point lookup on `id`.
+     * Direct B-tree point lookup (`findUnique({ where: { id: 'system_bot_v3_m2m' } })`) avoids full table/index scans.
+     * Uses `upsert` with deterministic ID `system_bot_v3_m2m` to guarantee O(1) resolution for M2M fallback context.
+     */
+    const systemBot = await prisma.user.upsert({
+      where: { id: 'system_bot_v3_m2m' },
+      update: {},
+      create: {
+        id: 'system_bot_v3_m2m',
+        name: 'System Bot',
+        email: 'system-bot-m2m@system.internal',
         isBot: true,
         status: 'online',
       },
+      select: { id: true, name: true },
     });
-    return { id: botUser.id, name: botUser.name };
+    return { id: systemBot.id, name: systemBot.name };
   }
 
   private formatResponse<T>(data: T) {

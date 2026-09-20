@@ -12,7 +12,7 @@ describe('V3DmsController', () => {
 
   beforeEach(async () => {
     vi.spyOn(prisma.user, 'findUnique').mockResolvedValue({ id: 'usr_1', name: 'User 1' } as any);
-    vi.spyOn(prisma.user, 'findFirst').mockResolvedValue({ id: 'bot_1', name: 'Bot 1' } as any);
+    vi.spyOn(prisma.user, 'upsert').mockResolvedValue({ id: 'system_bot_v3_m2m', name: 'System Bot' } as any);
 
     dmsService = {
       getDms: vi.fn().mockResolvedValue([{ id: 'dm_1' }]),
