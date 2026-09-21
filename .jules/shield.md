@@ -24,3 +24,7 @@
 ## 2026-09-19 - Enforcement of Access Authorization and Boundary Verification on Call Routes
 **Learning:** Call mutation and observation endpoints (`GET /calls/:callId/participants`, `PATCH /calls/:callId`, `POST /calls/:callId/invite`, `GET /calls/scheduled`, `POST /calls/scheduled`) previously allowed any authenticated user to view participants or mutate call states without verifying workspace membership, private channel access, or DM participation (BOLA / IDOR).
 **Action:** Always enforce central access validation (`verifyCallAccess`) verifying ban status, workspace membership (`workspaceMember.findUnique`), private channel membership, and DM participant scoping prior to returning or mutating call resources.
+
+## 2026-09-21 - Enforce Role Hierarchy in Workspace Member Management Endpoints
+**Learning:** `PATCH /workspaces/:slug/members/:memberId` and `DELETE /workspaces/:slug/members/:memberId` in `MembersController` allowed workspace `admin` users to modify `owner` roles, grant `owner` status, or remove other workspace `admin`s. This exposed workspaces to privilege escalation, unauthorized owner demotion, and admin lockout attacks.
+**Action:** When creating or updating user role management endpoints, always enforce hierarchical authorization: non-owners must be blocked from altering owner roles or promoting to owner, and admins should be restricted from removing other admins.
