@@ -126,24 +126,58 @@ describe('ProvisioningService', () => {
       ).rejects.toThrow(BadRequestException);
     });
 
-    it('should throw BadRequestException if owner user is not found', async () => {
+    it('should auto-create owner user if owner email is not found', async () => {
       const mockTx = {
         workspace: {
           findUnique: vi.fn().mockResolvedValue(null),
+          create: vi.fn().mockResolvedValue({
+            id: 'ws-123',
+            slug: 'acme',
+            name: 'Acme Corp',
+          }),
         },
         user: {
           findUnique: vi.fn().mockResolvedValue(null),
+          create: vi.fn().mockImplementation(({ data }) => {
+            if (data.email === 'newowner@acme.com') {
+              return Promise.resolve({ id: 'user-newowner', email: 'newowner@acme.com', name: 'newowner' });
+            }
+            return Promise.resolve({ id: 'bot_123', name: 'System Bot' });
+          }),
+        },
+        channel: {
+          createMany: vi.fn().mockResolvedValue({ count: 0 }),
+        },
+        workspaceMember: {
+          create: vi.fn().mockResolvedValue({ id: 'wm-bot' }),
+        },
+        botApplication: {
+          create: vi.fn().mockResolvedValue({
+            id: 'botapp-1',
+            clientId: 'bot_client_123',
+            clientSecret: 'secret_123',
+          }),
+        },
+        workspaceAuditLog: {
+          create: vi.fn().mockResolvedValue({ id: 'log-1' }),
         },
       };
 
       (prisma.$transaction as any).mockImplementation((cb: any) => cb(mockTx));
 
-      await expect(
-        service.provisionWorkspace(
-          {},
-          { name: 'Acme Corp', slug: 'acme', ownerEmail: 'nonexistent@acme.com' }
-        )
-      ).rejects.toThrow(BadRequestException);
+      const result = await service.provisionWorkspace(
+        {},
+        { name: 'Acme Corp', slug: 'acme', ownerEmail: 'newowner@acme.com' }
+      );
+
+      expect(mockTx.user.create).toHaveBeenCalledWith({
+        data: {
+          email: 'newowner@acme.com',
+          name: 'newowner',
+        },
+      });
+
+      expect(result.success).toBe(true);
     });
 
     it('should throw BadRequestException if owner is not a member of the M2M organization', async () => {

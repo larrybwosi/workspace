@@ -158,8 +158,6 @@ export async function processScheduledNotifications() {
     },
   });
 
-  console.log(`[Scheduled Notifications] Processing ${dueNotifications.length} due notifications`);
-
   for (const notification of dueNotifications) {
     try {
       // Send the notification
@@ -210,9 +208,7 @@ export async function processScheduledNotifications() {
         });
       }
 
-      console.log(`[Scheduled Notifications] Sent notification ${notification.id} to user ${notification.userId}`);
     } catch (error: any) {
-      console.error(`[Scheduled Notifications] Error sending notification ${notification.id}:`, error);
 
       // Log failure
       await prisma.scheduledNotificationHistory.create({
