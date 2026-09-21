@@ -1,5 +1,5 @@
 import axios, { AxiosRequestConfig } from 'axios';
-import { setGlobalToken } from './custom-instance';
+import { setGlobalToken, parseSDKError } from './custom-instance';
 import { getSkyrmeChatAPI } from './generated/v3-server';
 import type {
   V3ProvisionWorkspaceDto,
@@ -724,7 +724,7 @@ export class ScrymeSDK {
         }
       } catch (error) {
         console.error('ScrymeSDK failed to authenticate via client_credentials:', error);
-        throw error;
+        throw parseSDKError(error);
       }
     }
 
@@ -788,7 +788,11 @@ export class ScrymeSDK {
               cleanArgs.push(config);
             }
 
-            return (originalMethod as (...a: unknown[]) => unknown)(...cleanArgs);
+            try {
+              return await (originalMethod as (...a: unknown[]) => unknown)(...cleanArgs);
+            } catch (error) {
+              throw parseSDKError(error);
+            }
           };
         }
         return originalMethod;
