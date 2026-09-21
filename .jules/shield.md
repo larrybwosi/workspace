@@ -20,3 +20,7 @@
 ## 2026-09-11 - Enforce Channel Workspace Boundary and Admin/Moderator Authorization in ChannelsController.updateChannelMember
 **Learning:** `PATCH /workspaces/:slug/channels/:channelId/members/:targetUserId` in `ChannelsController` only checked that the requesting user belonged to the workspace, but did not verify `channel.workspaceId === workspace.id` or whether the user possessed workspace owner/admin or channel admin/moderator permissions. This allowed any workspace member to update channel member roles/permissions across channels or cross-workspace boundaries (BOLA / Privilege Escalation).
 **Action:** Always verify parent-child scoping (`channel.workspaceId === workspace.id`) and enforce least privilege role requirements (e.g., workspace admin or channel admin/moderator) on channel member role/permission update routes.
+
+## 2026-09-19 - Enforcement of Access Authorization and Boundary Verification on Call Routes
+**Learning:** Call mutation and observation endpoints (`GET /calls/:callId/participants`, `PATCH /calls/:callId`, `POST /calls/:callId/invite`, `GET /calls/scheduled`, `POST /calls/scheduled`) previously allowed any authenticated user to view participants or mutate call states without verifying workspace membership, private channel access, or DM participation (BOLA / IDOR).
+**Action:** Always enforce central access validation (`verifyCallAccess`) verifying ban status, workspace membership (`workspaceMember.findUnique`), private channel membership, and DM participant scoping prior to returning or mutating call resources.

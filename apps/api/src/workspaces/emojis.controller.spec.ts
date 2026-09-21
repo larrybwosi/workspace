@@ -98,5 +98,35 @@ describe('EmojisController', () => {
 
       await expect(controller.createEmoji(mockUser, 'my-workspace', { name: 'test' } as any)).rejects.toThrow(BadRequestException);
     });
+
+    it('should throw BadRequestException if imageUrl is invalid', async () => {
+      (prisma.workspace.findUnique as any).mockResolvedValue({
+        ...mockWorkspace,
+        members: [{ userId: mockUser.id, role: 'owner' }],
+      });
+
+      await expect(
+        controller.createEmoji(mockUser, 'my-workspace', {
+          name: 'parrot',
+          shortcode: 'parrot',
+          imageUrl: 'not-a-valid-url',
+        } as any)
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw BadRequestException if shortcode contains invalid characters', async () => {
+      (prisma.workspace.findUnique as any).mockResolvedValue({
+        ...mockWorkspace,
+        members: [{ userId: mockUser.id, role: 'owner' }],
+      });
+
+      await expect(
+        controller.createEmoji(mockUser, 'my-workspace', {
+          name: 'parrot',
+          shortcode: 'parrot <script>alert(1)</script>',
+          imageUrl: 'https://example.com/parrot.png',
+        } as any)
+      ).rejects.toThrow(BadRequestException);
+    });
   });
 });

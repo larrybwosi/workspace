@@ -292,16 +292,43 @@ export class IntegrationsService {
   }
 
   async updateWebhook(userId: string, webhookId: string, data: any) {
+    /**
+     * 🛡️ Security Hardening (BOLA / IDOR Mitigation):
+     * Verify webhook existence and ownership (`userId`) prior to executing mutations.
+     * Prevents unauthorized users from modifying webhooks belonging to other users.
+     */
+    const existingWebhook = await prisma.webhook.findUnique({
+      where: { id: webhookId },
+      select: { id: true, userId: true },
+    });
+
+    if (!existingWebhook || existingWebhook.userId !== userId) {
+      throw new NotFoundException('Webhook not found');
+    }
+
     return prisma.webhook.update({
-      where: { id: webhookId, userId },
+      where: { id: webhookId },
       data,
     });
   }
 
   async deleteWebhook(userId: string, webhookId: string) {
-    await prisma.webhook.delete({
-      where: { id: webhookId, userId },
+    /**
+     * 🛡️ Security Hardening (BOLA / IDOR Mitigation):
+     * Perform an atomic deletion with owner boundary validation (`userId`).
+     * Prevents unauthorized deletion of webhooks belonging to other users.
+     */
+    const result = await prisma.webhook.deleteMany({
+      where: {
+        id: webhookId,
+        userId,
+      },
     });
+
+    if (result.count === 0) {
+      throw new NotFoundException('Webhook not found');
+    }
+
     return { success: true };
   }
 
@@ -344,16 +371,43 @@ export class IntegrationsService {
   }
 
   async updateApiKey(userId: string, keyId: string, data: any) {
+    /**
+     * 🛡️ Security Hardening (BOLA / IDOR Mitigation):
+     * Verify API key existence and ownership (`userId`) prior to executing mutations.
+     * Prevents unauthorized users from modifying API keys belonging to other users.
+     */
+    const existingApiKey = await prisma.apiKey.findUnique({
+      where: { id: keyId },
+      select: { id: true, userId: true },
+    });
+
+    if (!existingApiKey || existingApiKey.userId !== userId) {
+      throw new NotFoundException('API key not found');
+    }
+
     return prisma.apiKey.update({
-      where: { id: keyId, userId },
+      where: { id: keyId },
       data,
     });
   }
 
   async deleteApiKey(userId: string, keyId: string) {
-    await prisma.apiKey.delete({
-      where: { id: keyId, userId },
+    /**
+     * 🛡️ Security Hardening (BOLA / IDOR Mitigation):
+     * Perform an atomic deletion with owner boundary validation (`userId`).
+     * Prevents unauthorized deletion of API keys belonging to other users.
+     */
+    const result = await prisma.apiKey.deleteMany({
+      where: {
+        id: keyId,
+        userId,
+      },
     });
+
+    if (result.count === 0) {
+      throw new NotFoundException('API key not found');
+    }
+
     return { success: true };
   }
 

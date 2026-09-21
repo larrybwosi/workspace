@@ -14,7 +14,8 @@ import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { prisma } from '@repo/database';
 import type { User } from '@repo/database';
-import { IsString } from 'class-validator';
+import { IsString, IsUrl } from 'class-validator';
+import { z } from 'zod';
 
 class CreateEmojiDto {
   @IsString()
@@ -25,10 +26,21 @@ class CreateEmojiDto {
   @ApiProperty({ example: 'party_parrot' })
   shortcode: string;
 
-  @IsString()
+  @IsUrl()
   @ApiProperty({ example: 'https://example.com/emoji.png' })
   imageUrl: string;
 }
+
+const createEmojiSchema = z.object({
+  name: z.string().trim().min(1, 'Name is required').max(50, 'Name cannot exceed 50 characters'),
+  shortcode: z
+    .string()
+    .trim()
+    .min(1, 'Shortcode is required')
+    .max(50, 'Shortcode cannot exceed 50 characters')
+    .regex(/^[a-zA-Z0-9_\-:]+$/, 'Shortcode contains invalid characters'),
+  imageUrl: z.string().trim().url('Image URL must be a valid URL'),
+});
 
 @ApiTags('Emojis')
 @ApiBearerAuth()
@@ -106,16 +118,24 @@ export class EmojisController {
       throw new ForbiddenException('Only workspace owners and admins can create custom emojis');
     }
 
-    const { name, shortcode, imageUrl } = body;
-
-    if (!name || !shortcode || !imageUrl) {
-      throw new BadRequestException('Missing required fields');
+    /**
+     * 🛡️ Security Hardening (Input Validation & Malformed Payload Mitigation):
+     * Strict Zod schema validation enforces payload types, string bounds, regex pattern constraints on shortcodes,
+     * and valid URL structures on imageUrl to prevent stored XSS, malformed database state, and unhandled runtime exceptions.
+     */
+    const validated = createEmojiSchema.safeParse(body);
+    if (!validated.success) {
+      throw new BadRequestException(validated.error.issues);
     }
+
+    const { name, shortcode, imageUrl } = validated.data;
+    const cleanShortcode = shortcode.replace(/^:+|:+$/g, '');
+    const formattedShortcode = `:${cleanShortcode}:`;
 
     const emoji = await prisma.customEmoji.create({
       data: {
         name,
-        shortcode: shortcode.startsWith(':') ? shortcode : `:${shortcode}:`,
+        shortcode: formattedShortcode,
         imageUrl,
         workspaceId: workspace.id,
         createdById: user.id,

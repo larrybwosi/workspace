@@ -222,6 +222,13 @@ describe('CallsService', () => {
   describe('getScheduledCalls', () => {
     const mockUser = { id: 'user-1' } as any;
 
+    it('should throw ForbiddenException if user is not a workspace member', async () => {
+      mockPrisma.workspace.findUnique.mockResolvedValue({ id: 'ws-1' });
+      mockPrisma.workspaceMember.findUnique.mockResolvedValue(null);
+
+      await expect(service.getScheduledCalls(mockUser, 'ws-1')).rejects.toThrow('Unauthorized: Not a workspace member');
+    });
+
     it('should throw BadRequestException when workspaceIdOrSlug is empty string', async () => {
       await expect(service.getScheduledCalls(mockUser, '')).rejects.toThrow(BadRequestException);
     });
@@ -238,6 +245,7 @@ describe('CallsService', () => {
 
     it('should look up workspace by id first and then by slug using findUnique', async () => {
       mockPrisma.workspace.findUnique.mockResolvedValueOnce(null).mockResolvedValueOnce({ id: 'resolved-ws-id' });
+      mockPrisma.workspaceMember.findUnique.mockResolvedValue({ role: 'member' });
       mockPrisma.call.findMany.mockResolvedValue([]);
 
       await service.getScheduledCalls(mockUser, 'my-slug');
@@ -260,6 +268,7 @@ describe('CallsService', () => {
 
     it('should use resolved workspace id when calling findMany for calls', async () => {
       mockPrisma.workspace.findUnique.mockResolvedValueOnce(null).mockResolvedValueOnce({ id: 'resolved-id' });
+      mockPrisma.workspaceMember.findUnique.mockResolvedValue({ role: 'member' });
       mockPrisma.call.findMany.mockResolvedValue([]);
 
       await service.getScheduledCalls(mockUser, 'my-slug');
@@ -273,6 +282,7 @@ describe('CallsService', () => {
 
     it('should fall back to original value as workspaceId if workspace lookup returns null', async () => {
       mockPrisma.workspace.findUnique.mockResolvedValue(null);
+      mockPrisma.workspaceMember.findUnique.mockResolvedValue({ role: 'member' });
       mockPrisma.call.findMany.mockResolvedValue([]);
 
       await service.getScheduledCalls(mockUser, 'direct-ws-id');
@@ -286,6 +296,7 @@ describe('CallsService', () => {
 
     it("should filter by status: 'scheduled'", async () => {
       mockPrisma.workspace.findUnique.mockResolvedValue({ id: 'ws-1' });
+      mockPrisma.workspaceMember.findUnique.mockResolvedValue({ role: 'member' });
       mockPrisma.call.findMany.mockResolvedValue([]);
 
       await service.getScheduledCalls(mockUser, 'ws-1');
@@ -296,6 +307,7 @@ describe('CallsService', () => {
 
     it('should filter by scheduledFor >= now', async () => {
       mockPrisma.workspace.findUnique.mockResolvedValue({ id: 'ws-1' });
+      mockPrisma.workspaceMember.findUnique.mockResolvedValue({ role: 'member' });
       mockPrisma.call.findMany.mockResolvedValue([]);
 
       await service.getScheduledCalls(mockUser, 'ws-1');
@@ -307,6 +319,7 @@ describe('CallsService', () => {
 
     it('should order results by scheduledFor asc', async () => {
       mockPrisma.workspace.findUnique.mockResolvedValue({ id: 'ws-1' });
+      mockPrisma.workspaceMember.findUnique.mockResolvedValue({ role: 'member' });
       mockPrisma.call.findMany.mockResolvedValue([]);
 
       await service.getScheduledCalls(mockUser, 'ws-1');
@@ -317,6 +330,7 @@ describe('CallsService', () => {
 
     it('should include initiator in query', async () => {
       mockPrisma.workspace.findUnique.mockResolvedValue({ id: 'ws-1' });
+      mockPrisma.workspaceMember.findUnique.mockResolvedValue({ role: 'member' });
       mockPrisma.call.findMany.mockResolvedValue([]);
 
       await service.getScheduledCalls(mockUser, 'ws-1');
@@ -331,6 +345,7 @@ describe('CallsService', () => {
         { id: 'call-2', status: 'scheduled', initiator: { id: 'user-2' } },
       ];
       mockPrisma.workspace.findUnique.mockResolvedValue({ id: 'ws-1' });
+      mockPrisma.workspaceMember.findUnique.mockResolvedValue({ role: 'member' });
       mockPrisma.call.findMany.mockResolvedValue(mockCalls);
 
       const result = await service.getScheduledCalls(mockUser, 'ws-1');
@@ -340,6 +355,7 @@ describe('CallsService', () => {
 
     it('should handle real slug lookup (value differs from resolved id)', async () => {
       mockPrisma.workspace.findUnique.mockResolvedValueOnce(null).mockResolvedValueOnce({ id: 'uuid-123' });
+      mockPrisma.workspaceMember.findUnique.mockResolvedValue({ role: 'member' });
       mockPrisma.call.findMany.mockResolvedValue([]);
 
       await service.getScheduledCalls(mockUser, 'my-workspace-slug');
@@ -577,6 +593,7 @@ describe('CallsService', () => {
         metadata: { workspaceId: 'ws-1' },
         participants: [],
       });
+      mockPrisma.workspaceMember.findUnique.mockResolvedValue({ role: 'member' });
       mockPrisma.callParticipant.upsert.mockResolvedValue({ id: 'p-1' });
       mockPrisma.call.update.mockResolvedValue({});
 
@@ -600,6 +617,7 @@ describe('CallsService', () => {
         metadata: { workspaceId: 'ws-1' },
         participants: [],
       });
+      mockPrisma.workspaceMember.findUnique.mockResolvedValue({ role: 'member' });
       mockPrisma.callParticipant.update.mockResolvedValue({});
       mockPrisma.callParticipant.count.mockResolvedValue(1);
 
@@ -623,6 +641,7 @@ describe('CallsService', () => {
         metadata: { workspaceId: 'ws-1' },
         participants: [],
       });
+      mockPrisma.workspaceMember.findUnique.mockResolvedValue({ role: 'member' });
       mockPrisma.callParticipant.update.mockResolvedValue({});
       mockPrisma.callParticipant.count.mockResolvedValue(0);
       mockPrisma.call.update.mockResolvedValue({});
@@ -647,6 +666,7 @@ describe('CallsService', () => {
         metadata: { workspaceId: 'ws-1' },
         participants: [],
       });
+      mockPrisma.workspaceMember.findUnique.mockResolvedValue({ role: 'member' });
       mockPrisma.callParticipant.update.mockResolvedValue({});
       mockPrisma.callParticipant.count.mockResolvedValue(2);
 
@@ -671,7 +691,7 @@ describe('CallsService', () => {
     });
 
     it('should find existing DM using findUnique and create an invite message', async () => {
-      mockPrisma.call.findUnique.mockResolvedValue({ id: 'call-1', type: 'video', metadata: {} });
+      mockPrisma.call.findUnique.mockResolvedValue({ id: 'call-1', type: 'video', metadata: {}, participants: [] });
       mockPrisma.directMessage.findUnique.mockResolvedValueOnce({ id: 'dm-1' });
       mockPrisma.dMMessage.create.mockResolvedValue({ id: 'msg-1' });
 
@@ -690,7 +710,7 @@ describe('CallsService', () => {
     });
 
     it('should fall back to reverse participant check on directMessage.findUnique if first is null', async () => {
-      mockPrisma.call.findUnique.mockResolvedValue({ id: 'call-1', type: 'video', metadata: {} });
+      mockPrisma.call.findUnique.mockResolvedValue({ id: 'call-1', type: 'video', metadata: {}, participants: [] });
       // First call (user.id, target) returns null, second call (target, user.id) returns the DM
       mockPrisma.directMessage.findUnique
         .mockResolvedValueOnce(null)
@@ -705,7 +725,7 @@ describe('CallsService', () => {
     });
 
     it('should create a new DM if no existing DM is found in either direction', async () => {
-      mockPrisma.call.findUnique.mockResolvedValue({ id: 'call-1', type: 'video', metadata: {} });
+      mockPrisma.call.findUnique.mockResolvedValue({ id: 'call-1', type: 'video', metadata: {}, participants: [] });
       mockPrisma.directMessage.findUnique.mockResolvedValue(null);
       mockPrisma.directMessage.create.mockResolvedValue({ id: 'new-dm' });
       mockPrisma.dMMessage.create.mockResolvedValue({ id: 'msg-1' });

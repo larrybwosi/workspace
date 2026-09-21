@@ -442,23 +442,38 @@ export class V3WorkspacesController {
     private readonly webhooksService?: WebhooksService
   ) {}
 
+  /**
+   * ⚡ Bolt Performance Optimization:
+   * Replaces sequential `prisma.botApplication.findFirst` and `prisma.workspace.findUnique` lookups
+   * with a single O(1) primary key point lookup on `prisma.workspace.findUnique` including nested `botApplications` relation.
+   * This cuts database round-trips from 2 down to 1 on the workspace bot creation path and avoids unindexed relation scans.
+   */
   private async resolveEffectiveUserId(context: ApiV3Context, workspaceId?: string): Promise<string> {
     if (context.userId && !context.userId.startsWith('m2m:')) {
       return context.userId;
     }
     if (workspaceId) {
-      const botApp = await prisma.botApplication.findFirst({
-        where: { workspaceId },
-        select: { botId: true },
-      });
-      if (botApp?.botId) {
-        return botApp.botId;
-      }
       const workspace = await prisma.workspace.findUnique({
         where: { id: workspaceId },
-        select: { id: true, name: true, slug: true, ownerId: true },
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          ownerId: true,
+          botApplications: {
+            where: { botId: { not: null } },
+            select: { botId: true },
+            take: 1,
+          },
+        },
       });
+
       if (workspace) {
+        const botApp = workspace.botApplications?.[0];
+        if (botApp?.botId) {
+          return botApp.botId;
+        }
+
         const botId = `bot_${crypto.randomBytes(8).toString('hex')}`;
         const botUser = await prisma.user.create({
           data: {

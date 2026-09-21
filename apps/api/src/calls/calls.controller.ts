@@ -40,8 +40,8 @@ export class CallsController {
   @ApiOperation({ summary: 'Get participants in a call' })
   @ApiParam({ name: 'callId', description: 'The call ID' })
   @ApiResponse({ status: 200, description: 'List of participants' })
-  async getParticipants(@Param('callId') callId: string) {
-    return this.callsService.getParticipants(callId);
+  async getParticipants(@CurrentUser() user: User, @Param('callId') callId: string) {
+    return this.callsService.getParticipants(user, callId);
   }
 
   @Get('scheduled')

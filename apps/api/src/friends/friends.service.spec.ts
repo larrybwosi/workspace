@@ -11,6 +11,7 @@ vi.mock('@repo/database', () => ({
       findFirst: vi.fn(),
       create: vi.fn(),
       createMany: vi.fn(),
+      deleteMany: vi.fn(),
     },
     friendRequest: {
       findMany: vi.fn(),
@@ -434,6 +435,30 @@ describe('FriendsService', () => {
       mockPrisma.friendRequest.deleteMany.mockResolvedValue({ count: 0 });
 
       await expect(service.deleteFriendRequest('user-1', 'req-nonexistent')).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('unfriend', () => {
+    it('should unfriend successfully when friendship exists', async () => {
+      mockPrisma.friend.deleteMany.mockResolvedValue({ count: 2 });
+
+      const result = await service.unfriend('user-1', 'user-2');
+
+      expect(result).toEqual({ success: true });
+      expect(mockPrisma.friend.deleteMany).toHaveBeenCalledWith({
+        where: {
+          OR: [
+            { userId: 'user-1', friendId: 'user-2' },
+            { userId: 'user-2', friendId: 'user-1' },
+          ],
+        },
+      });
+    });
+
+    it('should throw NotFoundException if friendship does not exist (deleteMany returns count 0)', async () => {
+      mockPrisma.friend.deleteMany.mockResolvedValue({ count: 0 });
+
+      await expect(service.unfriend('user-1', 'user-3')).rejects.toThrow(NotFoundException);
     });
   });
 });

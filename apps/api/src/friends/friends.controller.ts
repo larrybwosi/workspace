@@ -92,10 +92,24 @@ export class FriendsController {
   }
 
   @Delete('requests/:requestId')
-  @ApiOperation({ summary: 'Delete a friend request or unfriend' })
+  @ApiOperation({ summary: 'Delete a friend request' })
   @ApiParam({ name: 'requestId', description: 'The request ID' })
-  @ApiResponse({ status: 200, description: 'Friend request or friendship deleted' })
+  @ApiResponse({ status: 200, description: 'Friend request deleted' })
   async deleteFriendRequest(@CurrentUser() user: User, @Param('requestId') requestId: string) {
     return this.friendsService.deleteFriendRequest(user.id, requestId);
+  }
+
+  /**
+   * THREAT MITIGATION: BOLA/IDOR Prevention
+   * Enforces least privilege authorization by passing requesting user's ID to `unfriend`.
+   * Ensures users can only remove friendships where they are a participant.
+   */
+  @Delete(':friendId')
+  @ApiOperation({ summary: 'Remove a friend (unfriend)' })
+  @ApiParam({ name: 'friendId', description: 'The friend user ID' })
+  @ApiResponse({ status: 200, description: 'Friend removed successfully' })
+  @ApiResponse({ status: 404, description: 'Friendship not found' })
+  async unfriend(@CurrentUser() user: User, @Param('friendId') friendId: string) {
+    return this.friendsService.unfriend(user.id, friendId);
   }
 }
