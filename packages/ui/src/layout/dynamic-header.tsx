@@ -5,7 +5,7 @@ import { ThemeToggle } from './theme-toggle';
 import { Huddle } from '../features/chat/huddle';
 import { useCurrentUser, useUser } from '@repo/api-client';
 import { useWorkspace, useWorkspaceChannels } from '@repo/api-client';
-import { useParams } from 'next/navigation';
+import { useParams, usePathname } from 'next/navigation';
 import { Skeleton } from '../components/skeleton';
 import { useCommandPalette } from './command-palette-provider';
 
@@ -20,8 +20,11 @@ interface DynamicHeaderProps {
 export function DynamicHeader({ activeView, onMenuClick, onSearchClick, onBackClick, onInfoClick }: DynamicHeaderProps) {
   const { data: currentUser } = useCurrentUser();
   const { slug } = useParams();
-  const { data: workspace } = useWorkspace(slug as string);
-  const { data: channels, isLoading } = useWorkspaceChannels(slug as string);
+  const pathname = usePathname();
+  const isWorkspaceRoute = pathname?.startsWith('/workspace/') ?? false;
+  const workspaceSlug = isWorkspaceRoute ? (slug as string) : '';
+  const { data: workspace } = useWorkspace(workspaceSlug);
+  const { data: channels, isLoading } = useWorkspaceChannels(workspaceSlug);
   const palette = useCommandPalette();
 
   const dmUserId = activeView?.startsWith('dm-') ? activeView.replace('dm-', '') : '';
