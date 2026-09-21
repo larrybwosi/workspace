@@ -80,6 +80,16 @@ export class V3ProvisionWorkspaceDto {
 
   @IsString()
   @IsOptional()
+  @ApiProperty({ example: 'Alice Smith', required: false, description: 'Display name of the workspace owner' })
+  ownerName?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ example: 'https://example.com/avatar.png', required: false, description: 'Avatar URL of the workspace owner' })
+  ownerAvatar?: string;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ example: 'Technology', required: false, description: 'The industry categorization of the workspace.' })
   industry?: string;
 
@@ -113,17 +123,21 @@ export class V3ProvisionWorkspaceDto {
       type: 'object',
       properties: {
         email: { type: 'string', example: 'user@acme.com' },
+        name: { type: 'string', example: 'Bob Johnson' },
+        avatar: { type: 'string', example: 'https://example.com/bob.png' },
         role: { type: 'string', example: 'member', enum: ['admin', 'member'] },
       },
     },
   })
-  initialMembers?: { email: string; role: string }[];
+  initialMembers?: { email: string; name?: string; avatar?: string; role?: string }[];
 }
 
 const provisionSchema = z.object({
   name: z.string().min(1),
   slug: z.string().min(1),
   ownerEmail: z.string().email(),
+  ownerName: z.string().optional(),
+  ownerAvatar: z.string().optional(),
   industry: z.string().optional(),
   description: z.string().optional(),
   icon: z.string().optional().default('building'),
@@ -133,12 +147,49 @@ const provisionSchema = z.object({
     .array(
       z.object({
         email: z.string().email(),
+        name: z.string().optional(),
+        avatar: z.string().optional(),
         role: z.string().default('member'),
       })
     )
     .optional()
     .default([]),
 });
+
+export class V3ImportMemberItemDto {
+  @IsEmail()
+  @ApiProperty({ example: 'user@acme.com', description: 'Member email address' })
+  email: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ example: 'Bob Johnson', required: false, description: 'Member full name' })
+  name?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ example: 'https://example.com/avatar.png', required: false, description: 'Member avatar image URL' })
+  avatar?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ example: 'member', required: false, enum: ['admin', 'member', 'owner'], description: 'Role in workspace' })
+  role?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ example: 'ext_12345', required: false, description: 'External system user identifier' })
+  externalId?: string;
+}
+
+export class V3BulkImportMembersDto {
+  @IsArray()
+  @ApiProperty({
+    description: 'List of members/users to import from the integrating system into the workspace',
+    type: [V3ImportMemberItemDto],
+  })
+  members: V3ImportMemberItemDto[];
+}
 
 export class V3AddMemberDto {
   @IsEmail()
@@ -1284,6 +1335,123 @@ When provisioned via M2M:
     }
 
     return this.formatResponse({ members });
+  }
+
+  @Post(':slug/members/import')
+  @ApiOperation({
+    summary: 'Bulk import members from external system into workspace (Enterprise M2M)',
+    description:
+      'Seamlessly imports multiple users from an external integrating system into the workspace. Creates missing users, ensures organization membership, and adds/updates workspace roles.',
+  })
+  @ApiParam({ name: 'slug', description: 'The workspace slug' })
+  @ApiBody({ type: V3BulkImportMembersDto })
+  @ApiResponse({ status: 201, description: 'Members imported successfully.' })
+  @ApiResponse({ status: 403, description: 'Forbidden: Missing members:write scope.' })
+  async importWorkspaceMembers(
+    @V3Context() context: ApiV3Context,
+    @Param('slug') slug: string,
+    @Body() body: V3BulkImportMembersDto
+  ) {
+    if (!context.scopes.includes('members:write') && !context.scopes.includes('*')) {
+      throw new ForbiddenException('Missing members:write scope');
+    }
+
+    const workspace = await this.resolveWorkspaceAndCheckAccess(context, slug);
+
+    if (!body || !Array.isArray(body.members) || body.members.length === 0) {
+      throw new BadRequestException('members array must not be empty');
+    }
+
+    const results = [];
+
+    for (const item of body.members) {
+      if (!item.email) continue;
+
+      let user = await prisma.user.findUnique({
+        where: { email: item.email },
+      });
+
+      if (!user) {
+        const userName = item.name || item.email.split('@')[0] || item.email;
+        user = await prisma.user.create({
+          data: {
+            email: item.email,
+            name: userName,
+            avatar: item.avatar || null,
+          },
+        });
+      } else if (item.name || item.avatar) {
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            ...(item.name ? { name: item.name } : {}),
+            ...(item.avatar ? { avatar: item.avatar } : {}),
+          },
+        });
+      }
+
+      const orgId = workspace.organizationId || context.organizationId;
+      if (orgId) {
+        const existingOrgMember = await prisma.member.findFirst({
+          where: { organizationId: orgId, userId: user.id },
+        });
+        if (!existingOrgMember) {
+          await prisma.member.create({
+            data: {
+              organizationId: orgId,
+              userId: user.id,
+              role: 'member',
+            },
+          });
+        }
+      }
+
+      const role = item.role || 'member';
+      const membership = await prisma.workspaceMember.upsert({
+        where: {
+          workspaceId_userId: {
+            workspaceId: workspace.id,
+            userId: user.id,
+          },
+        },
+        update: { role },
+        create: {
+          workspaceId: workspace.id,
+          userId: user.id,
+          role,
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              avatar: true,
+            },
+          },
+        },
+      });
+
+      results.push({
+        email: user.email,
+        userId: user.id,
+        role: membership.role,
+        memberId: membership.id,
+        externalId: item.externalId || null,
+      });
+    }
+
+    try {
+      await this.redis.del('v3:members:' + workspace.id);
+      await this.redis.del('v2:members:' + workspace.id);
+    } catch (err) {
+      this.logger.warn('Redis error in importWorkspaceMembers:', err);
+    }
+
+    return this.formatResponse({
+      importedCount: results.length,
+      members: results,
+    });
   }
 
   @Post(':slug/members')

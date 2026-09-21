@@ -17,22 +17,26 @@ export class ProvisioningService {
         // Find or create owner
         let owner = await tx.user.findUnique({ where: { email: data.ownerEmail } });
         if (!owner) {
-          const name = data.ownerEmail.split('@')[0] || data.ownerEmail;
+          const name = data.ownerName || data.ownerEmail.split('@')[0] || data.ownerEmail;
           owner = await tx.user.create({
             data: {
               email: data.ownerEmail,
               name,
+              ...(data.ownerAvatar ? { avatar: data.ownerAvatar } : {}),
+            },
+          });
+        } else if (data.ownerName || data.ownerAvatar) {
+          owner = await tx.user.update({
+            where: { id: owner.id },
+            data: {
+              ...(data.ownerName ? { name: data.ownerName } : {}),
+              ...(data.ownerAvatar ? { avatar: data.ownerAvatar } : {}),
             },
           });
         }
 
         // If M2M, verify owner belongs to organization
         if (context.organizationId) {
-          /**
-           * ⚡ Performance Optimization:
-           * Leverages direct O(1) primary key point lookup on 'tx.organization.findUnique' with nested
-           * relation filtering instead of non-unique index scans on 'tx.member.findFirst'.
-           */
           const org = await tx.organization.findUnique({
             where: { id: context.organizationId },
             select: {
@@ -70,11 +74,6 @@ export class ProvisioningService {
 
         // 2. Create Channels
         if (data.channels && data.channels.length > 0) {
-          /**
-           * ⚡ Performance Optimization:
-           * Replaces sequential single-record channel inserts inside a loop with a single batch `createMany` query.
-           * This reduces database round-trips from N down to 1 inside the provisioning transaction.
-           */
           await tx.channel.createMany({
             data: data.channels.map((channelName: string) => ({
               workspaceId: workspace.id,
@@ -91,23 +90,27 @@ export class ProvisioningService {
           for (const member of data.initialMembers) {
             let user = await tx.user.findUnique({ where: { email: member.email } });
             if (!user) {
-              const name = member.email.split('@')[0] || member.email;
+              const name = member.name || member.email.split('@')[0] || member.email;
               user = await tx.user.create({
                 data: {
                   email: member.email,
                   name,
+                  ...(member.avatar ? { avatar: member.avatar } : {}),
+                },
+              });
+            } else if (member.name || member.avatar) {
+              user = await tx.user.update({
+                where: { id: user.id },
+                data: {
+                  ...(member.name ? { name: member.name } : {}),
+                  ...(member.avatar ? { avatar: member.avatar } : {}),
                 },
               });
             }
 
             if (user) {
-              // Verify member belongs to organization if M2M
+              // Ensure member belongs to organization if M2M context exists
               if (context.organizationId) {
-                /**
-                 * ⚡ Performance Optimization:
-                 * Direct O(1) primary key lookup on 'tx.organization.findUnique' replaces non-unique
-                 * index scans on 'tx.member.findFirst'.
-                 */
                 const org = await tx.organization.findUnique({
                   where: { id: context.organizationId },
                   select: {
@@ -118,7 +121,15 @@ export class ProvisioningService {
                   },
                 });
                 const isOrgMember = org && org.members.length > 0;
-                if (!isOrgMember) continue;
+                if (!isOrgMember && tx.member) {
+                  await tx.member.create({
+                    data: {
+                      organizationId: context.organizationId,
+                      userId: user.id,
+                      role: 'member',
+                    },
+                  });
+                }
               }
 
               await tx.workspaceMember.upsert({
@@ -128,11 +139,11 @@ export class ProvisioningService {
                     userId: user.id,
                   },
                 },
-                update: { role: member.role },
+                update: { role: member.role || 'member' },
                 create: {
                   workspaceId: workspace.id,
                   userId: user.id,
-                  role: member.role,
+                  role: member.role || 'member',
                 },
               });
             }
@@ -179,7 +190,7 @@ export class ProvisioningService {
         await tx.workspaceAuditLog.create({
           data: {
             workspaceId: workspace.id,
-            userId: context.userId,
+            userId: context.userId || owner.id,
             action: 'workspace.provisioned',
             resource: 'workspace',
             resourceId: workspace.id,

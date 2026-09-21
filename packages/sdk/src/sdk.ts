@@ -1,5 +1,5 @@
 import axios, { AxiosRequestConfig } from 'axios';
-import { setGlobalToken, parseSDKError } from './custom-instance';
+import { setGlobalToken, parseSDKError, customInstance } from './custom-instance';
 import { getSkyrmeChatAPI } from './generated/v3-server';
 import type {
   V3ProvisionWorkspaceDto,
@@ -935,6 +935,60 @@ export class ScrymeSDK {
         ): Promise<V3DeleteWorkspaceMemberResponse> => {
           return this.raw.v3WorkspacesControllerDeleteWorkspaceMember(slug, memberId, options) as unknown as V3DeleteWorkspaceMemberResponse;
         },
+        /**
+         * Bulk imports members from an external system into a workspace.
+         * @param slug Unique workspace slug.
+         * @param data Object containing array of members to import.
+         * @param options Optional request config override.
+         */
+        import: async (
+          slug: string,
+          data: {
+            members: Array<{
+              email: string;
+              name?: string;
+              avatar?: string;
+              role?: string;
+              externalId?: string;
+            }>;
+          },
+          options?: AxiosRequestConfig
+        ): Promise<{ success: boolean; data: { importedCount: number; members: any[] } }> => {
+          return customInstance({
+            url: `/api/v3/workspaces/${encodeURIComponent(slug)}/members/import`,
+            method: 'POST',
+            data,
+            headers: options?.headers,
+            ...options,
+          });
+        },
+        /**
+         * Bulk imports members from an external system into a workspace.
+         * @param slug Unique workspace slug.
+         * @param data Object containing array of members to import.
+         * @param options Optional request config override.
+         */
+        import: async (
+          slug: string,
+          data: {
+            members: Array<{
+              email: string;
+              name?: string;
+              avatar?: string;
+              role?: string;
+              externalId?: string;
+            }>;
+          },
+          options?: AxiosRequestConfig
+        ): Promise<{ success: boolean; data: { importedCount: number; members: any[] } }> => {
+          return customInstance({
+            url: `/api/v3/workspaces/${encodeURIComponent(slug)}/members/import`,
+            method: 'POST',
+            data,
+            headers: options?.headers,
+            ...options,
+          });
+        },
       },
       /**
        * Operations for listing and creating channels inside a workspace.
@@ -1570,6 +1624,28 @@ export class ScrymeSDK {
         options?: AxiosRequestConfig
       ): Promise<UserProfile[]> => {
         return this.raw.usersControllerSearchUsers(params, options) as unknown as UserProfile[];
+      },
+      /**
+       * Creates or provisions a user account via Enterprise M2M V3 API.
+       * @param data User account configuration (email, name, avatar, organizationId).
+       * @param options Optional request config override.
+       */
+      create: async (
+        data: {
+          email: string;
+          name?: string;
+          avatar?: string;
+          organizationId?: string;
+        },
+        options?: AxiosRequestConfig
+      ): Promise<{ success: boolean; data: { user: UserProfile } }> => {
+        return customInstance({
+          url: '/api/v3/users',
+          method: 'POST',
+          data,
+          headers: options?.headers,
+          ...options,
+        });
       },
     };
   }
@@ -2236,6 +2312,112 @@ export class ScrymeSDK {
           options?: AxiosRequestConfig
         ): Promise<V3DeleteWorkspaceMemberResponse> => {
           return this.raw.v3WorkspacesControllerDeleteWorkspaceMember(slug, memberId, options) as unknown as V3DeleteWorkspaceMemberResponse;
+        },
+        /**
+         * Bulk imports members from an external system into a workspace.
+         * @param slug Unique workspace slug.
+         * @param data Object containing array of members to import.
+         * @param options Optional request config override.
+         */
+        import: async (
+          slug: string,
+          data: {
+            members: Array<{
+              email: string;
+              name?: string;
+              avatar?: string;
+              role?: string;
+              externalId?: string;
+            }>;
+          },
+          options?: AxiosRequestConfig
+        ): Promise<{ success: boolean; data: { importedCount: number; members: any[] } }> => {
+          return customInstance({
+            url: `/api/v3/workspaces/${encodeURIComponent(slug)}/members/import`,
+            method: 'POST',
+            data,
+            headers: options?.headers,
+            ...options,
+          });
+        },
+        /**
+         * Bulk imports members from an external system into a workspace.
+         * @param slug Unique workspace slug.
+         * @param data Object containing array of members to import.
+         * @param options Optional request config override.
+         */
+        import: async (
+          slug: string,
+          data: {
+            members: Array<{
+              email: string;
+              name?: string;
+              avatar?: string;
+              role?: string;
+              externalId?: string;
+            }>;
+          },
+          options?: AxiosRequestConfig
+        ): Promise<{ success: boolean; data: { importedCount: number; members: any[] } }> => {
+          return customInstance({
+            url: `/api/v3/workspaces/${encodeURIComponent(slug)}/members/import`,
+            method: 'POST',
+            data,
+            headers: options?.headers,
+            ...options,
+          });
+        },
+      },
+
+      /**
+       * M2M User Account Operations (Creating/provisioning users and querying accounts).
+       */
+      user: {
+        /**
+         * Creates or provisions a new user account in the system.
+         * @param data User account details (email, name, avatar, organizationId).
+         * @param options Optional request config override.
+         */
+        create: async (
+          data: {
+            email: string;
+            name?: string;
+            avatar?: string;
+            organizationId?: string;
+          },
+          options?: AxiosRequestConfig
+        ): Promise<{ success: boolean; data: { user: UserProfile } }> => {
+          return customInstance({
+            url: '/api/v3/users',
+            method: 'POST',
+            data,
+            headers: options?.headers,
+            ...options,
+          });
+        },
+        /**
+         * Retrieves user account profile details by user ID or email.
+         * @param userIdOrEmail User ID or email address.
+         * @param options Optional request config override.
+         */
+        get: async (
+          userIdOrEmail: string,
+          options?: AxiosRequestConfig
+        ): Promise<{ success: boolean; data: { user: UserProfile } }> => {
+          if (userIdOrEmail.includes('@')) {
+            return customInstance({
+              url: `/api/v3/users/by-email?email=${encodeURIComponent(userIdOrEmail)}`,
+              method: 'GET',
+              headers: options?.headers,
+              ...options,
+            });
+          }
+          return customInstance({
+            url: `/api/v3/users/${encodeURIComponent(userIdOrEmail)}`,
+            method: 'GET',
+            headers: options?.headers,
+            ...options,
+          });
         },
       },
 
