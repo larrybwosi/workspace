@@ -962,33 +962,6 @@ export class ScrymeSDK {
             ...options,
           });
         },
-        /**
-         * Bulk imports members from an external system into a workspace.
-         * @param slug Unique workspace slug.
-         * @param data Object containing array of members to import.
-         * @param options Optional request config override.
-         */
-        import: async (
-          slug: string,
-          data: {
-            members: Array<{
-              email: string;
-              name?: string;
-              avatar?: string;
-              role?: string;
-              externalId?: string;
-            }>;
-          },
-          options?: AxiosRequestConfig
-        ): Promise<{ success: boolean; data: { importedCount: number; members: any[] } }> => {
-          return customInstance({
-            url: `/api/v3/workspaces/${encodeURIComponent(slug)}/members/import`,
-            method: 'POST',
-            data,
-            headers: options?.headers,
-            ...options,
-          });
-        },
       },
       /**
        * Operations for listing and creating channels inside a workspace.
@@ -2312,33 +2285,6 @@ export class ScrymeSDK {
           options?: AxiosRequestConfig
         ): Promise<V3DeleteWorkspaceMemberResponse> => {
           return this.raw.v3WorkspacesControllerDeleteWorkspaceMember(slug, memberId, options) as unknown as V3DeleteWorkspaceMemberResponse;
-        },
-        /**
-         * Bulk imports members from an external system into a workspace.
-         * @param slug Unique workspace slug.
-         * @param data Object containing array of members to import.
-         * @param options Optional request config override.
-         */
-        import: async (
-          slug: string,
-          data: {
-            members: Array<{
-              email: string;
-              name?: string;
-              avatar?: string;
-              role?: string;
-              externalId?: string;
-            }>;
-          },
-          options?: AxiosRequestConfig
-        ): Promise<{ success: boolean; data: { importedCount: number; members: any[] } }> => {
-          return customInstance({
-            url: `/api/v3/workspaces/${encodeURIComponent(slug)}/members/import`,
-            method: 'POST',
-            data,
-            headers: options?.headers,
-            ...options,
-          });
         },
         /**
          * Bulk imports members from an external system into a workspace.
