@@ -37,6 +37,7 @@ describe('next.config.ts rewrites', () => {
     // Ensure necessary backend API routes are proxied
     const expectedBackendPrefixes = [
       'workspaces',
+      'organizations',
       'v3',
       'v2',
       'dms',

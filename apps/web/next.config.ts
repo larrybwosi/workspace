@@ -24,6 +24,7 @@ const nextConfig = {
 
     const proxiedRoutes = [
       'workspaces',
+      'organizations',
       'v3',
       'v2',
       'dms',
