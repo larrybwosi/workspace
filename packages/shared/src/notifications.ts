@@ -56,7 +56,7 @@ export async function createNotifications(payloads: NotificationPayload[]) {
   // 2. Parallelize delivery
   const ably = getAblyRest();
   await Promise.all(
-    notifications.map(async notification => {
+    notifications.map(async (notification: any) => {
       // Real-time via Ably
       if (ably) {
         const channel = (ably as any).channels.get(AblyChannels.notifications(notification.userId));
@@ -180,8 +180,8 @@ export async function notifyMentions(
   const channelSlug = channel.slug || channelId;
 
   // 1. Resolve preferences for all mentioned users
-  const memberIdsInChannel = new Set(channel.members.map(m => m.userId));
-  const memberIdsWithoutChannelPref = channel.members.filter(m => !m.notificationPreference).map(m => m.userId);
+  const memberIdsInChannel = new Set(channel.members.map((m: any) => m.userId));
+  const memberIdsWithoutChannelPref = channel.members.filter((m: any) => !m.notificationPreference).map((m: any) => m.userId);
 
   const [workspaceMembers, users] = await Promise.all([
     workspaceId && memberIdsWithoutChannelPref.length > 0
@@ -198,8 +198,8 @@ export async function notifyMentions(
       : Promise.resolve([]),
   ]);
 
-  const workspacePrefMap = new Map(workspaceMembers.map(m => [m.userId, m.notificationPreference]));
-  const userPrefMap = new Map(users.map(u => [u.id, (u.notificationPreferences as any)?.mentions || 'all']));
+  const workspacePrefMap = new Map<string, string | null | undefined>(workspaceMembers.map((m: any) => [m.userId, m.notificationPreference]));
+  const userPrefMap = new Map<string, string>(users.map((u: any) => [u.id, (u.notificationPreferences as any)?.mentions || 'all']));
 
   const userMentions = extractUserMentions(messageContent || '');
   const channelMentions = extractChannelMentions(messageContent || '');
@@ -209,7 +209,7 @@ export async function notifyMentions(
   for (const userId of mentionedUserIds) {
     if (!memberIdsInChannel.has(userId)) continue; // Original behavior: only notify channel members
 
-    const channelMember = channel.members.find(m => m.userId === userId);
+    const channelMember = channel.members.find((m: any) => m.userId === userId);
     let preference: string | null | undefined = channelMember?.notificationPreference;
 
     if (!preference && workspaceId) {
@@ -368,7 +368,7 @@ export async function notifyChannel(
   const channelSlug = channel.slug || channelId;
 
   // 2. Fetch workspace-level and global preferences for members missing channel-level ones
-  const membersWithoutChannelPref = channel.members.filter(m => !m.notificationPreference).map(m => m.userId);
+  const membersWithoutChannelPref = channel.members.filter((m: any) => !m.notificationPreference).map((m: any) => m.userId);
 
   const [workspaceMembers, users] = await Promise.all([
     workspaceId && membersWithoutChannelPref.length > 0
@@ -385,8 +385,8 @@ export async function notifyChannel(
       : Promise.resolve([]),
   ]);
 
-  const workspacePrefMap = new Map(workspaceMembers.map(m => [m.userId, m.notificationPreference]));
-  const userPrefMap = new Map(users.map(u => [u.id, (u.notificationPreferences as any)?.mentions || 'all']));
+  const workspacePrefMap = new Map<string, string | null | undefined>(workspaceMembers.map((m: any) => [m.userId, m.notificationPreference]));
+  const userPrefMap = new Map<string, string>(users.map((u: any) => [u.id, (u.notificationPreferences as any)?.mentions || 'all']));
 
   const userMentions = extractUserMentions(messageContent || '');
   const channelMentions = extractChannelMentions(messageContent || '');
@@ -451,7 +451,7 @@ export async function notifyAppExclusive(
 
   if (!channel) return;
 
-  const payloads: NotificationPayload[] = channel.members.map(m => ({
+  const payloads: NotificationPayload[] = channel.members.map((m: any) => ({
     userId: m.userId,
     type: 'exclusive_alert',
     title,
@@ -538,7 +538,7 @@ export async function notifyNewMessage(
   const workspaceSlug = channel.workspace?.slug || 'default';
   const channelSlug = channel.slug || channelId;
 
-  const membersWithoutChannelPref = channel.members.filter(m => !m.notificationPreference).map(m => m.userId);
+  const membersWithoutChannelPref = channel.members.filter((m: any) => !m.notificationPreference).map((m: any) => m.userId);
 
   const [workspaceMembers, usersWithGlobalPrefs] = await Promise.all([
     workspaceId && membersWithoutChannelPref.length > 0
@@ -555,9 +555,9 @@ export async function notifyNewMessage(
       : Promise.resolve([]),
   ]);
 
-  const workspacePrefMap = new Map(workspaceMembers.map(m => [m.userId, m.notificationPreference]));
-  const globalPrefMap = new Map(
-    usersWithGlobalPrefs.map(u => [u.id, (u.notificationPreferences as any)?.channelMessages || 'all'])
+  const workspacePrefMap = new Map<string, string | null | undefined>(workspaceMembers.map((m: any) => [m.userId, m.notificationPreference]));
+  const globalPrefMap = new Map<string, string>(
+    usersWithGlobalPrefs.map((u: any) => [u.id, (u.notificationPreferences as any)?.channelMessages || 'all'])
   );
 
   const userMentions = extractUserMentions(content || '');

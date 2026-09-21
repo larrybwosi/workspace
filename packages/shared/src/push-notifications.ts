@@ -77,7 +77,7 @@ export async function sendPushNotification(payload: PushNotificationPayload) {
   }
 
   const results = await Promise.allSettled(
-    deviceTokens.map(async device => {
+    deviceTokens.map(async (device: any) => {
       const provider = providerRegistry.get(device.platform);
 
       const platformPayload: PlatformPushNotificationPayload = {
