@@ -1,3 +1,9 @@
+## 2026-09-21 - [Prisma/Performance] Single-Query Consolidated Organization User Context Resolution in Auth Guards
+
+**Learning:** In authentication guards (`BetterAuthGuard` and `AuthGuard`), resolving virtual user context for organization-scoped M2M tokens (`oat_...`) previously executed `prisma.botApplication.findFirst({ where: { workspace: { organizationId: orgId } } })` followed by a fallback query `prisma.workspace.findFirst({ where: { organizationId: orgId } })` if no bot application existed. Consolidating both operations into a single `prisma.workspace.findFirst({ where: { organizationId: orgId }, select: { owner: true, botApplications: { where: { botId: { not: null } }, select: { bot: true }, take: 1 } } })` query cuts database round-trips from 2 to 1 and leverages direct indexing on `Workspace.organizationId`.
+
+**Action:** Consolidate sequential fallback entity lookups (like system bot or workspace owner context resolution) into single parent queries with nested `select` projections.
+
 ## 2026-09-19 - [Prisma/Performance] Deterministic Primary Key Upsert for System Bot Context Resolution
 
 **Learning:** In `V3DmsController.resolveEffectiveUserId`, resolving the fallback system bot user for M2M contexts previously executed `prisma.user.findFirst({ where: { isBot: true } })`. Because `isBot` on `User` is a non-unique boolean flag, `findFirst` forced an index/table scan across the `User` table. Furthermore, if no bot existed, a random bot ID was created. Replacing `findFirst` with `prisma.user.upsert` using a deterministic primary key (`id: 'system_bot_v3_m2m'`) turns the query into a direct O(1) B-tree primary key point lookup and eliminates random ID generation for system bot context.

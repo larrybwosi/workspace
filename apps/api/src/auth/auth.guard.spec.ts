@@ -73,8 +73,9 @@ describe('AuthGuard', () => {
       expiresAt: new Date(Date.now() + 3600000),
     });
 
-    (prisma.botApplication.findFirst as any).mockResolvedValue({
-      bot: { id: 'bot-user-1', name: 'Bot User' },
+    (prisma.workspace.findFirst as any).mockResolvedValue({
+      owner: null,
+      botApplications: [{ bot: { id: 'bot-user-1', name: 'Bot User' } }],
     });
 
     const context = createMockContext({ authorization: `Bearer ${rawToken}` });
@@ -85,6 +86,32 @@ describe('AuthGuard', () => {
     expect(req.user).toEqual({ id: 'bot-user-1', name: 'Bot User' });
     expect(req.session).toBeDefined();
     expect(req.session.id).toBe('token-1');
+  });
+
+  it('should fallback to workspace owner if workspace has no bot application', async () => {
+    const rawToken = 'oat_test456';
+    const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
+
+    (prisma.oAuthAccessToken.findUnique as any).mockResolvedValue({
+      id: 'token-2',
+      token: hashedToken,
+      clientId: 'client-123',
+      userId: null,
+      referenceId: 'm2m:org-456',
+      expiresAt: new Date(Date.now() + 3600000),
+    });
+
+    (prisma.workspace.findFirst as any).mockResolvedValue({
+      owner: { id: 'owner-user-1', name: 'Workspace Owner' },
+      botApplications: [],
+    });
+
+    const context = createMockContext({ authorization: `Bearer ${rawToken}` });
+    const result = await guard.canActivate(context);
+
+    expect(result).toBe(true);
+    const req = context.switchToHttp().getRequest();
+    expect(req.user).toEqual({ id: 'owner-user-1', name: 'Workspace Owner' });
   });
 
   it('should throw UnauthorizedException if oat_ token is expired', async () => {
