@@ -14,10 +14,16 @@ export class ProvisioningService {
           throw new BadRequestException(`Workspace slug "${data.slug}" is already taken. Please choose a unique slug.`);
         }
 
-        // Find owner
-        const owner = await tx.user.findUnique({ where: { email: data.ownerEmail } });
+        // Find or create owner
+        let owner = await tx.user.findUnique({ where: { email: data.ownerEmail } });
         if (!owner) {
-          throw new BadRequestException(`Owner user with email "${data.ownerEmail}" not found. Please ensure the user exists in your organization before provisioning.`);
+          const name = data.ownerEmail.split('@')[0] || data.ownerEmail;
+          owner = await tx.user.create({
+            data: {
+              email: data.ownerEmail,
+              name,
+            },
+          });
         }
 
         // If M2M, verify owner belongs to organization
@@ -83,7 +89,17 @@ export class ProvisioningService {
         // 3. Add initial members
         if (data.initialMembers && data.initialMembers.length > 0) {
           for (const member of data.initialMembers) {
-            const user = await tx.user.findUnique({ where: { email: member.email } });
+            let user = await tx.user.findUnique({ where: { email: member.email } });
+            if (!user) {
+              const name = member.email.split('@')[0] || member.email;
+              user = await tx.user.create({
+                data: {
+                  email: member.email,
+                  name,
+                },
+              });
+            }
+
             if (user) {
               // Verify member belongs to organization if M2M
               if (context.organizationId) {
