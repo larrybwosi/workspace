@@ -388,13 +388,13 @@ async function notifyCallParticipants(call: any, timeLabel: string) {
       where: { channelId },
       select: { userId: true },
     });
-    userIds = members.map(m => m.userId);
+    userIds = members.map((m: any) => m.userId);
   } else if (workspaceId) {
     const members = await prisma.workspaceMember.findMany({
       where: { workspaceId },
       select: { userId: true },
     });
-    userIds = members.map(m => m.userId);
+    userIds = members.map((m: any) => m.userId);
   }
 
   const workspace = workspaceId
