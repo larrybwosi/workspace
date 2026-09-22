@@ -93,7 +93,7 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: false,
-    async sendVerificationEmail({ user, url }) {
+    async sendVerificationEmail({ user, url }: { user: any; url: string }) {
       await sendVerificationEmail({
         to: user.email,
         url,
@@ -103,7 +103,7 @@ export const auth = betterAuth({
         },
       });
     },
-    async sendResetPassword({ user, url }) {
+    async sendResetPassword({ user, url }: { user: any; url: string }) {
       await sendSetPasswordEmail({
         to: user.email,
         url,

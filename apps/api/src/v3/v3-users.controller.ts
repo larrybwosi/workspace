@@ -130,7 +130,7 @@ export class V3UsersController {
 
         let resetPasswordUrl: string;
         try {
-          const tokenRes = await auth.api.forgetPassword({
+          const tokenRes = await (auth.api as any).requestPasswordReset({
             body: { email: user.email, redirectTo: `${appUrl}/reset-password` },
           });
           resetPasswordUrl = (tokenRes as any)?.url || `${appUrl}/reset-password?email=${encodeURIComponent(user.email)}`;

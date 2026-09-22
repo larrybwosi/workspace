@@ -30,7 +30,7 @@ vi.mock('@repo/shared', async (importOriginal) => {
 vi.mock('@repo/auth', () => ({
   auth: {
     api: {
-      forgetPassword: vi.fn().mockResolvedValue({ url: 'http://localhost:3001/reset-password?token=mock' }),
+      requestPasswordReset: vi.fn().mockResolvedValue({ url: 'http://localhost:3001/reset-password?token=mock' }),
     },
   },
 }));
@@ -77,7 +77,7 @@ describe('V3UsersController', () => {
         },
       });
 
-      expect(auth.api.forgetPassword).toHaveBeenCalledWith({
+      expect((auth.api as any).requestPasswordReset).toHaveBeenCalledWith({
         body: { email: 'new@example.com', redirectTo: 'http://localhost:3001/reset-password' },
       });
 
