@@ -18,6 +18,8 @@ import { V3ExceptionFilter } from './v3-exception.filter';
 import { ApiV3Guard, ApiV3Context } from '../auth/api-v3.guard';
 import { V3Context } from '../auth/v3-context.decorator';
 import { prisma } from '@repo/database';
+import { sendSetPasswordEmail, validateEnv } from '@repo/shared';
+import { auth } from '@repo/auth';
 import { IsString, IsOptional, IsEmail } from 'class-validator';
 
 export class V3CreateUserDto {
@@ -80,11 +82,13 @@ export class V3UsersController {
       throw new BadRequestException('email is required');
     }
 
+    let isNewUser = false;
     let user = await prisma.user.findUnique({
       where: { email: body.email },
     });
 
     if (!user) {
+      isNewUser = true;
       const userName = body.name || body.email.split('@')[0] || body.email;
       user = await prisma.user.create({
         data: {
@@ -116,6 +120,35 @@ export class V3UsersController {
             role: 'member',
           },
         });
+      }
+    }
+
+    if (isNewUser) {
+      try {
+        const env = validateEnv();
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || (env as any).NEXT_PUBLIC_APP_URL || 'http://localhost:3001';
+
+        let resetPasswordUrl: string;
+        try {
+          const tokenRes = await auth.api.forgetPassword({
+            body: { email: user.email, redirectTo: `${appUrl}/reset-password` },
+          });
+          resetPasswordUrl = (tokenRes as any)?.url || `${appUrl}/reset-password?email=${encodeURIComponent(user.email)}`;
+        } catch (e) {
+          resetPasswordUrl = `${appUrl}/reset-password?email=${encodeURIComponent(user.email)}`;
+        }
+
+        await sendSetPasswordEmail({
+          to: user.email,
+          url: resetPasswordUrl,
+          user: {
+            name: user.name,
+            email: user.email,
+          },
+          isNewUser: true,
+        });
+      } catch (err) {
+        this.logger.error(`Failed to send set password email for ${user.email}`, err);
       }
     }
 

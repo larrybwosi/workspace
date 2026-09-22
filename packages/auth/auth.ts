@@ -4,7 +4,7 @@ import { prisma } from '@repo/database';
 import { admin, bearer, deviceAuthorization, jwt, organization, username } from 'better-auth/plugins';
 import { oauthProvider } from '@better-auth/oauth-provider';
 import { nextCookies } from 'better-auth/next-js';
-import { validateEnv } from '@repo/shared';
+import { validateEnv, sendVerificationEmail, sendSetPasswordEmail } from '@repo/shared';
 
 const env = validateEnv();
 
@@ -93,6 +93,27 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: false,
+    async sendVerificationEmail({ user, url }) {
+      await sendVerificationEmail({
+        to: user.email,
+        url,
+        user: {
+          name: user.name,
+          email: user.email,
+        },
+      });
+    },
+    async sendResetPassword({ user, url }) {
+      await sendSetPasswordEmail({
+        to: user.email,
+        url,
+        user: {
+          name: user.name,
+          email: user.email,
+        },
+        isNewUser: false,
+      });
+    },
   },
 
   socialProviders: {
