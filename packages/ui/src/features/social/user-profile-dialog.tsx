@@ -12,7 +12,7 @@ import type { User } from '../../lib/types';
 import { cn } from '../../lib/utils';
 import { useState } from 'react';
 import { EditProfileModal } from './edit-profile-modal';
-import { useSession } from '@repo/shared';
+import { useSession, signOut } from '@repo/shared';
 
 interface UserProfileDialogProps {
   user: User & { banner?: string; statusText?: string; statusEmoji?: string };
@@ -166,7 +166,7 @@ export function UserProfileDialog({ user, open, onOpenChange }: UserProfileDialo
                         variant="outline"
                         className="flex-1 gap-2 bg-muted/50 h-10 border-none text-destructive hover:bg-destructive/10"
                         onClick={() => {
-                          window.location.href = '/api/auth/sign-out';
+                          signOut({ fetchOptions: { onSuccess: () => { window.location.href = '/login'; } } });
                         }}
                       >
                         <LogOut className="h-4 w-4" />

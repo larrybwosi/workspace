@@ -7,9 +7,10 @@ import { Sidebar } from '@/components/layout/sidebar';
 import { DynamicHeader } from '@/components/layout/dynamic-header';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Building2, LayoutGrid, KeySquare, Settings as SettingsIcon, TriangleAlert } from 'lucide-react';
+import { Building2, LayoutGrid, KeySquare, Settings as SettingsIcon, Users, TriangleAlert } from 'lucide-react';
 import { WorkspacesTab } from './workspaces-tab';
 import { M2mTab } from './m2m-tab';
+import { MembersTab } from './members-tab';
 import { GeneralTab as OrganizationGeneralTab } from '@repo/ui';
 
 export default function OrganizationSettingsClient() {
@@ -17,7 +18,7 @@ export default function OrganizationSettingsClient() {
   const orgSlug = params?.slug as string;
   const { data: organization, isLoading } = useOrganization(orgSlug);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [activeTab, setActiveTab] = useState('workspaces');
+  const [activeTab, setActiveTab] = useState('members');
 
   return (
     <div className="h-screen flex overflow-hidden bg-background">
@@ -49,7 +50,7 @@ export default function OrganizationSettingsClient() {
                     <div>
                       <h1 className="text-3xl font-bold tracking-tight">{organization.name}</h1>
                       <p className="text-muted-foreground">
-                        Manage your organization's workspaces and programmatic access
+                        Manage your organization's members, workspaces, and programmatic access
                       </p>
                     </div>
                   </div>
@@ -57,6 +58,10 @@ export default function OrganizationSettingsClient() {
 
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
                   <TabsList className="bg-muted/50 p-1">
+                    <TabsTrigger value="members" className="flex items-center gap-2">
+                      <Users className="size-4" />
+                      Members & Invitations
+                    </TabsTrigger>
                     <TabsTrigger value="workspaces" className="flex items-center gap-2">
                       <LayoutGrid className="size-4" />
                       Workspaces
@@ -70,6 +75,9 @@ export default function OrganizationSettingsClient() {
                       General
                     </TabsTrigger>
                   </TabsList>
+                  <TabsContent value="members" className="space-y-4">
+                    <MembersTab orgSlug={orgSlug} />
+                  </TabsContent>
                   <TabsContent value="workspaces" className="space-y-4">
                     <WorkspacesTab orgSlug={orgSlug} />
                   </TabsContent>

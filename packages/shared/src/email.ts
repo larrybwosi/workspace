@@ -141,3 +141,59 @@ export async function sendSetPasswordEmail(options: SendSetPasswordEmailOptions)
     html,
   });
 }
+
+export interface SendOrganizationInviteEmailOptions {
+  to: string;
+  url: string;
+  organizationName: string;
+  inviterName?: string;
+  role?: string;
+}
+
+/**
+ * Sends an organization invitation email to a user.
+ */
+export async function sendOrganizationInviteEmail(options: SendOrganizationInviteEmailOptions) {
+  const { to, url, organizationName, inviterName, role } = options;
+  const resend = getResendClient();
+  const from = getFromEmail();
+
+  const inviterText = inviterName ? `${inviterName} has invited you` : 'You have been invited';
+  const roleText = role ? ` as ${role}` : '';
+  const subject = `Invitation to join ${organizationName} on Scrymechat`;
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <title>${subject}</title>
+      </head>
+      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f4f4f5; padding: 40px 20px; margin: 0;">
+        <div style="max-width: 560px; margin: 0 auto; background: #ffffff; border-radius: 8px; padding: 32px; border: 1px solid #e4e4e7;">
+          <h2 style="color: #18181b; margin-top: 0;">Organization Invitation</h2>
+          <p style="color: #52525b; font-size: 16px; line-height: 1.5;">${inviterText} to join <strong>${organizationName}</strong>${roleText} on Scrymechat.</p>
+          <p style="color: #52525b; font-size: 16px; line-height: 1.5;">Click the button below to accept the invitation and join the organization:</p>
+          <div style="margin: 32px 0;">
+            <a href="${url}" style="background-color: #18181b; color: #ffffff; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 500; display: inline-block;">Accept Invitation</a>
+          </div>
+          <p style="color: #71717a; font-size: 14px; line-height: 1.5;">If you did not expect this invitation, you can safely ignore this email.</p>
+          <hr style="border: none; border-top: 1px solid #e4e4e7; margin: 24px 0;" />
+          <p style="color: #a1a1aa; font-size: 12px; margin: 0;">Or copy and paste this link into your browser: <br/><a href="${url}" style="color: #2563eb;">${url}</a></p>
+        </div>
+      </body>
+    </html>
+  `;
+
+  if (!resend) {
+    console.log(`[Resend Mock Email] Organization Invite Email to: ${to}, org: ${organizationName}, link: ${url}`);
+    return { id: 'mock-email-id' };
+  }
+
+  return await resend.emails.send({
+    from,
+    to: [to],
+    subject,
+    html,
+  });
+}
