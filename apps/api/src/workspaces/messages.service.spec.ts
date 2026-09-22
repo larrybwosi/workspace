@@ -250,4 +250,127 @@ describe('MessagesService', () => {
       ).rejects.toThrow('Action already responded');
     });
   });
+
+  describe('updateMessage', () => {
+    it('should update message successfully when user is author and channel matches', async () => {
+      (prisma.channel.findUnique as any).mockResolvedValue({
+        id: 'chan-1',
+        workspaceId: 'ws-1',
+        isPrivate: false,
+        members: [],
+      });
+
+      const existingMessage = { id: 'msg-1', channelId: 'chan-1', userId: 'user-1', content: 'Old' };
+      const updatedMessage = { ...existingMessage, content: 'New', isEdited: true };
+
+      (prisma.message.findUnique as any).mockResolvedValue(existingMessage);
+      (prisma.message.update as any).mockResolvedValue(updatedMessage);
+
+      const result = await service.updateMessage('user-1', 'msg-1', 'New', 'chan-1', 'ws-1');
+      expect(result).toEqual(updatedMessage);
+    });
+
+    it('should throw NotFoundException when message does not belong to target channel', async () => {
+      (prisma.channel.findUnique as any).mockResolvedValue({
+        id: 'chan-1',
+        workspaceId: 'ws-1',
+        isPrivate: false,
+        members: [],
+      });
+
+      const existingMessage = { id: 'msg-1', channelId: 'chan-other', userId: 'user-1', content: 'Old' };
+      (prisma.message.findUnique as any).mockResolvedValue(existingMessage);
+
+      await expect(
+        service.updateMessage('user-1', 'msg-1', 'New', 'chan-1', 'ws-1')
+      ).rejects.toThrow('Message not found in this channel');
+    });
+
+    it('should throw ForbiddenException when updating another user message', async () => {
+      (prisma.channel.findUnique as any).mockResolvedValue({
+        id: 'chan-1',
+        workspaceId: 'ws-1',
+        isPrivate: false,
+        members: [],
+      });
+
+      const existingMessage = { id: 'msg-1', channelId: 'chan-1', userId: 'user-author', content: 'Old' };
+      (prisma.message.findUnique as any).mockResolvedValue(existingMessage);
+
+      await expect(
+        service.updateMessage('user-attacker', 'msg-1', 'Hacked', 'chan-1', 'ws-1')
+      ).rejects.toThrow('You can only update your own messages');
+    });
+
+    it('should throw ForbiddenException when user is not a member of private channel', async () => {
+      (prisma.channel.findUnique as any).mockResolvedValue({
+        id: 'chan-private',
+        workspaceId: 'ws-1',
+        isPrivate: true,
+        type: 'private',
+        members: [],
+      });
+
+      await expect(
+        service.updateMessage('user-1', 'msg-1', 'New', 'chan-private', 'ws-1')
+      ).rejects.toThrow('You do not have permission to access this private channel');
+    });
+  });
+
+  describe('deleteMessage', () => {
+    it('should delete message successfully when user is author and channel matches', async () => {
+      (prisma.channel.findUnique as any).mockResolvedValue({
+        id: 'chan-1',
+        workspaceId: 'ws-1',
+        isPrivate: false,
+        members: [],
+      });
+
+      const existingMessage = {
+        id: 'msg-1',
+        channelId: 'chan-1',
+        userId: 'user-1',
+        rootThread: null,
+        _count: { replies: 0 },
+      };
+
+      (prisma.message.findUnique as any).mockResolvedValue(existingMessage);
+      (prisma.message.delete as any).mockResolvedValue(existingMessage);
+
+      const result = await service.deleteMessage('user-1', 'msg-1', 'chan-1', 'ws-1');
+      expect(result).toEqual({ success: true });
+    });
+
+    it('should throw NotFoundException when message does not belong to target channel on delete', async () => {
+      (prisma.channel.findUnique as any).mockResolvedValue({
+        id: 'chan-1',
+        workspaceId: 'ws-1',
+        isPrivate: false,
+        members: [],
+      });
+
+      const existingMessage = { id: 'msg-1', channelId: 'chan-other', userId: 'user-1' };
+      (prisma.message.findUnique as any).mockResolvedValue(existingMessage);
+
+      await expect(
+        service.deleteMessage('user-1', 'msg-1', 'chan-1', 'ws-1')
+      ).rejects.toThrow('Message not found in this channel');
+    });
+
+    it('should throw ForbiddenException when deleting another user message', async () => {
+      (prisma.channel.findUnique as any).mockResolvedValue({
+        id: 'chan-1',
+        workspaceId: 'ws-1',
+        isPrivate: false,
+        members: [],
+      });
+
+      const existingMessage = { id: 'msg-1', channelId: 'chan-1', userId: 'user-author' };
+      (prisma.message.findUnique as any).mockResolvedValue(existingMessage);
+
+      await expect(
+        service.deleteMessage('user-attacker', 'msg-1', 'chan-1', 'ws-1')
+      ).rejects.toThrow('You can only delete your own messages');
+    });
+  });
 });
