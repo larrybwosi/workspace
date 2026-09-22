@@ -54,7 +54,19 @@ export class V3UpdateM2mApplicationDto {
   allowedIps?: string[];
 }
 
-export class V3UpdateOrganizationDto {
+export
+class V3InviteMemberDto {
+  @IsString()
+  @ApiProperty({ example: 'user@example.com' })
+  email!: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ required: false, example: 'member' })
+  role?: string;
+}
+
+class V3UpdateOrganizationDto {
   @IsString()
   @IsOptional()
   @ApiProperty({ required: false, example: 'Updated Organization Name' })
