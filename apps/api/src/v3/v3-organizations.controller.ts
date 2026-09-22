@@ -14,7 +14,8 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody, ApiProperty } from '@nestjs/swagger';
 import { ApiV3Guard } from '../auth/api-v3.guard';
-import { V3Context, ApiV3Context } from '../auth/v3-context.decorator';
+import { ApiV3Guard, ApiV3Context } from '../auth/api-v3.guard';
+import { V3Context } from '../auth/v3-context.decorator';
 import { V3ExceptionFilter } from './v3-exception.filter';
 import { prisma } from '@repo/database';
 import { z } from 'zod';
@@ -98,8 +99,9 @@ const updateOrganizationSchema = z.object({
 export class V3OrganizationsController {
   private formatResponse<T>(data: T) {
     return {
-      object: 'list',
+      success: true,
       data,
+      timestamp: new Date().toISOString(),
     };
   }
 
