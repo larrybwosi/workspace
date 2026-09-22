@@ -13,7 +13,6 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody, ApiProperty } from '@nestjs/swagger';
-import { ApiV3Guard } from '../auth/api-v3.guard';
 import { ApiV3Guard, ApiV3Context } from '../auth/api-v3.guard';
 import { V3Context } from '../auth/v3-context.decorator';
 import { V3ExceptionFilter } from './v3-exception.filter';
