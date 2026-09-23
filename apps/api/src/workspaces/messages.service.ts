@@ -346,12 +346,30 @@ export class MessagesService {
     return message;
   }
 
-  async updateMessage(userId: string, messageId: string, content: string) {
+  /**
+   * 🛡️ Security Hardening (BOLA / IDOR Mitigation & Workspace/Channel Boundary Enforcement):
+   * Verifies that the target channel exists and belongs to the workspace, validates that the message
+   * exists within that channel (existingMessage.channelId === channelId), and enforces that the requesting
+   * user is the original author of the message.
+   */
+  async updateMessage(userId: string, messageId: string, content: string, channelId?: string, workspaceId?: string) {
+    if (channelId) {
+      await this.verifyChannelAccess(channelId, userId, workspaceId);
+    }
+
     const existingMessage = await prisma.message.findUnique({
       where: { id: messageId },
     });
 
-    if (!existingMessage || existingMessage.userId !== userId) {
+    if (!existingMessage) {
+      throw new NotFoundException('Message not found');
+    }
+
+    if (channelId && existingMessage.channelId !== channelId) {
+      throw new NotFoundException('Message not found in this channel');
+    }
+
+    if (existingMessage.userId !== userId) {
       throw new ForbiddenException('You can only update your own messages');
     }
 
@@ -380,7 +398,17 @@ export class MessagesService {
     return message;
   }
 
-  async deleteMessage(userId: string, messageId: string) {
+  /**
+   * 🛡️ Security Hardening (BOLA / IDOR Mitigation & Workspace/Channel Boundary Enforcement):
+   * Verifies that the target channel exists and belongs to the workspace, validates that the message
+   * exists within that channel (existingMessage.channelId === channelId), and enforces that the requesting
+   * user is the original author of the message.
+   */
+  async deleteMessage(userId: string, messageId: string, channelId?: string, workspaceId?: string) {
+    if (channelId) {
+      await this.verifyChannelAccess(channelId, userId, workspaceId);
+    }
+
     const existingMessage = await prisma.message.findUnique({
       where: { id: messageId },
       include: {
@@ -396,11 +424,15 @@ export class MessagesService {
       throw new NotFoundException('Message not found');
     }
 
+    if (channelId && existingMessage.channelId !== channelId) {
+      throw new NotFoundException('Message not found in this channel');
+    }
+
     if (existingMessage.userId !== userId) {
       throw new ForbiddenException('You can only delete your own messages');
     }
 
-    const channelId = existingMessage.channelId;
+    const targetChannelId = existingMessage.channelId;
 
     if (existingMessage.rootThread) {
       await prisma.thread.delete({
@@ -425,9 +457,9 @@ export class MessagesService {
      * ⚡ Performance Optimization:
      * Background the realtime publishing to avoid blocking the deletion response.
      */
-    publishRealtime(AblyChannels.channel(channelId), AblyEvents.MESSAGE_DELETED, {
+    publishRealtime(AblyChannels.channel(targetChannelId), AblyEvents.MESSAGE_DELETED, {
       id: messageId,
-      channelId,
+      channelId: targetChannelId,
       threadId: existingMessage.rootThread?.id,
     }).catch(err => this.logger.error('Failed to publish message deletion:', err));
 
