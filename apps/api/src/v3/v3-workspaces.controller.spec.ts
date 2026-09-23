@@ -873,7 +873,7 @@ describe('V3WorkspacesController', () => {
 
     describe('deleteWorkspaceMember', () => {
       it('should delete member by member identifier and invalidate caches', async () => {
-        const mockWorkspace = { ownerId: 'owner-id' };
+        const mockWorkspace = { id: 'ws-123', ownerId: 'owner-id' };
         const mockMember = { id: 'wsm-1', userId: 'user-1', workspaceId: 'ws-123' };
         const mockUser = { id: 'user-1' };
 
@@ -887,10 +887,6 @@ describe('V3WorkspacesController', () => {
         const result = await controller.deleteWorkspaceMember(context as any, 'acme-slug', 'user-1@example.com');
 
         expect(result.success).toBe(true);
-        expect(prisma.workspace.findUnique).toHaveBeenCalledWith({
-          where: { id: 'ws-123' },
-          select: { ownerId: true },
-        });
         expect(prisma.workspaceMember.delete).toHaveBeenCalledWith({
           where: { id: 'wsm-1' },
         });
@@ -899,7 +895,7 @@ describe('V3WorkspacesController', () => {
       });
 
       it('should throw BadRequestException if member to delete is the owner', async () => {
-        const mockWorkspace = { ownerId: 'owner-id' };
+        const mockWorkspace = { id: 'ws-123', ownerId: 'owner-id' };
         const mockMember = { id: 'wsm-owner', userId: 'owner-id', workspaceId: 'ws-123' };
 
         (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);

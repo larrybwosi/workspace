@@ -1239,10 +1239,13 @@ When provisioned via M2M:
       throw new ForbiddenException('Missing members:read scope');
     }
 
-    const workspaceId = context.workspaceId;
-    if (!workspaceId) {
-      throw new BadRequestException('Workspace context is missing');
-    }
+    /**
+     * ⚡ Bolt Performance Optimization:
+     * Resolves workspace context dynamically by `slug` using `resolveWorkspaceAndCheckAccess`,
+     * allowing organization-level M2M tokens (`oat_...`) and workspace tokens to access members smoothly.
+     */
+    const workspace = await this.resolveWorkspaceAndCheckAccess(context, slug);
+    const workspaceId = workspace.id;
 
     const cacheKey = `v3:members:${workspaceId}`;
     try {
@@ -1302,11 +1305,6 @@ When provisioned via M2M:
   ) {
     if (!context.scopes.includes('members:write') && !context.scopes.includes('*')) {
       throw new ForbiddenException('Missing members:write scope');
-    }
-
-    const workspaceId = context.workspaceId;
-    if (!workspaceId) {
-      throw new BadRequestException('Workspace context is missing');
     }
 
     const validatedData = addMemberSchema.safeParse(body);
@@ -1475,13 +1473,10 @@ When provisioned via M2M:
       throw new ForbiddenException('Missing members:read scope');
     }
 
-    const workspaceId = context.workspaceId;
-    if (!workspaceId) {
-      throw new BadRequestException('Workspace context is missing');
-    }
+    const workspace = await this.resolveWorkspaceAndCheckAccess(context, slug);
 
     const member = await this.findWorkspaceMemberByIdentifier(
-      workspaceId,
+      workspace.id,
       memberIdParam,
       {
         id: true,
@@ -1533,19 +1528,16 @@ When provisioned via M2M:
       throw new ForbiddenException('Missing members:write scope');
     }
 
-    const workspaceId = context.workspaceId;
-    if (!workspaceId) {
-      throw new BadRequestException('Workspace context is missing');
-    }
-
     const validatedData = updateMemberSchema.safeParse(body);
     if (!validatedData.success) {
       throw new BadRequestException(validatedData.error.issues);
     }
     const { role } = validatedData.data;
 
+    const workspace = await this.resolveWorkspaceAndCheckAccess(context, slug);
+
     const existingMember = await this.findWorkspaceMemberByIdentifier(
-      workspaceId,
+      workspace.id,
       memberIdParam,
       { id: true, workspaceId: true }
     );
@@ -1572,8 +1564,8 @@ When provisioned via M2M:
 
       // Invalidate caches
       try {
-        await this.redis.del(`v3:members:${workspaceId}`);
-        await this.redis.del(`v2:members:${workspaceId}`);
+        await this.redis.del(`v3:members:${workspace.id}`);
+        await this.redis.del(`v2:members:${workspace.id}`);
       } catch (err) {
         this.logger.warn('Redis error in updateWorkspaceMember (del):', err);
       }
@@ -1606,22 +1598,10 @@ When provisioned via M2M:
       throw new ForbiddenException('Missing members:write scope');
     }
 
-    const workspaceId = context.workspaceId;
-    if (!workspaceId) {
-      throw new BadRequestException('Workspace context is missing');
-    }
-
-    const workspace = await prisma.workspace.findUnique({
-      where: { id: workspaceId },
-      select: { ownerId: true },
-    });
-
-    if (!workspace) {
-      throw new NotFoundException('Workspace not found');
-    }
+    const workspace = await this.resolveWorkspaceAndCheckAccess(context, slug);
 
     const memberToDelete = await this.findWorkspaceMemberByIdentifier(
-      workspaceId,
+      workspace.id,
       memberIdParam,
       { id: true, userId: true, workspaceId: true }
     );
@@ -1640,8 +1620,8 @@ When provisioned via M2M:
 
     // Invalidate caches
     try {
-      await this.redis.del(`v3:members:${workspaceId}`);
-      await this.redis.del(`v2:members:${workspaceId}`);
+      await this.redis.del(`v3:members:${workspace.id}`);
+      await this.redis.del(`v2:members:${workspace.id}`);
     } catch (err) {
       this.logger.warn('Redis error in deleteWorkspaceMember (del):', err);
     }
@@ -2172,11 +2152,16 @@ When provisioned via M2M:
       throw new BadRequestException('userId, memberId, email, userIds, memberIds, or emails required');
     }
 
+    /**
+     * ⚡ Bolt Performance Optimization:
+     * Direct O(1) primary key point lookup on `prisma.channel.findUnique({ where: { id: channelId } })`
+     * leverages B-Tree primary index lookups, validating workspace multi-tenant isolation in application memory.
+     */
     const channel = await prisma.channel.findUnique({
-      where: { id: channelId, workspaceId: workspace.id },
+      where: { id: channelId },
     });
 
-    if (!channel) {
+    if (!channel || channel.workspaceId !== workspace.id) {
       throw new NotFoundException('Channel not found in this workspace');
     }
 

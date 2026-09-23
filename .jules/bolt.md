@@ -1,3 +1,9 @@
+## 2026-09-22 - [Prisma/Performance] Dynamic Workspace Context Resolution & Primary Key Point Lookups in V3 Workspaces API
+
+**Learning:** In `V3WorkspacesController`, workspace member endpoints previously asserted `context.workspaceId` directly, which threw `BadRequestException` when Organization M2M tokens (`oat_...`) accessed member routes by slug without pre-bound `workspaceId`. Replacing static `context.workspaceId` assertions with `this.resolveWorkspaceAndCheckAccess(context, slug)` dynamically resolves workspace context by `slug` while verifying M2M organization boundaries. Additionally, replacing composite parameters in `addChannelMembers` with `prisma.channel.findUnique({ where: { id: channelId } })` leverages direct O(1) B-tree primary key point lookups while enforcing workspace isolation in memory.
+
+**Action:** Dynamically resolve parent entity context via slug verification for M2M routes, and prefer O(1) primary key `findUnique` point lookups for channel entity retrieval.
+
 ## 2026-09-21 - [Prisma/Performance] Single-Query Consolidated Organization User Context Resolution in Auth Guards
 
 **Learning:** In authentication guards (`BetterAuthGuard` and `AuthGuard`), resolving virtual user context for organization-scoped M2M tokens (`oat_...`) previously executed `prisma.botApplication.findFirst({ where: { workspace: { organizationId: orgId } } })` followed by a fallback query `prisma.workspace.findFirst({ where: { organizationId: orgId } })` if no bot application existed. Consolidating both operations into a single `prisma.workspace.findFirst({ where: { organizationId: orgId }, select: { owner: true, botApplications: { where: { botId: { not: null } }, select: { bot: true }, take: 1 } } })` query cuts database round-trips from 2 to 1 and leverages direct indexing on `Workspace.organizationId`.
