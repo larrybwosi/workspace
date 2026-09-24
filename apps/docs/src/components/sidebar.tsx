@@ -10,6 +10,7 @@ export function Sidebar({ type }: { type: 'user-guide' | 'api-reference' }) {
         { href: '/user-guide/joining-workspace', label: 'Joining a Workspace', category: 'Getting Started' },
         { href: '/user-guide/sending-messages', label: 'Sending Messages', category: 'Basics' },
         { href: '/user-guide/custom-messages', label: 'Custom Messages', category: 'Basics' },
+        { href: '/user-guide/message-actions-integration', label: 'Message Actions & Interactions', category: 'Integrations' },
         { href: '/user-guide/making-calls', label: 'Making Calls', category: 'Advanced' },
         { href: '/user-guide/inviting-members', label: 'Inviting Members', category: 'Advanced' },
         { href: '/user-guide/webhooks', label: 'Webhook Integrations', category: 'Integrations' },
