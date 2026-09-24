@@ -1823,3 +1823,12 @@ model ShortUrl {
 
   @@map("short_urls")
 }
+
+model ScrymeConfiguration {
+  id              String   @id @default(cuid())
+  channelMappings Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("scryme_configuration")
+}
