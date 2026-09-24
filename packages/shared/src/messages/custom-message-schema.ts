@@ -125,7 +125,9 @@ export const MessageNodeSchema: z.ZodType<MessageNode> = z.lazy(() =>
     id: z.string().optional(),
     properties: z.record(z.string(), z.any()).optional(),
     children: z.array(MessageNodeSchema).optional(),
-    condition: ConditionSchema.optional(),
+    allowMultipleResponses: z.boolean().optional(),
+  allowMultiple: z.boolean().optional(),
+  condition: ConditionSchema.optional(),
     validation: ValidationSchema.optional(),
     metadata: z.record(z.string(), z.any()).optional(),
   })
@@ -172,6 +174,8 @@ export const MessageActionSchema = z.object({
     includeFormState: z.boolean().default(true).optional(),
   }),
   /** Optional visibility condition for displaying this action button */
+  allowMultipleResponses: z.boolean().optional(),
+  allowMultiple: z.boolean().optional(),
   condition: ConditionSchema.optional(),
 });
 

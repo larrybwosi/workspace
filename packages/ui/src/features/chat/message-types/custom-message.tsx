@@ -477,50 +477,61 @@ const CustomMessageActions = memo(({
   data,
   handleAction,
   loadingAction,
-  externalLoading
+  externalLoading,
+  respondedActionIds,
 }: {
   actions: any[],
   formValues: any,
   data: any,
   handleAction: (action: any) => void,
   loadingAction: string | null,
-  externalLoading: boolean
+  externalLoading: boolean,
+  respondedActionIds: Set<string>,
 }) => {
   const { customIcons } = useUI();
   return (
     <div className="p-4 border-t bg-card/30 flex flex-wrap gap-2">
       {actions
         .filter(action => evaluateCondition(action.condition, formValues, data))
-        .map(action => (
-          <Button
-            key={action.id}
-            variant={
-              action.type === 'PRIMARY'
-                ? 'default'
-                : action.type === 'DESTRUCTIVE'
-                  ? 'destructive'
-                  : action.type === 'GHOST'
-                    ? 'ghost'
-                    : 'outline'
-            }
-            size="sm"
-            className="flex-1 sm:flex-none h-9 gap-2"
-            onClick={() => handleAction(action)}
-            disabled={loadingAction !== null || externalLoading}
-          >
-            {(loadingAction === action.id || (externalLoading && !loadingAction)) ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              getIcon(action.icon, 'w-3.5 h-3.5', customIcons)
-            )}
-            {resolveVariables(action.label, data, formValues)}
-          </Button>
-        ))}
+        .map(action => {
+          const allowMultiple = action.allowMultipleResponses ?? action.allowMultiple ?? false;
+          const isResponded = respondedActionIds.has(action.id);
+          const isDisabled = (isResponded && !allowMultiple) || loadingAction !== null || externalLoading;
+
+          return (
+            <Button
+              key={action.id}
+              variant={
+                isResponded && !allowMultiple
+                  ? 'secondary'
+                  : action.type === 'PRIMARY'
+                    ? 'default'
+                    : action.type === 'DESTRUCTIVE'
+                      ? 'destructive'
+                      : action.type === 'GHOST'
+                        ? 'ghost'
+                        : 'outline'
+              }
+              size="sm"
+              className="flex-1 sm:flex-none h-9 gap-2"
+              onClick={() => handleAction(action)}
+              disabled={isDisabled}
+            >
+              {(loadingAction === action.id || (externalLoading && !loadingAction)) ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : isResponded && !allowMultiple ? (
+                <Check className="w-3.5 h-3.5 text-emerald-500" />
+              ) : (
+                getIcon(action.icon, 'w-3.5 h-3.5', customIcons)
+              )}
+              {resolveVariables(action.label, data, formValues)}
+              {isResponded && !allowMultiple && <span className="text-xs opacity-75">(Submitted)</span>}
+            </Button>
+          );
+        })}
     </div>
   );
 });
-
-CustomMessageActions.displayName = 'CustomMessageActions';
 
 // --- Main Component ---
 
@@ -537,6 +548,16 @@ export function CustomMessage({
   const [loadingAction, setLoadingAction] = React.useState<string | null>(null);
   const [formValues, setFormValues] = React.useState<Record<string, any>>({});
   const [errors, setErrors] = React.useState<Record<string, string>>({});
+  const [respondedActionIds, setRespondedActionIds] = React.useState<Set<string>>(() => {
+    const set = new Set<string>();
+    if (Array.isArray(message.actionResponses)) {
+      message.actionResponses.forEach((r: any) => {
+        if (r.actionId) set.add(r.actionId);
+        if (r.actionValue) set.add(r.actionValue);
+      });
+    }
+    return set;
+  });
 
   const setValue = React.useCallback((id: string, value: any) => {
     setFormValues(prev => ({ ...prev, [id]: value }));
@@ -589,6 +610,7 @@ export function CustomMessage({
         };
         if (action.handler.includeFormState) payload.formState = formValues;
         await onAction(action.id, payload);
+        setRespondedActionIds(prev => new Set(prev).add(action.id));
       }
     } catch (e) {
       console.error('Action failed', e);
@@ -640,6 +662,7 @@ export function CustomMessage({
                 handleAction={handleAction}
                 loadingAction={loadingAction}
                 externalLoading={externalLoading}
+                respondedActionIds={respondedActionIds}
               />
             )}
             {readOnly && (

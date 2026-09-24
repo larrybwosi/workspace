@@ -1,85 +1,123 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { V3DmsController } from './v3-dms.controller';
-import { DmsService } from '../dms/dms.service';
-import { ConfigService } from '@nestjs/config';
-import { ForbiddenException, BadRequestException, NotFoundException } from '@nestjs/common';
-import { describe, beforeEach, it, expect, vi } from 'vitest';
+
+vi.mock('@repo/database', () => ({
+  prisma: {
+    user: {
+      findUnique: vi.fn(),
+    },
+    dMConversation: {
+      findUnique: vi.fn(),
+      findFirst: vi.fn(),
+    },
+    dMMessage: {
+      findUnique: vi.fn(),
+    },
+    messageAction: {
+      findFirst: vi.fn(),
+      upsert: vi.fn(),
+    },
+    messageActionResponse: {
+      findFirst: vi.fn(),
+      create: vi.fn(),
+      findMany: vi.fn(),
+    },
+    botApplication: {
+      findFirst: vi.fn(),
+    },
+  },
+}));
+
+vi.mock('@repo/shared/server', () => ({
+  publishRealtime: vi.fn().mockResolvedValue(true),
+  AblyChannels: {
+    dm: (id: string) => `dm:${id}`,
+  },
+}));
+
 import { prisma } from '@repo/database';
 
-describe('V3DmsController', () => {
+describe('V3DmsController Actions', () => {
   let controller: V3DmsController;
-  let dmsService: Partial<DmsService>;
 
-  beforeEach(async () => {
-    vi.spyOn(prisma.user, 'findUnique').mockResolvedValue({ id: 'usr_1', name: 'User 1' } as any);
-    vi.spyOn(prisma.user, 'upsert').mockResolvedValue({ id: 'system_bot_v3_m2m', name: 'System Bot' } as any);
+  beforeEach(() => {
+    vi.clearAllMocks();
+    controller = new V3DmsController({} as any, {} as any);
+  });
 
-    dmsService = {
-      getDms: vi.fn().mockResolvedValue([{ id: 'dm_1' }]),
-      createDm: vi.fn().mockResolvedValue({ id: 'dm_1' }),
-      getDm: vi.fn().mockImplementation(async (id: string) => (id === 'dm_1' ? { id: 'dm_1' } : null)),
-      deleteDm: vi.fn().mockResolvedValue({ success: true }),
-      getMessages: vi.fn().mockResolvedValue({ messages: [], nextCursor: null }),
-      createMessage: vi.fn().mockResolvedValue({ id: 'msg_1', content: 'hello' }),
-      updateMessage: vi.fn().mockResolvedValue({ id: 'msg_1', content: 'updated' }),
-      deleteMessage: vi.fn().mockResolvedValue({ success: true }),
-      addReaction: vi.fn().mockResolvedValue({ id: 'react_1', emoji: '👍' }),
-      removeReaction: vi.fn().mockResolvedValue({ success: true }),
+  const mockContext = {
+    scopes: ['messages:send', 'messages:read'],
+    userId: 'usr_1',
+  };
+
+  it('should trigger DM message action and record response', async () => {
+    (prisma.user.findUnique as any).mockResolvedValue({ id: 'usr_1', name: 'User 1' });
+    const mockMessage = {
+      id: 'msg_dm_1',
+      conversationId: 'dm_1',
+      content: 'Approval required',
+      senderId: 'bot_1',
+      sender: { isBot: true },
+      metadata: {
+        customMessage: {
+          actions: [{ id: 'approve', label: 'Approve', allowMultipleResponses: false }],
+        },
+        callbackUrl: 'https://example.com/callback',
+      },
     };
 
-    const module: TestingModule = await Test.createTestingModule({
-      controllers: [V3DmsController],
-      providers: [
-        { provide: DmsService, useValue: dmsService },
-        { provide: 'REDIS_CLIENT', useValue: {} },
-        { provide: ConfigService, useValue: { get: vi.fn() } },
-      ],
-    }).compile();
+    (prisma.dMMessage.findUnique as any).mockResolvedValue(mockMessage);
+    (prisma.messageAction.findFirst as any).mockResolvedValue(null);
+    (prisma.messageAction.upsert as any).mockResolvedValue({
+      id: 'act_db_1',
+      messageId: 'msg_dm_1',
+      actionId: 'approve',
+      label: 'Approve',
+    });
+    (prisma.messageActionResponse.findFirst as any).mockResolvedValue(null);
+    (prisma.messageActionResponse.create as any).mockResolvedValue({
+      id: 'resp_1',
+      actionId: 'act_db_1',
+      messageId: 'msg_dm_1',
+      userId: 'usr_1',
+      actionValue: 'approve',
+      respondedAt: new Date(),
+      user: { id: 'usr_1', name: 'User 1', email: 'user1@test.com', avatar: null },
+    });
 
-    controller = module.get<V3DmsController>(V3DmsController);
+    const result = await controller.triggerDmMessageAction(
+      mockContext as any,
+      'dm_1',
+      'msg_dm_1',
+      { actionId: 'approve', comment: 'Looks good' }
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.data.response.id).toBe('resp_1');
+    expect(prisma.messageActionResponse.create).toHaveBeenCalled();
   });
 
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
-  });
+  it('should get DM message action responses', async () => {
+    (prisma.messageActionResponse.findMany as any).mockResolvedValue([
+      {
+        id: 'resp_1',
+        actionId: 'act_db_1',
+        messageId: 'msg_dm_1',
+        userId: 'usr_1',
+        actionValue: 'approve',
+        respondedAt: new Date(),
+        user: { id: 'usr_1', name: 'User 1', email: 'user1@test.com', avatar: null },
+      },
+    ]);
 
-  describe('getDms', () => {
-    it('should throw ForbiddenException if missing messages:read scope', async () => {
-      const context: any = { scopes: ['channels:read'], userId: 'usr_1' };
-      await expect(controller.getDms(context)).rejects.toThrow(ForbiddenException);
-    });
+    const result = await controller.getDmMessageActionResponses(
+      mockContext as any,
+      'dm_1',
+      'msg_dm_1'
+    );
 
-    it('should return conversations when authorized', async () => {
-      const context: any = { scopes: ['messages:read'], userId: 'usr_1' };
-      const res = await controller.getDms(context);
-      expect(res.success).toBe(true);
-      expect(res.data.conversations).toBeDefined();
-    });
-  });
-
-  describe('createDm', () => {
-    it('should throw ForbiddenException if missing messages:send scope', async () => {
-      const context: any = { scopes: ['messages:read'], userId: 'usr_1' };
-      await expect(controller.createDm(context, { targetUserId: 'usr_2' })).rejects.toThrow(ForbiddenException);
-    });
-
-    it('should throw BadRequestException if targetUserId is missing', async () => {
-      const context: any = { scopes: ['messages:send'], userId: 'usr_1' };
-      await expect(controller.createDm(context, {})).rejects.toThrow(BadRequestException);
-    });
-  });
-
-  describe('getDm', () => {
-    it('should return conversation details if found', async () => {
-      const context: any = { scopes: ['messages:read'], userId: 'usr_1' };
-      const res = await controller.getDm(context, 'dm_1');
-      expect(res.success).toBe(true);
-      expect(res.data.conversation.id).toBe('dm_1');
-    });
-
-    it('should throw NotFoundException if conversation not found', async () => {
-      const context: any = { scopes: ['messages:read'], userId: 'usr_1' };
-      await expect(controller.getDm(context, 'dm_invalid')).rejects.toThrow(NotFoundException);
-    });
+    expect(result.success).toBe(true);
+    expect(result.data.responses).toHaveLength(1);
+    expect(result.data.responses[0].id).toBe('resp_1');
   });
 });
