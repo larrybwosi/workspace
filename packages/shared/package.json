@@ -22,6 +22,7 @@
     "ably": "^2.21.0",
     "better-auth": "1.6.20",
     "date-fns": "latest",
+    "firebase-admin": "^14.5.0",
     "react": "19.2.5",
     "resend": "^6.28.1",
     "socket.io-client": "^4.8.3",
