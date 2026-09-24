@@ -156,6 +156,13 @@ describe('ApiTokensController', () => {
 
       expect(result.id).toBe('token-created');
       expect(result.token).toMatch(/^wst_/);
+      expect(prisma.workspaceApiToken.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          workspaceId: 'ws-1',
+          name: 'Deployment Token',
+          token: expect.stringMatching(/^[a-f0-9]{64}$/),
+        }),
+      });
       expect(prisma.workspaceAuditLog.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           workspaceId: 'ws-1',
