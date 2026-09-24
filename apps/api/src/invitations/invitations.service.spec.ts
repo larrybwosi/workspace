@@ -216,4 +216,57 @@ describe('InvitationsService', () => {
       await expect(service.getInvitationByToken(token)).rejects.toThrow(NotFoundException);
     });
   });
+
+  describe('acceptInvitation', () => {
+    const token = 'test-token';
+    const mockUser = { id: 'u-123', email: 'user@example.com', name: 'Test User' } as any;
+
+    it('should throw ForbiddenException if workspace invitation email does not match user email', async () => {
+      mockPrisma.workspaceInviteLink.findUnique.mockResolvedValue(null);
+      mockPrisma.workspaceInvitation.findUnique.mockResolvedValue({
+        id: 'winv-1',
+        token,
+        email: 'attacker@example.com',
+        workspaceId: 'w-1',
+        status: 'pending',
+      });
+      mockPrisma.invitation.findUnique.mockResolvedValue(null);
+
+      await expect(service.acceptInvitation(mockUser, token)).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should throw ForbiddenException if platform invitation email does not match user email', async () => {
+      mockPrisma.workspaceInviteLink.findUnique.mockResolvedValue(null);
+      mockPrisma.workspaceInvitation.findUnique.mockResolvedValue(null);
+      mockPrisma.invitation.findUnique.mockResolvedValue({
+        id: 'inv-1',
+        token,
+        email: 'attacker@example.com',
+        status: 'pending',
+      });
+
+      await expect(service.acceptInvitation(mockUser, token)).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should successfully accept workspace invitation when email matches (case-insensitive)', async () => {
+      const mockWorkspace = { id: 'w-1', name: 'Workspace 1' };
+      mockPrisma.workspaceInviteLink.findUnique.mockResolvedValue(null);
+      mockPrisma.workspaceInvitation.findUnique.mockResolvedValue({
+        id: 'winv-1',
+        token,
+        email: 'USER@EXAMPLE.COM',
+        workspaceId: 'w-1',
+        role: 'member',
+        status: 'pending',
+        workspace: mockWorkspace,
+      });
+      mockPrisma.invitation.findUnique.mockResolvedValue(null);
+      mockPrisma.workspaceMember.findUnique.mockResolvedValue(null);
+      mockPrisma.$transaction.mockResolvedValue([{ id: 'wm-1' }, { id: 'winv-1' }]);
+
+      const result = await service.acceptInvitation(mockUser, token);
+
+      expect(result).toEqual({ success: true, workspace: mockWorkspace });
+    });
+  });
 });
