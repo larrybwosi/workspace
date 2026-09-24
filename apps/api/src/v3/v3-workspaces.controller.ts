@@ -649,7 +649,7 @@ export class V3WorkspacesController {
       (action as any)?.handler?.url;
 
     if (!callbackUrl && (message as any).user?.isBot) {
-      const app = await prisma.application.findFirst({
+      const app = await prisma.botApplication.findFirst({
         where: { botId: (message as any).userId },
         select: { interactionsUrl: true },
       });

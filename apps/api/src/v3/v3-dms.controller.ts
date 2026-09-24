@@ -418,15 +418,14 @@ export class V3DmsController {
     comment?: string,
     metadataPayload?: any
   ) {
-    const message = await prisma.dMMessage.findUnique({
+    const message = (await prisma.dMMessage.findUnique({
       where: { id: messageId },
       include: {
-        conversation: true,
         sender: true,
       },
-    });
+    })) as any;
 
-    if (!message || message.conversationId !== dmId) {
+    if (!message || (message.dmId !== dmId && message.conversationId !== dmId)) {
       throw new NotFoundException('Message not found in this DM conversation');
     }
 
@@ -494,7 +493,7 @@ export class V3DmsController {
       metaAct?.handler?.url;
 
     if (!callbackUrl && message.sender?.isBot) {
-      const app = await prisma.application.findFirst({
+      const app = await prisma.botApplication.findFirst({
         where: { botId: message.senderId },
         select: { interactionsUrl: true },
       });
@@ -546,11 +545,11 @@ export class V3DmsController {
       const webhookPayload = {
         event: 'message.action_response',
         timestamp: new Date().toISOString(),
-        conversationId: dmId,
+        dmId,
         message: {
           id: message.id,
           content: message.content,
-          conversationId: message.conversationId,
+          dmId: message.dmId || dmId,
         },
         action: {
           id: actionIdParam,

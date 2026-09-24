@@ -22,7 +22,7 @@ vi.mock('@repo/database', () => ({
       create: vi.fn(),
       findMany: vi.fn(),
     },
-    application: {
+    botApplication: {
       findFirst: vi.fn(),
     },
   },
