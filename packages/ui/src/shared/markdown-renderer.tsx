@@ -53,7 +53,7 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
         element: (
           <span
             key={`channel-${match.index}`}
-            className="text-primary hover:underline cursor-pointer font-medium"
+            className="font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
             onClick={e => {
               e.preventDefault();
               if (workspaceSlug) {
@@ -113,12 +113,12 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
   };
 
   return (
-    <div className={cn('prose prose-sm dark:prose-invert max-w-none break-words text-[15px] leading-[1.375rem]', className)}>
+    <div className={cn('prose prose-sm dark:prose-invert max-w-none break-words text-[14px] leading-[1.45]', className)}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
           p({ children }) {
-            return <p className="leading-[1.375rem] text-[15px] my-0">{children}</p>;
+            return <p className="leading-[1.45] text-[14px] my-0.5">{children}</p>;
           },
           code({ node, inline, className, children, ...props }: any) {
             const match = /language-(\w+)/.exec(className || '');
@@ -131,7 +131,7 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
             return (
               <code
                 className={cn(
-                  'bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded text-sm font-mono text-primary',
+                  'bg-muted/70 dark:bg-muted/40 border border-border/50 px-1.5 py-0.5 rounded-md text-[13px] font-mono text-foreground font-medium',
                   className
                 )}
                 {...props}
@@ -148,35 +148,35 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
           table({ children }) {
             return (
               <div className="overflow-x-auto my-2">
-                <table className="min-w-full divide-y divide-border border">{children}</table>
+                <table className="min-w-full divide-y divide-border border rounded-lg">{children}</table>
               </div>
             );
           },
           th({ children }) {
-            return <th className="px-3 py-1 bg-muted font-bold text-left border">{children}</th>;
+            return <th className="px-3 py-1 bg-muted font-semibold text-left text-xs border">{children}</th>;
           },
           td({ children }) {
-            return <td className="px-3 py-1 border">{children}</td>;
+            return <td className="px-3 py-1 border text-xs">{children}</td>;
           },
           ul({ children }) {
-            return <ul className="list-disc pl-5 my-1 space-y-0.5 text-[15px] leading-[1.375rem]">{children}</ul>;
+            return <ul className="list-disc pl-5 my-1 space-y-0.5 text-[14px] leading-[1.45]">{children}</ul>;
           },
           ol({ children }) {
-            return <ol className="list-decimal pl-5 my-1 space-y-0.5 text-[15px] leading-[1.375rem]">{children}</ol>;
+            return <ol className="list-decimal pl-5 my-1 space-y-0.5 text-[14px] leading-[1.45]">{children}</ol>;
           },
           li({ children }) {
-            return <li className="my-0 leading-[1.375rem]">{children}</li>;
+            return <li className="my-0 leading-[1.45]">{children}</li>;
           },
           blockquote({ children }) {
             return (
-              <blockquote className="border-l-4 border-primary/30 pl-3 italic my-1 text-muted-foreground text-[15px] leading-[1.375rem]">
+              <blockquote className="border-l-2 border-primary/40 pl-3 italic my-1 text-muted-foreground text-[14px] leading-[1.45]">
                 {children}
               </blockquote>
             );
           },
           a({ href, children }) {
             return (
-              <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+              <a href={href} target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline font-medium">
                 {children}
               </a>
             );
