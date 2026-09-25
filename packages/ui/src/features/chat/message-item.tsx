@@ -3,7 +3,7 @@
 import { Smile, MessageSquare, Copy, Trash2, Edit, LinkIcon, MoreHorizontal, Reply, Loader2, Pin } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '../../components/avatar';
 import { Button } from '../../components/button';
-import { cn } from '../../lib/utils';
+import { cn, formatMessageTimestamp, formatCondensedTime } from '../../lib/utils';
 import { CODE_BLOCK_REGEX, renderCustomMessage, extractCodeInfo } from '../../lib/message-renderer';
 import { SyntaxHighlighter } from '../../shared/syntax-highlighter';
 import { CustomEmojiPicker } from '../../shared/custom-emoji-picker';
@@ -117,7 +117,7 @@ const ReplyPreview = memo(({ message }: { message: any }) => {
 ReplyPreview.displayName = 'ReplyPreview';
 
 const MessageHeader = memo(({ user, message, userBadges }: { user: any, message: any, userBadges: any[] }) => {
-  const timestamp = useMemo(() => format(new Date(message.timestamp || new Date()), 'MM/dd/yyyy HH:mm'), [message.timestamp]);
+  const timestamp = useMemo(() => formatMessageTimestamp(message.timestamp), [message.timestamp]);
 
   return (
     <div className="flex flex-wrap items-baseline gap-x-2 mb-[1px]">
@@ -608,7 +608,7 @@ const MessageLayout = memo(React.forwardRef<
     ref={ref}
     className={cn(
       'group relative flex items-start px-4 gap-3 w-full select-text',
-      showAvatar ? 'pt-[6px] pb-[2px]' : 'pt-0 pb-0',
+      showAvatar ? 'pt-1 pb-0.5' : 'py-[1px]',
       'hover:bg-[#0000000a] dark:hover:bg-[#ffffff05]',
       isMenuOpen && 'bg-[#0000000a] dark:bg-[#ffffff05]',
       isMentioned && 'bg-yellow-500/10 border-l-2 border-yellow-500 pl-[14px]',
@@ -651,7 +651,7 @@ const MessageMainContent = memo(({
   handleAddReaction: any,
   handleToggleReaction: any
 }) => (
-  <div className="flex-1 min-w-0 overflow-hidden pb-[2px]">
+  <div className="flex-1 min-w-0 overflow-hidden pb-0">
     {isReply && <ReplyPreview message={message} />}
     {showAvatar && <MessageHeader user={user} message={message} userBadges={(user as any)?.badges || []} />}
     <MessageContent
@@ -714,7 +714,7 @@ const MessageAvatar = memo(({ showAvatar, user, timestamp, showToolbar }: {
   timestamp: Date,
   showToolbar: boolean
 }) => {
-  const formattedTime = useMemo(() => format(new Date(timestamp || new Date()), 'HH:mm'), [timestamp]);
+  const formattedTime = useMemo(() => formatCondensedTime(timestamp), [timestamp]);
 
   return (
     <div className={cn('flex-shrink-0 w-10 flex justify-center', showAvatar ? 'mt-0.5' : 'mt-0')}>
