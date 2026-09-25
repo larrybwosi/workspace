@@ -36,3 +36,7 @@
 ## 2026-09-23 - Enforcement of SHA-256 Hashing at Rest for Workspace API Tokens
 **Learning:** `POST /workspaces/:slug/api-tokens` stored generated `wst_` API tokens in plain text in the database (`prisma.workspaceApiToken.create`), whereas authentication guards (`AuthGuard`, `BetterAuthGuard`, `ApiV3Guard`) hashed incoming tokens with SHA-256 before performing database lookups. This caused newly created API tokens to fail authentication with 401 Unauthorized and exposed cleartext secrets in the database.
 **Action:** Always store secret API tokens, access tokens, and API keys as SHA-256 (or bcrypt/argon2) hashes in the database, returning the unhashed raw token string only once in the creation HTTP response and ensuring all authentication helpers/guards hash incoming tokens before database queries.
+
+## 2026-09-24 - Enforce Recipient Email Matching on Invitation Acceptance Routes
+**Learning:** `POST /invitations/:token/accept` in `InvitationsService` accepted workspace and platform invitations using only the token string without verifying that the accepting user's email matched the email address specified in the invitation record. This allowed any logged-in user who intercepted or obtained an invitation token to hijack the invitation and gain unauthorized workspace access or friend connections (IDOR / Invitation Hijacking).
+**Action:** When handling targeted email invitations, always perform case-insensitive verification between `invitation.email` and `user.email` prior to granting workspace membership or executing account relations.

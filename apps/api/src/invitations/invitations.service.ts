@@ -341,6 +341,15 @@ export class InvitationsService {
     }
 
     if (workspaceInvite) {
+      /**
+       * 🛡️ Security Hardening (IDOR / Invitation Hijacking Mitigation):
+       * Validate that the accepting user's email matches the invited email address on the workspace invitation.
+       * Case-insensitive comparison prevents email format mismatch while blocking unauthorized users who obtain the token.
+       */
+      if (workspaceInvite.email && user.email && workspaceInvite.email.toLowerCase() !== user.email.toLowerCase()) {
+        throw new ForbiddenException('This invitation was sent to a different email address');
+      }
+
       if (workspaceInvite.expiresAt && workspaceInvite.expiresAt < new Date()) {
         throw new BadRequestException('Invitation has expired');
       }
@@ -408,6 +417,15 @@ export class InvitationsService {
     }
 
     if (generalInvite) {
+      /**
+       * 🛡️ Security Hardening (IDOR / Invitation Hijacking Mitigation):
+       * Validate that the accepting user's email matches the invited email address on the platform invitation.
+       * Case-insensitive comparison prevents email format mismatch while blocking unauthorized users who obtain the token.
+       */
+      if (generalInvite.email && user.email && generalInvite.email.toLowerCase() !== user.email.toLowerCase()) {
+        throw new ForbiddenException('This invitation was sent to a different email address');
+      }
+
       if (generalInvite.expiresAt && generalInvite.expiresAt < new Date()) {
         throw new BadRequestException('Invitation has expired');
       }
