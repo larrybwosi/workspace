@@ -15,5 +15,6 @@ data class WorkspaceEntity(
     val createdAt: String,
     val isPublic: Boolean,
     val customDomain: String?,
-    val industry: String?
+    val industry: String?,
+    val organizationId: String? = null
 )
