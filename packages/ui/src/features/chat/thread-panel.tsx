@@ -26,7 +26,7 @@ import { useMessages, useSendMessage, useCurrentUser } from '@repo/api-client';
 import { useEffect, useRef, useMemo, useCallback, useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '../../components/avatar';
 import { format, formatDistanceToNow } from 'date-fns';
-import { cn } from '../../lib/utils';
+import { cn, formatMessageTimestamp } from '../../lib/utils';
 import { MarkdownRenderer } from '../../shared/markdown-renderer';
 import { useRealtimeSubscriptions } from './hooks/use-channel-view';
 import { useQueryClient } from '@tanstack/react-query';
@@ -133,7 +133,7 @@ export function ThreadPanel({
 
   const rootUser = rootMessage.user;
   const rootTimestamp = rootMessage.timestamp
-    ? format(new Date(rootMessage.timestamp), 'EEE, MMM d, h:mm a')
+    ? formatMessageTimestamp(rootMessage.timestamp)
     : '';
 
   const lastReplyTime =

@@ -113,10 +113,13 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
   };
 
   return (
-    <div className={cn('prose prose-sm dark:prose-invert max-w-none break-words', className)}>
+    <div className={cn('prose prose-sm dark:prose-invert max-w-none break-words text-[15px] leading-[1.375rem]', className)}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
+          p({ children }) {
+            return <p className="leading-[1.375rem] text-[15px] my-0">{children}</p>;
+          },
           code({ node, inline, className, children, ...props }: any) {
             const match = /language-(\w+)/.exec(className || '');
             const codeContent = String(children).replace(/\n$/, '');
@@ -144,29 +147,29 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
           // Ensure tables and other GFM elements are styled correctly
           table({ children }) {
             return (
-              <div className="overflow-x-auto my-4">
+              <div className="overflow-x-auto my-2">
                 <table className="min-w-full divide-y divide-border border">{children}</table>
               </div>
             );
           },
           th({ children }) {
-            return <th className="px-4 py-2 bg-muted font-bold text-left border">{children}</th>;
+            return <th className="px-3 py-1 bg-muted font-bold text-left border">{children}</th>;
           },
           td({ children }) {
-            return <td className="px-4 py-2 border">{children}</td>;
+            return <td className="px-3 py-1 border">{children}</td>;
           },
           ul({ children }) {
-            return <ul className="list-disc pl-6 my-2 space-y-1">{children}</ul>;
+            return <ul className="list-disc pl-5 my-1 space-y-0.5 text-[15px] leading-[1.375rem]">{children}</ul>;
           },
           ol({ children }) {
-            return <ol className="list-decimal pl-6 my-2 space-y-1">{children}</ol>;
+            return <ol className="list-decimal pl-5 my-1 space-y-0.5 text-[15px] leading-[1.375rem]">{children}</ol>;
           },
           li({ children }) {
-            return <li className="my-0">{children}</li>;
+            return <li className="my-0 leading-[1.375rem]">{children}</li>;
           },
           blockquote({ children }) {
             return (
-              <blockquote className="border-l-4 border-primary/30 pl-4 italic my-2 text-muted-foreground">
+              <blockquote className="border-l-4 border-primary/30 pl-3 italic my-1 text-muted-foreground text-[15px] leading-[1.375rem]">
                 {children}
               </blockquote>
             );

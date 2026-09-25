@@ -32,17 +32,18 @@ const DateDivider = memo(function DateDivider({ date }: { date: Date }) {
   const isYesterday = new Date(Date.now() - 86400000).toDateString() === date.toDateString();
 
   let dateLabel = date.toLocaleDateString(undefined, {
-    year: 'numeric',
+    weekday: 'long',
     month: 'long',
     day: 'numeric',
+    year: 'numeric',
   });
   if (isToday) dateLabel = 'Today';
   if (isYesterday) dateLabel = 'Yesterday';
 
   return (
-    <div className="flex items-center my-3 mx-4">
+    <div className="flex items-center my-2 mx-4">
       <div className="flex-1 h-px bg-border" />
-      <span className="px-2 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">{dateLabel}</span>
+      <span className="px-3 text-xs font-semibold text-muted-foreground whitespace-nowrap">{dateLabel}</span>
       <div className="flex-1 h-px bg-border" />
     </div>
   );
@@ -217,7 +218,7 @@ const MessageItems = memo(({
           data-message-id={message.id}
           className={cn(
             'group relative w-full',
-            isGrouped ? 'mt-0.5' : 'mt-3',
+            isGrouped ? 'mt-[1px]' : 'mt-2',
             isHighlighted && 'bg-yellow-500/10',
             'hover:bg-muted/40 transition-colors duration-75'
           )}
