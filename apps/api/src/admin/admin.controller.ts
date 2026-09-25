@@ -42,7 +42,7 @@ export class CreateAssetDto {
   type!: string;
 
   @IsObject()
-  @ApiProperty({ type: 'object' })
+  @ApiProperty({ type: Object })
   data!: Record<string, any>;
 }
 
@@ -57,7 +57,7 @@ export class UpdateAssetDto {
   id!: string;
 
   @IsObject()
-  @ApiProperty({ type: 'object' })
+  @ApiProperty({ type: Object })
   data!: Record<string, any>;
 }
 
