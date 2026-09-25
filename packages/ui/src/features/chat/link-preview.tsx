@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import * as React from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { ExternalLink, Copy, Check, Globe } from 'lucide-react';
 
 interface LinkPreviewData {
@@ -92,7 +93,7 @@ export function LinkPreview({ url }: { url: string }) {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const domain = React.useMemo(() => {
+  const domain = useMemo(() => {
     try {
       return new URL(url).hostname.replace('www.', '');
     } catch {
