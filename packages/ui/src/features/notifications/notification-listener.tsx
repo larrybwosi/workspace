@@ -5,20 +5,25 @@ import { realtime, AblyChannels, AblyEvents } from '@repo/shared';
 import { useParams, usePathname } from 'next/navigation';
 import { showDiscordNotification, playNotificationSound } from './custom-toasts/notification-utils';
 import { useSession } from '@repo/shared';
+import { useQueryClient } from '@tanstack/react-query';
+import { notificationKeys } from '@repo/api-client';
 
 export function NotificationListener() {
   const { data: session } = useSession() as any;
+  const queryClient = useQueryClient();
   const params = useParams();
   const pathname = usePathname();
 
   // Track "active" context to suppress notifications
-  // Format depends on how the app is structured (e.g., workspaceSlug, channelSlug)
   const activeWorkspace = params.slug as string;
   const activeChannel = (params.channelId as string) || (params.channelSlug as string);
 
   const handleNotification = useCallback(
     (payload: any) => {
       const notification = payload?.data || payload;
+
+      // Realtime Query Invalidation so unread notification counters and notification list update instantly
+      queryClient.invalidateQueries({ queryKey: notificationKeys.all });
 
       // Suppression Logic:
       // If the notification is for a channel the user is currently in, don't show it.
@@ -61,7 +66,7 @@ export function NotificationListener() {
         }
       }
     },
-    [activeChannel]
+    [activeChannel, queryClient]
   );
 
   useEffect(() => {

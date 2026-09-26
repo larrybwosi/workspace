@@ -35,7 +35,7 @@ import { UserProfileDialog } from '../features/social/user-profile-dialog';
 import { CreateChannelDialog } from '../features/chat/create-channel-dialog';
 import { CreateWorkspaceDialog } from '../features/workspace/create-workspace-dialog';
 import { CreateTicketDialog } from '../features/support/create-ticket-dialog';
-import { useCreateWorkspaceChannel, useWorkspaceChannels, useWorkspace, useFriends } from '@repo/api-client';
+import { useCreateWorkspaceChannel, useWorkspaceChannels, useWorkspace, useFriends, notificationKeys } from '@repo/api-client';
 import { User } from '../lib/types';
 import { usePresence } from '../lib/contexts/presence-context';
 
@@ -224,35 +224,34 @@ export function WorkspaceSidebar({ isOpen, onClose, onWorkspaceChange, onChannel
 
     const handleChannelUpdate = () => {
       queryClient.invalidateQueries({ queryKey: ['workspace-channels', workspaceSlug] });
+      queryClient.invalidateQueries({ queryKey: notificationKeys.all });
     };
 
-    realtime.subscribe(workspaceChannel, 'message:new', handleChannelUpdate);
-    realtime.subscribe(workspaceChannel, 'message:sent', handleChannelUpdate);
+    const wsEvents = ['message:new', 'message:sent', AblyEvents.MESSAGE_SENT];
+    wsEvents.forEach(evt => realtime.subscribe(workspaceChannel, evt, handleChannelUpdate));
+
     if (workspace?.id && workspaceSlug !== workspace.id) {
-      realtime.subscribe(`workspace:${workspaceSlug}`, 'message:new', handleChannelUpdate);
-      realtime.subscribe(`workspace:${workspaceSlug}`, 'message:sent', handleChannelUpdate);
+      wsEvents.forEach(evt => realtime.subscribe(`workspace:${workspaceSlug}`, evt, handleChannelUpdate));
     }
 
     if (sessionUser?.id) {
       const userChannel = AblyChannels.user(sessionUser.id);
-      realtime.subscribe(userChannel, 'message:read', handleChannelUpdate);
+      const userEvents = ['message:read', AblyEvents.MESSAGE_READ, AblyEvents.NOTIFICATION, 'notification:new'];
+      userEvents.forEach(evt => realtime.subscribe(userChannel, evt, handleChannelUpdate));
+
       return () => {
-        realtime.unsubscribe(workspaceChannel, 'message:new', handleChannelUpdate);
-        realtime.unsubscribe(workspaceChannel, 'message:sent', handleChannelUpdate);
+        wsEvents.forEach(evt => realtime.unsubscribe(workspaceChannel, evt, handleChannelUpdate));
         if (workspace?.id && workspaceSlug !== workspace.id) {
-          realtime.unsubscribe(`workspace:${workspaceSlug}`, 'message:new', handleChannelUpdate);
-          realtime.unsubscribe(`workspace:${workspaceSlug}`, 'message:sent', handleChannelUpdate);
+          wsEvents.forEach(evt => realtime.unsubscribe(`workspace:${workspaceSlug}`, evt, handleChannelUpdate));
         }
-        realtime.unsubscribe(userChannel, 'message:read', handleChannelUpdate);
+        userEvents.forEach(evt => realtime.unsubscribe(userChannel, evt, handleChannelUpdate));
       };
     }
 
     return () => {
-      realtime.unsubscribe(workspaceChannel, 'message:new', handleChannelUpdate);
-      realtime.unsubscribe(workspaceChannel, 'message:sent', handleChannelUpdate);
+      wsEvents.forEach(evt => realtime.unsubscribe(workspaceChannel, evt, handleChannelUpdate));
       if (workspace?.id && workspaceSlug !== workspace.id) {
-        realtime.unsubscribe(`workspace:${workspaceSlug}`, 'message:new', handleChannelUpdate);
-        realtime.unsubscribe(`workspace:${workspaceSlug}`, 'message:sent', handleChannelUpdate);
+        wsEvents.forEach(evt => realtime.unsubscribe(`workspace:${workspaceSlug}`, evt, handleChannelUpdate));
       }
     };
   }, [workspaceSlug, workspace?.id, sessionUser?.id, queryClient]);

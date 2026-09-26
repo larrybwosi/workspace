@@ -75,9 +75,9 @@ export const useRealtimeSubscriptions = (
 
       if (workspaceSlug) {
         queryClient.invalidateQueries({ queryKey: ['workspace-channels', workspaceSlug] });
-      } else {
-        queryClient.invalidateQueries({ queryKey: ['dms', 'conversations'] });
       }
+      queryClient.invalidateQueries({ queryKey: ['workspace-channels'] });
+      queryClient.invalidateQueries({ queryKey: ['dms', 'conversations'] });
     };
 
     const events = [
@@ -127,6 +127,10 @@ export const useRealtimeSubscriptions = (
 
 export const useReadReceipts = (activeChannelId: string, scrollAreaRef: React.RefObject<HTMLDivElement | null>, markedMessageIds: React.MutableRefObject<Set<string>>, messages: Message[], currentUserId?: string, markMessagesAsReadMutation?: any) => {
   const observerRef = useRef<IntersectionObserver | null>(null);
+
+  useEffect(() => {
+    markedMessageIds.current.clear();
+  }, [activeChannelId, markedMessageIds]);
 
   const handleIntersect = useCallback((entries: IntersectionObserverEntry[]) => {
     const visibleUnreadIds: string[] = [];

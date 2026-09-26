@@ -12,7 +12,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../com
 import { cn } from '../lib/utils';
 import { useRouter, usePathname } from 'next/navigation';
 import { useSession } from '@repo/shared';
-import { useNotifications } from '@repo/api-client';
+import { useNotifications, notificationKeys } from '@repo/api-client';
 import { useDMConversations, dmKeys } from '@repo/api-client';
 import { useQueryClient } from '@tanstack/react-query';
 import { realtime, AblyChannels, AblyEvents } from '@repo/shared';
@@ -228,6 +228,7 @@ export function Sidebar({
 
     const handleDMUpdate = () => {
       queryClient.invalidateQueries({ queryKey: dmKeys.conversations() });
+      queryClient.invalidateQueries({ queryKey: notificationKeys.all });
     };
 
     realtime.subscribe(userChannel, AblyEvents.DM_RECEIVED, handleDMUpdate);
