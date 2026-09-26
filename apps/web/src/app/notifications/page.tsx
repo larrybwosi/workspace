@@ -23,6 +23,7 @@ import {
 } from '@repo/api-client';
 import { Sidebar } from '@/components/layout/sidebar';
 import { DynamicHeader } from '@/components/layout/dynamic-header';
+import { MarkdownRenderer } from '@repo/ui';
 import { useToast } from '@/hooks/use-toast';
 import { format, isToday, isYesterday } from 'date-fns';
 import { cn } from '@repo/ui/lib/utils';
@@ -237,9 +238,9 @@ export default function NotificationsPage() {
                                       >
                                         {notification.title}
                                       </Link>
-                                      <p className="text-xs text-muted-foreground line-clamp-1">
-                                        {notification.message}
-                                      </p>
+                                      <div className="text-xs text-muted-foreground line-clamp-2">
+                                        <MarkdownRenderer content={notification.message} className="text-xs text-muted-foreground prose-p:my-0 prose-p:inline" />
+                                      </div>
                                     </div>
                                   </TableCell>
                                   <TableCell className="text-right text-xs text-muted-foreground whitespace-nowrap py-3">
