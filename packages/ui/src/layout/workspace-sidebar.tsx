@@ -26,7 +26,7 @@ import { Separator } from '../components/separator';
 import { Skeleton } from '../components/skeleton';
 import { cn } from '../lib/utils';
 import { useRouter, useParams, usePathname } from '../hooks/use-universal-router';
-import { useSession, realtime, AblyChannels } from '@repo/shared';
+import { useSession, realtime, AblyChannels, AblyEvents } from '@repo/shared';
 import { useQueryClient } from '@tanstack/react-query';
 import { WorkspaceSwitcher } from '../features/workspace/workspace-switcher';
 import { WorkspaceRail } from './workspace-rail';
