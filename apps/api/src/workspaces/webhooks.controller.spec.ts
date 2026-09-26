@@ -60,7 +60,17 @@ describe('WebhooksController', () => {
       await expect(controller.getWebhooks(mockUser, 'acme')).rejects.toThrow(ForbiddenException);
     });
 
-    it('should return webhooks list for workspace member', async () => {
+    it('should throw ForbiddenException when non-admin workspace member attempts to view webhooks', async () => {
+      (prisma.workspace.findUnique as any).mockResolvedValue({
+        id: 'ws-1',
+        members: [{ role: 'member' }],
+        webhooks: [],
+      });
+
+      await expect(controller.getWebhooks(mockUser, 'acme')).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should return webhooks list for workspace admin or owner', async () => {
       const mockWebhooks = [
         {
           id: 'wh-1',
@@ -73,7 +83,7 @@ describe('WebhooksController', () => {
 
       (prisma.workspace.findUnique as any).mockResolvedValue({
         id: 'ws-1',
-        members: [{ role: 'member' }],
+        members: [{ role: 'admin' }],
         webhooks: mockWebhooks,
       });
 
