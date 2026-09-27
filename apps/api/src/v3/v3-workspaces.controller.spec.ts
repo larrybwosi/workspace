@@ -1121,6 +1121,37 @@ describe('V3WorkspacesController', () => {
         });
       });
     });
+
+    describe('deleteChannelMessage', () => {
+      it('should resolve workspace user context and pass userId to channelsService.deleteMessage for author ownership/admin enforcement', async () => {
+        const msgContext = {
+          scopes: ['messages:send'],
+          workspaceId: 'ws-123',
+          userId: 'user-xyz',
+        };
+
+        (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
+
+        const result = await controller.deleteChannelMessage(msgContext as any, 'acme-slug', 'ch-1', 'msg-100');
+
+        expect(result.success).toBe(true);
+        expect(result.data).toEqual({ success: true });
+        // Verifies userId is forwarded so ChannelsService can enforce BOLA/IDOR protection
+        expect((controller as any).channelsService.deleteMessage).toHaveBeenCalledWith('ch-1', 'msg-100', 'user-xyz');
+      });
+
+      it('should throw ForbiddenException if missing messages:send scope', async () => {
+        const restrictedContext = {
+          scopes: ['channels:read'],
+          workspaceId: 'ws-123',
+          userId: 'user-xyz',
+        };
+
+        await expect(
+          controller.deleteChannelMessage(restrictedContext as any, 'acme-slug', 'ch-1', 'msg-100')
+        ).rejects.toThrow('Missing messages:send scope');
+      });
+    });
   });
 
   describe('custom messages and action responses (V3 M2M)', () => {
