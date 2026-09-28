@@ -40,3 +40,7 @@
 ## 2026-09-24 - Enforce Recipient Email Matching on Invitation Acceptance Routes
 **Learning:** `POST /invitations/:token/accept` in `InvitationsService` accepted workspace and platform invitations using only the token string without verifying that the accepting user's email matched the email address specified in the invitation record. This allowed any logged-in user who intercepted or obtained an invitation token to hijack the invitation and gain unauthorized workspace access or friend connections (IDOR / Invitation Hijacking).
 **Action:** When handling targeted email invitations, always perform case-insensitive verification between `invitation.email` and `user.email` prior to granting workspace membership or executing account relations.
+
+## 2026-09-25 - Enforce Workspace Owner/Admin Role Verification on Webhook Listing Endpoint
+**Learning:** `GET /workspaces/:slug/webhooks` in `WebhooksController` checked workspace membership but allowed any regular workspace member (`role: member`) to list all workspace outgoing webhooks and access sensitive HMAC secret signing keys (`secret`). This exposed sensitive signing credentials and workspace event configurations to lower-privileged workspace users (BOLA / Information Disclosure).
+**Action:** When implementing administrative resource listing endpoints that return sensitive credentials (e.g. webhook HMAC secrets, API keys, or integration tokens), always enforce strict workspace `owner` or `admin` role checks (`['owner', 'admin'].includes(member.role)`).
