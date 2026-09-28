@@ -1028,11 +1028,13 @@ describe('V3WorkspacesController', () => {
       it('should resolve users by memberId, userId, or email and add them to channel', async () => {
         const body = { emails: ['user1@example.com'], memberId: 'wsm-1' };
         const mockChannel = { id: 'ch-1', workspaceId: 'ws-123' };
-        const mockMatchedUsers = [{ id: 'user-1' }, { id: 'user-2' }];
 
         (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
         (prisma.channel.findUnique as any).mockResolvedValue(mockChannel);
-        (prisma.user.findMany as any).mockResolvedValue(mockMatchedUsers);
+        (prisma.user.findMany as any)
+          .mockResolvedValueOnce([{ id: 'user-1' }]) // usersById
+          .mockResolvedValueOnce([{ id: 'user-1' }]); // usersByEmail
+        (prisma.workspaceMember.findMany as any).mockResolvedValueOnce([{ userId: 'user-2' }]); // workspaceMembers
         (prisma.channelMember.createMany as any).mockResolvedValue({ count: 2 });
         (prisma.channelMember.findMany as any).mockResolvedValue([
           { id: 'cm-1', channelId: 'ch-1', userId: 'user-1', role: 'member', permissions: null, user: { id: 'user-1' } },
@@ -1041,15 +1043,20 @@ describe('V3WorkspacesController', () => {
         const result = await controller.addChannelMembers(context as any, 'acme-slug', 'ch-1', body as any);
 
         expect(result.success).toBe(true);
-        expect(prisma.user.findMany).toHaveBeenCalledWith({
-          where: {
-            OR: [
-              { id: { in: ['user1@example.com', 'wsm-1'] } },
-              { email: { in: ['user1@example.com', 'wsm-1'] } },
-              { workspaceMemberships: { some: { id: { in: ['user1@example.com', 'wsm-1'] }, workspaceId: 'ws-123' } } },
-            ],
-          },
+        expect(prisma.user.findMany).toHaveBeenNthCalledWith(1, {
+          where: { id: { in: ['user1@example.com', 'wsm-1'] } },
           select: { id: true },
+        });
+        expect(prisma.user.findMany).toHaveBeenNthCalledWith(2, {
+          where: { email: { in: ['user1@example.com', 'wsm-1'] } },
+          select: { id: true },
+        });
+        expect(prisma.workspaceMember.findMany).toHaveBeenCalledWith({
+          where: {
+            id: { in: ['user1@example.com', 'wsm-1'] },
+            workspaceId: 'ws-123',
+          },
+          select: { userId: true },
         });
         expect(prisma.channelMember.createMany).toHaveBeenCalled();
       });
