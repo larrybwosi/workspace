@@ -534,10 +534,9 @@ export class IntegrationsService {
 
   async getWorkspaceIntegration(userId: string, workspaceSlug: string, integrationId: string) {
     /**
-     * ⚡ Performance Optimization:
-     * Replaces findUnique on workspace followed by findFirst on integration with a single O(1) point-lookup
-     * on prisma.workspaceIntegration.findUnique by id with relational slug check.
-     * This reduces database round-trips (RTT) from 2 down to 1.
+     * 🛡️ Security Hardening (BOLA / IDOR Mitigation):
+     * Verify workspace existence, integration ownership, and user workspace membership (`workspace.members`).
+     * Prevents unauthorized users from viewing integration details for workspaces they are not members of.
      */
     const integration = await prisma.workspaceIntegration.findUnique({
       where: { id: integrationId },
@@ -551,18 +550,26 @@ export class IntegrationsService {
         workspace: {
           select: {
             slug: true,
+            members: {
+              where: { userId },
+              select: { id: true },
+            },
           },
         },
       },
     });
 
-    if (!integration || integration.workspace.slug !== workspaceSlug) {
+    if (!integration || integration.workspace.slug !== workspaceSlug || integration.workspace.members.length === 0) {
       throw new NotFoundException('Integration not found');
     }
 
     return {
-      ...integration,
-      workspace: undefined,
+      id: integration.id,
+      workspaceId: integration.workspaceId,
+      service: integration.service,
+      config: integration.config,
+      active: integration.active,
+      createdAt: integration.createdAt,
     };
   }
 
@@ -689,10 +696,9 @@ export class IntegrationsService {
 
   async testWorkspaceIntegration(userId: string, workspaceSlug: string, integrationId: string) {
     /**
-     * ⚡ Performance Optimization:
-     * Replaces workspace lookup + findFirst with a single O(1) point-lookup on prisma.workspaceIntegration.findUnique
-     * by id with relational slug check.
-     * This reduces database round-trips (RTT) from 2 down to 1.
+     * 🛡️ Security Hardening (BOLA / IDOR & Privilege Escalation Mitigation):
+     * Verify workspace membership and enforce workspace owner/admin role authorization (`['owner', 'admin'].includes(member.role)`).
+     * Prevents non-members or lower-privileged members from executing test webhooks and integration checks.
      */
     const integration = await prisma.workspaceIntegration.findUnique({
       where: { id: integrationId },
@@ -706,6 +712,10 @@ export class IntegrationsService {
           select: {
             id: true,
             slug: true,
+            members: {
+              where: { userId },
+              select: { role: true },
+            },
           },
         },
       },
@@ -713,6 +723,11 @@ export class IntegrationsService {
 
     if (!integration || integration.workspace.slug !== workspaceSlug) {
       throw new NotFoundException('Integration not found');
+    }
+
+    const member = integration.workspace.members[0];
+    if (!member || !['owner', 'admin'].includes(member.role)) {
+      throw new ForbiddenException('Forbidden - Admin access required');
     }
 
     const workspaceId = integration.workspace.id;
@@ -832,10 +847,9 @@ export class IntegrationsService {
 
   async getWorkspaceWebhooks(userId: string, workspaceSlug: string) {
     /**
-     * ⚡ Performance Optimization:
-     * Consolidates workspace lookup, user membership check, and webhooks list fetching (with log count)
-     * into a single query via nested select on workspace.findUnique.
-     * This reduces the database round-trips (RTT) from 3 down to 1.
+     * 🛡️ Security Hardening (BOLA / Privilege Escalation Mitigation):
+     * Enforce workspace owner or admin role authorization (`['owner', 'admin'].includes(member.role)`).
+     * Prevents non-admin workspace members from accessing sensitive webhook signing secrets and configurations.
      */
     const workspace = await prisma.workspace.findUnique({
       where: { slug: workspaceSlug },
@@ -861,7 +875,9 @@ export class IntegrationsService {
     if (!workspace) throw new NotFoundException('Workspace not found');
 
     const member = workspace.members[0];
-    if (!member) throw new ForbiddenException('Forbidden');
+    if (!member || !['owner', 'admin'].includes(member.role)) {
+      throw new ForbiddenException('Forbidden - Admin access required');
+    }
 
     return workspace.webhooks;
   }
