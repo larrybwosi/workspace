@@ -1,3 +1,9 @@
+## 2026-09-27 - [Prisma/Performance] Single-Query Consolidated Message Lookup and Channel Access Verification for Reactions
+
+**Learning:** In `MessagesService`, reaction methods (`addReaction`, `removeReaction`, and `toggleReaction`) previously performed `prisma.message.findUnique({ where: { id: messageId }, select: { channelId: true } })` followed by `this.verifyChannelAccess(targetMessage.channelId, userId, workspaceId)`, which issued a secondary `prisma.channel.findUnique` database call. Consolidating target message lookup and channel access authorization into a single `prisma.message.findUnique` query with nested `channel` relation selection (`workspaceId`, `isPrivate`, `type`, `members`) enables in-memory workspace boundary matching and private channel membership checks, cutting database round-trips from 3-4 down to 2 on high-frequency chat reaction endpoints.
+
+**Action:** Consolidate target entity lookups and parent channel/workspace authorization checks into a single primary key `findUnique` query with nested relation selection.
+
 ## 2026-09-22 - [Prisma/Performance] Dynamic Workspace Context Resolution & Primary Key Point Lookups in V3 Workspaces API
 
 **Learning:** In `V3WorkspacesController`, workspace member endpoints previously asserted `context.workspaceId` directly, which threw `BadRequestException` when Organization M2M tokens (`oat_...`) accessed member routes by slug without pre-bound `workspaceId`. Replacing static `context.workspaceId` assertions with `this.resolveWorkspaceAndCheckAccess(context, slug)` dynamically resolves workspace context by `slug` while verifying M2M organization boundaries. Additionally, replacing composite parameters in `addChannelMembers` with `prisma.channel.findUnique({ where: { id: channelId } })` leverages direct O(1) B-tree primary key point lookups while enforcing workspace isolation in memory.

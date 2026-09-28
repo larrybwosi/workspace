@@ -11,6 +11,11 @@ vi.mock('@repo/database', () => ({
       findMany: vi.fn(),
       update: vi.fn(),
     },
+    reaction: {
+      upsert: vi.fn(),
+      delete: vi.fn(),
+      findUnique: vi.fn(),
+    },
     channel: {
       findUnique: vi.fn(),
     },
@@ -371,6 +376,124 @@ describe('MessagesService', () => {
       await expect(
         service.deleteMessage('user-attacker', 'msg-1', 'chan-1', 'ws-1')
       ).rejects.toThrow('You can only delete your own messages');
+    });
+  });
+
+  describe('addReaction, removeReaction, toggleReaction', () => {
+    it('addReaction should add reaction when user has access', async () => {
+      (prisma.message.findUnique as any).mockResolvedValue({
+        id: 'msg-1',
+        channelId: 'chan-1',
+        channel: {
+          id: 'chan-1',
+          workspaceId: 'ws-1',
+          isPrivate: false,
+          type: 'public',
+          members: [],
+        },
+      });
+
+      const mockReaction = {
+        id: 'react-1',
+        messageId: 'msg-1',
+        userId: 'user-1',
+        emoji: '👍',
+        message: { channelId: 'chan-1' },
+      };
+      (prisma.reaction.upsert as any).mockResolvedValue(mockReaction);
+
+      const result = await service.addReaction('user-1', 'msg-1', '👍', undefined, 'ws-1');
+      expect(result).toEqual(mockReaction);
+      expect(prisma.message.findUnique).toHaveBeenCalledWith({
+        where: { id: 'msg-1' },
+        select: expect.objectContaining({
+          channelId: true,
+          channel: expect.anything(),
+        }),
+      });
+    });
+
+    it('addReaction should throw NotFoundException if message is not in specified workspace', async () => {
+      (prisma.message.findUnique as any).mockResolvedValue({
+        id: 'msg-1',
+        channelId: 'chan-1',
+        channel: {
+          id: 'chan-1',
+          workspaceId: 'ws-other',
+          isPrivate: false,
+          type: 'public',
+          members: [],
+        },
+      });
+
+      await expect(
+        service.addReaction('user-1', 'msg-1', '👍', undefined, 'ws-1')
+      ).rejects.toThrow('Channel not found in this workspace');
+    });
+
+    it('removeReaction should remove reaction successfully', async () => {
+      (prisma.message.findUnique as any).mockResolvedValue({
+        id: 'msg-1',
+        channelId: 'chan-1',
+        channel: {
+          id: 'chan-1',
+          workspaceId: 'ws-1',
+          isPrivate: false,
+          type: 'public',
+          members: [],
+        },
+      });
+
+      (prisma.reaction.delete as any).mockResolvedValue({
+        id: 'react-1',
+        message: { channelId: 'chan-1' },
+      });
+
+      const result = await service.removeReaction('user-1', 'msg-1', '👍', 'ws-1');
+      expect(result).toEqual({ success: true });
+    });
+
+    it('toggleReaction should remove reaction if exists, add if not', async () => {
+      (prisma.message.findUnique as any).mockImplementation((args: any) => {
+        if (args.where?.id === 'msg-1') {
+          return Promise.resolve({
+            id: 'msg-1',
+            channelId: 'chan-1',
+            channel: {
+              id: 'chan-1',
+              workspaceId: 'ws-1',
+              isPrivate: false,
+              type: 'public',
+              members: [],
+            },
+          });
+        }
+        return Promise.resolve(null);
+      });
+
+      // 1. Existing reaction -> calls removeReaction
+      (prisma.reaction.findUnique as any).mockResolvedValue({ id: 'react-1' });
+      (prisma.reaction.delete as any).mockResolvedValue({
+        id: 'react-1',
+        message: { channelId: 'chan-1' },
+      });
+
+      const removeResult = await service.toggleReaction('user-1', 'msg-1', '👍', undefined, 'ws-1');
+      expect(removeResult).toEqual({ success: true });
+
+      // 2. Non-existing reaction -> calls addReaction
+      (prisma.reaction.findUnique as any).mockResolvedValue(null);
+      const mockReaction = {
+        id: 'react-2',
+        messageId: 'msg-1',
+        userId: 'user-1',
+        emoji: '👍',
+        message: { channelId: 'chan-1' },
+      };
+      (prisma.reaction.upsert as any).mockResolvedValue(mockReaction);
+
+      const addResult = await service.toggleReaction('user-1', 'msg-1', '👍', undefined, 'ws-1');
+      expect(addResult).toEqual(mockReaction);
     });
   });
 });
