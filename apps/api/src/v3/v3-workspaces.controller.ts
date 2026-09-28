@@ -2496,9 +2496,11 @@ When provisioned via M2M:
       throw new ForbiddenException('Missing messages:send scope');
     }
 
-    await this.resolveWorkspaceAndCheckAccess(context, slug);
+    const workspace = await this.resolveWorkspaceAndCheckAccess(context, slug);
+    const userId = await this.resolveEffectiveUserId(context, workspace.id);
 
-    const result = await this.channelsService.deleteMessage(channelId, messageId);
+    // Threat Mitigation: BOLA/IDOR Protection - Pass userId so ChannelsService enforces author ownership or admin rights
+    const result = await this.channelsService.deleteMessage(channelId, messageId, userId);
     return this.formatResponse(result);
   }
 
