@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { V10ChannelsService } from './channels.service';
+import { NotFoundException } from '@nestjs/common';
 import { prisma } from '@repo/database';
 import * as sharedServer from '@repo/shared/server';
 import { vi, describe, beforeEach, it, expect } from 'vitest';
@@ -68,5 +69,71 @@ describe('V10ChannelsService', () => {
         message: expect.objectContaining({ id: 'msg-1' })
       })
     );
+  });
+
+  describe('channel boundary scoping (BOLA / IDOR protection)', () => {
+    it('should throw NotFoundException on updateMessage if message belongs to another channel', async () => {
+      const bot = { id: 'bot-1', name: 'Bot' };
+      (prisma.message.findUnique as any).mockResolvedValue({
+        id: 'msg-1',
+        channelId: 'chan-2', // message belongs to chan-2
+        userId: 'bot-1',
+      });
+
+      await expect(
+        service.updateMessage(bot, 'chan-1', 'msg-1', { content: 'updated' })
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw NotFoundException on deleteMessage if message belongs to another channel', async () => {
+      const bot = { id: 'bot-1', name: 'Bot' };
+      (prisma.message.findUnique as any).mockResolvedValue({
+        id: 'msg-1',
+        channelId: 'chan-2', // message belongs to chan-2
+        userId: 'bot-1',
+      });
+
+      await expect(
+        service.deleteMessage(bot, 'chan-1', 'msg-1')
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should update message successfully when channelId matches', async () => {
+      const bot = { id: 'bot-1', name: 'Bot' };
+      (prisma.message.findUnique as any).mockResolvedValue({
+        id: 'msg-1',
+        channelId: 'chan-1',
+        userId: 'bot-1',
+        content: 'old',
+      });
+      (prisma.message.update as any).mockResolvedValue({
+        id: 'msg-1',
+        channelId: 'chan-1',
+        content: 'updated',
+        timestamp: new Date(),
+        updatedAt: new Date(),
+        isEdited: true,
+        flags: 0,
+        metadata: {},
+        user: { id: 'bot-1', name: 'Bot', avatar: null, isBot: true },
+      });
+
+      const res = await service.updateMessage(bot, 'chan-1', 'msg-1', { content: 'updated' });
+      expect(res.content).toBe('updated');
+    });
+
+    it('should delete message successfully when channelId matches', async () => {
+      const bot = { id: 'bot-1', name: 'Bot' };
+      (prisma.message.findUnique as any).mockResolvedValue({
+        id: 'msg-1',
+        channelId: 'chan-1',
+        userId: 'bot-1',
+      });
+      (prisma.message.delete as any).mockResolvedValue({ id: 'msg-1' });
+
+      const res = await service.deleteMessage(bot, 'chan-1', 'msg-1');
+      expect(res).toBeNull();
+      expect(prisma.message.delete).toHaveBeenCalledWith({ where: { id: 'msg-1' } });
+    });
   });
 });

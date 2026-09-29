@@ -47,3 +47,7 @@
 ## 2026-09-25 - Enforce Workspace Owner/Admin Role Verification on Webhook Listing Endpoint
 **Learning:** `GET /workspaces/:slug/webhooks` in `WebhooksController` checked workspace membership but allowed any regular workspace member (`role: member`) to list all workspace outgoing webhooks and access sensitive HMAC secret signing keys (`secret`). This exposed sensitive signing credentials and workspace event configurations to lower-privileged workspace users (BOLA / Information Disclosure).
 **Action:** When implementing administrative resource listing endpoints that return sensitive credentials (e.g. webhook HMAC secrets, API keys, or integration tokens), always enforce strict workspace `owner` or `admin` role checks (`['owner', 'admin'].includes(member.role)`).
+
+## 2026-09-29 - Channel Scoping Enforcement on V10 Message Updates and Deletions
+**Learning:** `PATCH /bot/v10/channels/:id/messages/:messageId` and `DELETE /bot/v10/channels/:id/messages/:messageId` in `V10ChannelsService` retrieved messages by primary key `messageId` without validating `message.channelId === channelId`. An authenticated bot or user with permissions on `channelId` could edit or delete messages in a completely different channel (BOLA / Broken Object Level Authorization).
+**Action:** Always explicitly check parent resource relationship (`message.channelId === channelId`) on sub-resource mutation and deletion endpoints before applying edits or permission checks.
