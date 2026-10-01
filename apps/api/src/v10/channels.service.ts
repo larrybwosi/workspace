@@ -113,6 +113,8 @@ export class V10ChannelsService {
     });
 
     if (!message) throw new NotFoundException('Unknown Message');
+    // Threat Mitigation: BOLA/IDOR Protection - Enforce channel boundary scoping to prevent cross-channel message edits
+    if (message.channelId !== channelId) throw new NotFoundException('Unknown Message');
     if (message.userId !== bot.id) throw new ForbiddenException('You can only edit your own messages');
 
     /**
@@ -196,6 +198,8 @@ export class V10ChannelsService {
     });
 
     if (!message) throw new NotFoundException('Unknown Message');
+    // Threat Mitigation: BOLA/IDOR Protection - Enforce channel boundary scoping to prevent cross-channel message deletions
+    if (message.channelId !== channelId) throw new NotFoundException('Unknown Message');
 
     // Bot can delete its own messages, or if it has MANAGE_MESSAGES permission
     if (message.userId !== bot.id) {

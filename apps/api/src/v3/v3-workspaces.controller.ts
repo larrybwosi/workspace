@@ -2165,18 +2165,38 @@ When provisioned via M2M:
       throw new NotFoundException('Channel not found in this workspace');
     }
 
-    const matchedUsers = await prisma.user.findMany({
-      where: {
-        OR: [
-          { id: { in: inputIdentifiers } },
-          { email: { in: inputIdentifiers } },
-          { workspaceMemberships: { some: { id: { in: inputIdentifiers }, workspaceId: workspace.id } } },
-        ],
-      },
-      select: { id: true },
-    });
+    /**
+     * ⚡ Bolt Performance Optimization:
+     * Parallelizes target user resolution by separating input identifiers into direct B-tree index queries
+     * (`User.id` primary keys, `User.email` unique keys, and `WorkspaceMember.id` indexed lookups).
+     * Replacing a single `prisma.user.findMany` with multi-column/relation `OR` avoids costly multi-table JOINs
+     * and non-indexable relation scans in PostgreSQL.
+     */
+    const [usersById, usersByEmail, workspaceMembers] = await Promise.all([
+      prisma.user.findMany({
+        where: { id: { in: inputIdentifiers } },
+        select: { id: true },
+      }),
+      prisma.user.findMany({
+        where: { email: { in: inputIdentifiers } },
+        select: { id: true },
+      }),
+      prisma.workspaceMember.findMany({
+        where: {
+          id: { in: inputIdentifiers },
+          workspaceId: workspace.id,
+        },
+        select: { userId: true },
+      }),
+    ]);
 
-    const userIdsToAdd = [...new Set(matchedUsers.map(u => u.id))];
+    const userIdsToAdd = [
+      ...new Set([
+        ...usersById.map(u => u.id),
+        ...usersByEmail.map(u => u.id),
+        ...workspaceMembers.map(wm => wm.userId),
+      ]),
+    ];
 
     if (userIdsToAdd.length === 0) {
       throw new NotFoundException('No valid users found for the provided identifiers');

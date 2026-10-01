@@ -123,6 +123,22 @@ class UpdateApiKeyDto {
   rateLimit?: number;
 }
 
+class UpdateWorkspaceIntegrationDto {
+  @IsObject()
+  @IsOptional()
+  @ApiProperty({ required: false })
+  config?: any;
+
+  @IsOptional()
+  @ApiProperty({ required: false, example: true })
+  active?: boolean;
+}
+
+const updateWorkspaceIntegrationSchema = z.object({
+  config: z.record(z.string(), z.any()).optional(),
+  active: z.boolean().optional(),
+});
+
 @ApiTags('Integrations')
 @Controller('integrations')
 export class IntegrationsController {
@@ -355,14 +371,21 @@ export class WorkspaceIntegrationsController {
   @ApiOperation({ summary: 'Update an integration' })
   @ApiParam({ name: 'slug', description: 'The workspace slug' })
   @ApiParam({ name: 'integrationId', description: 'The integration ID' })
+  @ApiBody({ type: UpdateWorkspaceIntegrationDto })
   @ApiResponse({ status: 200, description: 'Integration updated' })
   async updateWorkspaceIntegration(
     @CurrentUser() user: User,
     @Param('slug') slug: string,
     @Param('integrationId') integrationId: string,
-    @Body() body: any
+    @Body() body: UpdateWorkspaceIntegrationDto
   ) {
-    return this.integrationsService.updateWorkspaceIntegration(user.id, slug, integrationId, body);
+    /**
+     * 🛡️ Threat Model: Unsanitized Request Payload Modification
+     * Risk Level: Medium
+     * Mitigation: Validate payload with Zod schema before executing update in service layer.
+     */
+    const validatedData = updateWorkspaceIntegrationSchema.parse(body);
+    return this.integrationsService.updateWorkspaceIntegration(user.id, slug, integrationId, validatedData);
   }
 
   @Delete(':integrationId')
