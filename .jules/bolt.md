@@ -1,3 +1,9 @@
+## 2026-09-28 - [Prisma/Performance] Parallel B-Tree Index Queries for Multi-Identifier Channel Member Resolution
+
+**Learning:** In `V3WorkspacesController.addChannelMembers`, resolving target user IDs across mixed identifier lists (user ID, user email, workspace member ID) previously executed a single `prisma.user.findMany` with an `OR` condition spanning `id`, `email`, and `workspaceMemberships: { some: ... }`. In PostgreSQL, relation filters inside `OR` queries force multi-table JOIN scans and prevent efficient B-tree index utilization. Splitting the lookup into parallelized `Promise.all` queries targeting direct B-tree index fields (`User.id`, `User.email`, and `WorkspaceMember.id` filtered by `workspaceId`) eliminates relation join scans and allows PostgreSQL to utilize dedicated B-tree index lookups concurrently.
+
+**Action:** Replace single `findMany` queries containing relation `OR` filters with parallel `Promise.all` queries targeting specific indexed fields and deduplicate IDs in Node.js.
+
 ## 2026-09-27 - [Prisma/Performance] Single-Query Consolidated Message Lookup and Channel Access Verification for Reactions
 
 **Learning:** In `MessagesService`, reaction methods (`addReaction`, `removeReaction`, and `toggleReaction`) previously performed `prisma.message.findUnique({ where: { id: messageId }, select: { channelId: true } })` followed by `this.verifyChannelAccess(targetMessage.channelId, userId, workspaceId)`, which issued a secondary `prisma.channel.findUnique` database call. Consolidating target message lookup and channel access authorization into a single `prisma.message.findUnique` query with nested `channel` relation selection (`workspaceId`, `isPrivate`, `type`, `members`) enables in-memory workspace boundary matching and private channel membership checks, cutting database round-trips from 3-4 down to 2 on high-frequency chat reaction endpoints.
