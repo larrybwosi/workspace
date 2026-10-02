@@ -255,7 +255,7 @@ export default function UserProfilePage({ params }: UserProfilePageProps) {
                                   <Avatar key={friend.id} className="h-8 w-8 border border-background">
                                     <AvatarImage src={friend.avatar} alt={friend.name} />
                                     <AvatarFallback className="text-[10px]">
-                                      {friend.name.slice(0, 2).toUpperCase()}
+                                      {friend.name?.slice(0, 2).toUpperCase() || 'FR'}
                                     </AvatarFallback>
                                   </Avatar>
                                 ))

@@ -74,7 +74,7 @@ export function UserMentionSelector({ users, onSelect, searchTerm, position }: U
               >
                 <Avatar className="h-6 w-6">
                   <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className="text-xs">{user.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                  <AvatarFallback className="text-xs">{user.name?.slice(0, 2).toUpperCase() || 'U'}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{user.name}</p>

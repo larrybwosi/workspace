@@ -53,7 +53,7 @@ export function DirectMessagesList({ activeUserId, onUserSelect }: DirectMessage
                 <div className="relative">
                   <Avatar className="h-8 w-8">
                     <AvatarFallback className="text-xs bg-primary text-primary-foreground">
-                      {otherUser.name.slice(0, 2).toUpperCase()}
+                      {otherUser.name?.slice(0, 2).toUpperCase() || 'DM'}
                     </AvatarFallback>
                   </Avatar>
                   <div

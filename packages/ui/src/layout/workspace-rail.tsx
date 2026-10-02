@@ -139,7 +139,7 @@ export function WorkspaceRail({ onPlusClick }: WorkspaceRailProps) {
                           <Avatar className="h-full w-full rounded-2xl">
                             <AvatarImage src={friendUser?.avatar || friendUser?.image} alt={displayName} />
                             <AvatarFallback className="text-xs bg-primary/20 text-primary font-bold">
-                              {displayName.slice(0, 2).toUpperCase()}
+                              {displayName?.slice(0, 2).toUpperCase() || 'WS'}
                             </AvatarFallback>
                           </Avatar>
                           {isOnline && (

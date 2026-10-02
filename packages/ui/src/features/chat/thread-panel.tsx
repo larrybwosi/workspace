@@ -372,7 +372,7 @@ export function ThreadPanel({
                           >
                             <AvatarImage src={a.avatar} alt={a.name} />
                             <AvatarFallback className="text-[9px] font-semibold bg-primary/20 text-primary">
-                              {a.name.slice(0, 1).toUpperCase()}
+                              {a.name?.slice(0, 1).toUpperCase() || 'U'}
                             </AvatarFallback>
                           </Avatar>
                         ))}

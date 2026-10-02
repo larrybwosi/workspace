@@ -181,7 +181,7 @@ export function InfoPanel({
                 <Avatar className="h-20 w-20">
                   <AvatarImage src={dmUser.avatar} alt={dmUser.name} />
                   <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
-                    {dmUser.name.slice(0, 2).toUpperCase()}
+                    {dmUser.name?.slice(0, 2).toUpperCase() || 'DM'}
                   </AvatarFallback>
                 </Avatar>
                 <div>
@@ -642,7 +642,7 @@ export function InfoPanel({
                         {channel.threads.map((thread, idx) => (
                           <Button key={idx} variant="ghost" className="w-full justify-start text-sm h-auto py-2">
                             <Hash className="h-3 w-3 mr-2 shrink-0" />
-                            <span className="truncate">{thread.title || `Thread ${thread.id.slice(0, 8)}`}</span>
+                            <span className="truncate">{thread.title || `Thread ${thread.id?.slice(0, 8)}`}</span>
                             {thread._count && thread._count.messages > 0 && (
                               <Badge variant="secondary" className="ml-auto">
                                 {thread._count.messages}
@@ -714,7 +714,7 @@ export function InfoPanel({
                                 <Avatar className="h-8 w-8">
                                   <AvatarImage src={member.avatar || member.image} />
                                   <AvatarFallback className="text-xs bg-primary text-primary-foreground">
-                                    {member.name?.slice(0, 2).toUpperCase()}
+                                    {member.name?.slice(0, 2).toUpperCase() || 'M'}
                                   </AvatarFallback>
                                 </Avatar>
                                 <div className="flex-1 min-w-0">

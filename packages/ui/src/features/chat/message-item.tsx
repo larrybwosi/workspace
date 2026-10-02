@@ -96,7 +96,7 @@ const ReplyPreview = memo(({ message }: { message: any }) => {
       <Avatar className="h-4 w-4 rounded-full overflow-hidden shrink-0">
         <AvatarImage src={replyToUser?.avatar || replyToUser?.image} alt={replyToName} />
         <AvatarFallback className="text-[8px] bg-primary/20 text-primary font-bold">
-          {replyToName.slice(0, 1).toUpperCase()}
+          {replyToName?.slice(0, 1).toUpperCase() || 'U'}
         </AvatarFallback>
       </Avatar>
       <span className="font-semibold text-foreground/80 hover:underline cursor-pointer">

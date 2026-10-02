@@ -61,7 +61,7 @@ export const ChannelHeader = memo(({
               <Avatar className="h-8 w-8 rounded-full">
                 <AvatarImage src={dmUser?.avatar || dmUser?.image} alt={displayName} />
                 <AvatarFallback className="text-[11px] font-bold bg-primary text-primary-foreground">
-                  {displayName.slice(0, 2).toUpperCase()}
+                  {displayName?.slice(0, 2).toUpperCase() || 'CH'}
                 </AvatarFallback>
               </Avatar>
               <span

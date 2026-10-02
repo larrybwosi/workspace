@@ -19,11 +19,11 @@ const SocialBannerStats = memo(({ socialProfile }: { socialProfile: any }) => {
       {hasMutualWorkspaces && (
         <div className="flex items-center gap-2">
           <div className="flex -space-x-2">
-            {socialProfile.mutualWorkspaces.slice(0, 3).map((ws: any) => (
+            {socialProfile.mutualWorkspaces?.slice(0, 3).map((ws: any) => (
               <Avatar key={ws.id} className="h-5 w-5 rounded-md border-2 border-background shrink-0">
                 <AvatarImage src={ws.icon} />
                 <AvatarFallback className="text-[6px] rounded-md bg-muted">
-                  {ws.name.slice(0, 1).toUpperCase()}
+                  {ws.name?.slice(0, 1).toUpperCase() || 'W'}
                 </AvatarFallback>
               </Avatar>
             ))}
@@ -37,11 +37,11 @@ const SocialBannerStats = memo(({ socialProfile }: { socialProfile: any }) => {
       {hasMutualFriends && (
         <div className="flex items-center gap-2">
           <div className="flex -space-x-2">
-            {socialProfile.mutualFriends.slice(0, 3).map((f: any) => (
+            {socialProfile.mutualFriends?.slice(0, 3).map((f: any) => (
               <Avatar key={f.id} className="h-5 w-5 border-2 border-background shrink-0">
                 <AvatarImage src={f.avatar} />
                 <AvatarFallback className="text-[6px] bg-muted">
-                  {f.name.slice(0, 1).toUpperCase()}
+                  {f.name?.slice(0, 1).toUpperCase() || 'F'}
                 </AvatarFallback>
               </Avatar>
             ))}
