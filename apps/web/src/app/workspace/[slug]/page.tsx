@@ -4,8 +4,7 @@ import * as React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
   useWorkspace,
-  useWorkspaceStats,
-  useWorkspaceActivity,
+  useWorkspaceAnalytics,
   useChannels,
   useWorkspaceMembers,
   useWorkspaceAuditLogs,
@@ -14,15 +13,11 @@ import {
   Users,
   MessageSquare,
   Hash,
-  Shield,
   Activity,
   ArrowUpRight,
-  Sparkles,
   Settings,
   UserPlus,
-  Plus,
   Clock,
-  FileText,
   AlertCircle,
   BarChart2,
   TrendingUp,
@@ -34,7 +29,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@repo/ui';
 import { Skeleton } from '@repo/ui';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@repo/ui';
 import { WorkspaceIcon } from '@repo/ui';
-import { formatDistanceToNow } from 'date-fns';
 
 export default function WorkspaceOverviewPage() {
   const params = useParams();
@@ -42,8 +36,7 @@ export default function WorkspaceOverviewPage() {
   const slug = params?.slug as string;
 
   const { data: workspace, isLoading: isWorkspaceLoading } = useWorkspace(slug);
-  const { data: stats, isLoading: isStatsLoading } = useWorkspaceStats(slug);
-  const { data: activities, isLoading: isActivityLoading } = useWorkspaceActivity(slug);
+  const { data: analytics } = useWorkspaceAnalytics(slug);
   const { data: channels } = useChannels();
   const { data: members } = useWorkspaceMembers(slug);
   const { data: auditLogs } = useWorkspaceAuditLogs(slug);
@@ -133,7 +126,7 @@ export default function WorkspaceOverviewPage() {
               <CardContent className="p-4 flex items-center justify-between">
                 <div>
                   <p className="text-xs font-medium text-muted-foreground">Total Members</p>
-                  <p className="text-2xl font-bold mt-1">{stats?.totalMembers ?? members?.length ?? 0}</p>
+                  <p className="text-2xl font-bold mt-1">{members?.length ?? 0}</p>
                 </div>
                 <div className="h-10 w-10 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
                   <Users className="h-5 w-5" />
@@ -145,7 +138,7 @@ export default function WorkspaceOverviewPage() {
               <CardContent className="p-4 flex items-center justify-between">
                 <div>
                   <p className="text-xs font-medium text-muted-foreground">Active Channels</p>
-                  <p className="text-2xl font-bold mt-1">{stats?.totalChannels ?? channels?.length ?? 0}</p>
+                  <p className="text-2xl font-bold mt-1">{channels?.length ?? 0}</p>
                 </div>
                 <div className="h-10 w-10 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
                   <Hash className="h-5 w-5" />
@@ -156,8 +149,8 @@ export default function WorkspaceOverviewPage() {
             <Card className="bg-card/50 border-border/60">
               <CardContent className="p-4 flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground">Total Messages</p>
-                  <p className="text-2xl font-bold mt-1">{stats?.totalMessages ?? '1.2k'}</p>
+                  <p className="text-xs font-medium text-muted-foreground">Messages Sent</p>
+                  <p className="text-2xl font-bold mt-1">{(analytics as any)?.totalMessages ?? '1.2k'}</p>
                 </div>
                 <div className="h-10 w-10 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center">
                   <MessageSquare className="h-5 w-5" />
@@ -199,24 +192,24 @@ export default function WorkspaceOverviewPage() {
                 <Card className="lg:col-span-2 border-border/60 bg-card/40">
                   <CardHeader className="p-4 pb-2">
                     <CardTitle className="text-base font-semibold flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-primary" /> Workspace Activity
+                      <Clock className="h-4 w-4 text-primary" /> Workspace Audit Overview
                     </CardTitle>
-                    <CardDescription className="text-xs">Recent events and message history across channels</CardDescription>
+                    <CardDescription className="text-xs">Recent events and administrative activity across workspace</CardDescription>
                   </CardHeader>
                   <CardContent className="p-4 space-y-3">
-                    {activities && activities.length > 0 ? (
-                      activities.slice(0, 6).map((act: any, i: number) => (
+                    {auditLogs && auditLogs.length > 0 ? (
+                      auditLogs.slice(0, 6).map((log: any, i: number) => (
                         <div key={i} className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-muted/40 transition-colors">
                           <Avatar className="h-8 w-8 mt-0.5">
-                            <AvatarImage src={act.user?.avatar} />
-                            <AvatarFallback>{act.user?.name?.slice(0, 2) || 'U'}</AvatarFallback>
+                            <AvatarImage src={log.user?.avatar} />
+                            <AvatarFallback>{log.actorName?.slice(0, 2) || 'A'}</AvatarFallback>
                           </Avatar>
                           <div className="flex-1 min-w-0 text-xs">
                             <p className="text-foreground">
-                              <span className="font-semibold">{act.user?.name || 'User'}</span> {act.action || 'performed action'}
+                              <span className="font-semibold">{log.actorName || 'System'}</span> {log.action || 'updated settings'}
                             </p>
                             <p className="text-muted-foreground text-[10px] mt-0.5">
-                              {act.timestamp ? formatDistanceToNow(new Date(act.timestamp), { addSuffix: true }) : 'Recently'}
+                              {log.createdAt || 'Recently'}
                             </p>
                           </div>
                         </div>

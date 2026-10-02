@@ -1,5 +1,5 @@
-import { parseSystemReport, SystemReportCard } from './message-types/system-report-card';
 'use client';
+import { parseSystemReport, SystemReportCard } from './message-types/system-report-card';
 
 import { Smile, MessageSquare, Copy, Trash2, Edit, LinkIcon, MoreHorizontal, Reply, Loader2, Pin } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '../../components/avatar';

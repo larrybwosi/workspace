@@ -37,7 +37,7 @@ export function WorkspaceSwitcher({
   const [createDialogOpen, setCreateDialogOpen] = React.useState(false);
 
   const currentWorkspace = workspaces?.find(
-    (w) => w.id === activeSlug || w.slug === activeSlug
+    (w: any) => w.id === activeSlug || w.slug === activeSlug
   ) || workspaces?.[0];
 
   const handleWorkspaceChange = (slug: string) => {
