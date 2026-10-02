@@ -97,3 +97,5 @@ export * from './features/support/ticket-status-badge';
 export * from './features/support/create-ticket-dialog';
 export * from './features/workspace/settings/tickets-tab';
 export * from './features/organization/settings/general-tab';
+export * from './components/workspace-icon';
+export * from './features/chat/message-types/system-report-card';

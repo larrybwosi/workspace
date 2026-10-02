@@ -1,418 +1,305 @@
 'use client';
 
+import * as React from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useWorkspaces, useCreateWorkspaceChannel, useWorkspace, useWorkspaceChannels } from '@repo/api-client';
-import { WorkspaceSidebar, useBranding } from '@repo/ui';
-import { useState, useMemo } from 'react';
+import {
+  useWorkspace,
+  useWorkspaceStats,
+  useWorkspaceActivity,
+  useChannels,
+  useWorkspaceMembers,
+  useWorkspaceAuditLogs,
+} from '@repo/api-client';
 import {
   Users,
   MessageSquare,
-  Settings,
-  ArrowRight,
-  Plus,
-  UserPlus,
   Hash,
-  Lock,
+  Shield,
   Activity,
-  ChevronRight,
+  ArrowUpRight,
   Sparkles,
-  LifeBuoy,
-  ShieldCheck,
-  Circle,
+  Settings,
+  UserPlus,
+  Plus,
+  Clock,
+  FileText,
+  AlertCircle,
+  BarChart2,
+  TrendingUp,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import Link from 'next/link';
-import { CreateChannelDialog } from '@/components/features/chat/create-channel-dialog';
-import { cn } from '@/lib/utils';
+import { Button } from '@repo/ui';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@repo/ui';
+import { Badge } from '@repo/ui';
+import { Avatar, AvatarFallback, AvatarImage } from '@repo/ui';
+import { Skeleton } from '@repo/ui';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@repo/ui';
+import { WorkspaceIcon } from '@repo/ui';
+import { formatDistanceToNow } from 'date-fns';
 
-interface Workspace {
-  id: string;
-  name: string;
-  slug: string;
-  description?: string;
-  icon?: string;
-  banner?: string;
-  plan?: string;
-  members?: any[];
-  _count?: {
-    members: number;
-    channels: number;
-  };
-}
-
-export default function WorkspacePage() {
+export default function WorkspaceOverviewPage() {
   const params = useParams();
   const router = useRouter();
   const slug = params?.slug as string;
 
-  const { data: workspaceData } = useWorkspace(slug);
-  useBranding(workspaceData?.brandingConfig);
+  const { data: workspace, isLoading: isWorkspaceLoading } = useWorkspace(slug);
+  const { data: stats, isLoading: isStatsLoading } = useWorkspaceStats(slug);
+  const { data: activities, isLoading: isActivityLoading } = useWorkspaceActivity(slug);
+  const { data: channels } = useChannels();
+  const { data: members } = useWorkspaceMembers(slug);
+  const { data: auditLogs } = useWorkspaceAuditLogs(slug);
 
-  const { data: workspaces, isLoading } = useWorkspaces();
-  const { data: channels, isLoading: channelsLoading } = useWorkspaceChannels(slug ?? '');
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [createChannelOpen, setCreateChannelOpen] = useState(false);
-
-  const workspace = useMemo(() => workspaces?.find((w: Workspace) => w.slug === slug), [workspaces, slug]);
-
-  const createChannelMutation = useCreateWorkspaceChannel(slug || '');
-
-  const handleCreateChannel = (channelData: { name: string; description: string; isPrivate: boolean }) => {
-    if (!slug) return;
-    createChannelMutation.mutate(
-      {
-        name: channelData.name,
-        description: channelData.description,
-        type: channelData.isPrivate ? 'private' : 'public',
-      },
-      { onSuccess: () => setCreateChannelOpen(false) }
-    );
-  };
-
-  if (isLoading) {
+  if (isWorkspaceLoading) {
     return (
-      <div className="h-screen w-screen flex overflow-hidden bg-background">
-        <WorkspaceSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} currentWorkspaceId="" />
-        <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
-          <div className="h-14 border-b border-border shrink-0" />
-          <div className="p-8 w-full space-y-8">
-            <div className="flex items-center gap-4">
-              <Skeleton className="h-14 w-14 rounded-md" />
-              <div className="space-y-2">
-                <Skeleton className="h-6 w-56" />
-                <Skeleton className="h-3.5 w-80" />
-              </div>
-            </div>
-            <div className="grid gap-px bg-border rounded-md overflow-hidden border border-border md:grid-cols-4">
-              {[1, 2, 3, 4].map(i => (
-                <Skeleton key={i} className="h-24 rounded-none" />
-              ))}
-            </div>
-          </div>
-        </main>
+      <div className="p-8 space-y-6 max-w-7xl mx-auto">
+        <Skeleton className="h-20 w-full rounded-xl" />
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Skeleton className="h-28 rounded-xl" />
+          <Skeleton className="h-28 rounded-xl" />
+          <Skeleton className="h-28 rounded-xl" />
+          <Skeleton className="h-28 rounded-xl" />
+        </div>
+        <Skeleton className="h-96 w-full rounded-xl" />
       </div>
     );
   }
 
   if (!workspace) {
     return (
-      <div className="flex h-screen w-screen flex-col items-center justify-center gap-4 bg-background">
-        <h1 className="text-xl font-semibold text-foreground">Workspace not found</h1>
-        <p className="text-sm text-muted-foreground">The workspace you are looking for does not exist.</p>
-        <Button asChild>
-          <Link href="/">Go back home</Link>
-        </Button>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <AlertCircle className="h-12 w-12 text-muted-foreground" />
+        <h2 className="text-xl font-semibold">Workspace not found</h2>
+        <Button onClick={() => router.push('/')}>Return Home</Button>
       </div>
     );
   }
 
-  const recentChannels = channels?.slice(0, 6) ?? [];
-
   return (
-    <div className="h-screen w-screen flex overflow-hidden bg-background">
-      <WorkspaceSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} currentWorkspaceId={workspace.id} />
-
-      <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Top bar */}
-        <header className="h-14 flex items-center justify-between px-6 border-b border-border bg-background shrink-0">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 lg:hidden shrink-0"
-              onClick={() => setSidebarOpen(true)}
-            >
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 12h18M3 6h18M3 18h18" />
-              </svg>
-            </Button>
-            <span className="text-sm font-medium text-muted-foreground truncate">{workspace.name}</span>
-            <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0" />
-            <span className="text-sm font-semibold text-foreground">Overview</span>
-            <Badge
-              variant="outline"
-              className="ml-2 h-5 gap-1 rounded-sm border-border px-1.5 text-[10px] font-medium text-muted-foreground hidden sm:inline-flex"
-            >
-              <Circle className="h-1.5 w-1.5 fill-emerald-500 text-emerald-500" />
-              All systems operational
-            </Badge>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => setCreateChannelOpen(true)}>
-              <Plus className="h-3.5 w-3.5 mr-1.5" />
-              New channel
-            </Button>
-            <Button size="sm" className="h-8 text-xs" asChild>
-              <Link href={`/workspace/${slug}/members`}>
-                <UserPlus className="h-3.5 w-3.5 mr-1.5" />
-                Invite members
-              </Link>
-            </Button>
-          </div>
-        </header>
-
-        <div className="flex-1 overflow-y-auto">
-          <div className="w-full">
-            {/* Workspace Banner if available */}
-            {workspace.banner && (
-              <div className="h-32 w-full overflow-hidden border-b border-border bg-muted">
-                <img src={workspace.banner} alt={`${workspace.name} banner`} className="h-full w-full object-cover" />
+    <div className="flex-1 flex flex-col h-full bg-background overflow-hidden">
+      {/* Overview Container */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-7xl mx-auto p-6 space-y-6">
+          {/* Header Banner */}
+          <div className="relative rounded-2xl border border-border/50 bg-card overflow-hidden shadow-sm">
+            {workspace.banner ? (
+              <div className="h-32 w-full overflow-hidden bg-muted">
+                <img src={workspace.banner} alt={workspace.name} className="h-full w-full object-cover" />
               </div>
+            ) : (
+              <div className="h-24 w-full bg-gradient-to-r from-primary/20 via-primary/10 to-background border-b border-border/50" />
             )}
 
-            {/* Workspace identity strip */}
-            <div className="flex items-center justify-between gap-4 px-8 py-6 border-b border-border">
-              <div className="flex items-center gap-4 min-w-0">
-                <div className="h-12 w-12 rounded-md bg-primary/10 border border-primary/20 flex items-center justify-center text-lg font-bold text-primary shrink-0 overflow-hidden">
-                  {workspace.icon && (workspace.icon.startsWith('http') || workspace.icon.startsWith('/') || workspace.icon.startsWith('data:') || workspace.icon.length > 2) ? (
-                    <img src={workspace.icon} alt={workspace.name} className="h-full w-full object-cover" />
-                  ) : (
-                    workspace.icon || workspace.name.charAt(0).toUpperCase()
-                  )}
+            <div className="p-6 pt-0 relative flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 -mt-10">
+              <div className="flex items-end gap-4">
+                <div className="h-20 w-20 rounded-2xl bg-card border-4 border-background shadow-md overflow-hidden flex items-center justify-center text-2xl font-bold text-primary shrink-0">
+                  <WorkspaceIcon icon={workspace.icon} name={workspace.name} textClassName="text-2xl" />
                 </div>
-                <div className="min-w-0">
+                <div className="pb-1">
                   <div className="flex items-center gap-2">
-                    <h1 className="text-lg font-semibold tracking-tight text-foreground truncate">{workspace.name}</h1>
-                    <Badge
-                      variant="secondary"
-                      className="h-5 rounded-sm px-1.5 text-[10px] font-semibold uppercase tracking-wide"
-                    >
-                      {workspace.plan || 'Enterprise'}
+                    <h1 className="text-2xl font-bold tracking-tight text-foreground">{workspace.name}</h1>
+                    <Badge variant="outline" className="text-xs uppercase tracking-wider bg-primary/5 text-primary border-primary/20">
+                      {workspace.plan || 'Free'}
                     </Badge>
                   </div>
-                  <p className="text-sm text-muted-foreground truncate">
-                    {workspace.description || 'Workspace overview, activity, and administration'}
+                  <p className="text-sm text-muted-foreground mt-1 max-w-xl line-clamp-1">
+                    {workspace.description || 'Welcome to your workspace dashboard'}
                   </p>
                 </div>
               </div>
-              <div className="hidden md:flex items-center gap-1.5 text-xs text-muted-foreground shrink-0">
-                <ShieldCheck className="h-3.5 w-3.5" />
-                SSO &amp; audit logging enabled
+
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 text-xs"
+                  onClick={() => router.push(`/workspace/${slug}/members`)}
+                >
+                  <UserPlus className="h-3.5 w-3.5" /> Invite
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 text-xs"
+                  onClick={() => router.push(`/workspace/${slug}/settings`)}
+                >
+                  <Settings className="h-3.5 w-3.5" /> Settings
+                </Button>
               </div>
             </div>
-
-            {/* Stats row */}
-            <div className="grid grid-cols-2 md:grid-cols-4 border-b border-border divide-x divide-border">
-              <StatTile
-                label="Members"
-                value={workspace._count?.members ?? 0}
-                icon={<Users className="h-3.5 w-3.5" />}
-                href={`/workspace/${slug}/members`}
-              />
-              <StatTile
-                label="Channels"
-                value={workspace._count?.channels ?? 0}
-                icon={<MessageSquare className="h-3.5 w-3.5" />}
-                onClick={() => setCreateChannelOpen(true)}
-              />
-              <StatTile
-                label="Assistant"
-                value="Active"
-                icon={<Sparkles className="h-3.5 w-3.5" />}
-                href={`/workspace/${slug}/assistant`}
-              />
-              <StatTile
-                label="Support"
-                value="Tickets"
-                icon={<LifeBuoy className="h-3.5 w-3.5" />}
-                href={`/workspace/${slug}/tickets`}
-              />
-            </div>
-
-            {/* Content grid */}
-            <div className="grid lg:grid-cols-3">
-              {/* Recent channels */}
-              <Card className="rounded-none border-0 border-b lg:border-b-0 lg:border-r border-border shadow-none lg:col-span-2">
-                <CardHeader className="pb-3 pt-5 px-8 flex-row items-center justify-between space-y-0">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Channels</p>
-                    <p className="text-sm text-foreground mt-0.5">Recent activity across your workspace</p>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-7 text-xs"
-                    onClick={() => setCreateChannelOpen(true)}
-                  >
-                    <Plus className="h-3.5 w-3.5 mr-1" />
-                    New
-                  </Button>
-                </CardHeader>
-                <CardContent className="px-8 pb-6">
-                  {channelsLoading ? (
-                    <div className="space-y-2">
-                      {[1, 2, 3].map(i => (
-                        <Skeleton key={i} className="h-11 rounded-md" />
-                      ))}
-                    </div>
-                  ) : recentChannels.length > 0 ? (
-                    <div className="border border-border rounded-md divide-y divide-border overflow-hidden">
-                      {recentChannels.map((channel: any) => {
-                        const Icon = channel.type === 'private' ? Lock : Hash;
-                        return (
-                          <Link
-                            key={channel.id}
-                            href={`/workspace/${slug}/channels/${channel.slug ?? channel.id}`}
-                            className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors group"
-                          >
-                            <div
-                              className={cn(
-                                'flex items-center justify-center h-7 w-7 rounded-md shrink-0 border',
-                                channel.type === 'private'
-                                  ? 'bg-amber-500/10 text-amber-600 border-amber-500/20'
-                                  : 'bg-primary/10 text-primary border-primary/20'
-                              )}
-                            >
-                              <Icon className="h-3.5 w-3.5" />
-                            </div>
-                            <span className="flex-1 text-sm font-medium truncate text-foreground">{channel.name}</span>
-                            {channel.unreadCount > 0 && (
-                              <Badge variant="default" className="h-5 min-w-5 px-1.5 rounded-sm text-[10px] shrink-0">
-                                {channel.unreadCount > 99 ? '99+' : channel.unreadCount}
-                              </Badge>
-                            )}
-                            <ArrowRight className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div className="py-10 text-center border border-dashed border-border rounded-md">
-                      <p className="text-sm font-medium text-foreground">No channels yet</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Create a channel to start organizing conversations.
-                      </p>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="mt-3 h-8 text-xs"
-                        onClick={() => setCreateChannelOpen(true)}
-                      >
-                        Create your first channel
-                      </Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Quick actions / Admin */}
-              <Card className="rounded-none border-0 shadow-none">
-                <CardHeader className="pb-3 pt-5 px-8">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Administration</p>
-                  <p className="text-sm text-foreground mt-0.5">Setup and governance</p>
-                </CardHeader>
-                <CardContent className="px-8 pb-6 space-y-1">
-                  <QuickAction
-                    icon={<Plus className="h-4 w-4" />}
-                    title="Create a channel"
-                    description="Organize discussions by topic or team"
-                    onClick={() => setCreateChannelOpen(true)}
-                  />
-                  <QuickAction
-                    icon={<UserPlus className="h-4 w-4" />}
-                    title="Invite teammates"
-                    description="Bring colleagues into the workspace"
-                    href={`/workspace/${slug}/members`}
-                  />
-                  <QuickAction
-                    icon={<Sparkles className="h-4 w-4" />}
-                    title="AI assistant"
-                    description="Automate routine work and answer questions"
-                    href={`/workspace/${slug}/assistant`}
-                  />
-                  <QuickAction
-                    icon={<Activity className="h-4 w-4" />}
-                    title="Audit log"
-                    description="Review member and admin activity"
-                    href={`/workspace/${slug}/activity`}
-                  />
-                  <QuickAction
-                    icon={<Settings className="h-4 w-4" />}
-                    title="Workspace settings"
-                    description="Branding, integrations, and permissions"
-                    href={`/workspace/${slug}/settings`}
-                  />
-                </CardContent>
-              </Card>
-            </div>
           </div>
+
+          {/* Quick Metrics */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card className="bg-card/50 border-border/60">
+              <CardContent className="p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">Total Members</p>
+                  <p className="text-2xl font-bold mt-1">{stats?.totalMembers ?? members?.length ?? 0}</p>
+                </div>
+                <div className="h-10 w-10 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
+                  <Users className="h-5 w-5" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-card/50 border-border/60">
+              <CardContent className="p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">Active Channels</p>
+                  <p className="text-2xl font-bold mt-1">{stats?.totalChannels ?? channels?.length ?? 0}</p>
+                </div>
+                <div className="h-10 w-10 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+                  <Hash className="h-5 w-5" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-card/50 border-border/60">
+              <CardContent className="p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">Total Messages</p>
+                  <p className="text-2xl font-bold mt-1">{stats?.totalMessages ?? '1.2k'}</p>
+                </div>
+                <div className="h-10 w-10 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center">
+                  <MessageSquare className="h-5 w-5" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-card/50 border-border/60">
+              <CardContent className="p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">Weekly Activity</p>
+                  <p className="text-2xl font-bold mt-1">+18%</p>
+                </div>
+                <div className="h-10 w-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
+                  <TrendingUp className="h-5 w-5" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Main Dashboard Tabs */}
+          <Tabs defaultValue="overview" className="w-full space-y-4">
+            <TabsList className="bg-muted/50 p-1 border border-border/50 rounded-xl">
+              <TabsTrigger value="overview" className="rounded-lg text-xs gap-1.5">
+                <BarChart2 className="h-3.5 w-3.5" /> Overview
+              </TabsTrigger>
+              <TabsTrigger value="channels" className="rounded-lg text-xs gap-1.5">
+                <Hash className="h-3.5 w-3.5" /> Channels
+              </TabsTrigger>
+
+              <TabsTrigger value="activity" className="rounded-lg text-xs gap-1.5">
+                <Activity className="h-3.5 w-3.5" /> Activity Logs
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="overview" className="space-y-4">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Recent Activity */}
+                <Card className="lg:col-span-2 border-border/60 bg-card/40">
+                  <CardHeader className="p-4 pb-2">
+                    <CardTitle className="text-base font-semibold flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-primary" /> Workspace Activity
+                    </CardTitle>
+                    <CardDescription className="text-xs">Recent events and message history across channels</CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-4 space-y-3">
+                    {activities && activities.length > 0 ? (
+                      activities.slice(0, 6).map((act: any, i: number) => (
+                        <div key={i} className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-muted/40 transition-colors">
+                          <Avatar className="h-8 w-8 mt-0.5">
+                            <AvatarImage src={act.user?.avatar} />
+                            <AvatarFallback>{act.user?.name?.slice(0, 2) || 'U'}</AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0 text-xs">
+                            <p className="text-foreground">
+                              <span className="font-semibold">{act.user?.name || 'User'}</span> {act.action || 'performed action'}
+                            </p>
+                            <p className="text-muted-foreground text-[10px] mt-0.5">
+                              {act.timestamp ? formatDistanceToNow(new Date(act.timestamp), { addSuffix: true }) : 'Recently'}
+                            </p>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-8 text-xs text-muted-foreground">No recent activity logged</div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Workspace Members Preview */}
+                <Card className="border-border/60 bg-card/40">
+                  <CardHeader className="p-4 pb-2">
+                    <CardTitle className="text-base font-semibold flex items-center justify-between">
+                      <span className="flex items-center gap-2">
+                        <Users className="h-4 w-4 text-primary" /> Members
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 text-[11px] px-2 text-muted-foreground hover:text-foreground"
+                        onClick={() => router.push(`/workspace/${slug}/members`)}
+                      >
+                        View all
+                      </Button>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-4 space-y-3">
+                    {members?.slice(0, 5).map((m: any) => (
+                      <div key={m.id || m.userId} className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <Avatar className="h-7 w-7">
+                            <AvatarImage src={m.user?.avatar || m.user?.image} />
+                            <AvatarFallback className="text-[10px]">{m.user?.name?.slice(0, 2) || 'U'}</AvatarFallback>
+                          </Avatar>
+                          <div className="min-w-0">
+                            <p className="font-medium truncate">{m.user?.name || m.name || 'Member'}</p>
+                            <p className="text-[10px] text-muted-foreground truncate">{m.role || 'Member'}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="channels">
+              <Card className="border-border/60 bg-card/40 p-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                  {channels?.map((ch: any) => (
+                    <div
+                      key={ch.id}
+                      onClick={() => router.push(`/workspace/${slug}/channels/${ch.slug}`)}
+                      className="p-3 rounded-xl border border-border/50 bg-card hover:bg-muted/50 cursor-pointer transition-colors flex items-center justify-between"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Hash className="h-4 w-4 text-muted-foreground shrink-0" />
+                        <span className="font-medium text-xs truncate">{ch.name}</span>
+                      </div>
+                      <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground" />
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="activity">
+              <Card className="border-border/60 bg-card/40 p-4 space-y-2">
+                {auditLogs?.map((log: any, idx: number) => (
+                  <div key={idx} className="p-3 rounded-lg border border-border/40 text-xs flex items-center justify-between">
+                    <div>
+                      <span className="font-semibold text-foreground">{log.action}</span>
+                      <span className="text-muted-foreground ml-2">by {log.actorName || 'System'}</span>
+                    </div>
+                    <span className="text-[10px] text-muted-foreground">{log.createdAt}</span>
+                  </div>
+                ))}
+              </Card>
+            </TabsContent>
+          </Tabs>
         </div>
-      </main>
-
-      <CreateChannelDialog
-        open={createChannelOpen}
-        onOpenChange={setCreateChannelOpen}
-        workspaceSlug={slug}
-        onCreateChannel={handleCreateChannel as any}
-      />
+      </div>
     </div>
   );
-}
-
-// ---------------------------------------------------------------------------
-// Sub-components
-// ---------------------------------------------------------------------------
-
-function StatTile({
-  label,
-  value,
-  icon,
-  href,
-  onClick,
-}: {
-  label: string;
-  value: number | string;
-  icon: React.ReactNode;
-  href?: string;
-  onClick?: () => void;
-}) {
-  const inner = (
-    <div className="flex flex-col gap-2 px-8 py-5 hover:bg-muted/40 transition-colors cursor-pointer select-none">
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</span>
-        <span className="text-muted-foreground/60">{icon}</span>
-      </div>
-      <span className="text-2xl font-semibold tabular-nums text-foreground">{value}</span>
-    </div>
-  );
-
-  if (href) {
-    return <Link href={href}>{inner}</Link>;
-  }
-  return <div onClick={onClick}>{inner}</div>;
-}
-
-function QuickAction({
-  icon,
-  title,
-  description,
-  href,
-  onClick,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-  href?: string;
-  onClick?: () => void;
-}) {
-  const inner = (
-    <div className="flex items-center gap-3 p-2.5 rounded-md hover:bg-muted transition-colors cursor-pointer group">
-      <div className="h-8 w-8 rounded-md border border-border bg-muted/40 flex items-center justify-center text-muted-foreground shrink-0">
-        {icon}
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-foreground truncate">{title}</p>
-        <p className="text-[11px] text-muted-foreground truncate">{description}</p>
-      </div>
-      <ArrowRight className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
-    </div>
-  );
-
-  if (href) {
-    return <Link href={href}>{inner}</Link>;
-  }
-  return <div onClick={onClick}>{inner}</div>;
 }

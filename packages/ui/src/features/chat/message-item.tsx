@@ -1,3 +1,4 @@
+import { parseSystemReport, SystemReportCard } from './message-types/system-report-card';
 'use client';
 
 import { Smile, MessageSquare, Copy, Trash2, Edit, LinkIcon, MoreHorizontal, Reply, Loader2, Pin } from 'lucide-react';
@@ -404,6 +405,10 @@ const MessageBodyRenderer = memo(({ message, handleCustomAction, isActionPending
   handleCustomAction: any,
   isActionPending: boolean
 }) => {
+  const parsedReport = parseSystemReport(message.content, message.metadata);
+  if (parsedReport) {
+    return <SystemReportCard report={parsedReport} />;
+  }
   const isImplicitCode = (!message.messageType || message.messageType === 'standard') &&
     (CODE_BLOCK_REGEX.test(message.content) || message.metadata?.isImplicit);
 
