@@ -41,7 +41,7 @@ export const ValidationSchema = z.object({
 export type ValidationSchemaType = z.infer<typeof ValidationSchema>;
 
 /**
- * Data Source Schema for dynamic content (e.g., Select options or dynamic dropdowns).
+ * Data Source Schema for dynamic content (e.g., Select or Radio options).
  */
 export const DataSourceSchema = z.object({
   /** Source type: 'STATIC' for inline items, 'API' for external fetching, 'VARIABLE' for message data interpolation */
@@ -92,6 +92,10 @@ export const CustomMessageThemeSchema = z.object({
   textColor: z.string().optional(),
   /** Accent / Brand highlight color */
   accentColor: z.string().optional(),
+  /** Inner card background override */
+  cardBackgroundColor: z.string().optional(),
+  /** Primary button background override */
+  primaryButtonColor: z.string().optional(),
   /** Custom CSS class names applied to the container */
   className: z.string().optional(),
 });
@@ -102,7 +106,7 @@ export type CustomMessageTheme = z.infer<typeof CustomMessageThemeSchema>;
  * A Node is the recursive structural building block of custom message UI components.
  */
 export type MessageNode = {
-  /** The type identifier of the component (e.g., 'Layout.Card', 'Display.Field', 'Input.Text', 'Data.Stat') */
+  /** The type identifier of the component (e.g., 'Layout.Card', 'Display.Field', 'Input.Text', 'Input.RadioGroup', 'Input.Switch', 'Display.Progress') */
   type: string;
   /** Unique identifier for the node (required for form inputs to track state & validation) */
   id?: string;
@@ -110,6 +114,9 @@ export type MessageNode = {
   properties?: Record<string, any>;
   /** Nested child nodes rendered inside this node */
   children?: MessageNode[];
+  /** Allow multiple responses toggle */
+  allowMultipleResponses?: boolean;
+  allowMultiple?: boolean;
   /** Optional conditional display logic evaluating visibility based on form state or message data */
   condition?: ConditionSchemaType;
   /** Optional validation rules for user inputs */
@@ -126,8 +133,8 @@ export const MessageNodeSchema: z.ZodType<MessageNode> = z.lazy(() =>
     properties: z.record(z.string(), z.any()).optional(),
     children: z.array(MessageNodeSchema).optional(),
     allowMultipleResponses: z.boolean().optional(),
-  allowMultiple: z.boolean().optional(),
-  condition: ConditionSchema.optional(),
+    allowMultiple: z.boolean().optional(),
+    condition: ConditionSchema.optional(),
     validation: ValidationSchema.optional(),
     metadata: z.record(z.string(), z.any()).optional(),
   })
@@ -143,6 +150,7 @@ export const PredefinedCustomMessageTypeSchema = z.enum([
   'FEEDBACK',
   'TASK_CARD',
   'SURVEY',
+  'LOW_STOCK_ALERT',
   'GENERIC',
 ]);
 
@@ -173,9 +181,10 @@ export const MessageActionSchema = z.object({
     /** Whether to automatically gather and send all current form input state in the callback payload */
     includeFormState: z.boolean().default(true).optional(),
   }),
-  /** Optional visibility condition for displaying this action button */
+  /** Flag to allow users to trigger this action multiple times */
   allowMultipleResponses: z.boolean().optional(),
   allowMultiple: z.boolean().optional(),
+  /** Optional visibility condition for displaying this action button */
   condition: ConditionSchema.optional(),
 });
 
@@ -189,7 +198,7 @@ export const CustomMessageSchema = z.object({
   version: z.string().default('v1'),
   /** Optional template identifier reference */
   templateId: z.string().optional(),
-  /** The logical message category type (e.g. 'APPROVAL', 'REPORT', 'FORM', 'FEEDBACK', 'TASK_CARD', 'SURVEY', or custom string) */
+  /** The logical message category type (e.g. 'APPROVAL', 'REPORT', 'FORM', 'FEEDBACK', 'TASK_CARD', 'SURVEY', 'LOW_STOCK_ALERT', or custom string) */
   type: z.string(),
   /** Top-level configuration, branding, and header context */
   context: z.object({
@@ -240,25 +249,13 @@ export interface CreateApprovalMessageOptions {
   priority?: 'low' | 'normal' | 'high' | 'urgent';
   approveLabel?: string;
   rejectLabel?: string;
+  allowMultipleResponses?: boolean;
   data?: Record<string, any>;
   theme?: CustomMessageTheme;
 }
 
 /**
  * Creates a standard Approval Custom Message schema structure.
- *
- * @example
- * ```ts
- * const approvalSchema = createApprovalMessage({
- *   title: 'Expense Reimbursement Request',
- *   description: 'Requested by Jane Doe for $450.00',
- *   fields: [
- *     { label: 'Category', value: 'Travel' },
- *     { label: 'Amount', value: '$450.00' }
- *   ],
- *   callbackId: 'expense-approval-101'
- * });
- * ```
  */
 export const createApprovalMessage = (options: CreateApprovalMessageOptions): CustomMessage => ({
   version: 'v1',
@@ -289,6 +286,7 @@ export const createApprovalMessage = (options: CreateApprovalMessageOptions): Cu
       label: options.approveLabel || 'Approve',
       type: 'PRIMARY',
       icon: 'Check',
+      allowMultipleResponses: options.allowMultipleResponses ?? false,
       handler: {
         type: 'CALLBACK',
         callbackId: options.callbackId,
@@ -301,6 +299,7 @@ export const createApprovalMessage = (options: CreateApprovalMessageOptions): Cu
       label: options.rejectLabel || 'Reject',
       type: 'DESTRUCTIVE',
       icon: 'X',
+      allowMultipleResponses: options.allowMultipleResponses ?? false,
       handler: {
         type: 'CALLBACK',
         callbackId: options.callbackId,
@@ -374,7 +373,7 @@ export const createReportMessage = (options: CreateReportMessageOptions): Custom
 export interface FormFieldConfig {
   id: string;
   label: string;
-  type?: 'text' | 'textarea' | 'select' | 'checkbox';
+  type?: 'text' | 'textarea' | 'select' | 'checkbox' | 'radio' | 'switch';
   placeholder?: string;
   options?: Array<{ label: string; value: string }>;
   required?: boolean;
@@ -390,6 +389,7 @@ export interface CreateFormMessageOptions {
   submitCallbackId: string;
   submitLabel?: string;
   type?: 'FORM' | 'FEEDBACK' | 'SURVEY';
+  allowMultipleResponses?: boolean;
   data?: Record<string, any>;
   theme?: CustomMessageTheme;
 }
@@ -415,7 +415,11 @@ export const createFormMessage = (options: CreateFormMessageOptions): CustomMess
           ? 'Input.Select'
           : field.type === 'checkbox'
             ? 'Input.Checkbox'
-            : 'Input.Text';
+            : field.type === 'radio'
+              ? 'Input.RadioGroup'
+              : field.type === 'switch'
+                ? 'Input.Switch'
+                : 'Input.Text';
 
       const validation: ValidationSchemaType | undefined = field.required
         ? { required: true, errorMessage: `${field.label} is required` }
@@ -430,11 +434,12 @@ export const createFormMessage = (options: CreateFormMessageOptions): CustomMess
         properties.multiline = true;
       }
 
-      if (field.type === 'select' && field.options) {
+      if ((field.type === 'select' || field.type === 'radio') && field.options) {
         properties.dataSource = {
           type: 'STATIC',
           items: field.options,
         };
+        properties.options = field.options;
       }
 
       return {
@@ -451,6 +456,7 @@ export const createFormMessage = (options: CreateFormMessageOptions): CustomMess
       label: options.submitLabel || 'Submit',
       type: 'PRIMARY',
       icon: 'Send',
+      allowMultipleResponses: options.allowMultipleResponses ?? false,
       handler: {
         type: 'CALLBACK',
         callbackId: options.submitCallbackId,
@@ -472,6 +478,7 @@ export interface CreateTaskCardMessageOptions {
   assignee?: string;
   dueDate?: string;
   callbackId: string;
+  allowMultipleResponses?: boolean;
   data?: Record<string, any>;
   theme?: CustomMessageTheme;
 }
@@ -509,6 +516,7 @@ export const createTaskCardMessage = (options: CreateTaskCardMessageOptions): Cu
       label: 'Mark Completed',
       type: 'PRIMARY',
       icon: 'Check',
+      allowMultipleResponses: options.allowMultipleResponses ?? false,
       handler: {
         type: 'CALLBACK',
         callbackId: options.callbackId,

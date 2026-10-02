@@ -31,6 +31,10 @@ import { Textarea } from '../../../components/textarea';
 import { Checkbox } from '../../../components/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/select';
 import { Label } from '../../../components/label';
+import { RadioGroup, RadioGroupItem } from '../../../components/radio-group';
+import { Switch } from '../../../components/switch';
+import { Progress } from '../../../components/progress';
+import { Avatar, AvatarImage, AvatarFallback } from '../../../components/avatar';
 import { cn } from '../../../lib/utils';
 import { MessageRenderer } from '../message-renderer';
 import { CustomMessageSchema, type CustomMessage as ICustomMessage, type MessageNode, type CustomMessageTheme } from '@repo/shared';
@@ -220,6 +224,72 @@ const DefaultComponentRegistry: Record<string, React.FC<{ node: MessageNode }>> 
       </div>
     );
   },
+  'Display.Progress': ({ node }) => {
+    const { properties = {} } = node;
+    const { data, values } = useForm();
+    const val = Number(resolveVariables(properties.value ?? properties.progress ?? 0, data, values));
+
+    return (
+      <div className={cn('space-y-1', properties.className)}>
+        {properties.label && (
+          <div className="flex justify-between text-xs text-muted-foreground font-medium">
+            <span>{resolveVariables(properties.label, data, values)}</span>
+            <span>{val}%</span>
+          </div>
+        )}
+        <Progress value={val} />
+      </div>
+    );
+  },
+  'Display.Badge': ({ node }) => {
+    const { properties = {} } = node;
+    const { data, values } = useForm();
+    const label = resolveVariables(properties.label || properties.value || properties.content, data, values);
+
+    return (
+      <Badge
+        variant={properties.variant || 'outline'}
+        className={cn('text-xs', properties.className)}
+      >
+        {label}
+      </Badge>
+    );
+  },
+  'Display.Image': ({ node }) => {
+    const { properties = {} } = node;
+    const { data, values } = useForm();
+    const src = resolveVariables(properties.src || properties.url, data, values);
+    const alt = resolveVariables(properties.alt || 'Image', data, values);
+
+    if (!src) return null;
+
+    return (
+      <img
+        src={src}
+        alt={alt}
+        className={cn('rounded-md max-w-full h-auto object-cover', properties.className)}
+        style={properties.width ? { width: properties.width } : undefined}
+      />
+    );
+  },
+  'Display.Avatar': ({ node }) => {
+    const { properties = {} } = node;
+    const { data, values } = useForm();
+    const src = resolveVariables(properties.src || properties.avatar, data, values);
+    const name = resolveVariables(properties.name || properties.label || 'User', data, values);
+
+    return (
+      <div className={cn('flex items-center gap-2', properties.className)}>
+        <Avatar className="h-8 w-8">
+          <AvatarImage src={src} alt={name} />
+          <AvatarFallback>{name ? name.slice(0, 2).toUpperCase() : 'U'}</AvatarFallback>
+        </Avatar>
+        {properties.showName !== false && (
+          <span className="text-sm font-medium">{name}</span>
+        )}
+      </div>
+    );
+  },
   'Text.Paragraph': ({ node }) => {
     const { properties = {} } = node;
     const { data, values } = useForm();
@@ -286,6 +356,10 @@ const DefaultComponentRegistry: Record<string, React.FC<{ node: MessageNode }>> 
 
       const fetchOptions = async () => {
         const ds = properties.dataSource;
+        if (properties.options) {
+          setOptions(properties.options);
+          return;
+        }
         if (!ds) return;
 
         if (ds.type === 'STATIC') {
@@ -320,7 +394,7 @@ const DefaultComponentRegistry: Record<string, React.FC<{ node: MessageNode }>> 
       fetchOptions();
 
       return () => abortController.abort();
-    }, [properties.dataSource, data]);
+    }, [properties.dataSource, properties.options, data]);
 
     if (!id) return null;
 
@@ -339,6 +413,60 @@ const DefaultComponentRegistry: Record<string, React.FC<{ node: MessageNode }>> 
             ))}
           </SelectContent>
         </Select>
+        {error && <p className="text-[10px] text-destructive font-medium">{error}</p>}
+      </div>
+    );
+  },
+  'Input.RadioGroup': ({ node }) => {
+    const { id, properties = {} } = node;
+    const { values, setValue, errors, data } = useForm();
+    if (!id) return null;
+
+    const error = errors[id];
+    const rawOptions = properties.options || properties.dataSource?.items || [];
+
+    return (
+      <div className="space-y-1.5">
+        {properties.label && <Label htmlFor={id}>{resolveVariables(properties.label, data, values)}</Label>}
+        <RadioGroup
+          value={values[id] || ''}
+          onValueChange={(val) => setValue(id, val)}
+          className="space-y-1"
+        >
+          {rawOptions.map((opt: any) => (
+            <div key={opt.value} className="flex items-center space-x-2">
+              <RadioGroupItem value={String(opt.value)} id={`${id}-${opt.value}`} />
+              <Label htmlFor={`${id}-${opt.value}`} className="font-normal text-sm cursor-pointer">
+                {resolveVariables(opt.label, data, values)}
+              </Label>
+            </div>
+          ))}
+        </RadioGroup>
+        {error && <p className="text-[10px] text-destructive font-medium">{error}</p>}
+      </div>
+    );
+  },
+  'Input.Switch': ({ node }) => {
+    const { id, properties = {} } = node;
+    const { values, setValue, errors, data } = useForm();
+    if (!id) return null;
+
+    const error = errors[id];
+
+    return (
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between space-x-2">
+          {properties.label && (
+            <Label htmlFor={id} className="text-sm font-medium leading-none cursor-pointer">
+              {resolveVariables(properties.label, data, values)}
+            </Label>
+          )}
+          <Switch
+            id={id}
+            checked={!!values[id]}
+            onCheckedChange={(checked) => setValue(id, !!checked)}
+          />
+        </div>
         {error && <p className="text-[10px] text-destructive font-medium">{error}</p>}
       </div>
     );
@@ -605,10 +733,13 @@ export function CustomMessage({
     try {
       if (onAction) {
         const payload: Record<string, any> = {
+          actionId: action.id,
           messageId: message.id,
-          ...action.handler.payload,
+          ...(action.handler.payload || {}),
         };
-        if (action.handler.includeFormState) payload.formState = formValues;
+        if (action.handler.includeFormState !== false) {
+          payload.formState = formValues;
+        }
         await onAction(action.id, payload);
         setRespondedActionIds(prev => new Set(prev).add(action.id));
       }
