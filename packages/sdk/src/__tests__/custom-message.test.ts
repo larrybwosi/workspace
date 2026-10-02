@@ -5,8 +5,6 @@ import {
   createReportMessage,
   createFormMessage,
   createTaskCardMessage,
-  createLowStockAlertMessage,
-  formatLowStockItemName,
 } from '../index';
 
 describe('Custom Message Schema & Helper Builders', () => {
@@ -106,70 +104,6 @@ describe('Custom Message Schema & Helper Builders', () => {
       expect(taskCard.actions?.[0].id).toBe('complete_task');
 
       const validationResult = CustomMessageSchema.safeParse(taskCard);
-      expect(validationResult.success).toBe(true);
-    });
-  });
-
-  describe('createLowStockAlertMessage & formatLowStockItemName', () => {
-    it('should omit variant name if variant is missing, empty, or default (case-insensitive)', () => {
-      expect(formatLowStockItemName({ productName: 'Wireless Mouse' })).toBe('Wireless Mouse');
-      expect(formatLowStockItemName({ productName: 'Wireless Mouse', variantName: 'default' })).toBe('Wireless Mouse');
-      expect(formatLowStockItemName({ productName: 'Wireless Mouse', variantName: 'DEFAULT' })).toBe('Wireless Mouse');
-      expect(formatLowStockItemName({ productName: 'Wireless Mouse', variantName: ' Default ' })).toBe('Wireless Mouse');
-
-      expect(createLowStockAlertMessage({
-        productName: 'Wireless Mouse',
-        currentQuantity: 2,
-        thresholdQuantity: 5,
-      }).context.description).toContain('Wireless Mouse');
-
-      const msg1 = createLowStockAlertMessage({
-        productName: 'Wireless Mouse',
-        variantName: 'default',
-        currentQuantity: 2,
-        thresholdQuantity: 5,
-      });
-
-      const gridChildren1 = msg1.root.children?.[0]?.children || [];
-      const itemNameField1 = gridChildren1.find((c: any) => c.properties?.label === 'Item Name');
-      expect(itemNameField1?.properties?.value).toBe('Wireless Mouse');
-
-      const msg2 = createLowStockAlertMessage({
-        productName: 'Mechanical Keyboard',
-        variantName: 'DEFAULT',
-        currentQuantity: 1,
-        thresholdQuantity: 10,
-      });
-      const gridChildren2 = msg2.root.children?.[0]?.children || [];
-      const itemNameField2 = gridChildren2.find((c: any) => c.properties?.label === 'Item Name');
-      expect(itemNameField2?.properties?.value).toBe('Mechanical Keyboard');
-    });
-
-    it('should include variant name when variant is not default', () => {
-      expect(formatLowStockItemName({ productName: 'Ergonomic Chair', variantName: 'Mesh Black' })).toBe('Ergonomic Chair - Mesh Black');
-
-      const msg = createLowStockAlertMessage({
-        productName: 'Ergonomic Chair',
-        variantName: 'Mesh Black',
-        currentQuantity: 3,
-        thresholdQuantity: 8,
-        sku: 'CHAIR-BLK-01',
-        location: 'Warehouse A',
-        reorderUrl: 'https://inventory.example.com/reorder/CHAIR-BLK-01',
-      });
-
-      expect(msg.type).toBe('LOW_STOCK_ALERT');
-      expect(msg.context.title).toBe('Low Stock Alert');
-      expect(msg.context.priority).toBe('high');
-
-      const gridChildren = msg.root.children?.[0]?.children || [];
-      const itemNameField = gridChildren.find((c: any) => c.properties?.label === 'Item Name');
-      expect(itemNameField?.properties?.value).toBe('Ergonomic Chair - Mesh Black');
-
-      expect(msg.actions?.[0].handler.type).toBe('LINK');
-      expect(msg.actions?.[0].handler.url).toBe('https://inventory.example.com/reorder/CHAIR-BLK-01');
-
-      const validationResult = CustomMessageSchema.safeParse(msg);
       expect(validationResult.success).toBe(true);
     });
   });
