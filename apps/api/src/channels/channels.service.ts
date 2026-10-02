@@ -616,12 +616,15 @@ export class ChannelsService {
       skipDuplicates: true,
     });
 
-    // ⚡ Optimization: Publish read status if channelId is provided
+    /**
+     * ⚡ Performance Optimization:
+     * Background non-critical real-time event broadcasting to avoid blocking the HTTP response path.
+     */
     if (channelId) {
-      await publishRealtime(AblyChannels.user(userId), AblyEvents.MESSAGE_READ, {
+      publishRealtime(AblyChannels.user(userId), AblyEvents.MESSAGE_READ, {
         channelId,
         messageIds,
-      });
+      }).catch(err => this.logger.error('Failed to publish realtime message read event:', err));
     }
 
     return { success: true };
@@ -644,11 +647,15 @@ export class ChannelsService {
       },
     });
 
-    await publishRealtime(AblyChannels.channel(channelId), AblyEvents.MESSAGE_REACTION, {
+    /**
+     * ⚡ Performance Optimization:
+     * Background non-critical real-time event broadcasting to avoid blocking the HTTP response path.
+     */
+    publishRealtime(AblyChannels.channel(channelId), AblyEvents.MESSAGE_REACTION, {
       messageId,
       reaction,
       action: 'add',
-    });
+    }).catch(err => this.logger.error('Failed to publish realtime reaction addition event:', err));
 
     return reaction;
   }
@@ -671,12 +678,16 @@ export class ChannelsService {
         },
       });
 
-      await publishRealtime(AblyChannels.channel(channelId), AblyEvents.MESSAGE_REACTION, {
+      /**
+       * ⚡ Performance Optimization:
+       * Background non-critical real-time event broadcasting to avoid blocking the HTTP response path.
+       */
+      publishRealtime(AblyChannels.channel(channelId), AblyEvents.MESSAGE_REACTION, {
         messageId,
         emoji,
         userId,
         action: 'remove',
-      });
+      }).catch(err => this.logger.error('Failed to publish realtime reaction removal event:', err));
     } catch (error) {
       // Prisma error code for 'Record to delete does not exist' - we ignore it here
       // to maintain idempotency and match previous behavior.
