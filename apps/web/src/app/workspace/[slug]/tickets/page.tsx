@@ -145,7 +145,7 @@ export default function TicketsPage() {
                               <Avatar className="h-5 w-5">
                                 <AvatarImage src={activeTicket.assignee.avatar} />
                                 <AvatarFallback className="text-[8px] font-bold">
-                                  {activeTicket.assignee.name.slice(0, 2).toUpperCase()}
+                                  {activeTicket.assignee?.name?.slice(0, 2).toUpperCase() || 'CU'}
                                 </AvatarFallback>
                               </Avatar>
                               {activeTicket.assignee.name.split(' ')[0]}
@@ -178,7 +178,7 @@ export default function TicketsPage() {
                               <Avatar className="h-5 w-5">
                                 <AvatarImage src={member.user.avatar} />
                                 <AvatarFallback className="text-[8px] font-bold">
-                                  {member.user.name.slice(0, 2).toUpperCase()}
+                                  {member.user?.name?.slice(0, 2).toUpperCase() || 'U'}
                                 </AvatarFallback>
                               </Avatar>
                               {member.user.name}

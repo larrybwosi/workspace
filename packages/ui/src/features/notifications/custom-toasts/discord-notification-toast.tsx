@@ -47,7 +47,7 @@ export function DiscordNotificationToast({ notification, onClose }: DiscordNotif
           <Avatar className="h-10 w-10 border-2 border-primary/20">
             <AvatarImage src={notification.avatar} />
             <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
-              {notification.title.slice(0, 2).toUpperCase()}
+              {notification.title?.slice(0, 2) || 'NT'.toUpperCase()}
             </AvatarFallback>
           </Avatar>
           <div className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-background flex items-center justify-center shadow-sm border border-border">

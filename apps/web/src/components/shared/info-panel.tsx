@@ -214,7 +214,7 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
                 <Avatar className="h-20 w-20">
                   <AvatarImage src={dmUser.avatar} alt={dmUser.name} />
                   <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
-                    {dmUser.name.slice(0, 2).toUpperCase()}
+                    {dmUser.name?.slice(0, 2).toUpperCase() || 'DM'}
                   </AvatarFallback>
                 </Avatar>
                 <div>
@@ -308,7 +308,7 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
                             <Avatar className="h-8 w-8 rounded-lg border border-border cursor-help">
                               <AvatarImage src={ws.icon} />
                               <AvatarFallback className="rounded-lg text-[10px]">
-                                {ws.name.slice(0, 2).toUpperCase()}
+                                {ws.name?.slice(0, 2).toUpperCase() || 'WS'}
                               </AvatarFallback>
                             </Avatar>
                           </TooltipTrigger>
@@ -347,7 +347,7 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
                             <Avatar className="h-8 w-8 border border-border cursor-help">
                               <AvatarImage src={friend.avatar} />
                               <AvatarFallback className="text-[10px]">
-                                {friend.name.slice(0, 2).toUpperCase()}
+                                {friend.name?.slice(0, 2).toUpperCase() || 'FR'}
                               </AvatarFallback>
                             </Avatar>
                           </TooltipTrigger>
@@ -794,7 +794,7 @@ export function InfoPanel({ isOpen, onClose, dmUser, type = 'channel', id }: Inf
                         {channel.threads.map((thread, idx) => (
                           <Button key={idx} variant="ghost" className="w-full justify-start text-sm h-auto py-2">
                             <Hash className="h-3 w-3 mr-2 shrink-0" />
-                            <span className="truncate">{thread.title || `Thread ${thread.id.slice(0, 8)}`}</span>
+                            <span className="truncate">{thread.title || `Thread ${thread.id?.slice(0, 8)}`}</span>
                             {thread._count && thread._count.messages > 0 && (
                               <Badge variant="secondary" className="ml-auto">
                                 {thread._count.messages}

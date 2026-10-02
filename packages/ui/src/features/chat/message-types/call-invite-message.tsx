@@ -73,7 +73,7 @@ export function CallInviteMessage({ message, attachment }: CallInviteMessageProp
         <div className="flex items-center gap-4 bg-background/50 p-3 rounded-lg border border-border">
           <Avatar className="h-10 w-10">
             <AvatarImage src={message.sender.avatar || message.sender.image} />
-            <AvatarFallback>{message.sender.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+            <AvatarFallback>{message.sender?.name?.slice(0, 2).toUpperCase() || 'U'}</AvatarFallback>
           </Avatar>
           <div className="flex-1">
             <p className="text-sm font-semibold">{message.sender.name}</p>

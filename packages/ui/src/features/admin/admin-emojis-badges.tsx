@@ -773,7 +773,7 @@ export function AdminEmojisBadges() {
                 >
                   <Avatar>
                     <AvatarImage src={user.avatar || '/placeholder.svg'} />
-                    <AvatarFallback>{user.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                    <AvatarFallback>{user.name?.slice(0, 2).toUpperCase() || 'U'}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
                     <p className="font-medium text-sm">{user.name}</p>

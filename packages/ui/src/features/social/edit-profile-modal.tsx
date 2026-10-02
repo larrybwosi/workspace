@@ -215,7 +215,7 @@ export function EditProfileModal({ user, open, onOpenChange }: EditProfileModalP
                   <Avatar className="h-32 w-32 border-4 border-background shadow-xl">
                     <AvatarImage src={avatar || undefined} />
                     <AvatarFallback className="text-3xl bg-primary text-primary-foreground font-bold">
-                      {name.slice(0, 2).toUpperCase()}
+                      {name?.slice(0, 2).toUpperCase() || 'U'}
                     </AvatarFallback>
                   </Avatar>
                   {uploadingAvatar && (
