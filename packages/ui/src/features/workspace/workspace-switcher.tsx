@@ -1,117 +1,102 @@
 'use client';
 
 import * as React from 'react';
-import { Check, ChevronsUpDown, Plus, Settings, Users, Building2, User } from 'lucide-react';
-import { useRouter } from '../../hooks/use-universal-router';
-import { Button } from '../../components/button';
+import { useRouter, useParams } from 'next/navigation';
+import { useWorkspaces } from '@repo/api-client';
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuGroup,
 } from '../../components/dropdown-menu';
-import { useWorkspaces } from '@repo/api-client';
-import { CreateWorkspaceDialog } from './create-workspace-dialog';
+import { Button } from '../../components/button';
 import { Badge } from '../../components/badge';
+import { ChevronDown, Plus, Settings, Check, Sparkles } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { CreateWorkspaceDialog } from './create-workspace-dialog';
+import { WorkspaceIcon } from '../../components/workspace-icon';
 
 interface WorkspaceSwitcherProps {
   currentWorkspaceId?: string;
-  onWorkspaceChange?: (workspaceId: string) => void;
+  onWorkspaceSelect?: (workspaceId: string) => void;
+  className?: string;
 }
 
-export function WorkspaceSwitcher({ currentWorkspaceId, onWorkspaceChange }: WorkspaceSwitcherProps) {
+export function WorkspaceSwitcher({
+  currentWorkspaceId,
+  onWorkspaceSelect,
+  className,
+}: WorkspaceSwitcherProps) {
   const router = useRouter();
+  const params = useParams();
+  const activeSlug = (params?.slug as string) || currentWorkspaceId;
   const { data: workspaces, isLoading } = useWorkspaces();
   const [createDialogOpen, setCreateDialogOpen] = React.useState(false);
 
-  const currentWorkspace = workspaces?.find((w: any) => w.id === currentWorkspaceId || w.slug === currentWorkspaceId);
+  const currentWorkspace = workspaces?.find(
+    (w: any) => w.id === activeSlug || w.slug === activeSlug
+  ) || workspaces?.[0];
 
-  // Define fallback values for the "Personal" view
-  const displayName = currentWorkspace?.name || 'Personal';
-  const displayIcon = currentWorkspace?.icon;
-  const displayInitials = displayName.charAt(0).toUpperCase();
-
-  const handleWorkspaceChange = (workspaceSlug: string) => {
-    const workspace = workspaces?.find((w: any) => w.slug === workspaceSlug);
-    if (workspace) {
-      router.push(`/workspace/${workspace.slug}`);
+  const handleWorkspaceChange = (slug: string) => {
+    if (onWorkspaceSelect) {
+      onWorkspaceSelect(slug);
+    } else {
+      router.push(`/workspace/${slug}`);
     }
-    onWorkspaceChange?.(workspaceSlug);
   };
+
+  if (isLoading) {
+    return (
+      <div className={cn('h-10 w-full animate-pulse bg-muted rounded-md', className)} />
+    );
+  }
 
   return (
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="w-full justify-between h-14 px-3 hover:bg-muted/80">
-            <div className="flex items-center gap-3 min-w-0">
-              {displayIcon ? (
-                <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-lg shrink-0 shadow-sm overflow-hidden">
-                  {displayIcon.startsWith('http') || displayIcon.startsWith('/') || displayIcon.startsWith('data:') || displayIcon.length > 2 ? (
-                    <img src={displayIcon} alt={displayName} className="h-full w-full object-cover" />
-                  ) : (
-                    displayIcon
-                  )}
-                </div>
-              ) : (
-                <div
-                  className={cn(
-                    'h-9 w-9 rounded-lg flex items-center justify-center shrink-0 shadow-sm',
-                    currentWorkspace ? 'bg-gradient-to-br from-blue-500 to-purple-600' : 'bg-muted border border-border' // Neutral look for Personal if preferred
-                  )}
-                >
-                  <span className={cn('font-bold text-sm', currentWorkspace ? 'text-white' : 'text-muted-foreground')}>
-                    {displayInitials}
+          <Button
+            variant="ghost"
+            className={cn(
+              'w-full justify-between h-12 px-3 hover:bg-muted/50 data-[state=open]:bg-muted/50',
+              className
+            )}
+          >
+            <div className="flex items-center gap-3 text-left overflow-hidden">
+              <div className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0 overflow-hidden border border-border/50">
+                <WorkspaceIcon icon={currentWorkspace?.icon} name={currentWorkspace?.name || 'Workspace'} />
+              </div>
+              <div className="flex flex-col overflow-hidden">
+                <div className="flex items-center gap-1.5">
+                  <span className="font-semibold text-sm truncate">
+                    {currentWorkspace?.name || 'Select Workspace'}
                   </span>
-                </div>
-              )}
-              <div className="text-left min-w-0">
-                <div className="font-semibold text-sm truncate flex items-center gap-2">
-                  {displayName}
                   {currentWorkspace?.plan === 'pro' && (
-                    <Badge variant="secondary" className="text-[10px] px-1 py-0">
+                    <Badge variant="secondary" className="text-[9px] px-1 py-0 h-4 bg-amber-500/10 text-amber-500 border-amber-500/20">
                       PRO
                     </Badge>
                   )}
-                  {currentWorkspace?.plan === 'enterprise' && (
-                    <Badge className="text-[10px] px-1 py-0 bg-gradient-to-r from-amber-500 to-orange-500">ENT</Badge>
-                  )}
                 </div>
-                <div className="text-xs text-muted-foreground truncate">
-                  {currentWorkspace
-                    ? `${currentWorkspace?._count?.members || 0} members · ${currentWorkspace?._count?.projects || 0} projects`
-                    : 'Individual Workspace'}
-                </div>
+                <span className="text-xs text-muted-foreground truncate">
+                  {currentWorkspace?.memberCount ? `${currentWorkspace.memberCount} members` : 'Workspace'}
+                </span>
               </div>
             </div>
-            <ChevronsUpDown className="h-4 w-4 opacity-50 shrink-0" />
+            <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </DropdownMenuTrigger>
 
-        {/* ... Rest of the DropdownMenuContent remains the same ... */}
-        <DropdownMenuContent align="start" className="w-72">
-          <DropdownMenuLabel className="flex items-center justify-between">
-            <span>Workspaces</span>
-            <Badge variant="outline" className="text-[10px]">
-              {workspaces?.length || 0}
-            </Badge>
+        <DropdownMenuContent className="w-64" align="start">
+          <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
+            Workspaces
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
 
-          {isLoading ? (
-            <DropdownMenuItem disabled>
-              <div className="flex items-center gap-2">
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                Loading...
-              </div>
-            </DropdownMenuItem>
-          ) : workspaces?.length === 0 ? (
-            <div className="px-2 py-4 text-center text-sm text-muted-foreground">
-              <Building2 className="h-8 w-8 mx-auto mb-2 opacity-50" />
+          {workspaces?.length === 0 ? (
+            <div className="p-4 text-center text-sm text-muted-foreground">
               <p>No workspaces yet</p>
               <p className="text-xs">Create one to get started</p>
             </div>
@@ -123,23 +108,13 @@ export function WorkspaceSwitcher({ currentWorkspaceId, onWorkspaceChange }: Wor
                   onClick={() => handleWorkspaceChange(workspace.slug)}
                   className={cn(
                     'cursor-pointer py-2',
-                    (currentWorkspaceId === workspace.id || currentWorkspaceId === workspace.slug) && 'bg-muted'
+                    (currentWorkspaceId === workspace.id || currentWorkspaceId === workspace.slug || activeSlug === workspace.slug) && 'bg-muted'
                   )}
                 >
                   <div className="flex items-center gap-3 flex-1">
-                    {workspace.icon ? (
-                      <div className="h-8 w-8 rounded-lg flex items-center justify-center bg-gradient-to-br from-blue-500/20 to-purple-600/20 text-lg overflow-hidden">
-                        {workspace.icon.startsWith('http') || workspace.icon.startsWith('/') || workspace.icon.startsWith('data:') || workspace.icon.length > 2 ? (
-                          <img src={workspace.icon} alt={workspace.name} className="h-full w-full object-cover" />
-                        ) : (
-                          workspace.icon
-                        )}
-                      </div>
-                    ) : (
-                      <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                        <span className="text-white font-bold text-xs">{workspace.name.charAt(0)}</span>
-                      </div>
-                    )}
+                    <div className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0 overflow-hidden border border-border/50">
+                      <WorkspaceIcon icon={workspace.icon} name={workspace.name} />
+                    </div>
                     <div className="flex-1 min-w-0">
                       <div className="font-medium text-sm truncate flex items-center gap-1.5">
                         {workspace.name}
@@ -149,14 +124,13 @@ export function WorkspaceSwitcher({ currentWorkspaceId, onWorkspaceChange }: Wor
                           </Badge>
                         )}
                       </div>
-                      <div className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Users className="h-3 w-3" />
-                        {workspace._count?.members || 0}
-                        <span className="mx-1">·</span>
-                        {workspace._count?.projects || 0} projects
+                      <div className="text-xs text-muted-foreground truncate">
+                        {workspace.slug}
                       </div>
                     </div>
-                    {currentWorkspaceId === workspace.id && <Check className="h-4 w-4 text-primary shrink-0" />}
+                    {(currentWorkspaceId === workspace.id || currentWorkspaceId === workspace.slug || activeSlug === workspace.slug) && (
+                      <Check className="h-4 w-4 text-primary shrink-0" />
+                    )}
                   </div>
                 </DropdownMenuItem>
               ))}
@@ -165,31 +139,30 @@ export function WorkspaceSwitcher({ currentWorkspaceId, onWorkspaceChange }: Wor
 
           <DropdownMenuSeparator />
 
-          {currentWorkspace && (
-            <>
-              <DropdownMenuItem
-                onClick={() => router.push(`/workspace/${currentWorkspace.slug}/settings`)}
-                className="cursor-pointer"
-              >
-                <Settings className="h-4 w-4 mr-2" />
-                Workspace Settings
-              </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer">
-                <Users className="h-4 w-4 mr-2" />
-                Invite Members
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-            </>
-          )}
-
-          <DropdownMenuItem onClick={() => setCreateDialogOpen(true)} className="cursor-pointer text-primary">
-            <Plus className="h-4 w-4 mr-2" />
-            Create New Workspace
+          <DropdownMenuItem
+            onClick={() => setCreateDialogOpen(true)}
+            className="cursor-pointer text-primary focus:text-primary"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            <span>Create Workspace</span>
           </DropdownMenuItem>
+
+          {currentWorkspace && (
+            <DropdownMenuItem
+              onClick={() => router.push(`/workspace/${currentWorkspace.slug}/settings`)}
+              className="cursor-pointer"
+            >
+              <Settings className="mr-2 h-4 w-4" />
+              <span>Workspace Settings</span>
+            </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <CreateWorkspaceDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} />
+      <CreateWorkspaceDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+      />
     </>
   );
 }
