@@ -14,8 +14,6 @@ export {
   createReportMessage,
   createFormMessage,
   createTaskCardMessage,
-  createLowStockAlertMessage,
-  formatLowStockItemName,
   type CustomMessage,
   type MessageNode,
   type ConditionSchemaType,
@@ -27,6 +25,5 @@ export {
   type CreateReportMessageOptions,
   type CreateFormMessageOptions,
   type CreateTaskCardMessageOptions,
-  type CreateLowStockAlertMessageOptions,
   type FormFieldConfig,
 } from './custom-message-schema';
