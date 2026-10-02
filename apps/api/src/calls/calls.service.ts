@@ -188,6 +188,12 @@ export class CallsService {
     }
 
     if (!call) {
+      /**
+       * ⚡ Performance Optimization:
+       * Uses nested Prisma `create` to create both the Call record and initial CallParticipant
+       * in a single database round-trip (RTT) instead of 2 sequential queries.
+       * Expected impact: Reduces call creation database latency by 1 DB RTT (~15-30ms).
+       */
       call = await prisma.call.create({
         data: {
           channelName: agoraChannelName,
@@ -196,16 +202,13 @@ export class CallsService {
           workspaceId,
           status: 'pending',
           metadata: { workspaceId },
-        },
-      });
-
-      // Automatically add initiator as the first participant
-      await prisma.callParticipant.create({
-        data: {
-          callId: call.id,
-          userId: user.id,
-          role: 'host',
-          joinedAt: new Date(),
+          participants: {
+            create: {
+              userId: user.id,
+              role: 'host',
+              joinedAt: new Date(),
+            },
+          },
         },
       });
 
