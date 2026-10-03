@@ -475,7 +475,8 @@ fun SwipeableMessageItem(
                     apiUrl = apiUrl,
                     onMentionClick = onMentionClick,
                     onChannelTagClick = onChannelTagClick,
-                    messageApi = messageApi
+                    messageApi = messageApi,
+                    currentUserId = currentUserId
                 )
 
                 if (showContextMenu) {
@@ -577,7 +578,8 @@ fun MessageItem(
     apiUrl: String = "https://api.chat.scryme.tech",
     onMentionClick: (String) -> Unit = {},
     onChannelTagClick: (String) -> Unit = {},
-    messageApi: MessageApi? = null
+    messageApi: MessageApi? = null,
+    currentUserId: String? = null
 ) {
     val cleanName = remember(message.senderName) {
         val rawName = message.senderName ?: "Unknown User"
@@ -747,6 +749,15 @@ fun MessageItem(
                             color = palette.textTertiary,
                             fontSize = 11.5.sp
                         )
+                        if (currentUserId != null && currentUserId == message.senderId) {
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Icon(
+                                imageVector = if (message.readByCurrentUser) Icons.Default.DoneAll else Icons.Default.Done,
+                                contentDescription = if (message.readByCurrentUser) "Read" else "Sent",
+                                tint = if (message.readByCurrentUser) palette.accent else palette.textTertiary,
+                                modifier = Modifier.size(13.dp)
+                            )
+                        }
                         if (message.isPinned) {
                             Spacer(modifier = Modifier.width(6.dp))
                             Icon(
