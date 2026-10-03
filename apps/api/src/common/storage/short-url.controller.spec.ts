@@ -3,7 +3,7 @@ import { ShortUrlController } from './short-url.controller';
 import { RustFSStorageProvider } from './providers/rustfs.provider';
 import { vi, describe, beforeEach, it, expect, afterEach } from 'vitest';
 import { prisma } from '@repo/database';
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { Readable } from 'stream';
 
 // Mock the prisma export
@@ -140,5 +140,59 @@ describe('ShortUrlController', () => {
     } as any;
 
     await expect(controller.redirect('xyz', mockRes)).rejects.toThrow(NotFoundException);
+  });
+
+  describe('SSRF Protection', () => {
+    it('should throw BadRequestException for non-HTTP/HTTPS schemes', async () => {
+      const mockShortUrl = {
+        id: '1',
+        code: 'ftp-code',
+        original: 'ftp://files.example.com/file.png',
+        key: null,
+        mimeType: 'image/png',
+      };
+
+      vi.mocked(prisma.shortUrl.findUnique).mockResolvedValue(mockShortUrl as any);
+
+      const mockRes = {
+        type: vi.fn().mockReturnThis(),
+        header: vi.fn().mockReturnThis(),
+        send: vi.fn(),
+      } as any;
+
+      await expect(controller.redirect('ftp-code', mockRes)).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw BadRequestException when targeting loopback or private IP addresses', async () => {
+      const restrictedUrls = [
+        'http://localhost/secret',
+        'http://127.0.0.1:8080/admin',
+        'http://[::1]:8080/admin',
+        'http://169.254.169.254/latest/meta-data/',
+        'http://10.0.0.1/internal',
+        'http://192.168.1.1/router',
+        'http://172.16.0.1/private',
+      ];
+
+      for (const url of restrictedUrls) {
+        vi.mocked(prisma.shortUrl.findUnique).mockResolvedValue({
+          id: '1',
+          code: 'ssrf-code',
+          original: url,
+          key: null,
+          mimeType: 'text/html',
+        } as any);
+
+        const mockRes = {
+          type: vi.fn().mockReturnThis(),
+          header: vi.fn().mockReturnThis(),
+          send: vi.fn(),
+        } as any;
+
+        await expect(controller.redirect('ssrf-code', mockRes)).rejects.toThrow(
+          'Access to private or local network addresses is restricted'
+        );
+      }
+    });
   });
 });
