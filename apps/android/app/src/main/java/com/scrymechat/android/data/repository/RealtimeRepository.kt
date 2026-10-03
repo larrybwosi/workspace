@@ -65,6 +65,37 @@ class RealtimeRepository @Inject constructor(
         }
     }
 
+    fun observeReadEvents(): Flow<RealtimeReadEvent> = callbackFlow {
+        val listener = Emitter.Listener { args ->
+            try {
+                val data = args[0].toString()
+                val json = JSONObject(data)
+                val channelId = if (json.has("channelId")) json.optString("channelId").takeIf { it.isNotBlank() } else null
+                val dmId = if (json.has("dmId")) json.optString("dmId").takeIf { it.isNotBlank() } else null
+                val messageIds = mutableListOf<String>()
+                if (json.has("messageIds")) {
+                    val array = json.optJSONArray("messageIds")
+                    if (array != null) {
+                        for (i in 0 until array.length()) {
+                            messageIds.add(array.getString(i))
+                        }
+                    }
+                }
+                trySend(RealtimeReadEvent(channelId = channelId, dmId = dmId, messageIds = messageIds))
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+
+        socket.on("message:read", listener)
+        socket.on("MESSAGE_READ", listener)
+
+        awaitClose {
+            socket.off("message:read", listener)
+            socket.off("MESSAGE_READ", listener)
+        }
+    }
+
     fun observePresence(): Flow<PresenceEvent> = callbackFlow {
         val enterListener = Emitter.Listener { args ->
             try {
@@ -163,6 +194,12 @@ class RealtimeRepository @Inject constructor(
 data class RealtimeMessageEvent(
     val eventType: String,
     val message: MessageDto
+)
+
+data class RealtimeReadEvent(
+    val channelId: String? = null,
+    val dmId: String? = null,
+    val messageIds: List<String> = emptyList()
 )
 
 data class TypingEvent(

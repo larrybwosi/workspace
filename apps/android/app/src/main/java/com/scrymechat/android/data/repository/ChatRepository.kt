@@ -311,4 +311,22 @@ class ChatRepository @Inject constructor(
     suspend fun deleteMessageById(id: String) {
         dao.deleteMessageById(id)
     }
+
+    suspend fun handleReadEvent(event: RealtimeReadEvent) {
+        try {
+            if (event.messageIds.isNotEmpty()) {
+                dao.markMessagesAsRead(event.messageIds)
+            }
+            if (event.channelId != null) {
+                dao.markChannelMessagesAsRead(event.channelId)
+                channelDao.clearUnreadCount(event.channelId)
+            }
+            if (event.dmId != null) {
+                dao.markDmMessagesAsRead(event.dmId)
+                dmDao.clearUnreadCount(event.dmId)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
 }

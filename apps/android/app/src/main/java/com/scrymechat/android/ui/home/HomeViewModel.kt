@@ -44,6 +44,7 @@ class HomeViewModel @Inject constructor(
         loadDms()
         observeCurrentUser()
         observeRealtimeMessages()
+        observeReadEvents()
         observePresence()
     }
 
@@ -59,12 +60,32 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    private fun observeReadEvents() {
+        viewModelScope.launch {
+            realtimeRepository.observeReadEvents().collect { event ->
+                if (event.messageIds.isNotEmpty()) {
+                    messageDao.markMessagesAsRead(event.messageIds)
+                }
+                if (event.channelId != null) {
+                    messageDao.markChannelMessagesAsRead(event.channelId)
+                    channelDao.clearUnreadCount(event.channelId)
+                }
+                if (event.dmId != null) {
+                    messageDao.markDmMessagesAsRead(event.dmId)
+                    dmDao.clearUnreadCount(event.dmId)
+                }
+            }
+        }
+    }
+
     private fun observePresence() {
         viewModelScope.launch {
             sessionManager.getActiveSessionFlow().collect { session ->
                 session?.userId?.let { userId ->
                     // Join the global-presence room and notify others that we are online
                     realtimeRepository.joinRoom("global-presence")
+                    realtimeRepository.joinRoom("user:$userId")
+                    realtimeRepository.joinRoom("notifications:$userId")
                     realtimeRepository.enterPresence("global-presence", userId, mapOf("status" to "online"))
                 }
             }
@@ -85,13 +106,7 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Atomically and sequentially selects a workspace and a channel within it.
-     * This avoids race conditions between parallel async operations that can result
-     * in the selected channel being wiped out, which would cause the workspace
-     * welcome screen to be shown instead of the chat view.
-     */
-    fun selectWorkspaceAndChannel(workspaceSlug: String, channelId: String) {
+        fun selectWorkspaceAndChannel(workspaceSlug: String, channelId: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isChannelLoading = true) }
 
