@@ -6,6 +6,20 @@ import { hasPermission, Permissions } from '../common/permissions';
 export class V10GuildsService {
   async getChannels(bot: any, guildId: string) {
     /**
+     * THREAT MITIGATION: Broken Object Level Authorization (BOLA / IDOR)
+     * Risk Level: High
+     * Verify that the requesting bot is an active member of the target workspace before
+     * returning channel listings. Prevents unauthorized bots from probing internal channel metadata.
+     */
+    const botMember = await prisma.workspaceMember.findUnique({
+      where: { workspaceId_userId: { workspaceId: guildId, userId: bot.id } },
+    });
+
+    if (!botMember) {
+      throw new ForbiddenException('Bot is not a member of this guild');
+    }
+
+    /**
      * ⚡ Performance Optimization:
      * Uses 'select' to fetch only required fields for Discord channel objects.
      * Reduces database payload and memory usage for guild channel listings.
@@ -39,6 +53,20 @@ export class V10GuildsService {
   }
 
   async getMembers(bot: any, guildId: string, query: { limit?: number; after?: string }) {
+    /**
+     * THREAT MITIGATION: Broken Object Level Authorization (BOLA / IDOR)
+     * Risk Level: High
+     * Verify that the requesting bot is an active member of the target workspace before
+     * returning user rosters. Prevents unauthorized bots from scraping member user data.
+     */
+    const botMember = await prisma.workspaceMember.findUnique({
+      where: { workspaceId_userId: { workspaceId: guildId, userId: bot.id } },
+    });
+
+    if (!botMember) {
+      throw new ForbiddenException('Bot is not a member of this guild');
+    }
+
     const { limit = 50, after } = query;
 
     /**
@@ -84,6 +112,20 @@ export class V10GuildsService {
   }
 
   async getRoles(bot: any, guildId: string) {
+    /**
+     * THREAT MITIGATION: Broken Object Level Authorization (BOLA / IDOR)
+     * Risk Level: Medium
+     * Verify that the requesting bot is an active member of the target workspace before
+     * returning role structure information.
+     */
+    const botMember = await prisma.workspaceMember.findUnique({
+      where: { workspaceId_userId: { workspaceId: guildId, userId: bot.id } },
+    });
+
+    if (!botMember) {
+      throw new ForbiddenException('Bot is not a member of this guild');
+    }
+
     // Our system has a simplified role system, but we can return some defaults
     // Mapping internal roles to snowflake-like strings for Discord library compatibility
     return [

@@ -33,14 +33,20 @@ describe('V10GuildsService', () => {
   });
 
   describe('getChannels', () => {
-    it('should fetch channels with select optimization', async () => {
+    const bot = { id: 'bot1' };
+
+    it('should fetch channels with select optimization if bot is a member', async () => {
       const mockChannels = [
         { id: '1', type: 'channel', workspaceId: 'guild1', name: 'general', description: 'desc', parentId: null },
       ];
+      (prisma.workspaceMember.findUnique as any).mockResolvedValue({ id: 'wm_bot' });
       (prisma.channel.findMany as any).mockResolvedValue(mockChannels);
 
-      const result = await service.getChannels({}, 'guild1');
+      const result = await service.getChannels(bot, 'guild1');
 
+      expect(prisma.workspaceMember.findUnique).toHaveBeenCalledWith({
+        where: { workspaceId_userId: { workspaceId: 'guild1', userId: 'bot1' } },
+      });
       expect(prisma.channel.findMany).toHaveBeenCalledWith({
         where: { workspaceId: 'guild1' },
         select: {
@@ -54,10 +60,17 @@ describe('V10GuildsService', () => {
       });
       expect(result[0].name).toBe('general');
     });
+
+    it('should throw ForbiddenException if bot is not a member', async () => {
+      (prisma.workspaceMember.findUnique as any).mockResolvedValue(null);
+      await expect(service.getChannels(bot, 'guild1')).rejects.toThrow(ForbiddenException);
+    });
   });
 
   describe('getMembers', () => {
-    it('should fetch members with select optimization', async () => {
+    const bot = { id: 'bot1' };
+
+    it('should fetch members with select optimization if bot is a member', async () => {
       const mockMembers = [
         {
           id: 'wm1',
@@ -66,10 +79,14 @@ describe('V10GuildsService', () => {
           user: { id: 'u1', name: 'user1', avatar: 'av1', isBot: false },
         },
       ];
+      (prisma.workspaceMember.findUnique as any).mockResolvedValue({ id: 'wm_bot' });
       (prisma.workspaceMember.findMany as any).mockResolvedValue(mockMembers);
 
-      const result = await service.getMembers({}, 'guild1', { limit: 10 });
+      const result = await service.getMembers(bot, 'guild1', { limit: 10 });
 
+      expect(prisma.workspaceMember.findUnique).toHaveBeenCalledWith({
+        where: { workspaceId_userId: { workspaceId: 'guild1', userId: 'bot1' } },
+      });
       expect(prisma.workspaceMember.findMany).toHaveBeenCalledWith({
         where: { workspaceId: 'guild1' },
         take: 10,
@@ -88,6 +105,31 @@ describe('V10GuildsService', () => {
         },
       });
       expect(result[0].user.username).toBe('user1');
+    });
+
+    it('should throw ForbiddenException if bot is not a member', async () => {
+      (prisma.workspaceMember.findUnique as any).mockResolvedValue(null);
+      await expect(service.getMembers(bot, 'guild1', { limit: 10 })).rejects.toThrow(ForbiddenException);
+    });
+  });
+
+  describe('getRoles', () => {
+    const bot = { id: 'bot1' };
+
+    it('should return roles if bot is a member', async () => {
+      (prisma.workspaceMember.findUnique as any).mockResolvedValue({ id: 'wm_bot' });
+
+      const roles = await service.getRoles(bot, 'guild1');
+
+      expect(prisma.workspaceMember.findUnique).toHaveBeenCalledWith({
+        where: { workspaceId_userId: { workspaceId: 'guild1', userId: 'bot1' } },
+      });
+      expect(roles.length).toBeGreaterThan(0);
+    });
+
+    it('should throw ForbiddenException if bot is not a member', async () => {
+      (prisma.workspaceMember.findUnique as any).mockResolvedValue(null);
+      await expect(service.getRoles(bot, 'guild1')).rejects.toThrow(ForbiddenException);
     });
   });
 
