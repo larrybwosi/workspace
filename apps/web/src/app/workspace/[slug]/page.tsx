@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import {
   useWorkspace,
   useWorkspaceAnalytics,
-  useChannels,
+  useWorkspaceChannels,
   useWorkspaceMembers,
   useWorkspaceAuditLogs,
 } from '@repo/api-client';
@@ -37,7 +37,7 @@ export default function WorkspaceOverviewPage() {
 
   const { data: workspace, isLoading: isWorkspaceLoading } = useWorkspace(slug);
   const { data: analytics } = useWorkspaceAnalytics(slug);
-  const { data: channels } = useChannels();
+  const { data: channels } = useWorkspaceChannels(slug);
   const { data: members } = useWorkspaceMembers(slug);
   const { data: auditLogs } = useWorkspaceAuditLogs(slug);
 
