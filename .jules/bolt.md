@@ -1,3 +1,9 @@
+## 2026-10-03 - [Prisma/Performance] Single-Query Consolidated Bot Member & Guild Resolution in V10 Gateway
+
+**Learning:** In `V10Gateway`, dispatching real-time message events (`MESSAGE_CREATE`, `MESSAGE_UPDATE`, `MESSAGE_DELETE`) previously issued two sequential database queries: `prisma.channel.findUnique({ where: { id: channelId }, select: { workspaceId: true } })` followed by `prisma.workspaceMember.findMany({ where: { workspaceId, user: { isBot: true } } })`. Consolidating both operations into a single `prisma.channel.findUnique` query with nested `workspace.members` selection (`select: { workspaceId: true, workspace: { select: { members: { where: { user: { isBot: true } }, select: { userId: true } } } } }`) cuts database round-trips from 2 to 1 on every real-time message event dispatch in the V10 Discord WebSocket gateway.
+
+**Action:** Consolidate channel lookup and workspace bot member retrieval into single primary key `findUnique` queries with nested relational `workspace.members` selections.
+
 ## 2026-09-28 - [Prisma/Performance] Parallel B-Tree Index Queries for Multi-Identifier Channel Member Resolution
 
 **Learning:** In `V3WorkspacesController.addChannelMembers`, resolving target user IDs across mixed identifier lists (user ID, user email, workspace member ID) previously executed a single `prisma.user.findMany` with an `OR` condition spanning `id`, `email`, and `workspaceMemberships: { some: ... }`. In PostgreSQL, relation filters inside `OR` queries force multi-table JOIN scans and prevent efficient B-tree index utilization. Splitting the lookup into parallelized `Promise.all` queries targeting direct B-tree index fields (`User.id`, `User.email`, and `WorkspaceMember.id` filtered by `workspaceId`) eliminates relation join scans and allows PostgreSQL to utilize dedicated B-tree index lookups concurrently.

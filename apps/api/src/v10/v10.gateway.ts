@@ -56,16 +56,28 @@ export class V10Gateway implements OnGatewayConnection, OnGatewayDisconnect, OnM
   }
 
   private async dispatchMessageCreated(message: any) {
+    /**
+     * ⚡ Performance Optimization:
+     * Consolidates channel resolution and workspace bot member retrieval into a single query via nested select.
+     * This reduces database round-trips from 2 down to 1 on every real-time message creation event in V10 Gateway.
+     */
     const channel = await prisma.channel.findUnique({
       where: { id: message.channelId },
-      select: { workspaceId: true },
+      select: {
+        workspaceId: true,
+        workspace: {
+          select: {
+            members: {
+              where: { user: { isBot: true } },
+              select: { userId: true },
+            },
+          },
+        },
+      },
     });
 
     if (channel?.workspaceId) {
-      const bots = await prisma.workspaceMember.findMany({
-        where: { workspaceId: channel.workspaceId, user: { isBot: true } },
-        select: { userId: true },
-      });
+      const bots = channel.workspace?.members || [];
 
       const discordMessage = {
         id: message.id,
@@ -100,16 +112,28 @@ export class V10Gateway implements OnGatewayConnection, OnGatewayDisconnect, OnM
   }
 
   private async dispatchMessageUpdated(message: any) {
+    /**
+     * ⚡ Performance Optimization:
+     * Consolidates channel resolution and workspace bot member retrieval into a single query via nested select.
+     * This reduces database round-trips from 2 down to 1 on every real-time message update event in V10 Gateway.
+     */
     const channel = await prisma.channel.findUnique({
       where: { id: message.channelId },
-      select: { workspaceId: true },
+      select: {
+        workspaceId: true,
+        workspace: {
+          select: {
+            members: {
+              where: { user: { isBot: true } },
+              select: { userId: true },
+            },
+          },
+        },
+      },
     });
 
     if (channel?.workspaceId) {
-      const bots = await prisma.workspaceMember.findMany({
-        where: { workspaceId: channel.workspaceId, user: { isBot: true } },
-        select: { userId: true },
-      });
+      const bots = channel.workspace?.members || [];
 
       const discordMessage = {
         id: message.id,
@@ -150,16 +174,28 @@ export class V10Gateway implements OnGatewayConnection, OnGatewayDisconnect, OnM
 
   private async dispatchMessageDeleted(data: any) {
     const { id, channelId } = data;
+    /**
+     * ⚡ Performance Optimization:
+     * Consolidates channel resolution and workspace bot member retrieval into a single query via nested select.
+     * This reduces database round-trips from 2 down to 1 on every real-time message deletion event in V10 Gateway.
+     */
     const channel = await prisma.channel.findUnique({
       where: { id: channelId },
-      select: { workspaceId: true },
+      select: {
+        workspaceId: true,
+        workspace: {
+          select: {
+            members: {
+              where: { user: { isBot: true } },
+              select: { userId: true },
+            },
+          },
+        },
+      },
     });
 
     if (channel?.workspaceId) {
-      const bots = await prisma.workspaceMember.findMany({
-        where: { workspaceId: channel.workspaceId, user: { isBot: true } },
-        select: { userId: true },
-      });
+      const bots = channel.workspace?.members || [];
 
       for (const bot of bots) {
         this.dispatch(bot.userId, 'MESSAGE_DELETE', {
