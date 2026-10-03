@@ -24,7 +24,7 @@ pub struct ProxyResponse {
 
 #[tauri::command]
 async fn api_request(request: ProxyRequest) -> Result<ProxyResponse, String> {
-    let mut config = scryme_sdk::apis::configuration::Configuration::new();
+    let mut config = scryme_chat_sdk::apis::configuration::Configuration::new();
 
     if let Some(ref base) = request.base_url {
         let mut trimmed = base.trim_end_matches('/').to_string();

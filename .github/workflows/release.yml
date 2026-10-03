@@ -328,21 +328,21 @@ jobs:
           pnpm --filter @repo/api-client build || true
       - name: Update Version
         run: node scripts/update-version.js
-      - name: Wait for scryme-sdk on crates.io
+      - name: Wait for scryme-chat-sdk on crates.io
         shell: bash
         run: |
           VERSION="${{ needs.version-main.outputs.version }}"
-          echo "Waiting for scryme-sdk version $VERSION to be available on crates.io..."
+          echo "Waiting for scryme-chat-sdk version $VERSION to be available on crates.io..."
           for i in {1..30}; do
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" -H "User-Agent: github-actions" "https://crates.io/api/v1/crates/scryme-sdk/$VERSION")
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" -H "User-Agent: github-actions" "https://crates.io/api/v1/crates/scryme-chat-sdk/$VERSION")
             if [ "$STATUS" = "200" ]; then
-              echo "scryme-sdk $VERSION is available on crates.io!"
+              echo "scryme-chat-sdk $VERSION is available on crates.io!"
               exit 0
             fi
             echo "Attempt $i: Version $VERSION not available yet (HTTP $STATUS). Waiting 10 seconds..."
             sleep 10
           done
-          echo "Timed out waiting for scryme-sdk $VERSION on crates.io"
+          echo "Timed out waiting for scryme-chat-sdk $VERSION on crates.io"
           exit 1
       - name: Build Release
         uses: tauri-apps/tauri-action@v0
