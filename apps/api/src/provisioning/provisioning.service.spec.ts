@@ -45,11 +45,6 @@ describe('ProvisioningService', () => {
             name: 'System Bot',
           }),
         },
-        organization: {
-          findUnique: vi.fn().mockResolvedValue({
-            members: [{ id: 'org-member-1' }],
-          }),
-        },
         channel: {
           createMany: vi.fn().mockResolvedValue({ count: 2 }),
         },
@@ -101,11 +96,6 @@ describe('ProvisioningService', () => {
           { workspaceId: 'ws-123', name: 'general', icon: 'hash', type: 'channel', createdById: 'user-owner' },
           { workspaceId: 'ws-123', name: 'random', icon: 'hash', type: 'channel', createdById: 'user-owner' },
         ],
-      });
-
-      expect(mockTx.organization.findUnique).toHaveBeenCalledWith({
-        where: { id: 'org-123' },
-        select: { members: { where: { userId: 'user-owner' }, select: { id: true } } },
       });
     });
 
@@ -180,27 +170,51 @@ describe('ProvisioningService', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should throw BadRequestException if owner is not a member of the M2M organization', async () => {
+    it('should provision workspace even when owner is not a member of the organization', async () => {
       const mockTx = {
         workspace: {
           findUnique: vi.fn().mockResolvedValue(null),
+          create: vi.fn().mockResolvedValue({
+            id: 'ws-123',
+            slug: 'acme',
+            name: 'Acme Corp',
+          }),
         },
         user: {
           findUnique: vi.fn().mockResolvedValue({ id: 'user-owner', email: 'owner@acme.com' }),
+          create: vi.fn().mockResolvedValue({ id: 'bot_123', name: 'System Bot' }),
         },
-        organization: {
-          findUnique: vi.fn().mockResolvedValue({ members: [] }),
+        workspaceMember: {
+          create: vi.fn().mockResolvedValue({ id: 'wm-bot' }),
+        },
+        botApplication: {
+          create: vi.fn().mockResolvedValue({
+            id: 'botapp-1',
+            clientId: 'bot_client_123',
+            clientSecret: 'secret_123',
+          }),
+        },
+        workspaceAuditLog: {
+          create: vi.fn().mockResolvedValue({ id: 'log-1' }),
         },
       };
 
       (prisma.$transaction as any).mockImplementation((cb: any) => cb(mockTx));
 
-      await expect(
-        service.provisionWorkspace(
-          { organizationId: 'org-123' },
-          { name: 'Acme Corp', slug: 'acme', ownerEmail: 'owner@acme.com' }
-        )
-      ).rejects.toThrow(BadRequestException);
+      const result = await service.provisionWorkspace(
+        { organizationId: 'org-123' },
+        { name: 'Acme Corp', slug: 'acme', ownerEmail: 'owner@acme.com' }
+      );
+
+      expect(result.success).toBe(true);
+      expect(mockTx.workspace.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            ownerId: 'user-owner',
+            organizationId: 'org-123',
+          }),
+        })
+      );
     });
 
     it('should wrap unexpected database errors in InternalServerErrorException', async () => {
