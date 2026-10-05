@@ -35,23 +35,6 @@ export class ProvisioningService {
           });
         }
 
-        // If M2M, verify owner belongs to organization
-        if (context.organizationId) {
-          const org = await tx.organization.findUnique({
-            where: { id: context.organizationId },
-            select: {
-              members: {
-                where: { userId: owner.id },
-                select: { id: true },
-              },
-            },
-          });
-          const isMember = org && org.members.length > 0;
-          if (!isMember) {
-            throw new BadRequestException('Workspace owner must be a member of your organization');
-          }
-        }
-
         // 1. Create Workspace
         const workspace = await tx.workspace.create({
           data: {
@@ -109,29 +92,6 @@ export class ProvisioningService {
             }
 
             if (user) {
-              // Ensure member belongs to organization if M2M context exists
-              if (context.organizationId) {
-                const org = await tx.organization.findUnique({
-                  where: { id: context.organizationId },
-                  select: {
-                    members: {
-                      where: { userId: user.id },
-                      select: { id: true },
-                    },
-                  },
-                });
-                const isOrgMember = org && org.members.length > 0;
-                if (!isOrgMember && tx.member) {
-                  await tx.member.create({
-                    data: {
-                      organizationId: context.organizationId,
-                      userId: user.id,
-                      role: 'member',
-                    },
-                  });
-                }
-              }
-
               await tx.workspaceMember.upsert({
                 where: {
                   workspaceId_userId: {
