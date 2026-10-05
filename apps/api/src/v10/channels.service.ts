@@ -108,8 +108,21 @@ export class V10ChannelsService {
   async updateMessage(bot: any, channelId: string, messageId: string, data: any) {
     const { content, embeds, components } = data;
 
+    /**
+     * ⚡ Performance Optimization:
+     * Uses targeted `select` to fetch only fields required for verification and update merging
+     * (`id`, `channelId`, `userId`, `content`, `metadata`), avoiding over-fetching scalar columns
+     * or relations and reducing DB response payload size.
+     */
     const message = await prisma.message.findUnique({
       where: { id: messageId },
+      select: {
+        id: true,
+        channelId: true,
+        userId: true,
+        content: true,
+        metadata: true,
+      },
     });
 
     if (!message) throw new NotFoundException('Unknown Message');
@@ -193,8 +206,18 @@ export class V10ChannelsService {
   }
 
   async deleteMessage(bot: any, channelId: string, messageId: string) {
+    /**
+     * ⚡ Performance Optimization:
+     * Uses targeted `select` to fetch only boundary and ownership verification fields
+     * (`id`, `channelId`, `userId`), avoiding over-fetching message contents or metadata.
+     */
     const message = await prisma.message.findUnique({
       where: { id: messageId },
+      select: {
+        id: true,
+        channelId: true,
+        userId: true,
+      },
     });
 
     if (!message) throw new NotFoundException('Unknown Message');
