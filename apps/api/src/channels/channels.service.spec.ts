@@ -38,6 +38,10 @@ vi.mock('@repo/database', () => ({
     },
     sharedChannel: {
       findFirst: vi.fn(),
+      create: vi.fn(),
+    },
+    workspace: {
+      findUnique: vi.fn(),
     },
     workspaceMember: {
       findUnique: vi.fn(),
@@ -478,6 +482,98 @@ describe('ChannelsService', () => {
         'reply-1',
         'Reply content'
       );
+    });
+  });
+
+  describe('inviteWorkspaceToChannel', () => {
+    const channelId = 'ch-1';
+    const workspaceId = 'target-ws-1';
+    const userId = 'user-1';
+
+    it('should throw BadRequestException if target workspaceId is missing', async () => {
+      await expect(service.inviteWorkspaceToChannel(channelId, '', userId)).rejects.toThrow(
+        'Target workspaceId is required'
+      );
+    });
+
+    it('should throw NotFoundException if channel does not exist', async () => {
+      mockPrisma.channel.findUnique.mockResolvedValue(null);
+      await expect(service.inviteWorkspaceToChannel(channelId, workspaceId, userId)).rejects.toThrow(
+        NotFoundException
+      );
+    });
+
+    it('should throw ForbiddenException if user is not workspace admin or channel admin', async () => {
+      mockPrisma.channel.findUnique.mockResolvedValue({
+        id: channelId,
+        workspaceId: 'ws-1',
+        workspace: { members: [{ role: 'member' }] },
+        members: [{ role: 'member' }],
+      });
+
+      await expect(service.inviteWorkspaceToChannel(channelId, workspaceId, userId)).rejects.toThrow(
+        ForbiddenException
+      );
+    });
+
+    it('should throw NotFoundException if target workspace does not exist', async () => {
+      mockPrisma.channel.findUnique.mockResolvedValue({
+        id: channelId,
+        workspaceId: 'ws-1',
+        workspace: { members: [{ role: 'admin' }] },
+        members: [],
+      });
+      mockPrisma.workspace.findUnique.mockResolvedValue(null);
+
+      await expect(service.inviteWorkspaceToChannel(channelId, workspaceId, userId)).rejects.toThrow(
+        NotFoundException
+      );
+    });
+
+    it('should create and return shared channel record when authorized by workspace admin', async () => {
+      const mockShared = { id: 'sc-1', channelId, workspaceId, status: 'PENDING' };
+      mockPrisma.channel.findUnique.mockResolvedValue({
+        id: channelId,
+        workspaceId: 'ws-1',
+        workspace: { members: [{ role: 'owner' }] },
+        members: [],
+      });
+      mockPrisma.workspace.findUnique.mockResolvedValue({ id: workspaceId });
+      mockPrisma.sharedChannel.create.mockResolvedValue(mockShared);
+
+      const result = await service.inviteWorkspaceToChannel(channelId, workspaceId, userId);
+
+      expect(result).toEqual(mockShared);
+      expect(mockPrisma.sharedChannel.create).toHaveBeenCalledWith({
+        data: {
+          channelId,
+          workspaceId,
+          status: 'PENDING',
+        },
+      });
+    });
+
+    it('should create and return shared channel record when authorized by channel admin', async () => {
+      const mockShared = { id: 'sc-1', channelId, workspaceId, status: 'PENDING' };
+      mockPrisma.channel.findUnique.mockResolvedValue({
+        id: channelId,
+        workspaceId: 'ws-1',
+        workspace: { members: [] },
+        members: [{ role: 'admin' }],
+      });
+      mockPrisma.workspace.findUnique.mockResolvedValue({ id: workspaceId });
+      mockPrisma.sharedChannel.create.mockResolvedValue(mockShared);
+
+      const result = await service.inviteWorkspaceToChannel(channelId, workspaceId, userId);
+
+      expect(result).toEqual(mockShared);
+      expect(mockPrisma.sharedChannel.create).toHaveBeenCalledWith({
+        data: {
+          channelId,
+          workspaceId,
+          status: 'PENDING',
+        },
+      });
     });
   });
 });

@@ -134,8 +134,16 @@ export class ChannelsController {
 
   @Post(':channelId/share')
   @ApiOperation({ summary: 'Share a channel with another workspace' })
-  async shareChannel(@Param('channelId') channelId: string, @Body('workspaceId') workspaceId: string) {
-    return this.channelsService.inviteWorkspaceToChannel(channelId, workspaceId);
+  @ApiParam({ name: 'channelId', description: 'The channel ID' })
+  @ApiBody({ schema: { type: 'object', properties: { workspaceId: { type: 'string' } }, required: ['workspaceId'] } })
+  @ApiResponse({ status: 201, description: 'Channel share request created' })
+  async shareChannel(
+    @Param('channelId') channelId: string,
+    @CurrentUser() user: User,
+    @Body('workspaceId') workspaceId: string
+  ) {
+    // Threat Mitigation: BOLA/IDOR Protection - Pass requesting user context to verify workspace/channel admin authorization
+    return this.channelsService.inviteWorkspaceToChannel(channelId, workspaceId, user.id);
   }
 
   @Post(':channelId/messages/:messageId/reply')

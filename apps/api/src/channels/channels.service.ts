@@ -699,7 +699,52 @@ export class ChannelsService {
     return { success: true };
   }
 
-  async inviteWorkspaceToChannel(channelId: string, workspaceId: string) {
+  async inviteWorkspaceToChannel(channelId: string, workspaceId: string, userId: string) {
+    if (!workspaceId) {
+      throw new BadRequestException('Target workspaceId is required');
+    }
+
+    const channel = await prisma.channel.findUnique({
+      where: { id: channelId },
+      select: {
+        id: true,
+        workspaceId: true,
+        workspace: {
+          select: {
+            members: {
+              where: { userId },
+              select: { role: true },
+            },
+          },
+        },
+        members: {
+          where: { userId },
+          select: { role: true },
+        },
+      },
+    });
+
+    if (!channel) {
+      throw new NotFoundException('Channel not found');
+    }
+
+    // Threat Mitigation: BOLA/IDOR Protection - Verify requesting user is workspace owner/admin or channel admin/moderator
+    const isWorkspaceAdmin = channel.workspace?.members?.some(m => ['owner', 'admin'].includes(m.role));
+    const isChannelAdmin = channel.members?.some(m => ['admin', 'moderator'].includes(m.role));
+
+    if (!isWorkspaceAdmin && !isChannelAdmin) {
+      throw new ForbiddenException('Only workspace or channel administrators can share channels');
+    }
+
+    const targetWorkspace = await prisma.workspace.findUnique({
+      where: { id: workspaceId },
+      select: { id: true },
+    });
+
+    if (!targetWorkspace) {
+      throw new NotFoundException('Target workspace not found');
+    }
+
     return prisma.sharedChannel.create({
       data: {
         channelId,
