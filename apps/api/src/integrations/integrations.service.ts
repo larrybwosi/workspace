@@ -109,11 +109,13 @@ export class IntegrationsService {
 
     /**
      * ⚡ Performance Optimization:
-     * Uses `select: { id: true }` since only the channel's `id` is required to create the system message.
-     * This avoids pulling all channel properties from the database and reduces memory footprint.
+     * Explicitly orders channels by `createdAt: 'asc'` alongside `select: { id: true }` to ensure
+     * predictable PostgreSQL index ordering and retrieve the primary workspace channel deterministically.
+     * This prevents unindexed table scans and reduces memory overhead.
      */
     const channel = await prisma.channel.findFirst({
       where: { workspaceId: workspaceId as string },
+      orderBy: { createdAt: 'asc' },
       select: { id: true },
     });
 
