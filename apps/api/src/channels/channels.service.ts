@@ -357,12 +357,18 @@ export class ChannelsService {
           throw new ForbiddenException('Not eligible to use this sticker');
         }
       }
-      await logAssetUsage({
+      /**
+       * ⚡ Performance Optimization:
+       * Background non-critical sticker usage logging with `.catch()` error handling to avoid
+       * blocking the message creation HTTP response path on database write latency.
+       * Expected impact: Eliminates 1 blocking DB write RTT (~15-30ms) during message creation.
+       */
+      logAssetUsage({
         assetId: stickerId,
         assetType: 'sticker',
         userId: userId,
         workspaceId: sticker?.workspaceId || undefined,
-      });
+      }).catch(err => this.logger.error('Failed to log sticker asset usage:', err));
     }
 
     const message = await prisma.$transaction(async tx => {
