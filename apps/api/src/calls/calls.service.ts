@@ -47,25 +47,33 @@ export class CallsService {
     }
 
     const targetWorkspaceId = (call.metadata as any)?.workspaceId || call.workspaceId;
-    if (targetWorkspaceId) {
-      const isMember = await prisma.workspaceMember.findUnique({
-        where: { workspaceId_userId: { workspaceId: targetWorkspaceId, userId: user.id } },
-      });
-      if (!isMember) {
-        throw new ForbiddenException('Unauthorized: Not a workspace member');
-      }
+    const channelMatch = call.channelName?.match(/^channel-(.+)$/);
+
+    /**
+     * ⚡ Performance Optimization:
+     * Parallelizes workspace membership and private channel access verification queries via `Promise.all`.
+     * This reduces sequential database round-trips (RTT) from 3 down to 2 on call authorization checks.
+     */
+    const [isMember, channel] = await Promise.all([
+      targetWorkspaceId
+        ? prisma.workspaceMember.findUnique({
+            where: { workspaceId_userId: { workspaceId: targetWorkspaceId, userId: user.id } },
+          })
+        : null,
+      channelMatch
+        ? prisma.channel.findUnique({
+            where: { id: channelMatch[1] },
+            include: { members: { where: { userId: user.id } } },
+          })
+        : null,
+    ]);
+
+    if (targetWorkspaceId && !isMember) {
+      throw new ForbiddenException('Unauthorized: Not a workspace member');
     }
 
-    const channelMatch = call.channelName?.match(/^channel-(.+)$/);
-    if (channelMatch) {
-      const channelIdMatch = channelMatch[1];
-      const channel = await prisma.channel.findUnique({
-        where: { id: channelIdMatch },
-        include: { members: { where: { userId: user.id } } },
-      });
-      if (channel?.isPrivate && channel.members.length === 0) {
-        throw new ForbiddenException('Unauthorized: Not a channel member');
-      }
+    if (channelMatch && channel?.isPrivate && channel.members.length === 0) {
+      throw new ForbiddenException('Unauthorized: Not a channel member');
     }
 
     if (call.channelName?.startsWith('dm-') && !call.channelName.includes(user.id)) {

@@ -1,3 +1,9 @@
+## 2026-10-06 - [Prisma/Performance] Parallelizing Workspace and Channel Access Checks in Calls Verification
+
+**Learning:** In `CallsService.verifyCallAccess`, validating workspace membership (`prisma.workspaceMember.findUnique`) and private channel membership (`prisma.channel.findUnique`) previously executed sequentially with `await`. For workspace channel calls, this required 3 sequential database round-trips (RTT) on every call verification action (join, leave, update state, promote, remove, invite, list participants). Executing both membership queries concurrently via `Promise.all` after retrieving the call record reduces database RTTs from 3 down to 2, cutting access authorization query latency by up to 50% on high-frequency call endpoints.
+
+**Action:** Execute independent secondary authorization queries (like workspace and channel access verification) concurrently via `Promise.all` after parent entity retrieval.
+
 ## 2026-10-03 - [Prisma/Performance] Single-Query Consolidated Bot Member & Guild Resolution in V10 Gateway
 
 **Learning:** In `V10Gateway`, dispatching real-time message events (`MESSAGE_CREATE`, `MESSAGE_UPDATE`, `MESSAGE_DELETE`) previously issued two sequential database queries: `prisma.channel.findUnique({ where: { id: channelId }, select: { workspaceId: true } })` followed by `prisma.workspaceMember.findMany({ where: { workspaceId, user: { isBot: true } } })`. Consolidating both operations into a single `prisma.channel.findUnique` query with nested `workspace.members` selection (`select: { workspaceId: true, workspace: { select: { members: { where: { user: { isBot: true } }, select: { userId: true } } } } }`) cuts database round-trips from 2 to 1 on every real-time message event dispatch in the V10 Discord WebSocket gateway.
