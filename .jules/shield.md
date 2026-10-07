@@ -61,3 +61,7 @@
 ## 2026-10-06 - Enforce Target Channel Existence, Workspace Scoping, and Private Channel Authorization on Invitation Creation
 **Learning:** `createInvitation` in `InvitationsService` accepted `channelId` without validating channel existence, workspace scoping, or channel membership. This allowed authenticated users to associate platform invitations with arbitrary private channels across workspaces without permission (BOLA / Broken Object Level Authorization).
 **Action:** When handling sub-resource association on invitation creation (e.g. `channelId`), always perform explicit point lookups to verify target existence, parent workspace scoping (`channel.workspaceId === data.workspaceId`), workspace membership, and private channel authorization (`isPrivate && !isWorkspaceAdmin && !isChannelMember`).
+
+## 2026-10-07 - Enforce Bot Workspace Membership Verification on V10 Channel and Message Endpoints
+**Learning:** `GET /bot/v10/channels/:id` and `GET /bot/v10/channels/:id/messages` in `V10ChannelsController` and `V10ChannelsService` fetched channel details and message histories without extracting `@CurrentBot()` or verifying bot workspace membership. Any authenticated bot token could read channel metadata and chat history across arbitrary workspaces (BOLA / IDOR / Information Disclosure).
+**Action:** Always inject bot user context into controller endpoints and perform explicit workspace membership checks (`workspace.members.some(...)`) before returning channel metadata or message history logs to external bot applications.

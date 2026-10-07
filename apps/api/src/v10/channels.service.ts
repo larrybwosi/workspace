@@ -7,11 +7,12 @@ import { hasPermission, Permissions } from '../common/permissions';
 export class V10ChannelsService {
   private readonly logger = new Logger(V10ChannelsService.name);
 
-  async getChannel(id: string) {
+  async getChannel(bot: any, id: string) {
     /**
-     * ⚡ Performance Optimization:
-     * Uses 'select' to fetch only required fields for Discord channel objects.
-     * Reduces database payload and memory usage.
+     * THREAT MITIGATION: Broken Object Level Authorization (BOLA / IDOR)
+     * Risk Level: High
+     * Verify that the requesting bot is an active member of the target workspace before
+     * returning channel details. Prevents unauthorized bots from probing internal channel metadata.
      */
     const channel = await prisma.channel.findUnique({
       where: { id },
@@ -22,10 +23,22 @@ export class V10ChannelsService {
         name: true,
         description: true,
         parentId: true,
+        workspace: {
+          select: {
+            members: {
+              where: { userId: bot.id },
+              select: { userId: true },
+            },
+          },
+        },
       },
     });
 
     if (!channel) throw new NotFoundException('Unknown Channel');
+
+    if (channel.workspaceId && (!channel.workspace?.members || channel.workspace.members.length === 0)) {
+      throw new ForbiddenException('Bot is not a member of this guild');
+    }
 
     return {
       id: channel.id,
@@ -43,7 +56,35 @@ export class V10ChannelsService {
     };
   }
 
-  async getMessages(channelId: string, query: { limit?: number; before?: string; after?: string }) {
+  async getMessages(bot: any, channelId: string, query: { limit?: number; before?: string; after?: string }) {
+    /**
+     * THREAT MITIGATION: Broken Object Level Authorization (BOLA / IDOR)
+     * Risk Level: High
+     * Verify that the requesting bot is an active member of the target workspace before
+     * returning message history. Prevents unauthorized bots from reading channel messages across workspaces.
+     */
+    const channel = await prisma.channel.findUnique({
+      where: { id: channelId },
+      select: {
+        id: true,
+        workspaceId: true,
+        workspace: {
+          select: {
+            members: {
+              where: { userId: bot.id },
+              select: { userId: true },
+            },
+          },
+        },
+      },
+    });
+
+    if (!channel) throw new NotFoundException('Unknown Channel');
+
+    if (channel.workspaceId && (!channel.workspace?.members || channel.workspace.members.length === 0)) {
+      throw new ForbiddenException('Bot is not a member of this guild');
+    }
+
     const { limit = 50, before, after } = query;
 
     /**
