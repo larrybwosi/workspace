@@ -928,12 +928,18 @@ export class CallsService {
       }
     }
 
-    await logAssetUsage({
+    /**
+     * ⚡ Performance Optimization:
+     * Background non-critical asset usage logging with `.catch()` error handling to avoid
+     * blocking the soundboard play HTTP response path on database write latency.
+     * Expected impact: Cuts soundboard playback API response latency by 1 DB write RTT (~15-30ms).
+     */
+    logAssetUsage({
       assetId: soundId,
       assetType: 'sound',
       userId: user.id,
       workspaceId: sound.workspaceId || undefined,
-    });
+    }).catch(err => this.logger.error('Failed to log soundboard asset usage:', err));
 
     if (callId) {
       await publishRealtime(AblyChannels.call(callId), AblyEvents.SOUNDBOARD_PLAYED, {
