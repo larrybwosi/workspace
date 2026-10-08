@@ -14,8 +14,8 @@ export class V10ChannelsController {
   @Get(':id')
   @ApiOperation({ summary: 'Get channel details' })
   @ApiParam({ name: 'id', description: 'The channel ID' })
-  async getChannel(@Param('id') id: string) {
-    return this.channelsService.getChannel(id);
+  async getChannel(@CurrentBot() bot: any, @Param('id') id: string) {
+    return this.channelsService.getChannel(bot, id);
   }
 
   @Post(':id/messages')
@@ -32,12 +32,13 @@ export class V10ChannelsController {
   @ApiQuery({ name: 'before', required: false })
   @ApiQuery({ name: 'after', required: false })
   async getMessages(
+    @CurrentBot() bot: any,
     @Param('id') id: string,
     @Query('limit') limit?: number,
     @Query('before') before?: string,
     @Query('after') after?: string
   ) {
-    return this.channelsService.getMessages(id, { limit, before, after });
+    return this.channelsService.getMessages(bot, id, { limit, before, after });
   }
 
   @Patch(':id/messages/:messageId')

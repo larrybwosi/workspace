@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { V10ChannelsService } from './channels.service';
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException, ForbiddenException } from '@nestjs/common';
 import { prisma } from '@repo/database';
 import * as sharedServer from '@repo/shared/server';
 import { vi, describe, beforeEach, it, expect } from 'vitest';
@@ -13,6 +13,7 @@ vi.mock('@repo/database', () => ({
     message: {
       create: vi.fn(),
       findUnique: vi.fn(),
+      findMany: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
     },
@@ -134,6 +135,76 @@ describe('V10ChannelsService', () => {
       const res = await service.deleteMessage(bot, 'chan-1', 'msg-1');
       expect(res).toBeNull();
       expect(prisma.message.delete).toHaveBeenCalledWith({ where: { id: 'msg-1' } });
+    });
+  });
+
+  describe('bot workspace membership enforcement (BOLA / IDOR protection)', () => {
+    it('should throw ForbiddenException on getChannel if bot is not a member of the guild', async () => {
+      const bot = { id: 'bot-1', name: 'Bot' };
+      (prisma.channel.findUnique as any).mockResolvedValue({
+        id: 'chan-1',
+        workspaceId: 'ws-1',
+        name: 'general',
+        description: 'General channel',
+        parentId: null,
+        workspace: { members: [] }, // bot is not a member
+      });
+
+      await expect(service.getChannel(bot, 'chan-1')).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should return channel details on getChannel if bot is a member of the guild', async () => {
+      const bot = { id: 'bot-1', name: 'Bot' };
+      (prisma.channel.findUnique as any).mockResolvedValue({
+        id: 'chan-1',
+        type: 'channel',
+        workspaceId: 'ws-1',
+        name: 'general',
+        description: 'General channel',
+        parentId: null,
+        workspace: { members: [{ userId: 'bot-1' }] },
+      });
+
+      const res = await service.getChannel(bot, 'chan-1');
+      expect(res.id).toBe('chan-1');
+      expect(res.name).toBe('general');
+    });
+
+    it('should throw ForbiddenException on getMessages if bot is not a member of the guild', async () => {
+      const bot = { id: 'bot-1', name: 'Bot' };
+      (prisma.channel.findUnique as any).mockResolvedValue({
+        id: 'chan-1',
+        workspaceId: 'ws-1',
+        workspace: { members: [] }, // bot is not a member
+      });
+
+      await expect(service.getMessages(bot, 'chan-1', {})).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should return messages on getMessages if bot is a member of the guild', async () => {
+      const bot = { id: 'bot-1', name: 'Bot' };
+      (prisma.channel.findUnique as any).mockResolvedValue({
+        id: 'chan-1',
+        workspaceId: 'ws-1',
+        workspace: { members: [{ userId: 'bot-1' }] },
+      });
+      (prisma.message.findMany as any).mockResolvedValue([
+        {
+          id: 'msg-1',
+          content: 'Hello world',
+          channelId: 'chan-1',
+          timestamp: new Date(),
+          isEdited: false,
+          updatedAt: new Date(),
+          flags: 0,
+          metadata: {},
+          user: { id: 'user-1', name: 'Alice', avatar: null, isBot: false },
+        },
+      ]);
+
+      const res = await service.getMessages(bot, 'chan-1', {});
+      expect(res).toHaveLength(1);
+      expect(res[0].id).toBe('msg-1');
     });
   });
 });
