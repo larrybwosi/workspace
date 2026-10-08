@@ -279,7 +279,8 @@ private fun processChannelGrouping(channels: List<ChannelEntity>): Pair<List<Cha
     val normalChannels = channels.filter { it.type?.lowercase() != "category" }
 
     if (categoryEntities.isNotEmpty()) {
-        val uncategorized = normalChannels.filter { it.parentId == null }
+        val categoryIds = categoryEntities.map { it.id }.toSet()
+        val uncategorized = normalChannels.filter { it.parentId == null || it.parentId !in categoryIds }
         val grouped = categoryEntities.map { cat ->
             ChannelCategoryGroup(
                 categoryId = cat.id,

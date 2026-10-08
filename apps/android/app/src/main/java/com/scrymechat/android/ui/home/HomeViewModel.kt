@@ -269,13 +269,22 @@ class HomeViewModel @Inject constructor(
             channelRepository.getWorkspaceChannels(workspaceSlug).collect { resource ->
                 when (resource) {
                     is Resource.Success -> {
-                        _uiState.update { it.copy(channels = resource.data ?: emptyList()) }
+                        val channels = resource.data ?: emptyList()
+                        _uiState.update { state ->
+                            val currentSelected = state.selectedChannel
+                            val updatedSelected = if (currentSelected != null) {
+                                channels.find { it.id == currentSelected.id } ?: currentSelected
+                            } else {
+                                state.selectedChannel
+                            }
+                            state.copy(channels = channels, selectedChannel = updatedSelected)
+                        }
                     }
                     is Resource.Error -> {
-                        // Handle error
+                        // Keep cached channels if error occurs
                     }
                     is Resource.Loading -> {
-                        // Handle loading
+                        // Keep loading state if necessary
                     }
                 }
             }
@@ -448,16 +457,27 @@ class HomeViewModel @Inject constructor(
             val workspaceSlug = _uiState.value.selectedWorkspace?.slug ?: return@launch
             _uiState.update { it.copy(isCreatingChannel = true, error = null) }
             val finalRequest = if (categoryId != null) {
-                request.copy(departmentId = categoryId) // Using departmentId as parentId based on CreateChannelRequest
+                request.copy(departmentId = categoryId)
             } else {
                 request
             }
             val result = channelRepository.createChannel(workspaceSlug, finalRequest)
-            if (result is Resource.Success) {
-                _uiState.update { it.copy(isCreatingChannel = false, isCreateChannelDialogOpen = false) }
+            if (result is Resource.Success && result.data != null) {
+                val createdChannel = result.data
+                _uiState.update { state ->
+                    val updatedChannels = state.channels.filter { it.id != createdChannel.id } + createdChannel
+                    state.copy(
+                        isCreatingChannel = false,
+                        isCreateChannelDialogOpen = false,
+                        channels = updatedChannels,
+                        selectedChannel = createdChannel,
+                        selectedDm = null,
+                        isHomeSelected = false
+                    )
+                }
                 loadChannels(workspaceSlug)
             } else {
-                _uiState.update { it.copy(isCreatingChannel = false, error = result.message) }
+                _uiState.update { it.copy(isCreatingChannel = false, error = result.message ?: "Failed to create channel") }
             }
         }
     }
