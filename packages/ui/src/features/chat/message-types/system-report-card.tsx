@@ -6,24 +6,15 @@ import {
   AlertCircle,
   CheckCircle2,
   Info,
-  Server,
-  Code2,
   Clock,
   Copy,
   Check,
-  ChevronRight,
-  Database,
-  Layers,
-  Terminal,
-  Activity,
-  PackageCheck,
-  Cpu,
 } from 'lucide-react';
 import { Card } from '../../../components/card';
 import { Badge } from '../../../components/badge';
 import { Button } from '../../../components/button';
+import { MarkdownRenderer } from '../../../shared/markdown-renderer';
 import { cn } from '../../../lib/utils';
-import { formatDistanceToNow, format } from 'date-fns';
 
 export interface SystemReportData {
   title: string;
@@ -41,19 +32,28 @@ interface SystemReportCardProps {
   className?: string;
 }
 
+const cleanValue = (str: string): string => {
+  if (!str) return '';
+  return str.replace(/\*\*/g, '').replace(/`/g, '').trim();
+};
+
 export function parseSystemReport(content: string, metadata?: any): SystemReportData | null {
   if (!content) return null;
 
   // 1. Check if metadata explicitly defines system report data
   if (metadata?.type === 'system_report' || metadata?.systemReport) {
     return {
-      title: metadata.title || 'System Notification',
+      title: cleanValue(metadata.title || 'System Notification'),
       type: metadata.reportType || 'system',
       severity: metadata.severity || 'info',
       httpStatus: metadata.httpStatus,
-      fields: metadata.fields || [],
-      summary: metadata.summary || content,
-      timestamp: metadata.timestamp,
+      fields: (metadata.fields || []).map((f: any) => ({
+        ...f,
+        label: cleanValue(f.label),
+        value: cleanValue(f.value),
+      })),
+      summary: cleanValue(metadata.summary || content),
+      timestamp: metadata.timestamp ? cleanValue(metadata.timestamp) : undefined,
     };
   }
 
@@ -71,7 +71,7 @@ export function parseSystemReport(content: string, metadata?: any): SystemReport
   // Determine Severity & Type
   let severity: SystemReportData['severity'] = 'info';
   let type: SystemReportData['type'] = 'system';
-  let title = firstLine.replace(/^[🚨⚠️ℹ️✅\s]+/, '');
+  let title = cleanValue(firstLine.replace(/^[🚨⚠️ℹ️✅\s]+/, ''));
 
   if (isExceptionAlert) {
     severity = 'critical';
@@ -87,62 +87,72 @@ export function parseSystemReport(content: string, metadata?: any): SystemReport
   const httpMatch = content.match(/HTTP\s*(\d{3})/i);
   const httpStatus = httpMatch ? httpMatch[1] : undefined;
 
-  // Extract Key-Value fields from patterns like:
-  // "Method / Path:" followed by code block or line
-  // "Product: Default (ID: cm...) Current Stock: 1"
+  // Helper matcher to extract multiline or inline key-value pairs
+  const extractField = (labelPattern: string): string | null => {
+    const regex = new RegExp(`(?:\\*\\*)?(?:${labelPattern})(?:\\*\\*)?:`, 'i');
+    const match = content.match(regex);
+    if (!match) return null;
+
+    const startIndex = match.index! + match[0].length;
+    let remainder = content.slice(startIndex);
+    remainder = remainder.replace(/^\*+/, '');
+    const nextLines = remainder.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+    return nextLines[0] ? cleanValue(nextLines[0]) : null;
+  };
+
   const fields: SystemReportData['fields'] = [];
   let summary = '';
 
   // Extract Method / Path
-  const methodMatch = content.match(/(?:Method\s*\/\s*Path|Path|Endpoint):\s*(?:`{1,3})?\s*([^\n`]+)/i);
-  if (methodMatch) {
-    fields.push({ label: 'Endpoint / Path', value: methodMatch[1].trim(), isCode: true, copyable: true });
+  const methodVal = extractField('Method\\s*\\/\\s*Path|Path|Endpoint');
+  if (methodVal) {
+    fields.push({ label: 'Endpoint / Path', value: methodVal, isCode: true, copyable: true });
   }
 
   // Extract Error Code
-  const errorCodeMatch = content.match(/(?:Error Code|Code):\s*(?:`{1,3})?\s*([^\n`]+)/i);
-  if (errorCodeMatch) {
-    fields.push({ label: 'Error Code', value: errorCodeMatch[1].trim(), isCode: true });
+  const errorCodeVal = extractField('Error Code|Code');
+  if (errorCodeVal) {
+    fields.push({ label: 'Error Code', value: errorCodeVal, isCode: true });
   }
 
   // Extract Message
-  const messageMatch = content.match(/(?:Message):\s*([^\n`]+)/i);
-  if (messageMatch) {
-    summary = messageMatch[1].trim();
+  const messageVal = extractField('Message');
+  if (messageVal) {
+    summary = messageVal;
   }
 
   // Extract Correlation ID
-  const correlationMatch = content.match(/(?:Correlation ID|Request ID|Trace ID):\s*(?:`{1,3})?\s*([^\n`]+)/i);
-  if (correlationMatch) {
-    fields.push({ label: 'Correlation ID', value: correlationMatch[1].trim(), isCode: true, copyable: true });
+  const correlationVal = extractField('Correlation ID|Request ID|Trace ID');
+  if (correlationVal) {
+    fields.push({ label: 'Correlation ID', value: correlationVal, isCode: true, copyable: true });
   }
 
   // Extract Tenant ID
-  const tenantMatch = content.match(/(?:Tenant ID|Organization ID):\s*(?:`{1,3})?\s*([^\n`]+)/i);
-  if (tenantMatch) {
-    fields.push({ label: 'Tenant ID', value: tenantMatch[1].trim(), isCode: true, copyable: true });
+  const tenantVal = extractField('Tenant ID|Organization ID');
+  if (tenantVal) {
+    fields.push({ label: 'Tenant ID', value: tenantVal, isCode: true, copyable: true });
   }
 
   // Extract Product Stock Alert patterns
-  const productMatch = content.match(/Product:\s*([^\n(]+)(?:\(ID:\s*([^)]+)\))?/i);
+  const productMatch = content.match(/(?:\*\*|\b)Product(?:\*\*|\b):\s*([^\n(]+)(?:\(ID:\s*([^)]+)\))?/i);
   if (productMatch) {
-    fields.push({ label: 'Product', value: productMatch[1].trim() });
+    fields.push({ label: 'Product', value: cleanValue(productMatch[1]) });
     if (productMatch[2]) {
-      fields.push({ label: 'Product ID', value: productMatch[2].trim(), isCode: true, copyable: true });
+      fields.push({ label: 'Product ID', value: cleanValue(productMatch[2]), isCode: true, copyable: true });
     }
   }
 
-  const stockMatch = content.match(/Current Stock:\s*(\d+)(?:\s*\(Threshold:\s*(\d+)\))?/i);
+  const stockMatch = content.match(/(?:\*\*|\b)Current Stock(?:\*\*|\b):\s*(\d+)(?:\s*\(Threshold:\s*(\d+)\))?/i);
   if (stockMatch) {
-    fields.push({ label: 'Current Stock', value: stockMatch[1].trim(), isCode: true });
+    fields.push({ label: 'Current Stock', value: cleanValue(stockMatch[1]), isCode: true });
     if (stockMatch[2]) {
-      fields.push({ label: 'Min Threshold', value: stockMatch[2].trim(), isCode: true });
+      fields.push({ label: 'Min Threshold', value: cleanValue(stockMatch[2]), isCode: true });
     }
   }
 
   // Extract Timestamp
-  const timestampMatch = content.match(/Timestamp:\s*([^\n]+)/i);
-  const timestamp = timestampMatch ? timestampMatch[1].trim() : undefined;
+  const timestampVal = extractField('Timestamp');
+  const timestamp = timestampVal || undefined;
 
   return {
     title,
@@ -208,9 +218,11 @@ export function SystemReportCard({ report, className }: SystemReportCardProps) {
         <div className="flex items-center gap-2.5 min-w-0">
           {theme.icon}
           <div className="min-w-0">
-            <h4 className="font-semibold text-sm leading-tight text-foreground truncate">{report.title}</h4>
+            <div className="font-semibold text-sm leading-tight text-foreground truncate">
+              <MarkdownRenderer content={report.title} className="inline prose-p:inline prose-p:my-0 text-sm font-semibold" />
+            </div>
             {report.type && (
-              <span className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium">
+              <span className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium block">
                 {report.type} report
               </span>
             )}
@@ -227,9 +239,9 @@ export function SystemReportCard({ report, className }: SystemReportCardProps) {
       {/* Card Body */}
       <div className="p-4 space-y-3">
         {report.summary && (
-          <p className="text-xs text-foreground/90 font-medium bg-muted/30 p-2.5 rounded-lg border border-border/40 leading-relaxed">
-            {report.summary}
-          </p>
+          <div className="text-xs text-foreground/90 font-medium bg-muted/30 p-2.5 rounded-lg border border-border/40 leading-relaxed">
+            <MarkdownRenderer content={report.summary} className="text-xs text-foreground/90 font-medium prose-p:my-0" />
+          </div>
         )}
 
         {/* Key-Value Metrics Grid */}
