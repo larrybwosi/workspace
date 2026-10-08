@@ -71,6 +71,21 @@ export class V10ApplicationsService {
       throw new ForbiddenException('Forbidden');
     }
 
+    /**
+     * THREAT MITIGATION: Broken Object Level Authorization (BOLA / IDOR)
+     * Risk Level: High
+     * Verify that the requesting bot is an active member of the target workspace before
+     * retrieving guild-specific commands. Prevents unauthorized bots from probing commands
+     * in arbitrary guilds/workspaces.
+     */
+    const botMember = await prisma.workspaceMember.findUnique({
+      where: { workspaceId_userId: { workspaceId: guildId, userId: bot.id } },
+    });
+
+    if (!botMember) {
+      throw new ForbiddenException('Bot is not a member of this guild');
+    }
+
     const commands = await prisma.botCommand.findMany({
       where: { applicationId, guildId },
     });
@@ -89,6 +104,21 @@ export class V10ApplicationsService {
   async createGuildCommand(bot: any, applicationId: string, guildId: string, data: any) {
     if (bot.botApplication?.id !== applicationId) {
       throw new ForbiddenException('Forbidden');
+    }
+
+    /**
+     * THREAT MITIGATION: Broken Object Level Authorization (BOLA / IDOR)
+     * Risk Level: High
+     * Verify that the requesting bot is an active member of the target workspace before
+     * registering guild-specific commands. Prevents unauthorized bots from registering commands
+     * in arbitrary guilds/workspaces.
+     */
+    const botMember = await prisma.workspaceMember.findUnique({
+      where: { workspaceId_userId: { workspaceId: guildId, userId: bot.id } },
+    });
+
+    if (!botMember) {
+      throw new ForbiddenException('Bot is not a member of this guild');
     }
 
     const { name, description, options, type = 1 } = data;
