@@ -1,12 +1,17 @@
 import { Injectable, BadRequestException, InternalServerErrorException, Logger } from '@nestjs/common';
 import { prisma } from '@repo/database';
+import { sendSetPasswordEmail, validateEnv } from '@repo/shared';
+import { auth } from '@repo/auth';
 import * as crypto from 'crypto';
 
 @Injectable()
 export class ProvisioningService {
   private readonly logger = new Logger(ProvisioningService.name);
+
   async provisionWorkspace(context: any, data: any) {
-    return await prisma
+    const createdUsers: Array<{ id: string; email: string; name: string }> = [];
+
+    const result = await prisma
       .$transaction(async tx => {
         // Check if slug exists
         const existing = await tx.workspace.findUnique({ where: { slug: data.slug } });
@@ -25,6 +30,7 @@ export class ProvisioningService {
               ...(data.ownerAvatar ? { avatar: data.ownerAvatar } : {}),
             },
           });
+          createdUsers.push({ id: owner.id, email: owner.email, name: owner.name });
         } else if (data.ownerName || data.ownerAvatar) {
           owner = await tx.user.update({
             where: { id: owner.id },
@@ -81,6 +87,7 @@ export class ProvisioningService {
                   ...(member.avatar ? { avatar: member.avatar } : {}),
                 },
               });
+              createdUsers.push({ id: user.id, email: user.email, name: user.name });
             } else if (member.name || member.avatar) {
               user = await tx.user.update({
                 where: { id: user.id },
@@ -177,5 +184,39 @@ export class ProvisioningService {
         this.logger.error('Provisioning failed:', err?.stack || err);
         throw new InternalServerErrorException('Failed to provision workspace');
       });
+
+    // Send email to all newly created users outside transaction
+    if (createdUsers.length > 0) {
+      const env = validateEnv();
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || (env as any).NEXT_PUBLIC_APP_URL || 'http://localhost:3001';
+
+      for (const u of createdUsers) {
+        try {
+          let verificationUrl: string;
+          try {
+            const tokenRes = await (auth.api as any).requestPasswordReset({
+              body: { email: u.email, redirectTo: `${appUrl}/verify-email` },
+            });
+            verificationUrl = (tokenRes as any)?.url || `${appUrl}/verify-email?email=${encodeURIComponent(u.email)}`;
+          } catch (e) {
+            verificationUrl = `${appUrl}/verify-email?email=${encodeURIComponent(u.email)}`;
+          }
+
+          await sendSetPasswordEmail({
+            to: u.email,
+            url: verificationUrl,
+            user: {
+              name: u.name,
+              email: u.email,
+            },
+            isNewUser: true,
+          });
+        } catch (err) {
+          this.logger.error(`Failed to send verification/set password email to ${u.email}:`, err);
+        }
+      }
+    }
+
+    return result;
   }
 }
