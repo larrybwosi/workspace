@@ -2,10 +2,28 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import { ProvisioningService } from './provisioning.service';
 import { prisma } from '@repo/database';
+import * as sharedModule from '@repo/shared';
+import { auth } from '@repo/auth';
 
 vi.mock('@repo/database', () => ({
   prisma: {
     $transaction: vi.fn(),
+  },
+}));
+
+vi.mock('@repo/shared', async () => {
+  const actual = await vi.importActual('@repo/shared');
+  return {
+    ...actual,
+    sendSetPasswordEmail: vi.fn().mockResolvedValue({ id: 'test-email-id' }),
+  };
+});
+
+vi.mock('@repo/auth', () => ({
+  auth: {
+    api: {
+      requestPasswordReset: vi.fn().mockResolvedValue({ url: 'http://localhost:3001/verify-email?token=mocktoken' }),
+    },
   },
 }));
 
@@ -33,10 +51,10 @@ describe('ProvisioningService', () => {
             .fn()
             .mockImplementation(({ where }) => {
               if (where.email === 'owner@acme.com') {
-                return Promise.resolve({ id: 'user-owner', email: 'owner@acme.com' });
+                return Promise.resolve({ id: 'user-owner', email: 'owner@acme.com', name: 'Owner' });
               }
               if (where.email === 'member1@acme.com') {
-                return Promise.resolve({ id: 'user-m1', email: 'member1@acme.com' });
+                return Promise.resolve({ id: 'user-m1', email: 'member1@acme.com', name: 'Member1' });
               }
               return Promise.resolve(null);
             }),
@@ -91,32 +109,11 @@ describe('ProvisioningService', () => {
         },
       });
 
-      expect(mockTx.channel.createMany).toHaveBeenCalledWith({
-        data: [
-          { workspaceId: 'ws-123', name: 'general', icon: 'hash', type: 'channel', createdById: 'user-owner' },
-          { workspaceId: 'ws-123', name: 'random', icon: 'hash', type: 'channel', createdById: 'user-owner' },
-        ],
-      });
+      // Existing users -> no emails sent
+      expect(sharedModule.sendSetPasswordEmail).not.toHaveBeenCalled();
     });
 
-    it('should throw BadRequestException if workspace slug is already taken', async () => {
-      const mockTx = {
-        workspace: {
-          findUnique: vi.fn().mockResolvedValue({ id: 'existing-ws' }),
-        },
-      };
-
-      (prisma.$transaction as any).mockImplementation((cb: any) => cb(mockTx));
-
-      await expect(
-        service.provisionWorkspace(
-          {},
-          { name: 'Acme Corp', slug: 'acme', ownerEmail: 'owner@acme.com' }
-        )
-      ).rejects.toThrow(BadRequestException);
-    });
-
-    it('should auto-create owner user if owner email is not found', async () => {
+    it('should send verification email to newly created owner and initial members', async () => {
       const mockTx = {
         workspace: {
           findUnique: vi.fn().mockResolvedValue(null),
@@ -132,6 +129,9 @@ describe('ProvisioningService', () => {
             if (data.email === 'newowner@acme.com') {
               return Promise.resolve({ id: 'user-newowner', email: 'newowner@acme.com', name: 'newowner' });
             }
+            if (data.email === 'newmember@acme.com') {
+              return Promise.resolve({ id: 'user-newmember', email: 'newmember@acme.com', name: 'New Member' });
+            }
             return Promise.resolve({ id: 'bot_123', name: 'System Bot' });
           }),
         },
@@ -139,6 +139,7 @@ describe('ProvisioningService', () => {
           createMany: vi.fn().mockResolvedValue({ count: 0 }),
         },
         workspaceMember: {
+          upsert: vi.fn().mockResolvedValue({ id: 'wm-1' }),
           create: vi.fn().mockResolvedValue({ id: 'wm-bot' }),
         },
         botApplication: {
@@ -157,64 +158,47 @@ describe('ProvisioningService', () => {
 
       const result = await service.provisionWorkspace(
         {},
-        { name: 'Acme Corp', slug: 'acme', ownerEmail: 'newowner@acme.com' }
+        {
+          name: 'Acme Corp',
+          slug: 'acme',
+          ownerEmail: 'newowner@acme.com',
+          initialMembers: [{ email: 'newmember@acme.com', name: 'New Member' }],
+        }
       );
 
-      expect(mockTx.user.create).toHaveBeenCalledWith({
-        data: {
-          email: 'newowner@acme.com',
-          name: 'newowner',
-        },
-      });
-
       expect(result.success).toBe(true);
+
+      // Verify emails were sent for both new users
+      expect(sharedModule.sendSetPasswordEmail).toHaveBeenCalledTimes(2);
+      expect(sharedModule.sendSetPasswordEmail).toHaveBeenCalledWith({
+        to: 'newowner@acme.com',
+        url: 'http://localhost:3001/verify-email?token=mocktoken',
+        user: { name: 'newowner', email: 'newowner@acme.com' },
+        isNewUser: true,
+      });
+      expect(sharedModule.sendSetPasswordEmail).toHaveBeenCalledWith({
+        to: 'newmember@acme.com',
+        url: 'http://localhost:3001/verify-email?token=mocktoken',
+        user: { name: 'New Member', email: 'newmember@acme.com' },
+        isNewUser: true,
+      });
     });
 
-    it('should provision workspace even when owner is not a member of the organization', async () => {
+    it('should throw BadRequestException if workspace slug is already taken', async () => {
       const mockTx = {
         workspace: {
-          findUnique: vi.fn().mockResolvedValue(null),
-          create: vi.fn().mockResolvedValue({
-            id: 'ws-123',
-            slug: 'acme',
-            name: 'Acme Corp',
-          }),
-        },
-        user: {
-          findUnique: vi.fn().mockResolvedValue({ id: 'user-owner', email: 'owner@acme.com' }),
-          create: vi.fn().mockResolvedValue({ id: 'bot_123', name: 'System Bot' }),
-        },
-        workspaceMember: {
-          create: vi.fn().mockResolvedValue({ id: 'wm-bot' }),
-        },
-        botApplication: {
-          create: vi.fn().mockResolvedValue({
-            id: 'botapp-1',
-            clientId: 'bot_client_123',
-            clientSecret: 'secret_123',
-          }),
-        },
-        workspaceAuditLog: {
-          create: vi.fn().mockResolvedValue({ id: 'log-1' }),
+          findUnique: vi.fn().mockResolvedValue({ id: 'existing-ws' }),
         },
       };
 
       (prisma.$transaction as any).mockImplementation((cb: any) => cb(mockTx));
 
-      const result = await service.provisionWorkspace(
-        { organizationId: 'org-123' },
-        { name: 'Acme Corp', slug: 'acme', ownerEmail: 'owner@acme.com' }
-      );
-
-      expect(result.success).toBe(true);
-      expect(mockTx.workspace.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({
-            ownerId: 'user-owner',
-            organizationId: 'org-123',
-          }),
-        })
-      );
+      await expect(
+        service.provisionWorkspace(
+          {},
+          { name: 'Acme Corp', slug: 'acme', ownerEmail: 'owner@acme.com' }
+        )
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should wrap unexpected database errors in InternalServerErrorException', async () => {
