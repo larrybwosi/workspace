@@ -751,22 +751,11 @@ export class CallsService {
 
     /**
      * ⚡ Performance Optimization:
-     * Replaces findFirst with OR filter with serial findUnique queries.
-     * Since 'id' is the primary key and 'slug' has a unique constraint,
-     * querying them individually with findUnique leverages direct database O(1) primary/unique key index optimization.
-     * This avoids a full scan or complex OR search and is much faster.
-     * Retaining only 'id' selection further reduces payload and memory overhead.
+     * Leverages private `resolveWorkspaceId` helper which short-circuits evaluation upon finding
+     * the workspace by primary key `id` (or unique `slug`), avoiding redundant database calls
+     * and taking advantage of direct O(1) B-tree index point lookups.
      */
-    const workspace =
-      (await prisma.workspace.findUnique({
-        where: { id: workspaceIdOrSlug },
-        select: { id: true },
-      })) ||
-      (await prisma.workspace.findUnique({
-        where: { slug: workspaceIdOrSlug },
-        select: { id: true },
-      }));
-    const workspaceId = workspace?.id || workspaceIdOrSlug;
+    const workspaceId = await this.resolveWorkspaceId(workspaceIdOrSlug);
 
     // Hardening: Verify requesting user is a workspace member (BOLA/IDOR protection)
     const member = await prisma.workspaceMember.findUnique({
