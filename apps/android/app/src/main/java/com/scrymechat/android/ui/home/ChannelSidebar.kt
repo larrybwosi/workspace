@@ -105,7 +105,7 @@ fun presenceColor(status: String?): Color = when (status?.lowercase()) {
     else -> Color(0xFF6C7086)
 }
 
-private data class ChannelCategoryGroup(
+internal data class ChannelCategoryGroup(
     val categoryId: String,
     val name: String,
     val channels: List<ChannelEntity>
@@ -113,7 +113,7 @@ private data class ChannelCategoryGroup(
 
 private fun channelLeadingIcon(channel: ChannelEntity): Any {
     if (!channel.icon.isNullOrEmpty() && channel.icon != "#") return channel.icon
-    return when (channel.type?.lowercase()) {
+    return when (channel.type.lowercase()) {
         "voice" -> Icons.AutoMirrored.Filled.VolumeUp
         "announcement" -> Icons.Default.Campaign
         "stage" -> Icons.Default.RecordVoiceOver
@@ -274,25 +274,56 @@ fun ChannelSidebar(
     }
 }
 
-private fun processChannelGrouping(channels: List<ChannelEntity>): Pair<List<ChannelEntity>, List<ChannelCategoryGroup>> {
-    val categoryEntities = channels.filter { it.type?.lowercase() == "category" }
-    val normalChannels = channels.filter { it.type?.lowercase() != "category" }
+internal fun processChannelGrouping(channels: List<ChannelEntity>): Pair<List<ChannelEntity>, List<ChannelCategoryGroup>> {
+    val categoryEntities = channels.filter { it.type.lowercase() == "category" }
+    val normalChannels = channels.filter { it.type.lowercase() != "category" }
+
+    val isVoiceChannel: (ChannelEntity) -> Boolean = { channel ->
+        val t = channel.type.lowercase()
+        t == "voice" || t == "stage"
+    }
 
     if (categoryEntities.isNotEmpty()) {
         val categoryIds = categoryEntities.map { it.id }.toSet()
         val uncategorized = normalChannels.filter { it.parentId == null || it.parentId !in categoryIds }
-        val grouped = categoryEntities.map { cat ->
-            ChannelCategoryGroup(
-                categoryId = cat.id,
-                name = cat.name,
-                channels = normalChannels.filter { it.parentId == cat.id }
+        val uncategorizedText = uncategorized.filter { !isVoiceChannel(it) }
+        val uncategorizedVoice = uncategorized.filter { isVoiceChannel(it) }
+
+        val resultGroups = mutableListOf<ChannelCategoryGroup>()
+        var mergedTextUncategorized = false
+        var mergedVoiceUncategorized = false
+
+        categoryEntities.forEach { cat ->
+            var catChannels = normalChannels.filter { it.parentId == cat.id }
+            if (cat.name.equals("Text Channels", ignoreCase = true)) {
+                catChannels = catChannels + uncategorizedText
+                mergedTextUncategorized = true
+            } else if (cat.name.equals("Voice Channels", ignoreCase = true)) {
+                catChannels = catChannels + uncategorizedVoice
+                mergedVoiceUncategorized = true
+            }
+            resultGroups.add(
+                ChannelCategoryGroup(
+                    categoryId = cat.id,
+                    name = cat.name,
+                    channels = catChannels
+                )
             )
         }
-        return Pair(uncategorized, grouped)
+
+        if (!mergedTextUncategorized && uncategorizedText.isNotEmpty()) {
+            resultGroups.add(0, ChannelCategoryGroup("cat_text_default", "Text Channels", uncategorizedText))
+        }
+
+        if (!mergedVoiceUncategorized && uncategorizedVoice.isNotEmpty()) {
+            resultGroups.add(ChannelCategoryGroup("cat_voice_default", "Voice Channels", uncategorizedVoice))
+        }
+
+        return Pair(emptyList(), resultGroups)
     }
 
-    val textChannels = normalChannels.filter { it.type?.lowercase() != "voice" }
-    val voiceChannels = normalChannels.filter { it.type?.lowercase() == "voice" }
+    val textChannels = normalChannels.filter { !isVoiceChannel(it) }
+    val voiceChannels = normalChannels.filter { isVoiceChannel(it) }
 
     val defaultGroups = mutableListOf<ChannelCategoryGroup>()
     if (textChannels.isNotEmpty()) {
