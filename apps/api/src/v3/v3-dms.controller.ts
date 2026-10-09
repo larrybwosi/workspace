@@ -24,13 +24,80 @@ import { DmsService } from '../dms/dms.service';
 import { prisma } from '@repo/database';
 import Redis from 'ioredis';
 import * as crypto from 'crypto';
+import { IsString, IsOptional, IsArray, ValidateNested, IsNumber } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class V3CreateDmDto {
+  @IsOptional()
+  @IsString()
   @ApiProperty({ example: 'usr_123', description: 'Target user ID to start direct message conversation with', required: false })
   targetUserId?: string;
 
+  @IsOptional()
+  @IsString()
   @ApiProperty({ example: 'usr_123', description: 'Target user ID (alias)', required: false })
   userId?: string;
+}
+
+/**
+ * Security: Validation DTO for DM attachments preventing unvalidated payload injection (CWE-20).
+ */
+export class V3DmAttachmentDto {
+  @IsString()
+  @ApiProperty({ example: 'file.png' })
+  name: string;
+
+  @IsString()
+  @ApiProperty({ example: 'image/png' })
+  type: string;
+
+  @IsString()
+  @ApiProperty({ example: 'https://example.com/file.png' })
+  url: string;
+
+  @IsOptional()
+  @IsNumber()
+  @ApiProperty({ example: 1024, required: false })
+  size?: number;
+}
+
+/**
+ * Security: Validation DTO for creating DM messages preventing arbitrary payload injection and mass assignment.
+ */
+export class V3CreateDmMessageDto {
+  @IsString()
+  @ApiProperty({ example: 'Hello from V3 M2M!' })
+  content: string;
+
+  @IsOptional()
+  @IsString()
+  @ApiProperty({ example: 'msg_123', required: false })
+  replyToId?: string;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => V3DmAttachmentDto)
+  @ApiProperty({ type: [V3DmAttachmentDto], required: false })
+  attachments?: V3DmAttachmentDto[];
+}
+
+/**
+ * Security: Validation DTO for updating DM messages.
+ */
+export class V3UpdateDmMessageDto {
+  @IsString()
+  @ApiProperty({ example: 'Updated content' })
+  content: string;
+}
+
+/**
+ * Security: Validation DTO for adding reactions to DM messages.
+ */
+export class V3AddDmReactionDto {
+  @IsString()
+  @ApiProperty({ example: '👍' })
+  emoji: string;
 }
 
 @ApiTags('V3 Direct Messages')
@@ -190,8 +257,13 @@ export class V3DmsController {
     description: 'Send a message in a DM conversation. Requires messages:send scope.',
   })
   @ApiParam({ name: 'dmId', description: 'The direct message conversation ID' })
+  @ApiBody({ type: V3CreateDmMessageDto })
   @ApiResponse({ status: 201, description: 'Direct message sent successfully.' })
-  async createMessage(@V3Context() context: ApiV3Context, @Param('dmId') dmId: string, @Body() body: any) {
+  async createMessage(
+    @V3Context() context: ApiV3Context,
+    @Param('dmId') dmId: string,
+    @Body() body: V3CreateDmMessageDto
+  ) {
     if (!context.scopes.includes('messages:send') && !context.scopes.includes('messages:write') && !context.scopes.includes('*')) {
       throw new ForbiddenException('Missing messages:send scope');
     }
@@ -208,12 +280,13 @@ export class V3DmsController {
   })
   @ApiParam({ name: 'dmId', description: 'The direct message conversation ID' })
   @ApiParam({ name: 'messageId', description: 'The message ID' })
+  @ApiBody({ type: V3UpdateDmMessageDto })
   @ApiResponse({ status: 200, description: 'Direct message updated successfully.' })
   async updateMessage(
     @V3Context() context: ApiV3Context,
     @Param('dmId') dmId: string,
     @Param('messageId') messageId: string,
-    @Body() body: { content: string }
+    @Body() body: V3UpdateDmMessageDto
   ) {
     if (!context.scopes.includes('messages:send') && !context.scopes.includes('messages:write') && !context.scopes.includes('*')) {
       throw new ForbiddenException('Missing messages:send scope');
@@ -249,12 +322,13 @@ export class V3DmsController {
   })
   @ApiParam({ name: 'dmId', description: 'The direct message conversation ID' })
   @ApiParam({ name: 'messageId', description: 'The message ID' })
+  @ApiBody({ type: V3AddDmReactionDto })
   @ApiResponse({ status: 201, description: 'Reaction added successfully.' })
   async addReaction(
     @V3Context() context: ApiV3Context,
     @Param('dmId') dmId: string,
     @Param('messageId') messageId: string,
-    @Body() body: { emoji: string }
+    @Body() body: V3AddDmReactionDto
   ) {
     if (!context.scopes.includes('messages:send') && !context.scopes.includes('messages:write') && !context.scopes.includes('*')) {
       throw new ForbiddenException('Missing messages:send scope');
