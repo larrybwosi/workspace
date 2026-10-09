@@ -65,3 +65,7 @@
 ## 2026-10-07 - Enforce Bot Workspace Membership Verification on V10 Channel and Message Endpoints
 **Learning:** `GET /bot/v10/channels/:id` and `GET /bot/v10/channels/:id/messages` in `V10ChannelsController` and `V10ChannelsService` fetched channel details and message histories without extracting `@CurrentBot()` or verifying bot workspace membership. Any authenticated bot token could read channel metadata and chat history across arbitrary workspaces (BOLA / IDOR / Information Disclosure).
 **Action:** Always inject bot user context into controller endpoints and perform explicit workspace membership checks (`workspace.members.some(...)`) before returning channel metadata or message history logs to external bot applications.
+
+## 2026-10-08 - Enforce Workspace Membership Verification on V10 Guild Command Routes
+**Learning:** `getGuildCommands` and `createGuildCommand` in `V10ApplicationsService` checked that `bot.botApplication.id === applicationId`, but did not verify that the requesting bot was a member of `guildId` (`workspace`). Any authenticated bot application could query or register guild-specific commands in arbitrary workspaces across the platform without installation or workspace membership (BOLA / IDOR).
+**Action:** Always perform explicit workspace membership checks (`prisma.workspaceMember.findUnique({ where: { workspaceId_userId: { workspaceId: guildId, userId: bot.id } } })`) on bot application endpoints targeting specific guild/workspace resources before returning or mutating guild command definitions.
