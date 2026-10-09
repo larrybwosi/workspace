@@ -1,6 +1,6 @@
 {
   "name": "@scryme/chat",
-  "version": "2.91.141",
+  "version": "2.91.144",
   "private": false,
   "publishConfig": {
     "access": "public"
