@@ -272,11 +272,10 @@ class HomeViewModel @Inject constructor(
                         val channels = resource.data ?: emptyList()
                         _uiState.update { state ->
                             val currentSelected = state.selectedChannel
-                            val updatedSelected = if (currentSelected != null) {
-                                channels.find { it.id == currentSelected.id } ?: currentSelected
-                            } else {
-                                state.selectedChannel
-                            }
+                            val defaultChannel = channels.firstOrNull { it.type.lowercase() != "category" }
+                            val updatedSelected = currentSelected?.let { sel ->
+                                channels.find { it.id == sel.id }
+                            } ?: defaultChannel
                             state.copy(channels = channels, selectedChannel = updatedSelected)
                         }
                     }
