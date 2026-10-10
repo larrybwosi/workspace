@@ -82,4 +82,41 @@ describe('V3DmsController', () => {
       await expect(controller.getDm(context, 'dm_invalid')).rejects.toThrow(NotFoundException);
     });
   });
+
+  describe('createMessage', () => {
+    it('should throw ForbiddenException if missing messages:send scope', async () => {
+      const context: any = { scopes: ['messages:read'], userId: 'usr_1' };
+      await expect(controller.createMessage(context, 'dm_1', { content: 'hello' })).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should create message with valid DTO payload', async () => {
+      const context: any = { scopes: ['messages:send'], userId: 'usr_1' };
+      const dto = {
+        content: 'hello',
+        replyToId: 'msg_0',
+        attachments: [{ name: 'test.png', type: 'image/png', url: 'https://example.com/test.png', size: 100 }],
+      };
+      const res = await controller.createMessage(context, 'dm_1', dto);
+      expect(res.success).toBe(true);
+      expect(dmsService.createMessage).toHaveBeenCalledWith('dm_1', 'usr_1', dto);
+    });
+  });
+
+  describe('updateMessage', () => {
+    it('should update message with valid DTO payload', async () => {
+      const context: any = { scopes: ['messages:send'], userId: 'usr_1' };
+      const res = await controller.updateMessage(context, 'dm_1', 'msg_1', { content: 'updated' });
+      expect(res.success).toBe(true);
+      expect(dmsService.updateMessage).toHaveBeenCalledWith('dm_1', 'msg_1', 'usr_1', 'updated');
+    });
+  });
+
+  describe('addReaction', () => {
+    it('should add reaction with valid DTO payload', async () => {
+      const context: any = { scopes: ['messages:send'], userId: 'usr_1' };
+      const res = await controller.addReaction(context, 'dm_1', 'msg_1', { emoji: '👍' });
+      expect(res.success).toBe(true);
+      expect(dmsService.addReaction).toHaveBeenCalledWith('dm_1', 'msg_1', 'usr_1', '👍');
+    });
+  });
 });
