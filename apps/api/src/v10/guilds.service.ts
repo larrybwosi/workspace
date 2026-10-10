@@ -270,6 +270,12 @@ export class V10GuildsService {
   }
 
   async addMemberRole(bot: any, guildId: string, userId: string, roleId: string) {
+    /**
+     * THREAT MITIGATION: Broken Object Level Authorization (BOLA / IDOR) & Privilege Escalation
+     * Risk Level: High
+     * Verify bot guild membership and MANAGE_ROLES permission before modifying member roles.
+     * Enforce role hierarchy: bots cannot modify roles of workspace owners or assign the owner role.
+     */
     const botMember = await prisma.workspaceMember.findUnique({
       where: { workspaceId_userId: { workspaceId: guildId, userId: bot.id } },
     });
@@ -285,9 +291,18 @@ export class V10GuildsService {
 
     if (!member) throw new NotFoundException('Member not found');
 
+    if (member.role === 'owner') {
+      throw new ForbiddenException('Forbidden: Cannot modify owner role');
+    }
+
     // Discord allows multiple roles, but our system has one 'role' field and 'permissions' (BigInt).
     // Mapping 'owner', 'admin', 'member' to our 'role' field.
     const mappedRoleId = this.mapDiscordRoleToInternal(roleId);
+
+    if (mappedRoleId === 'owner') {
+      throw new ForbiddenException('Forbidden: Cannot assign owner role');
+    }
+
     let targetRole = member.role;
     if (['owner', 'admin', 'member'].includes(mappedRoleId)) {
       targetRole = mappedRoleId;
@@ -324,17 +339,45 @@ export class V10GuildsService {
   }
 
   async removeMemberRole(bot: any, guildId: string, userId: string, roleId: string) {
+    /**
+     * THREAT MITIGATION: Broken Object Level Authorization (BOLA / IDOR) & Privilege Escalation
+     * Risk Level: High
+     * Verify bot guild membership, MANAGE_ROLES permission, target member existence, and enforce
+     * role hierarchy prior to removing roles. Record audit log for tracking administrative actions.
+     */
     const botMember = await prisma.workspaceMember.findUnique({
       where: { workspaceId_userId: { workspaceId: guildId, userId: bot.id } },
     });
 
-    if (!botMember || !hasPermission(BigInt(botMember.permissions || 0), Permissions.MANAGE_ROLES)) {
-      throw new ForbiddenException('Forbidden');
+    if (!botMember) throw new ForbiddenException('Bot is not a member of this guild');
+    if (!hasPermission(BigInt(botMember.permissions || 0), Permissions.MANAGE_ROLES)) {
+      throw new ForbiddenException('Bot missing MANAGE_ROLES permission');
+    }
+
+    const member = await prisma.workspaceMember.findUnique({
+      where: { workspaceId_userId: { workspaceId: guildId, userId: userId } },
+    });
+
+    if (!member) throw new NotFoundException('Member not found');
+
+    if (member.role === 'owner') {
+      throw new ForbiddenException('Forbidden: Cannot modify owner role');
     }
 
     await prisma.workspaceMember.update({
-      where: { workspaceId_userId: { workspaceId: guildId, userId: userId } },
+      where: { id: member.id },
       data: { role: 'member' },
+    });
+
+    await prisma.workspaceAuditLog.create({
+      data: {
+        workspaceId: guildId,
+        userId: bot.id,
+        action: 'BOT_MEMBER_ROLE_REMOVE',
+        resource: 'member',
+        resourceId: userId,
+        metadata: { roleId },
+      },
     });
 
     return null;
