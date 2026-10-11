@@ -1539,11 +1539,26 @@ When provisioned via M2M:
     const existingMember = await this.findWorkspaceMemberByIdentifier(
       workspace.id,
       memberIdParam,
-      { id: true, workspaceId: true }
+      { id: true, workspaceId: true, role: true, userId: true }
     );
 
     if (!existingMember) {
       throw new NotFoundException('Member not found in this workspace');
+    }
+
+    /**
+     * 🛡️ Security Hardening (Privilege Escalation & Owner Demotion Mitigation):
+     * 1. Only workspace owners can alter the role of an existing owner.
+     * 2. Only workspace owners can promote members to the owner role.
+     * Prevents non-owner admins or API callers with members:write scope from demoting owners
+     * or performing unauthorized ownership takeover (BOLA / Privilege Escalation).
+     */
+    if (existingMember.role === 'owner' && context.userId !== workspace.ownerId) {
+      throw new ForbiddenException('Forbidden: Only workspace owners can modify owner roles');
+    }
+
+    if (role === 'owner' && context.userId !== workspace.ownerId) {
+      throw new ForbiddenException('Forbidden: Only workspace owners can assign owner role');
     }
 
     try {

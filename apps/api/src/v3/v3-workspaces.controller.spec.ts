@@ -834,12 +834,18 @@ describe('V3WorkspacesController', () => {
     });
 
     describe('updateWorkspaceMember', () => {
-      it('should update member role by member identifier (userId, memberId, email)', async () => {
+      it('should update member role by member identifier (userId, memberId, email) when requested by workspace owner', async () => {
         const body = { role: 'moderator' as const };
-        const mockExistingMember = { id: 'wsm-1', workspaceId: 'ws-123' };
+        const mockWorkspaceWithOwner = {
+          id: 'ws-123',
+          slug: 'acme-slug',
+          ownerId: 'user-xyz',
+        };
+        const mockExistingMember = { id: 'wsm-1', workspaceId: 'ws-123', role: 'member', userId: 'user-1' };
         const mockUser = { id: 'user-1' };
         const mockUpdatedMember = { id: 'wsm-1', userId: 'user-1', role: 'moderator' };
 
+        (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspaceWithOwner);
         (prisma.workspaceMember.findUnique as any).mockResolvedValueOnce(null);
         (prisma.workspaceMember.findUnique as any).mockResolvedValueOnce(null);
         (prisma.user.findUnique as any).mockResolvedValueOnce(mockUser);
@@ -859,6 +865,42 @@ describe('V3WorkspacesController', () => {
         });
         expect(redisClient.del).toHaveBeenCalledWith('v3:members:ws-123');
         expect(redisClient.del).toHaveBeenCalledWith('v2:members:ws-123');
+      });
+
+      it('should throw ForbiddenException if a non-owner attempts to modify an owner role', async () => {
+        const body = { role: 'admin' as const };
+        const nonOwnerContext = { ...context, userId: 'user-admin' };
+        const mockWorkspaceWithOwner = {
+          id: 'ws-123',
+          slug: 'acme-slug',
+          ownerId: 'user-owner',
+        };
+        const mockTargetOwnerMember = { id: 'wsm-owner', workspaceId: 'ws-123', role: 'owner', userId: 'user-owner' };
+
+        (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspaceWithOwner);
+        (prisma.workspaceMember.findUnique as any).mockResolvedValueOnce(mockTargetOwnerMember);
+
+        await expect(
+          controller.updateWorkspaceMember(nonOwnerContext as any, 'acme-slug', 'wsm-owner', body)
+        ).rejects.toThrow('Forbidden: Only workspace owners can modify owner roles');
+      });
+
+      it('should throw ForbiddenException if a non-owner attempts to assign the owner role', async () => {
+        const body = { role: 'owner' as const };
+        const nonOwnerContext = { ...context, userId: 'user-admin' };
+        const mockWorkspaceWithOwner = {
+          id: 'ws-123',
+          slug: 'acme-slug',
+          ownerId: 'user-owner',
+        };
+        const mockTargetMember = { id: 'wsm-member', workspaceId: 'ws-123', role: 'member', userId: 'user-member' };
+
+        (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspaceWithOwner);
+        (prisma.workspaceMember.findUnique as any).mockResolvedValueOnce(mockTargetMember);
+
+        await expect(
+          controller.updateWorkspaceMember(nonOwnerContext as any, 'acme-slug', 'wsm-member', body)
+        ).rejects.toThrow('Forbidden: Only workspace owners can assign owner role');
       });
 
       it('should throw NotFoundException if workspace member is not found', async () => {
