@@ -639,4 +639,111 @@ describe('ChannelsController - NestJS module', () => {
       ).rejects.toThrow(NotFoundException);
     });
   });
+
+  describe('getChannelMembers', () => {
+    it('should return channel members in a single query when user is a workspace member', async () => {
+      const mockPrisma = prisma as any;
+      const mockMembers = [
+        { id: 'cm-1', channelId: 'ch-1', userId: 'user-1', user: { id: 'user-1', name: 'Alice', email: 'alice@example.com' } },
+        { id: 'cm-2', channelId: 'ch-1', userId: 'user-2', user: { id: 'user-2', name: 'Bob', email: 'bob@example.com' } },
+      ];
+
+      mockPrisma.channel.findUnique.mockResolvedValue({
+        id: 'ch-1',
+        workspace: {
+          id: 'ws-1',
+          slug: 'my-workspace',
+          members: [{ role: 'member' }],
+        },
+        members: mockMembers,
+      });
+
+      const user = { id: 'user-1', name: 'Alice' } as any;
+      const result = await controller.getChannelMembers(user, 'my-workspace', 'ch-1');
+
+      expect(mockPrisma.channel.findUnique).toHaveBeenCalledWith({
+        where: { id: 'ch-1' },
+        select: {
+          id: true,
+          workspace: {
+            select: {
+              id: true,
+              slug: true,
+              members: {
+                where: { userId: user.id },
+                select: { role: true },
+              },
+            },
+          },
+          members: {
+            include: {
+              user: {
+                select: { id: true, name: true, email: true, avatar: true, status: true },
+              },
+            },
+          },
+        },
+      });
+      expect(result).toEqual(mockMembers);
+    });
+
+    it('should throw ForbiddenException if user is not a workspace member', async () => {
+      const mockPrisma = prisma as any;
+      mockPrisma.channel.findUnique.mockResolvedValue({
+        id: 'ch-1',
+        workspace: {
+          id: 'ws-1',
+          slug: 'my-workspace',
+          members: [], // User not a member
+        },
+        members: [],
+      });
+
+      const user = { id: 'user-99', name: 'NonMember' } as any;
+      await expect(
+        controller.getChannelMembers(user, 'my-workspace', 'ch-1')
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should throw NotFoundException if workspace is not found for channel', async () => {
+      const mockPrisma = prisma as any;
+      mockPrisma.channel.findUnique.mockResolvedValue(null);
+      mockPrisma.workspace.findUnique.mockResolvedValue(null);
+
+      const user = { id: 'user-1', name: 'Alice' } as any;
+      await expect(
+        controller.getChannelMembers(user, 'unknown-workspace', 'ch-1')
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw ForbiddenException if user is not a workspace member when querying non-existent channel', async () => {
+      const mockPrisma = prisma as any;
+      mockPrisma.channel.findUnique.mockResolvedValue(null);
+      mockPrisma.workspace.findUnique.mockResolvedValue({
+        id: 'ws-1',
+        slug: 'my-workspace',
+        members: [],
+      });
+
+      const user = { id: 'user-99', name: 'NonMember' } as any;
+      await expect(
+        controller.getChannelMembers(user, 'my-workspace', 'nonexistent-ch')
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should return empty array if channel is not found but workspace exists and user is member', async () => {
+      const mockPrisma = prisma as any;
+      mockPrisma.channel.findUnique.mockResolvedValue(null);
+      mockPrisma.workspace.findUnique.mockResolvedValue({
+        id: 'ws-1',
+        slug: 'my-workspace',
+        members: [{ role: 'member' }],
+      });
+
+      const user = { id: 'user-1', name: 'Alice' } as any;
+      const result = await controller.getChannelMembers(user, 'my-workspace', 'nonexistent-ch');
+
+      expect(result).toEqual([]);
+    });
+  });
 });
