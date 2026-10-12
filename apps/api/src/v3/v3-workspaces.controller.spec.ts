@@ -834,19 +834,24 @@ describe('V3WorkspacesController', () => {
     });
 
     describe('updateWorkspaceMember', () => {
-      it('should update member role by member identifier (userId, memberId, email)', async () => {
+      it('should update member role by member identifier when user is workspace admin/owner', async () => {
         const body = { role: 'moderator' as const };
-        const mockExistingMember = { id: 'wsm-1', workspaceId: 'ws-123' };
-        const mockUser = { id: 'user-1' };
         const mockUpdatedMember = { id: 'wsm-1', userId: 'user-1', role: 'moderator' };
 
-        (prisma.workspaceMember.findUnique as any).mockResolvedValueOnce(null);
-        (prisma.workspaceMember.findUnique as any).mockResolvedValueOnce(null);
-        (prisma.user.findUnique as any).mockResolvedValueOnce(mockUser);
-        (prisma.workspaceMember.findUnique as any).mockResolvedValueOnce(mockExistingMember);
+        (prisma.workspace.findUnique as any).mockResolvedValue({ id: 'ws-123', slug: 'acme-slug' });
+        (prisma.workspaceMember.findUnique as any).mockImplementation((args: any) => {
+          if (args.where?.workspaceId_userId?.userId === 'user-xyz') {
+            return Promise.resolve({ id: 'req-wsm', userId: 'user-xyz', role: 'admin' });
+          }
+          if (args.where?.id === 'wsm-1') {
+            return Promise.resolve({ id: 'wsm-1', workspaceId: 'ws-123', role: 'member', userId: 'user-1' });
+          }
+          return Promise.resolve(null);
+        });
+
         (prisma.workspaceMember.update as any).mockResolvedValue(mockUpdatedMember);
 
-        const result = await controller.updateWorkspaceMember(context as any, 'acme-slug', 'user-1@example.com', body);
+        const result = await controller.updateWorkspaceMember(context as any, 'acme-slug', 'wsm-1', body);
 
         expect(result.success).toBe(true);
         expect(result.data.member).toEqual(mockUpdatedMember);
@@ -861,9 +866,69 @@ describe('V3WorkspacesController', () => {
         expect(redisClient.del).toHaveBeenCalledWith('v2:members:ws-123');
       });
 
+      it('should throw ForbiddenException if requester is a regular member', async () => {
+        const body = { role: 'moderator' as const };
+        (prisma.workspace.findUnique as any).mockResolvedValue({ id: 'ws-123', slug: 'acme-slug' });
+        (prisma.workspaceMember.findUnique as any).mockImplementation((args: any) => {
+          if (args.where?.workspaceId_userId?.userId === 'user-xyz') {
+            return Promise.resolve({ id: 'req-wsm', userId: 'user-xyz', role: 'member' });
+          }
+          return Promise.resolve(null);
+        });
+
+        await expect(
+          controller.updateWorkspaceMember(context as any, 'acme-slug', 'wsm-1', body)
+        ).rejects.toThrow('Forbidden: Only workspace owners and admins can update member roles');
+      });
+
+      it('should throw ForbiddenException if non-owner admin attempts to modify owner role', async () => {
+        const body = { role: 'admin' as const };
+
+        (prisma.workspace.findUnique as any).mockResolvedValue({ id: 'ws-123', slug: 'acme-slug' });
+        (prisma.workspaceMember.findUnique as any).mockImplementation((args: any) => {
+          if (args.where?.workspaceId_userId?.userId === 'user-xyz') {
+            return Promise.resolve({ id: 'req-wsm', userId: 'user-xyz', role: 'admin' });
+          }
+          if (args.where?.id === 'wsm-owner') {
+            return Promise.resolve({ id: 'wsm-owner', workspaceId: 'ws-123', role: 'owner', userId: 'owner-usr' });
+          }
+          return Promise.resolve(null);
+        });
+
+        await expect(
+          controller.updateWorkspaceMember(context as any, 'acme-slug', 'wsm-owner', body)
+        ).rejects.toThrow('Forbidden: Only workspace owners can modify owner roles');
+      });
+
+      it('should throw ForbiddenException if non-owner admin attempts to assign owner role', async () => {
+        const body = { role: 'owner' as const };
+
+        (prisma.workspace.findUnique as any).mockResolvedValue({ id: 'ws-123', slug: 'acme-slug' });
+        (prisma.workspaceMember.findUnique as any).mockImplementation((args: any) => {
+          if (args.where?.workspaceId_userId?.userId === 'user-xyz') {
+            return Promise.resolve({ id: 'req-wsm', userId: 'user-xyz', role: 'admin' });
+          }
+          if (args.where?.id === 'wsm-target') {
+            return Promise.resolve({ id: 'wsm-target', workspaceId: 'ws-123', role: 'member', userId: 'target-usr' });
+          }
+          return Promise.resolve(null);
+        });
+
+        await expect(
+          controller.updateWorkspaceMember(context as any, 'acme-slug', 'wsm-target', body)
+        ).rejects.toThrow('Forbidden: Only workspace owners can assign owner role');
+      });
+
       it('should throw NotFoundException if workspace member is not found', async () => {
         const body = { role: 'moderator' as const };
-        (prisma.workspaceMember.findUnique as any).mockResolvedValue(null);
+        (prisma.workspace.findUnique as any).mockResolvedValue({ id: 'ws-123', slug: 'acme-slug' });
+        (prisma.workspaceMember.findUnique as any).mockImplementation((args: any) => {
+          if (args.where?.workspaceId_userId?.userId === 'user-xyz') {
+            return Promise.resolve({ id: 'req-wsm', userId: 'user-xyz', role: 'admin' });
+          }
+          return Promise.resolve(null);
+        });
+        (prisma.user.findUnique as any).mockResolvedValue(null);
 
         await expect(
           controller.updateWorkspaceMember(context as any, 'acme-slug', 'nonexistent', body)
@@ -872,19 +937,23 @@ describe('V3WorkspacesController', () => {
     });
 
     describe('deleteWorkspaceMember', () => {
-      it('should delete member by member identifier and invalidate caches', async () => {
+      it('should delete member by member identifier when user is workspace admin/owner', async () => {
         const mockWorkspace = { id: 'ws-123', ownerId: 'owner-id' };
-        const mockMember = { id: 'wsm-1', userId: 'user-1', workspaceId: 'ws-123' };
-        const mockUser = { id: 'user-1' };
 
         (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
-        (prisma.workspaceMember.findUnique as any).mockResolvedValueOnce(null);
-        (prisma.workspaceMember.findUnique as any).mockResolvedValueOnce(null);
-        (prisma.user.findUnique as any).mockResolvedValueOnce(mockUser);
-        (prisma.workspaceMember.findUnique as any).mockResolvedValueOnce(mockMember);
+        (prisma.workspaceMember.findUnique as any).mockImplementation((args: any) => {
+          if (args.where?.workspaceId_userId?.userId === 'user-xyz') {
+            return Promise.resolve({ id: 'req-wsm', userId: 'user-xyz', role: 'admin' });
+          }
+          if (args.where?.id === 'wsm-1') {
+            return Promise.resolve({ id: 'wsm-1', userId: 'user-1', workspaceId: 'ws-123', role: 'member' });
+          }
+          return Promise.resolve(null);
+        });
+
         (prisma.workspaceMember.delete as any).mockResolvedValue({ id: 'wsm-1' });
 
-        const result = await controller.deleteWorkspaceMember(context as any, 'acme-slug', 'user-1@example.com');
+        const result = await controller.deleteWorkspaceMember(context as any, 'acme-slug', 'wsm-1');
 
         expect(result.success).toBe(true);
         expect(prisma.workspaceMember.delete).toHaveBeenCalledWith({
@@ -894,13 +963,75 @@ describe('V3WorkspacesController', () => {
         expect(redisClient.del).toHaveBeenCalledWith('v2:members:ws-123');
       });
 
-      it('should throw BadRequestException if member to delete is the owner', async () => {
+      it('should throw ForbiddenException if requester is a regular member', async () => {
         const mockWorkspace = { id: 'ws-123', ownerId: 'owner-id' };
-        const mockMember = { id: 'wsm-owner', userId: 'owner-id', workspaceId: 'ws-123' };
 
         (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
-        (prisma.workspaceMember.findUnique as any).mockResolvedValueOnce(null);
-        (prisma.workspaceMember.findUnique as any).mockResolvedValueOnce(mockMember);
+        (prisma.workspaceMember.findUnique as any).mockImplementation((args: any) => {
+          if (args.where?.workspaceId_userId?.userId === 'user-xyz') {
+            return Promise.resolve({ id: 'req-wsm', userId: 'user-xyz', role: 'member' });
+          }
+          return Promise.resolve(null);
+        });
+
+        await expect(controller.deleteWorkspaceMember(context as any, 'acme-slug', 'wsm-1')).rejects.toThrow(
+          'Forbidden: Only workspace owners and admins can remove members'
+        );
+      });
+
+      it('should throw ForbiddenException if workspace admin attempts to remove another admin', async () => {
+        const mockWorkspace = { id: 'ws-123', ownerId: 'owner-id' };
+
+        (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
+        (prisma.workspaceMember.findUnique as any).mockImplementation((args: any) => {
+          if (args.where?.workspaceId_userId?.userId === 'user-xyz') {
+            return Promise.resolve({ id: 'req-wsm', userId: 'user-xyz', role: 'admin' });
+          }
+          if (args.where?.id === 'wsm-admin2') {
+            return Promise.resolve({ id: 'wsm-admin2', userId: 'user-admin2', workspaceId: 'ws-123', role: 'admin' });
+          }
+          return Promise.resolve(null);
+        });
+
+        await expect(controller.deleteWorkspaceMember(context as any, 'acme-slug', 'wsm-admin2')).rejects.toThrow(
+          'Forbidden: Only workspace owners can remove admins'
+        );
+      });
+
+      it('should allow workspace admin to remove self', async () => {
+        const mockWorkspace = { id: 'ws-123', ownerId: 'owner-id' };
+
+        (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
+        (prisma.workspaceMember.findUnique as any).mockImplementation((args: any) => {
+          if (args.where?.workspaceId_userId?.userId === 'user-xyz' || args.where?.id === 'wsm-self') {
+            return Promise.resolve({ id: 'wsm-self', userId: 'user-xyz', workspaceId: 'ws-123', role: 'admin' });
+          }
+          return Promise.resolve(null);
+        });
+
+        (prisma.workspaceMember.delete as any).mockResolvedValue({ id: 'wsm-self' });
+
+        const result = await controller.deleteWorkspaceMember(context as any, 'acme-slug', 'wsm-self');
+
+        expect(result.success).toBe(true);
+        expect(prisma.workspaceMember.delete).toHaveBeenCalledWith({
+          where: { id: 'wsm-self' },
+        });
+      });
+
+      it('should throw BadRequestException if member to delete is the owner', async () => {
+        const mockWorkspace = { id: 'ws-123', ownerId: 'owner-id' };
+
+        (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
+        (prisma.workspaceMember.findUnique as any).mockImplementation((args: any) => {
+          if (args.where?.workspaceId_userId?.userId === 'user-xyz') {
+            return Promise.resolve({ id: 'req-wsm', userId: 'user-xyz', role: 'owner' });
+          }
+          if (args.where?.id === 'owner-id' || args.where?.workspaceId_userId?.userId === 'owner-id') {
+            return Promise.resolve({ id: 'wsm-owner', userId: 'owner-id', workspaceId: 'ws-123', role: 'owner' });
+          }
+          return Promise.resolve(null);
+        });
 
         await expect(controller.deleteWorkspaceMember(context as any, 'acme-slug', 'owner-id')).rejects.toThrow(
           'Cannot remove workspace owner'

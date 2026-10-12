@@ -1536,14 +1536,48 @@ When provisioned via M2M:
 
     const workspace = await this.resolveWorkspaceAndCheckAccess(context, slug);
 
+    /**
+     * 🛡️ Security Hardening (Privilege Escalation & Owner Demotion Mitigation):
+     * For user session-authenticated requests (!context.organizationId):
+     * 1. Require that requesting user has 'owner' or 'admin' role in the workspace.
+     * 2. Only workspace owners can modify an existing owner's role.
+     * 3. Only workspace owners can assign the 'owner' role.
+     */
+    let requesterRole: string | null = null;
+    if (!context.organizationId) {
+      const requesterMember = await prisma.workspaceMember.findUnique({
+        where: {
+          workspaceId_userId: {
+            workspaceId: workspace.id,
+            userId: context.userId!,
+          },
+        },
+        select: { role: true },
+      });
+
+      if (!requesterMember || !['owner', 'admin'].includes(requesterMember.role)) {
+        throw new ForbiddenException('Forbidden: Only workspace owners and admins can update member roles');
+      }
+      requesterRole = requesterMember.role;
+    }
+
     const existingMember = await this.findWorkspaceMemberByIdentifier(
       workspace.id,
       memberIdParam,
-      { id: true, workspaceId: true }
+      { id: true, workspaceId: true, role: true, userId: true }
     );
 
     if (!existingMember) {
       throw new NotFoundException('Member not found in this workspace');
+    }
+
+    if (requesterRole && requesterRole !== 'owner') {
+      if (existingMember.role === 'owner') {
+        throw new ForbiddenException('Forbidden: Only workspace owners can modify owner roles');
+      }
+      if (role === 'owner') {
+        throw new ForbiddenException('Forbidden: Only workspace owners can assign owner role');
+      }
     }
 
     try {
@@ -1600,18 +1634,52 @@ When provisioned via M2M:
 
     const workspace = await this.resolveWorkspaceAndCheckAccess(context, slug);
 
+    /**
+     * 🛡️ Security Hardening (BOLA & Admin Lockout Mitigation):
+     * For user session-authenticated requests (!context.organizationId):
+     * 1. Require that requesting user has 'owner' or 'admin' role in the workspace.
+     * 2. Prevent removing workspace owners.
+     * 3. Prevent workspace admins from removing other workspace admins (unless performing self-removal).
+     */
+    let requesterRole: string | null = null;
+    if (!context.organizationId) {
+      const requesterMember = await prisma.workspaceMember.findUnique({
+        where: {
+          workspaceId_userId: {
+            workspaceId: workspace.id,
+            userId: context.userId!,
+          },
+        },
+        select: { id: true, role: true },
+      });
+
+      if (!requesterMember || !['owner', 'admin'].includes(requesterMember.role)) {
+        throw new ForbiddenException('Forbidden: Only workspace owners and admins can remove members');
+      }
+      requesterRole = requesterMember.role;
+    }
+
     const memberToDelete = await this.findWorkspaceMemberByIdentifier(
       workspace.id,
       memberIdParam,
-      { id: true, userId: true, workspaceId: true }
+      { id: true, userId: true, workspaceId: true, role: true }
     );
 
     if (!memberToDelete) {
       throw new NotFoundException('Member not found in this workspace');
     }
 
-    if (workspace.ownerId === memberToDelete.userId) {
+    if (workspace.ownerId === memberToDelete.userId || memberToDelete.role === 'owner') {
       throw new BadRequestException('Cannot remove workspace owner');
+    }
+
+    if (
+      requesterRole &&
+      requesterRole !== 'owner' &&
+      memberToDelete.role === 'admin' &&
+      memberToDelete.userId !== context.userId
+    ) {
+      throw new ForbiddenException('Forbidden: Only workspace owners can remove admins');
     }
 
     await prisma.workspaceMember.delete({
