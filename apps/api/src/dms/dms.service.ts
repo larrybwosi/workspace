@@ -237,23 +237,19 @@ export class DmsService {
   }
 
   async getMessages(dmId: string, userId: string, cursor?: string, limitNum = 50) {
-    // Threat Mitigation: BOLA/IDOR Protection - Verify DM conversation exists and user is a participant
-    const existingDm = await prisma.directMessage.findUnique({
-      where: { id: dmId },
-      select: { participant1Id: true, participant2Id: true },
-    });
-
-    if (!existingDm) {
-      throw new NotFoundException('DM conversation not found');
-    }
-
-    if (existingDm.participant1Id !== userId && existingDm.participant2Id !== userId) {
-      throw new ForbiddenException('You do not have access to this DM conversation');
-    }
-
-    const messages = await prisma.dMMessage.findMany({
+    /**
+     * ⚡ Bolt Performance Optimization:
+     * Query `prisma.dMMessage.findMany` directly with relational ownership filter (`dm: { OR: [...] }`).
+     * On the happy path (messages exist), this cuts database round-trips (RTT) from 2 down to 1.
+     * Fallback O(1) point lookup on `prisma.directMessage.findUnique` is only executed when `messages` is empty
+     * to preserve exact `NotFoundException` and `ForbiddenException` semantics for invalid or unauthorized DMs.
+     */
+    const messages = (await prisma.dMMessage.findMany({
       where: {
         dmId,
+        dm: {
+          OR: [{ participant1Id: userId }, { participant2Id: userId }],
+        },
         ...(cursor ? { createdAt: { lt: new Date(cursor) } } : {}),
       },
       select: {
@@ -312,7 +308,23 @@ export class DmsService {
         createdAt: 'desc',
       },
       take: limitNum + 1,
-    });
+    })) || [];
+
+    // Fallback point lookup on empty result set to maintain error contract semantics (NotFound / Forbidden)
+    if (messages.length === 0) {
+      const existingDm = await prisma.directMessage.findUnique({
+        where: { id: dmId },
+        select: { participant1Id: true, participant2Id: true },
+      });
+
+      if (!existingDm) {
+        throw new NotFoundException('DM conversation not found');
+      }
+
+      if (existingDm.participant1Id !== userId && existingDm.participant2Id !== userId) {
+        throw new ForbiddenException('You do not have access to this DM conversation');
+      }
+    }
 
     const hasMore = messages.length > limitNum;
     const rawData = hasMore ? messages.slice(0, limitNum) : messages;
