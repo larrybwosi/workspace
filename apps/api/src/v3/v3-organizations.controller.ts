@@ -518,6 +518,16 @@ export class V3OrganizationsController {
       select: { clientId: true },
     });
 
+    /**
+     * 🛡️ Security Hardening (Resource Verification & IDOR / BOLA Prevention):
+     * Verify that the requested M2M application identifier matches either the organization's ID
+     * or its M2M `clientId` before resetting credentials. This prevents accidental credential wiping
+     * or unauthorized deletion when an invalid application ID is provided.
+     */
+    if (organization.id !== id && currentOrg?.clientId !== id) {
+      throw new NotFoundException('M2M application not found');
+    }
+
     if (currentOrg?.clientId) {
       await prisma.oAuthClient.deleteMany({
         where: { clientId: currentOrg.clientId },

@@ -263,13 +263,15 @@ describe('V3OrganizationsController', () => {
   });
 
   describe('deleteM2mApplication', () => {
-    it('should clear M2M credentials', async () => {
+    it('should clear M2M credentials when matching org ID is provided', async () => {
       const mockOrg = {
         id: 'org-1',
         members: [{ role: 'admin' }],
       };
 
-      (prisma.organization.findUnique as any).mockResolvedValue(mockOrg);
+      (prisma.organization.findUnique as any)
+        .mockResolvedValueOnce(mockOrg)
+        .mockResolvedValueOnce({ clientId: 'm2m_123' });
       (prisma.organization.update as any).mockResolvedValue({});
 
       const result = await controller.deleteM2mApplication(mockUserContext, 'acme', 'org-1');
@@ -285,6 +287,21 @@ describe('V3OrganizationsController', () => {
       });
       expect(result.success).toBe(true);
       expect(result.data).toEqual({ success: true });
+    });
+
+    it('should throw NotFoundException if provided M2M app ID does not match org ID or clientId', async () => {
+      const mockOrg = {
+        id: 'org-1',
+        members: [{ role: 'admin' }],
+      };
+
+      (prisma.organization.findUnique as any)
+        .mockResolvedValueOnce(mockOrg)
+        .mockResolvedValueOnce({ clientId: 'm2m_123' });
+
+      await expect(
+        controller.deleteM2mApplication(mockUserContext, 'acme', 'invalid-app-id')
+      ).rejects.toThrow(NotFoundException);
     });
   });
 });
