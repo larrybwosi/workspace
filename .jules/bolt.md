@@ -1,3 +1,45 @@
+## 2026-10-10 - [Prisma/Performance] Single-Query Eager Workspace Membership Selection for Support Operations
+
+**Learning:** In `SupportService` (`apps/api/src/support/support.service.ts`), methods `endLiveChat`, `updateTicketStatus`, and `assignTicket` previously performed `prisma.findUnique` for the primary record followed by sequential `prisma.workspaceMember.findUnique` calls to verify workspace agent authorization. Eagerly including `workspace: { select: { members: { where: { userId: { in: targetUserIds } }, select: { userId: true, role: true } } } }` in the initial `findUnique` query retrieves entity data and workspace agent membership in a single query. Evaluating authorization in-memory using `checkAgentRole` cuts database round-trips from 2-4 down to 1-2 per request.
+
+**Action:** Eagerly select required relation membership roles (`workspace.members`) in initial primary key `findUnique` lookups to evaluate entity authorization in-memory.
+
+## 2026-10-06 - [Prisma/Performance] Parallelizing Workspace and Channel Access Checks in Calls Verification
+
+**Learning:** In `CallsService.verifyCallAccess`, validating workspace membership (`prisma.workspaceMember.findUnique`) and private channel membership (`prisma.channel.findUnique`) previously executed sequentially with `await`. For workspace channel calls, this required 3 sequential database round-trips (RTT) on every call verification action (join, leave, update state, promote, remove, invite, list participants). Executing both membership queries concurrently via `Promise.all` after retrieving the call record reduces database RTTs from 3 down to 2, cutting access authorization query latency by up to 50% on high-frequency call endpoints.
+
+**Action:** Execute independent secondary authorization queries (like workspace and channel access verification) concurrently via `Promise.all` after parent entity retrieval.
+
+## 2026-10-03 - [Prisma/Performance] Single-Query Consolidated Bot Member & Guild Resolution in V10 Gateway
+
+**Learning:** In `V10Gateway`, dispatching real-time message events (`MESSAGE_CREATE`, `MESSAGE_UPDATE`, `MESSAGE_DELETE`) previously issued two sequential database queries: `prisma.channel.findUnique({ where: { id: channelId }, select: { workspaceId: true } })` followed by `prisma.workspaceMember.findMany({ where: { workspaceId, user: { isBot: true } } })`. Consolidating both operations into a single `prisma.channel.findUnique` query with nested `workspace.members` selection (`select: { workspaceId: true, workspace: { select: { members: { where: { user: { isBot: true } }, select: { userId: true } } } } }`) cuts database round-trips from 2 to 1 on every real-time message event dispatch in the V10 Discord WebSocket gateway.
+
+**Action:** Consolidate channel lookup and workspace bot member retrieval into single primary key `findUnique` queries with nested relational `workspace.members` selections.
+
+## 2026-09-28 - [Prisma/Performance] Parallel B-Tree Index Queries for Multi-Identifier Channel Member Resolution
+
+**Learning:** In `V3WorkspacesController.addChannelMembers`, resolving target user IDs across mixed identifier lists (user ID, user email, workspace member ID) previously executed a single `prisma.user.findMany` with an `OR` condition spanning `id`, `email`, and `workspaceMemberships: { some: ... }`. In PostgreSQL, relation filters inside `OR` queries force multi-table JOIN scans and prevent efficient B-tree index utilization. Splitting the lookup into parallelized `Promise.all` queries targeting direct B-tree index fields (`User.id`, `User.email`, and `WorkspaceMember.id` filtered by `workspaceId`) eliminates relation join scans and allows PostgreSQL to utilize dedicated B-tree index lookups concurrently.
+
+**Action:** Replace single `findMany` queries containing relation `OR` filters with parallel `Promise.all` queries targeting specific indexed fields and deduplicate IDs in Node.js.
+
+## 2026-09-27 - [Prisma/Performance] Single-Query Consolidated Message Lookup and Channel Access Verification for Reactions
+
+**Learning:** In `MessagesService`, reaction methods (`addReaction`, `removeReaction`, and `toggleReaction`) previously performed `prisma.message.findUnique({ where: { id: messageId }, select: { channelId: true } })` followed by `this.verifyChannelAccess(targetMessage.channelId, userId, workspaceId)`, which issued a secondary `prisma.channel.findUnique` database call. Consolidating target message lookup and channel access authorization into a single `prisma.message.findUnique` query with nested `channel` relation selection (`workspaceId`, `isPrivate`, `type`, `members`) enables in-memory workspace boundary matching and private channel membership checks, cutting database round-trips from 3-4 down to 2 on high-frequency chat reaction endpoints.
+
+**Action:** Consolidate target entity lookups and parent channel/workspace authorization checks into a single primary key `findUnique` query with nested relation selection.
+
+## 2026-09-22 - [Prisma/Performance] Dynamic Workspace Context Resolution & Primary Key Point Lookups in V3 Workspaces API
+
+**Learning:** In `V3WorkspacesController`, workspace member endpoints previously asserted `context.workspaceId` directly, which threw `BadRequestException` when Organization M2M tokens (`oat_...`) accessed member routes by slug without pre-bound `workspaceId`. Replacing static `context.workspaceId` assertions with `this.resolveWorkspaceAndCheckAccess(context, slug)` dynamically resolves workspace context by `slug` while verifying M2M organization boundaries. Additionally, replacing composite parameters in `addChannelMembers` with `prisma.channel.findUnique({ where: { id: channelId } })` leverages direct O(1) B-tree primary key point lookups while enforcing workspace isolation in memory.
+
+**Action:** Dynamically resolve parent entity context via slug verification for M2M routes, and prefer O(1) primary key `findUnique` point lookups for channel entity retrieval.
+
+## 2026-09-21 - [Prisma/Performance] Single-Query Consolidated Organization User Context Resolution in Auth Guards
+
+**Learning:** In authentication guards (`BetterAuthGuard` and `AuthGuard`), resolving virtual user context for organization-scoped M2M tokens (`oat_...`) previously executed `prisma.botApplication.findFirst({ where: { workspace: { organizationId: orgId } } })` followed by a fallback query `prisma.workspace.findFirst({ where: { organizationId: orgId } })` if no bot application existed. Consolidating both operations into a single `prisma.workspace.findFirst({ where: { organizationId: orgId }, select: { owner: true, botApplications: { where: { botId: { not: null } }, select: { bot: true }, take: 1 } } })` query cuts database round-trips from 2 to 1 and leverages direct indexing on `Workspace.organizationId`.
+
+**Action:** Consolidate sequential fallback entity lookups (like system bot or workspace owner context resolution) into single parent queries with nested `select` projections.
+
 ## 2026-09-19 - [Prisma/Performance] Deterministic Primary Key Upsert for System Bot Context Resolution
 
 **Learning:** In `V3DmsController.resolveEffectiveUserId`, resolving the fallback system bot user for M2M contexts previously executed `prisma.user.findFirst({ where: { isBot: true } })`. Because `isBot` on `User` is a non-unique boolean flag, `findFirst` forced an index/table scan across the `User` table. Furthermore, if no bot existed, a random bot ID was created. Replacing `findFirst` with `prisma.user.upsert` using a deterministic primary key (`id: 'system_bot_v3_m2m'`) turns the query into a direct O(1) B-tree primary key point lookup and eliminates random ID generation for system bot context.

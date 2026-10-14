@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { IntegrationsService } from './integrations.service';
-import { NotFoundException, BadRequestException } from '@nestjs/common';
+import { NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { SystemMessagesService } from '../common/system-messages.service';
 
 // Mock @repo/database
@@ -13,6 +13,7 @@ vi.mock('@repo/database', () => ({
     },
     workspaceIntegration: {
       findFirst: vi.fn(),
+      findUnique: vi.fn(),
       findMany: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
@@ -586,6 +587,118 @@ describe('IntegrationsService - GitHub integration (PR change)', () => {
             service: 'slack',
             name: 'Slack Integration',
           },
+        },
+      });
+    });
+  });
+
+  describe('workspace integration security hardening (BOLA & Privilege Enforcement)', () => {
+    it('getWorkspaceIntegration should return integration details for valid member', async () => {
+      mockPrisma.workspaceIntegration.findUnique.mockResolvedValue({
+        id: 'int-1',
+        workspaceId: 'ws-1',
+        service: 'slack',
+        config: { name: 'Slack Bot' },
+        active: true,
+        createdAt: new Date(),
+        workspace: {
+          slug: 'acme',
+          members: [{ id: 'mem-1' }],
+        },
+      });
+
+      const result = await service.getWorkspaceIntegration('user-1', 'acme', 'int-1');
+      expect(result.id).toBe('int-1');
+      expect(result.service).toBe('slack');
+    });
+
+    it('getWorkspaceIntegration should throw NotFoundException if user is not a member of workspace', async () => {
+      mockPrisma.workspaceIntegration.findUnique.mockResolvedValue({
+        id: 'int-1',
+        workspaceId: 'ws-1',
+        service: 'slack',
+        config: {},
+        active: true,
+        createdAt: new Date(),
+        workspace: {
+          slug: 'acme',
+          members: [], // non-member
+        },
+      });
+
+      await expect(service.getWorkspaceIntegration('non-member', 'acme', 'int-1')).rejects.toThrow(
+        NotFoundException
+      );
+    });
+
+    it('testWorkspaceIntegration should throw ForbiddenException if user is not workspace owner or admin', async () => {
+      mockPrisma.workspaceIntegration.findUnique.mockResolvedValue({
+        id: 'int-1',
+        workspaceId: 'ws-1',
+        service: 'custom',
+        config: { webhookUrl: 'https://example.com/hook' },
+        active: true,
+        workspace: {
+          id: 'ws-1',
+          slug: 'acme',
+          members: [{ role: 'member' }], // non-admin
+        },
+      });
+
+      await expect(service.testWorkspaceIntegration('user-1', 'acme', 'int-1')).rejects.toThrow(
+        ForbiddenException
+      );
+    });
+
+    it('getWorkspaceWebhooks should throw ForbiddenException for regular member', async () => {
+      mockPrisma.workspace.findUnique.mockResolvedValue({
+        id: 'ws-1',
+        members: [{ role: 'member' }],
+        webhooks: [],
+      });
+
+      await expect(service.getWorkspaceWebhooks('regular-user', 'acme')).rejects.toThrow(
+        ForbiddenException
+      );
+    });
+
+    it('getWorkspaceWebhooks should return webhooks for workspace admin', async () => {
+      const mockWebhooks = [{ id: 'wh-1', name: 'Deploy Webhook', secret: 'supersecret' }];
+      mockPrisma.workspace.findUnique.mockResolvedValue({
+        id: 'ws-1',
+        members: [{ role: 'admin' }],
+        webhooks: mockWebhooks,
+      });
+
+      const result = await service.getWorkspaceWebhooks('admin-user', 'acme');
+      expect(result).toEqual(mockWebhooks);
+    });
+
+    it('updateWorkspaceIntegration should update integration for workspace admin', async () => {
+      mockPrisma.workspace.findUnique.mockResolvedValue({
+        id: 'ws-1',
+        members: [{ role: 'admin' }],
+        integrations: [{ id: 'int-1' }],
+      });
+
+      const updatedIntegration = {
+        id: 'int-1',
+        active: false,
+        config: { name: 'Updated Slack' },
+      };
+      mockPrisma.workspaceIntegration.update.mockResolvedValue(updatedIntegration);
+
+      const result = await service.updateWorkspaceIntegration('admin-user', 'acme', 'int-1', {
+        active: false,
+        config: { name: 'Updated Slack' },
+      });
+
+      expect(result).toEqual(updatedIntegration);
+      expect(mockPrisma.workspaceIntegration.update).toHaveBeenCalledWith({
+        where: { id: 'int-1' },
+        data: {
+          active: false,
+          config: { name: 'Updated Slack' },
         },
       });
     });

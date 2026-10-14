@@ -154,8 +154,8 @@ export class MessagesController {
     @Param('messageId') messageId: string,
     @Body() body: UpdateMessageDto
   ) {
-    await this.messagesService.verifyWorkspaceAccess(user.id, slug);
-    return this.messagesService.updateMessage(user.id, messageId, body.content);
+    const workspace = await this.messagesService.verifyWorkspaceAccess(user.id, slug);
+    return this.messagesService.updateMessage(user.id, messageId, body.content, channelId, workspace.id);
   }
 
   @Delete(':messageId')
@@ -170,8 +170,8 @@ export class MessagesController {
     @Param('channelId') channelId: string,
     @Param('messageId') messageId: string
   ) {
-    await this.messagesService.verifyWorkspaceAccess(user.id, slug);
-    return this.messagesService.deleteMessage(user.id, messageId);
+    const workspace = await this.messagesService.verifyWorkspaceAccess(user.id, slug);
+    return this.messagesService.deleteMessage(user.id, messageId, channelId, workspace.id);
   }
 
   @Post('read')

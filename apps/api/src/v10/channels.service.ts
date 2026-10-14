@@ -7,11 +7,12 @@ import { hasPermission, Permissions } from '../common/permissions';
 export class V10ChannelsService {
   private readonly logger = new Logger(V10ChannelsService.name);
 
-  async getChannel(id: string) {
+  async getChannel(bot: any, id: string) {
     /**
-     * ⚡ Performance Optimization:
-     * Uses 'select' to fetch only required fields for Discord channel objects.
-     * Reduces database payload and memory usage.
+     * THREAT MITIGATION: Broken Object Level Authorization (BOLA / IDOR)
+     * Risk Level: High
+     * Verify that the requesting bot is an active member of the target workspace before
+     * returning channel details. Prevents unauthorized bots from probing internal channel metadata.
      */
     const channel = await prisma.channel.findUnique({
       where: { id },
@@ -22,10 +23,22 @@ export class V10ChannelsService {
         name: true,
         description: true,
         parentId: true,
+        workspace: {
+          select: {
+            members: {
+              where: { userId: bot.id },
+              select: { userId: true },
+            },
+          },
+        },
       },
     });
 
     if (!channel) throw new NotFoundException('Unknown Channel');
+
+    if (channel.workspaceId && (!channel.workspace?.members || channel.workspace.members.length === 0)) {
+      throw new ForbiddenException('Bot is not a member of this guild');
+    }
 
     return {
       id: channel.id,
@@ -43,7 +56,35 @@ export class V10ChannelsService {
     };
   }
 
-  async getMessages(channelId: string, query: { limit?: number; before?: string; after?: string }) {
+  async getMessages(bot: any, channelId: string, query: { limit?: number; before?: string; after?: string }) {
+    /**
+     * THREAT MITIGATION: Broken Object Level Authorization (BOLA / IDOR)
+     * Risk Level: High
+     * Verify that the requesting bot is an active member of the target workspace before
+     * returning message history. Prevents unauthorized bots from reading channel messages across workspaces.
+     */
+    const channel = await prisma.channel.findUnique({
+      where: { id: channelId },
+      select: {
+        id: true,
+        workspaceId: true,
+        workspace: {
+          select: {
+            members: {
+              where: { userId: bot.id },
+              select: { userId: true },
+            },
+          },
+        },
+      },
+    });
+
+    if (!channel) throw new NotFoundException('Unknown Channel');
+
+    if (channel.workspaceId && (!channel.workspace?.members || channel.workspace.members.length === 0)) {
+      throw new ForbiddenException('Bot is not a member of this guild');
+    }
+
     const { limit = 50, before, after } = query;
 
     /**
@@ -108,11 +149,26 @@ export class V10ChannelsService {
   async updateMessage(bot: any, channelId: string, messageId: string, data: any) {
     const { content, embeds, components } = data;
 
+    /**
+     * ⚡ Performance Optimization:
+     * Uses targeted `select` to fetch only fields required for verification and update merging
+     * (`id`, `channelId`, `userId`, `content`, `metadata`), avoiding over-fetching scalar columns
+     * or relations and reducing DB response payload size.
+     */
     const message = await prisma.message.findUnique({
       where: { id: messageId },
+      select: {
+        id: true,
+        channelId: true,
+        userId: true,
+        content: true,
+        metadata: true,
+      },
     });
 
     if (!message) throw new NotFoundException('Unknown Message');
+    // Threat Mitigation: BOLA/IDOR Protection - Enforce channel boundary scoping to prevent cross-channel message edits
+    if (message.channelId !== channelId) throw new NotFoundException('Unknown Message');
     if (message.userId !== bot.id) throw new ForbiddenException('You can only edit your own messages');
 
     /**
@@ -191,11 +247,23 @@ export class V10ChannelsService {
   }
 
   async deleteMessage(bot: any, channelId: string, messageId: string) {
+    /**
+     * ⚡ Performance Optimization:
+     * Uses targeted `select` to fetch only boundary and ownership verification fields
+     * (`id`, `channelId`, `userId`), avoiding over-fetching message contents or metadata.
+     */
     const message = await prisma.message.findUnique({
       where: { id: messageId },
+      select: {
+        id: true,
+        channelId: true,
+        userId: true,
+      },
     });
 
     if (!message) throw new NotFoundException('Unknown Message');
+    // Threat Mitigation: BOLA/IDOR Protection - Enforce channel boundary scoping to prevent cross-channel message deletions
+    if (message.channelId !== channelId) throw new NotFoundException('Unknown Message');
 
     // Bot can delete its own messages, or if it has MANAGE_MESSAGES permission
     if (message.userId !== bot.id) {

@@ -43,22 +43,25 @@ export class AuthGuard implements CanActivate {
         }
 
         if (!user && orgId) {
-          // Find system bot or workspace owner / organization member as virtual user context
-          const defaultBot = await prisma.botApplication.findFirst({
-            where: { workspace: { organizationId: orgId } },
-            include: { bot: true },
+          /**
+           * ⚡ Performance Optimization:
+           * Consolidates bot application retrieval and workspace owner fallback into a single
+           * `prisma.workspace.findFirst` query with nested `botApplications` and `owner` selection.
+           * This cuts database round-trips from 2 to 1 and leverages direct indexing on `organizationId`.
+           */
+          const firstWorkspace = await prisma.workspace.findFirst({
+            where: { organizationId: orgId },
+            select: {
+              owner: true,
+              botApplications: {
+                where: { botId: { not: null } },
+                select: { bot: true },
+                take: 1,
+              },
+            },
           });
-          if (defaultBot?.bot) {
-            user = defaultBot.bot;
-          } else {
-            // Fallback to org workspace owner / first user
-            const firstWorkspace = await prisma.workspace.findFirst({
-              where: { organizationId: orgId },
-              include: { owner: true },
-            });
-            if (firstWorkspace?.owner) {
-              user = firstWorkspace.owner;
-            }
+          if (firstWorkspace) {
+            user = firstWorkspace.botApplications[0]?.bot || firstWorkspace.owner;
           }
         }
 

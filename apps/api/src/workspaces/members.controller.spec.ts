@@ -180,4 +180,54 @@ describe('MembersController', () => {
       expect(response.members[2].user).toBeNull();
     });
   });
+
+  describe('updateMember security checks', () => {
+    const adminUser = { id: 'admin-user', name: 'Admin' } as any;
+
+    it('should throw ForbiddenException if non-owner tries to modify an owner role', async () => {
+      (prisma.workspace.findUnique as any).mockResolvedValue({
+        id: 'ws-1',
+        members: [
+          { id: 'm-admin', userId: 'admin-user', role: 'admin' },
+          { id: 'm-owner', userId: 'owner-user', role: 'owner' },
+        ],
+      });
+
+      await expect(
+        controller.updateMember(adminUser, 'ws-1', 'm-owner', { role: 'admin' })
+      ).rejects.toThrow('Forbidden: Only workspace owners can modify owner roles');
+    });
+
+    it('should throw ForbiddenException if non-owner tries to assign owner role', async () => {
+      (prisma.workspace.findUnique as any).mockResolvedValue({
+        id: 'ws-1',
+        members: [
+          { id: 'm-admin', userId: 'admin-user', role: 'admin' },
+          { id: 'm-member', userId: 'member-user', role: 'member' },
+        ],
+      });
+
+      await expect(
+        controller.updateMember(adminUser, 'ws-1', 'm-member', { role: 'owner' })
+      ).rejects.toThrow('Forbidden: Only workspace owners can assign owner role');
+    });
+  });
+
+  describe('removeMember security checks', () => {
+    const adminUser = { id: 'admin-user', name: 'Admin' } as any;
+
+    it('should throw ForbiddenException if admin tries to remove another admin', async () => {
+      (prisma.workspace.findUnique as any).mockResolvedValue({
+        id: 'ws-1',
+        members: [
+          { id: 'm-admin1', userId: 'admin-user', role: 'admin' },
+          { id: 'm-admin2', userId: 'other-admin-user', role: 'admin' },
+        ],
+      });
+
+      await expect(
+        controller.removeMember(adminUser, 'ws-1', 'm-admin2')
+      ).rejects.toThrow('Forbidden: Only workspace owners can remove admins');
+    });
+  });
 });

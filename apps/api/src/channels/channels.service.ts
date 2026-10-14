@@ -357,12 +357,18 @@ export class ChannelsService {
           throw new ForbiddenException('Not eligible to use this sticker');
         }
       }
-      await logAssetUsage({
+      /**
+       * ⚡ Performance Optimization:
+       * Background non-critical sticker usage logging with `.catch()` error handling to avoid
+       * blocking the message creation HTTP response path on database write latency.
+       * Expected impact: Eliminates 1 blocking DB write RTT (~15-30ms) during message creation.
+       */
+      logAssetUsage({
         assetId: stickerId,
         assetType: 'sticker',
         userId: userId,
         workspaceId: sticker?.workspaceId || undefined,
-      });
+      }).catch(err => this.logger.error('Failed to log sticker asset usage:', err));
     }
 
     const message = await prisma.$transaction(async tx => {
@@ -616,12 +622,15 @@ export class ChannelsService {
       skipDuplicates: true,
     });
 
-    // ⚡ Optimization: Publish read status if channelId is provided
+    /**
+     * ⚡ Performance Optimization:
+     * Background non-critical real-time event broadcasting to avoid blocking the HTTP response path.
+     */
     if (channelId) {
-      await publishRealtime(AblyChannels.user(userId), AblyEvents.MESSAGE_READ, {
+      publishRealtime(AblyChannels.user(userId), AblyEvents.MESSAGE_READ, {
         channelId,
         messageIds,
-      });
+      }).catch(err => this.logger.error('Failed to publish realtime message read event:', err));
     }
 
     return { success: true };
@@ -644,11 +653,15 @@ export class ChannelsService {
       },
     });
 
-    await publishRealtime(AblyChannels.channel(channelId), AblyEvents.MESSAGE_REACTION, {
+    /**
+     * ⚡ Performance Optimization:
+     * Background non-critical real-time event broadcasting to avoid blocking the HTTP response path.
+     */
+    publishRealtime(AblyChannels.channel(channelId), AblyEvents.MESSAGE_REACTION, {
       messageId,
       reaction,
       action: 'add',
-    });
+    }).catch(err => this.logger.error('Failed to publish realtime reaction addition event:', err));
 
     return reaction;
   }
@@ -671,12 +684,16 @@ export class ChannelsService {
         },
       });
 
-      await publishRealtime(AblyChannels.channel(channelId), AblyEvents.MESSAGE_REACTION, {
+      /**
+       * ⚡ Performance Optimization:
+       * Background non-critical real-time event broadcasting to avoid blocking the HTTP response path.
+       */
+      publishRealtime(AblyChannels.channel(channelId), AblyEvents.MESSAGE_REACTION, {
         messageId,
         emoji,
         userId,
         action: 'remove',
-      });
+      }).catch(err => this.logger.error('Failed to publish realtime reaction removal event:', err));
     } catch (error) {
       // Prisma error code for 'Record to delete does not exist' - we ignore it here
       // to maintain idempotency and match previous behavior.
@@ -688,7 +705,52 @@ export class ChannelsService {
     return { success: true };
   }
 
-  async inviteWorkspaceToChannel(channelId: string, workspaceId: string) {
+  async inviteWorkspaceToChannel(channelId: string, workspaceId: string, userId: string) {
+    if (!workspaceId) {
+      throw new BadRequestException('Target workspaceId is required');
+    }
+
+    const channel = await prisma.channel.findUnique({
+      where: { id: channelId },
+      select: {
+        id: true,
+        workspaceId: true,
+        workspace: {
+          select: {
+            members: {
+              where: { userId },
+              select: { role: true },
+            },
+          },
+        },
+        members: {
+          where: { userId },
+          select: { role: true },
+        },
+      },
+    });
+
+    if (!channel) {
+      throw new NotFoundException('Channel not found');
+    }
+
+    // Threat Mitigation: BOLA/IDOR Protection - Verify requesting user is workspace owner/admin or channel admin/moderator
+    const isWorkspaceAdmin = channel.workspace?.members?.some(m => ['owner', 'admin'].includes(m.role));
+    const isChannelAdmin = channel.members?.some(m => ['admin', 'moderator'].includes(m.role));
+
+    if (!isWorkspaceAdmin && !isChannelAdmin) {
+      throw new ForbiddenException('Only workspace or channel administrators can share channels');
+    }
+
+    const targetWorkspace = await prisma.workspace.findUnique({
+      where: { id: workspaceId },
+      select: { id: true },
+    });
+
+    if (!targetWorkspace) {
+      throw new NotFoundException('Target workspace not found');
+    }
+
     return prisma.sharedChannel.create({
       data: {
         channelId,

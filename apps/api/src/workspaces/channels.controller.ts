@@ -572,35 +572,61 @@ export class ChannelsController {
     @Param('slug') slug: string,
     @Param('channelId') channelId: string
   ) {
-    const workspace = await prisma.workspace.findUnique({
-      where: { slug },
+    /**
+     * ⚡ Performance Optimization:
+     * Consolidates channel lookup, workspace membership authorization, and channel member retrieval
+     * into a single `prisma.channel.findUnique` query with nested `workspace` and `members` selection.
+     * This reduces database round-trips from 2 to 1 on the happy path and eliminates table JOIN scans.
+     */
+    const channel = await prisma.channel.findUnique({
+      where: { id: channelId },
       select: {
         id: true,
+        workspace: {
+          select: {
+            id: true,
+            slug: true,
+            members: {
+              where: { userId: user.id },
+              select: { role: true },
+            },
+          },
+        },
         members: {
-          where: { userId: user.id },
-          select: { role: true },
+          include: {
+            user: {
+              select: { id: true, name: true, email: true, avatar: true, status: true },
+            },
+          },
         },
       },
     });
 
-    if (!workspace) {
-      throw new NotFoundException('Workspace not found');
+    if (!channel || !channel.workspace || channel.workspace.slug !== slug) {
+      const workspace = await prisma.workspace.findUnique({
+        where: { slug },
+        select: {
+          id: true,
+          members: {
+            where: { userId: user.id },
+            select: { role: true },
+          },
+        },
+      });
+      if (!workspace) {
+        throw new NotFoundException('Workspace not found');
+      }
+      if (workspace.members.length === 0) {
+        throw new ForbiddenException('Forbidden');
+      }
+      return [];
     }
 
-    if (workspace.members.length === 0) {
+    if (channel.workspace.members.length === 0) {
       throw new ForbiddenException('Forbidden');
     }
 
-    const members = await prisma.channelMember.findMany({
-      where: { channelId, channel: { workspaceId: workspace.id } },
-      include: {
-        user: {
-          select: { id: true, name: true, email: true, avatar: true, status: true },
-        },
-      },
-    });
-
-    return members;
+    return channel.members;
   }
 
   @Post(':channelId/members')

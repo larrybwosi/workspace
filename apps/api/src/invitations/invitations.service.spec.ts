@@ -3,12 +3,15 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { InvitationsService } from './invitations.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { WebhooksService } from '../webhooks/webhooks.service';
-import { NotFoundException, ForbiddenException } from '@nestjs/common';
+import { NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 
 // Mock @repo/database
 vi.mock('@repo/database', () => ({
   prisma: {
     workspace: {
+      findUnique: vi.fn(),
+    },
+    channel: {
       findUnique: vi.fn(),
     },
     workspaceInvitation: {
@@ -160,6 +163,93 @@ describe('InvitationsService', () => {
     });
   });
 
+  describe('createInvitation - channel authorization', () => {
+    const mockUser = { id: 'u-1', name: 'User 1', email: 'u1@example.com' } as any;
+
+    it('should throw NotFoundException if specified channelId does not exist', async () => {
+      mockPrisma.channel.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.createInvitation(mockUser, {
+          email: 'target@example.com',
+          channelId: 'non-existent-channel',
+        })
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw BadRequestException if channel workspaceId does not match provided workspaceId', async () => {
+      mockPrisma.channel.findUnique.mockResolvedValue({
+        id: 'c-1',
+        isPrivate: false,
+        workspaceId: 'w-1',
+        workspace: { members: [{ role: 'admin' }] },
+        members: [],
+      });
+
+      await expect(
+        service.createInvitation(mockUser, {
+          email: 'target@example.com',
+          workspaceId: 'w-mismatch',
+          channelId: 'c-1',
+        })
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw ForbiddenException if user is not a member of the channel workspace', async () => {
+      mockPrisma.channel.findUnique.mockResolvedValue({
+        id: 'c-1',
+        isPrivate: false,
+        workspaceId: 'w-1',
+        workspace: { members: [] },
+        members: [],
+      });
+
+      await expect(
+        service.createInvitation(mockUser, {
+          email: 'target@example.com',
+          channelId: 'c-1',
+        })
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should throw ForbiddenException if channel is private and user is neither workspace admin nor channel member', async () => {
+      mockPrisma.channel.findUnique.mockResolvedValue({
+        id: 'c-private',
+        isPrivate: true,
+        workspaceId: 'w-1',
+        workspace: { members: [{ role: 'member' }] },
+        members: [],
+      });
+
+      await expect(
+        service.createInvitation(mockUser, {
+          email: 'target@example.com',
+          channelId: 'c-private',
+        })
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should successfully create channel invitation when user is authorized', async () => {
+      mockPrisma.channel.findUnique.mockResolvedValue({
+        id: 'c-1',
+        isPrivate: false,
+        workspaceId: 'w-1',
+        workspace: { members: [{ role: 'member' }] },
+        members: [{ id: 'm-1' }],
+      });
+      const createdInvite = { id: 'inv-created', email: 'target@example.com', token: 'inv_123' };
+      mockPrisma.invitation.create.mockResolvedValue(createdInvite);
+      mockPrisma.user.findUnique.mockResolvedValue(null);
+
+      const result = await service.createInvitation(mockUser, {
+        email: 'target@example.com',
+        channelId: 'c-1',
+      });
+
+      expect(result).toEqual(createdInvite);
+    });
+  });
+
   describe('getInvitationByToken', () => {
     const token = 'test-token';
 
@@ -214,6 +304,59 @@ describe('InvitationsService', () => {
       mockPrisma.invitation.findUnique.mockResolvedValue(null);
 
       await expect(service.getInvitationByToken(token)).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('acceptInvitation', () => {
+    const token = 'test-token';
+    const mockUser = { id: 'u-123', email: 'user@example.com', name: 'Test User' } as any;
+
+    it('should throw ForbiddenException if workspace invitation email does not match user email', async () => {
+      mockPrisma.workspaceInviteLink.findUnique.mockResolvedValue(null);
+      mockPrisma.workspaceInvitation.findUnique.mockResolvedValue({
+        id: 'winv-1',
+        token,
+        email: 'attacker@example.com',
+        workspaceId: 'w-1',
+        status: 'pending',
+      });
+      mockPrisma.invitation.findUnique.mockResolvedValue(null);
+
+      await expect(service.acceptInvitation(mockUser, token)).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should throw ForbiddenException if platform invitation email does not match user email', async () => {
+      mockPrisma.workspaceInviteLink.findUnique.mockResolvedValue(null);
+      mockPrisma.workspaceInvitation.findUnique.mockResolvedValue(null);
+      mockPrisma.invitation.findUnique.mockResolvedValue({
+        id: 'inv-1',
+        token,
+        email: 'attacker@example.com',
+        status: 'pending',
+      });
+
+      await expect(service.acceptInvitation(mockUser, token)).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should successfully accept workspace invitation when email matches (case-insensitive)', async () => {
+      const mockWorkspace = { id: 'w-1', name: 'Workspace 1' };
+      mockPrisma.workspaceInviteLink.findUnique.mockResolvedValue(null);
+      mockPrisma.workspaceInvitation.findUnique.mockResolvedValue({
+        id: 'winv-1',
+        token,
+        email: 'USER@EXAMPLE.COM',
+        workspaceId: 'w-1',
+        role: 'member',
+        status: 'pending',
+        workspace: mockWorkspace,
+      });
+      mockPrisma.invitation.findUnique.mockResolvedValue(null);
+      mockPrisma.workspaceMember.findUnique.mockResolvedValue(null);
+      mockPrisma.$transaction.mockResolvedValue([{ id: 'wm-1' }, { id: 'winv-1' }]);
+
+      const result = await service.acceptInvitation(mockUser, token);
+
+      expect(result).toEqual({ success: true, workspace: mockWorkspace });
     });
   });
 });

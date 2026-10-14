@@ -98,6 +98,17 @@ export class WebhooksController {
       throw new ForbiddenException('You do not have access to this workspace');
     }
 
+    const member = workspace.members[0];
+
+    /**
+     * 🛡️ Security Hardening (BOLA / Information Disclosure Mitigation):
+     * Restrict webhook listing to workspace owners and admins.
+     * Prevents regular non-admin workspace members from viewing outgoing webhooks and their HMAC signing secrets.
+     */
+    if (!member || !['owner', 'admin'].includes(member.role)) {
+      throw new ForbiddenException('Forbidden: Only owners and admins can view webhooks');
+    }
+
     return workspace.webhooks;
   }
 

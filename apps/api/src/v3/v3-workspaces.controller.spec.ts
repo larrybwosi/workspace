@@ -835,12 +835,18 @@ describe('V3WorkspacesController', () => {
     });
 
     describe('updateWorkspaceMember', () => {
-      it('should update member role by member identifier (userId, memberId, email)', async () => {
+      it('should update member role by member identifier (userId, memberId, email) when requested by workspace owner', async () => {
         const body = { role: 'moderator' as const };
-        const mockExistingMember = { id: 'wsm-1', workspaceId: 'ws-123' };
+        const mockWorkspaceWithOwner = {
+          id: 'ws-123',
+          slug: 'acme-slug',
+          ownerId: 'user-xyz',
+        };
+        const mockExistingMember = { id: 'wsm-1', workspaceId: 'ws-123', role: 'member', userId: 'user-1' };
         const mockUser = { id: 'user-1' };
         const mockUpdatedMember = { id: 'wsm-1', userId: 'user-1', role: 'moderator' };
 
+        (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspaceWithOwner);
         (prisma.workspaceMember.findUnique as any).mockResolvedValueOnce(null);
         (prisma.workspaceMember.findUnique as any).mockResolvedValueOnce(null);
         (prisma.user.findUnique as any).mockResolvedValueOnce(mockUser);
@@ -862,6 +868,42 @@ describe('V3WorkspacesController', () => {
         expect(redisClient.del).toHaveBeenCalledWith('v2:members:ws-123');
       });
 
+      it('should throw ForbiddenException if a non-owner attempts to modify an owner role', async () => {
+        const body = { role: 'admin' as const };
+        const nonOwnerContext = { ...context, userId: 'user-admin' };
+        const mockWorkspaceWithOwner = {
+          id: 'ws-123',
+          slug: 'acme-slug',
+          ownerId: 'user-owner',
+        };
+        const mockTargetOwnerMember = { id: 'wsm-owner', workspaceId: 'ws-123', role: 'owner', userId: 'user-owner' };
+
+        (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspaceWithOwner);
+        (prisma.workspaceMember.findUnique as any).mockResolvedValueOnce(mockTargetOwnerMember);
+
+        await expect(
+          controller.updateWorkspaceMember(nonOwnerContext as any, 'acme-slug', 'wsm-owner', body)
+        ).rejects.toThrow('Forbidden: Only workspace owners can modify owner roles');
+      });
+
+      it('should throw ForbiddenException if a non-owner attempts to assign the owner role', async () => {
+        const body = { role: 'owner' as const };
+        const nonOwnerContext = { ...context, userId: 'user-admin' };
+        const mockWorkspaceWithOwner = {
+          id: 'ws-123',
+          slug: 'acme-slug',
+          ownerId: 'user-owner',
+        };
+        const mockTargetMember = { id: 'wsm-member', workspaceId: 'ws-123', role: 'member', userId: 'user-member' };
+
+        (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspaceWithOwner);
+        (prisma.workspaceMember.findUnique as any).mockResolvedValueOnce(mockTargetMember);
+
+        await expect(
+          controller.updateWorkspaceMember(nonOwnerContext as any, 'acme-slug', 'wsm-member', body)
+        ).rejects.toThrow('Forbidden: Only workspace owners can assign owner role');
+      });
+
       it('should throw NotFoundException if workspace member is not found', async () => {
         const body = { role: 'moderator' as const };
         (prisma.workspaceMember.findUnique as any).mockResolvedValue(null);
@@ -874,7 +916,7 @@ describe('V3WorkspacesController', () => {
 
     describe('deleteWorkspaceMember', () => {
       it('should delete member by member identifier and invalidate caches', async () => {
-        const mockWorkspace = { ownerId: 'owner-id' };
+        const mockWorkspace = { id: 'ws-123', ownerId: 'owner-id' };
         const mockMember = { id: 'wsm-1', userId: 'user-1', workspaceId: 'ws-123' };
         const mockUser = { id: 'user-1' };
 
@@ -888,10 +930,6 @@ describe('V3WorkspacesController', () => {
         const result = await controller.deleteWorkspaceMember(context as any, 'acme-slug', 'user-1@example.com');
 
         expect(result.success).toBe(true);
-        expect(prisma.workspace.findUnique).toHaveBeenCalledWith({
-          where: { id: 'ws-123' },
-          select: { ownerId: true },
-        });
         expect(prisma.workspaceMember.delete).toHaveBeenCalledWith({
           where: { id: 'wsm-1' },
         });
@@ -900,7 +938,7 @@ describe('V3WorkspacesController', () => {
       });
 
       it('should throw BadRequestException if member to delete is the owner', async () => {
-        const mockWorkspace = { ownerId: 'owner-id' };
+        const mockWorkspace = { id: 'ws-123', ownerId: 'owner-id' };
         const mockMember = { id: 'wsm-owner', userId: 'owner-id', workspaceId: 'ws-123' };
 
         (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
@@ -1033,11 +1071,13 @@ describe('V3WorkspacesController', () => {
       it('should resolve users by memberId, userId, or email and add them to channel', async () => {
         const body = { emails: ['user1@example.com'], memberId: 'wsm-1' };
         const mockChannel = { id: 'ch-1', workspaceId: 'ws-123' };
-        const mockMatchedUsers = [{ id: 'user-1' }, { id: 'user-2' }];
 
         (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
         (prisma.channel.findUnique as any).mockResolvedValue(mockChannel);
-        (prisma.user.findMany as any).mockResolvedValue(mockMatchedUsers);
+        (prisma.user.findMany as any)
+          .mockResolvedValueOnce([{ id: 'user-1' }]) // usersById
+          .mockResolvedValueOnce([{ id: 'user-1' }]); // usersByEmail
+        (prisma.workspaceMember.findMany as any).mockResolvedValueOnce([{ userId: 'user-2' }]); // workspaceMembers
         (prisma.channelMember.createMany as any).mockResolvedValue({ count: 2 });
         (prisma.channelMember.findMany as any).mockResolvedValue([
           { id: 'cm-1', channelId: 'ch-1', userId: 'user-1', role: 'member', permissions: null, user: { id: 'user-1' } },
@@ -1046,15 +1086,20 @@ describe('V3WorkspacesController', () => {
         const result = await controller.addChannelMembers(context as any, 'acme-slug', 'ch-1', body as any);
 
         expect(result.success).toBe(true);
-        expect(prisma.user.findMany).toHaveBeenCalledWith({
-          where: {
-            OR: [
-              { id: { in: ['user1@example.com', 'wsm-1'] } },
-              { email: { in: ['user1@example.com', 'wsm-1'] } },
-              { workspaceMemberships: { some: { id: { in: ['user1@example.com', 'wsm-1'] }, workspaceId: 'ws-123' } } },
-            ],
-          },
+        expect(prisma.user.findMany).toHaveBeenNthCalledWith(1, {
+          where: { id: { in: ['user1@example.com', 'wsm-1'] } },
           select: { id: true },
+        });
+        expect(prisma.user.findMany).toHaveBeenNthCalledWith(2, {
+          where: { email: { in: ['user1@example.com', 'wsm-1'] } },
+          select: { id: true },
+        });
+        expect(prisma.workspaceMember.findMany).toHaveBeenCalledWith({
+          where: {
+            id: { in: ['user1@example.com', 'wsm-1'] },
+            workspaceId: 'ws-123',
+          },
+          select: { userId: true },
         });
         expect(prisma.channelMember.createMany).toHaveBeenCalled();
       });
@@ -1124,6 +1169,37 @@ describe('V3WorkspacesController', () => {
             ],
           },
         });
+      });
+    });
+
+    describe('deleteChannelMessage', () => {
+      it('should resolve workspace user context and pass userId to channelsService.deleteMessage for author ownership/admin enforcement', async () => {
+        const msgContext = {
+          scopes: ['messages:send'],
+          workspaceId: 'ws-123',
+          userId: 'user-xyz',
+        };
+
+        (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
+
+        const result = await controller.deleteChannelMessage(msgContext as any, 'acme-slug', 'ch-1', 'msg-100');
+
+        expect(result.success).toBe(true);
+        expect(result.data).toEqual({ success: true });
+        // Verifies userId is forwarded so ChannelsService can enforce BOLA/IDOR protection
+        expect((controller as any).channelsService.deleteMessage).toHaveBeenCalledWith('ch-1', 'msg-100', 'user-xyz');
+      });
+
+      it('should throw ForbiddenException if missing messages:send scope', async () => {
+        const restrictedContext = {
+          scopes: ['channels:read'],
+          workspaceId: 'ws-123',
+          userId: 'user-xyz',
+        };
+
+        await expect(
+          controller.deleteChannelMessage(restrictedContext as any, 'acme-slug', 'ch-1', 'msg-100')
+        ).rejects.toThrow('Missing messages:send scope');
       });
     });
   });

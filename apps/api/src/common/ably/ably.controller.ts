@@ -2,6 +2,7 @@ import { Controller, Post, Req } from '@nestjs/common';
 import { auth } from '@repo/auth';
 import { getAblyRest } from '@repo/shared/server';
 import { AllowAnonymous } from '@thallesp/nestjs-better-auth';
+import { prisma } from '@repo/database';
 
 @Controller('ably')
 export class AblyController {
@@ -20,22 +21,74 @@ export class AblyController {
     }
 
     if (user) {
-      // TODO: More granular capabilities based on user's workspaces and channels
+      /**
+       * THREAT MITIGATION: Broken Object Level Authorization (BOLA/Realtime IDOR)
+       * Instead of granting blanket wildcards ('channel:*', 'workspace:*', 'dm:*'),
+       * query the database for resources the user is explicitly authorized to access:
+       * 1. Workspaces the user belongs to.
+       * 2. Channels the user belongs to + public channels in member workspaces.
+       * 3. DM conversations where the user is a participant.
+       * Dynamically grant Ably token capabilities only for authorized channel names.
+       */
+      const [workspaceMemberships, channelMemberships, dmConversations] = await Promise.all([
+        prisma.workspaceMember.findMany({
+          where: { userId: user.id },
+          select: { workspaceId: true },
+        }),
+        prisma.channelMember.findMany({
+          where: { userId: user.id },
+          select: { channelId: true },
+        }),
+        prisma.directMessage.findMany({
+          where: {
+            OR: [{ participant1Id: user.id }, { participant2Id: user.id }],
+          },
+          select: { id: true },
+        }),
+      ]);
+
+      const workspaceIds = workspaceMemberships.map(m => m.workspaceId);
+
+      const publicChannels = workspaceIds.length
+        ? await prisma.channel.findMany({
+            where: {
+              workspaceId: { in: workspaceIds },
+              isPrivate: false,
+            },
+            select: { id: true },
+          })
+        : [];
+
+      const channelIdSet = new Set<string>([
+        ...channelMemberships.map(m => m.channelId),
+        ...publicChannels.map(c => c.id),
+      ]);
+
+      const ops = ['subscribe', 'publish', 'history', 'presence'];
+
+      const capability: Record<string, string[]> = {
+        [`user:${user.id}:*`]: ops,
+        [`notifications:${user.id}:*`]: ops,
+        'global-presence': ['subscribe', 'publish', 'presence'],
+      };
+
+      for (const wId of workspaceIds) {
+        capability[`workspace:${wId}`] = ops;
+      }
+
+      for (const cId of channelIdSet) {
+        capability[`channel:${cId}`] = ops;
+        capability[`thread:${cId}`] = ops;
+        capability[`presence:${cId}`] = ops;
+      }
+
+      for (const dm of dmConversations) {
+        capability[`dm:${dm.id}`] = ops;
+      }
+
       const tokenRequest = await client.auth.createTokenRequest({
         clientId: user.id,
-        capability: {
-          [`user:${user.id}:*`]: ['subscribe', 'publish', 'history', 'presence'],
-          [`notifications:${user.id}:*`]: ['subscribe', 'publish', 'history', 'presence'],
-          'channel:*': ['subscribe', 'publish', 'history', 'presence'],
-          'session:*': ['subscribe', 'publish', 'history', 'presence'],
-          'workspace:*': ['subscribe', 'publish', 'history', 'presence'],
-          'thread:*': ['subscribe', 'publish', 'history', 'presence'],
-          'call:*': ['subscribe', 'publish', 'history', 'presence'],
-          'call-chat:*': ['subscribe', 'publish', 'history', 'presence'],
-          'dm:*': ['subscribe', 'publish', 'history', 'presence'],
-          'presence:*': ['subscribe', 'publish', 'history', 'presence'],
-          'global-presence': ['subscribe', 'publish', 'history', 'presence'],
-        },
+        capability,
         ttl: 3600 * 1000, // 1 hour in milliseconds
         timestamp: Date.now(),
       });

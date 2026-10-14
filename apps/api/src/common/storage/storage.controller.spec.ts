@@ -26,7 +26,7 @@ describe('StorageController', () => {
     service = module.get<StorageService>(StorageService);
   });
 
-  it('should call storageService.uploadFile', async () => {
+  it('should call storageService.uploadFile for valid file', async () => {
     const mockFile = {
       toBuffer: vi.fn().mockResolvedValue(Buffer.from('test')),
       filename: 'test.png',
@@ -40,5 +40,36 @@ describe('StorageController', () => {
 
     expect(service.uploadFile).toHaveBeenCalled();
     expect(result.url).toBe('http://test.com/file.png');
+  });
+
+  it('should throw BadRequestException when disallowed MIME type is uploaded', async () => {
+    const mockFile = {
+      toBuffer: vi.fn().mockResolvedValue(Buffer.from('<html><script>alert(1)</script></html>')),
+      filename: 'exploit.html',
+      mimetype: 'text/html',
+    };
+    const req: any = {
+      file: vi.fn().mockResolvedValue(mockFile),
+    };
+
+    await expect(controller.uploadFile(req)).rejects.toThrow(
+      "File upload rejected: MIME type 'text/html' is not permitted."
+    );
+  });
+
+  it('should throw BadRequestException when file size exceeds 25MB limit', async () => {
+    const oversizedBuffer = Buffer.alloc(25 * 1024 * 1024 + 1);
+    const mockFile = {
+      toBuffer: vi.fn().mockResolvedValue(oversizedBuffer),
+      filename: 'huge.zip',
+      mimetype: 'application/zip',
+    };
+    const req: any = {
+      file: vi.fn().mockResolvedValue(mockFile),
+    };
+
+    await expect(controller.uploadFile(req)).rejects.toThrow(
+      'File upload rejected: Exceeds maximum allowed size of 25MB.'
+    );
   });
 });

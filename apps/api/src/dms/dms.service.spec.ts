@@ -77,6 +77,70 @@ describe('DmsService', () => {
     vi.clearAllMocks();
   });
 
+  describe('getDm', () => {
+    it('should return null if DM conversation does not exist', async () => {
+      (prisma.directMessage.findUnique as any).mockResolvedValue(null);
+
+      const res = await service.getDm('dm-nonexistent', 'user-1');
+      expect(res).toBeNull();
+    });
+
+    it('should throw ForbiddenException if requesting user is not a participant', async () => {
+      (prisma.directMessage.findUnique as any).mockResolvedValue({
+        id: 'dm-1',
+        participant1Id: 'user-1',
+        participant2Id: 'user-2',
+      });
+
+      await expect(service.getDm('dm-1', 'user-attacker')).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should return conversation details if user is a participant', async () => {
+      (prisma.directMessage.findUnique as any).mockResolvedValue({
+        id: 'dm-1',
+        participant1Id: 'user-1',
+        participant2Id: 'user-2',
+        participant1: { id: 'user-1', name: 'User 1', avatar: null, image: null, status: 'online' },
+        participant2: { id: 'user-2', name: 'User 2', avatar: null, image: null, status: 'online' },
+      });
+
+      const res = await service.getDm('dm-1', 'user-1');
+      expect(res).not.toBeNull();
+      expect(res?.id).toBe('dm-1');
+      expect(res?.user.id).toBe('user-2');
+    });
+  });
+
+  describe('getMessages', () => {
+    it('should throw NotFoundException if DM conversation does not exist', async () => {
+      (prisma.directMessage.findUnique as any).mockResolvedValue(null);
+
+      await expect(service.getMessages('dm-nonexistent', 'user-1')).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw ForbiddenException if user is not a participant', async () => {
+      (prisma.directMessage.findUnique as any).mockResolvedValue({
+        participant1Id: 'user-1',
+        participant2Id: 'user-2',
+      });
+
+      await expect(service.getMessages('dm-1', 'user-attacker')).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should return messages when user is a participant', async () => {
+      (prisma.directMessage.findUnique as any).mockResolvedValue({
+        participant1Id: 'user-1',
+        participant2Id: 'user-2',
+      });
+
+      (prisma.dMMessage.findMany as any).mockResolvedValue([]);
+
+      const res = await service.getMessages('dm-1', 'user-1');
+      expect(res.messages).toEqual([]);
+      expect(res.hasMore).toBe(false);
+    });
+  });
+
   describe('createDm', () => {
     it('should create a new DM and publish to Ably', async () => {
       const mockDm = {
@@ -301,7 +365,38 @@ describe('DmsService', () => {
   });
 
   describe('reactions', () => {
-    it('should add reaction and publish', async () => {
+    it('should throw NotFoundException if message does not exist', async () => {
+      (prisma.dMMessage.findUnique as any).mockResolvedValue(null);
+
+      await expect(service.addReaction('dm-1', 'msg-999', 'user-1', '😀')).rejects.toThrow(NotFoundException);
+      await expect(service.removeReaction('dm-1', 'msg-999', 'user-1', '😀')).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw NotFoundException if message belongs to another conversation', async () => {
+      (prisma.dMMessage.findUnique as any).mockResolvedValue({
+        dmId: 'dm-other',
+        dm: { participant1Id: 'user-1', participant2Id: 'user-2' },
+      });
+
+      await expect(service.addReaction('dm-1', 'msg-1', 'user-1', '😀')).rejects.toThrow(NotFoundException);
+      await expect(service.removeReaction('dm-1', 'msg-1', 'user-1', '😀')).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw ForbiddenException if user is not a conversation participant', async () => {
+      (prisma.dMMessage.findUnique as any).mockResolvedValue({
+        dmId: 'dm-1',
+        dm: { participant1Id: 'user-1', participant2Id: 'user-2' },
+      });
+
+      await expect(service.addReaction('dm-1', 'msg-1', 'user-attacker', '😀')).rejects.toThrow(ForbiddenException);
+      await expect(service.removeReaction('dm-1', 'msg-1', 'user-attacker', '😀')).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should add reaction and publish when user is a participant', async () => {
+      (prisma.dMMessage.findUnique as any).mockResolvedValue({
+        dmId: 'dm-1',
+        dm: { participant1Id: 'user-1', participant2Id: 'user-2' },
+      });
       (prisma.dMReaction.upsert as any).mockResolvedValue({ id: 'react-1' });
 
       await service.addReaction('dm-1', 'msg-1', 'user-1', '😀');
@@ -314,7 +409,12 @@ describe('DmsService', () => {
       });
     });
 
-    it('should remove reaction and publish', async () => {
+    it('should remove reaction and publish when user is a participant', async () => {
+      (prisma.dMMessage.findUnique as any).mockResolvedValue({
+        dmId: 'dm-1',
+        dm: { participant1Id: 'user-1', participant2Id: 'user-2' },
+      });
+
       await service.removeReaction('dm-1', 'msg-1', 'user-1', '😀');
 
       expect(prisma.dMReaction.delete).toHaveBeenCalled();

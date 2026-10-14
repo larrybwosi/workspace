@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Res, NotFoundException, Inject } from '@nestjs/common';
+import { Controller, Get, Param, Res, NotFoundException, BadRequestException, Inject } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { SkipThrottle } from '@nestjs/throttler';
 import { AllowAnonymous } from '@thallesp/nestjs-better-auth';
@@ -102,7 +102,36 @@ export class ShortUrlController {
 
     // Proxy by fetching original/direct URL
     try {
-      const response = await fetch(original);
+      // THREAT MITIGATION: Server-Side Request Forgery (SSRF) Defense.
+      // Validate the target protocol and reject requests targeting loopback addresses, RFC1918 private IPv4 subnets,
+      // and cloud metadata service endpoints (IMDS) to prevent internal infrastructure probing via short URLs.
+      let targetUrl: URL;
+      try {
+        targetUrl = new URL(original);
+      } catch {
+        throw new BadRequestException('Invalid short URL target');
+      }
+
+      if (targetUrl.protocol !== 'http:' && targetUrl.protocol !== 'https:') {
+        throw new BadRequestException('Invalid URL scheme for file proxy');
+      }
+
+      const rawHostname = targetUrl.hostname.toLowerCase();
+      const hostname = rawHostname.replace(/^\[|\]$/g, '');
+      if (
+        hostname === 'localhost' ||
+        hostname === '127.0.0.1' ||
+        hostname === '::1' ||
+        hostname === '0.0.0.0' ||
+        hostname.startsWith('10.') ||
+        hostname.startsWith('192.168.') ||
+        hostname.startsWith('169.254.') ||
+        /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(hostname)
+      ) {
+        throw new BadRequestException('Access to private or local network addresses is restricted');
+      }
+
+      const response = await fetch(targetUrl.toString());
       if (!response.ok) {
         throw new NotFoundException('Failed to retrieve file from storage provider');
       }
@@ -122,7 +151,7 @@ export class ShortUrlController {
       }
       return res.send(stream);
     } catch (error: any) {
-      if (error instanceof NotFoundException) {
+      if (error instanceof NotFoundException || error instanceof BadRequestException) {
         throw error;
       }
       throw new NotFoundException('Short URL source file is unreachable');

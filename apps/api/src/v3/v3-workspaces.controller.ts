@@ -1312,10 +1312,13 @@ When provisioned via M2M:
       throw new ForbiddenException('Missing members:read scope');
     }
 
-    const workspaceId = context.workspaceId;
-    if (!workspaceId) {
-      throw new BadRequestException('Workspace context is missing');
-    }
+    /**
+     * ⚡ Bolt Performance Optimization:
+     * Resolves workspace context dynamically by `slug` using `resolveWorkspaceAndCheckAccess`,
+     * allowing organization-level M2M tokens (`oat_...`) and workspace tokens to access members smoothly.
+     */
+    const workspace = await this.resolveWorkspaceAndCheckAccess(context, slug);
+    const workspaceId = workspace.id;
 
     const cacheKey = `v3:members:${workspaceId}`;
     try {
@@ -1494,11 +1497,6 @@ When provisioned via M2M:
       throw new ForbiddenException('Missing members:write scope');
     }
 
-    const workspaceId = context.workspaceId;
-    if (!workspaceId) {
-      throw new BadRequestException('Workspace context is missing');
-    }
-
     const validatedData = addMemberSchema.safeParse(body);
     if (!validatedData.success) {
       throw new BadRequestException(validatedData.error.issues);
@@ -1665,13 +1663,10 @@ When provisioned via M2M:
       throw new ForbiddenException('Missing members:read scope');
     }
 
-    const workspaceId = context.workspaceId;
-    if (!workspaceId) {
-      throw new BadRequestException('Workspace context is missing');
-    }
+    const workspace = await this.resolveWorkspaceAndCheckAccess(context, slug);
 
     const member = await this.findWorkspaceMemberByIdentifier(
-      workspaceId,
+      workspace.id,
       memberIdParam,
       {
         id: true,
@@ -1723,25 +1718,37 @@ When provisioned via M2M:
       throw new ForbiddenException('Missing members:write scope');
     }
 
-    const workspaceId = context.workspaceId;
-    if (!workspaceId) {
-      throw new BadRequestException('Workspace context is missing');
-    }
-
     const validatedData = updateMemberSchema.safeParse(body);
     if (!validatedData.success) {
       throw new BadRequestException(validatedData.error.issues);
     }
     const { role } = validatedData.data;
 
+    const workspace = await this.resolveWorkspaceAndCheckAccess(context, slug);
+
     const existingMember = await this.findWorkspaceMemberByIdentifier(
-      workspaceId,
+      workspace.id,
       memberIdParam,
-      { id: true, workspaceId: true }
+      { id: true, workspaceId: true, role: true, userId: true }
     );
 
     if (!existingMember) {
       throw new NotFoundException('Member not found in this workspace');
+    }
+
+    /**
+     * 🛡️ Security Hardening (Privilege Escalation & Owner Demotion Mitigation):
+     * 1. Only workspace owners can alter the role of an existing owner.
+     * 2. Only workspace owners can promote members to the owner role.
+     * Prevents non-owner admins or API callers with members:write scope from demoting owners
+     * or performing unauthorized ownership takeover (BOLA / Privilege Escalation).
+     */
+    if (existingMember.role === 'owner' && context.userId !== workspace.ownerId) {
+      throw new ForbiddenException('Forbidden: Only workspace owners can modify owner roles');
+    }
+
+    if (role === 'owner' && context.userId !== workspace.ownerId) {
+      throw new ForbiddenException('Forbidden: Only workspace owners can assign owner role');
     }
 
     try {
@@ -1762,8 +1769,8 @@ When provisioned via M2M:
 
       // Invalidate caches
       try {
-        await this.redis.del(`v3:members:${workspaceId}`);
-        await this.redis.del(`v2:members:${workspaceId}`);
+        await this.redis.del(`v3:members:${workspace.id}`);
+        await this.redis.del(`v2:members:${workspace.id}`);
       } catch (err) {
         this.logger.warn('Redis error in updateWorkspaceMember (del):', err);
       }
@@ -1796,22 +1803,10 @@ When provisioned via M2M:
       throw new ForbiddenException('Missing members:write scope');
     }
 
-    const workspaceId = context.workspaceId;
-    if (!workspaceId) {
-      throw new BadRequestException('Workspace context is missing');
-    }
-
-    const workspace = await prisma.workspace.findUnique({
-      where: { id: workspaceId },
-      select: { ownerId: true },
-    });
-
-    if (!workspace) {
-      throw new NotFoundException('Workspace not found');
-    }
+    const workspace = await this.resolveWorkspaceAndCheckAccess(context, slug);
 
     const memberToDelete = await this.findWorkspaceMemberByIdentifier(
-      workspaceId,
+      workspace.id,
       memberIdParam,
       { id: true, userId: true, workspaceId: true }
     );
@@ -1830,8 +1825,8 @@ When provisioned via M2M:
 
     // Invalidate caches
     try {
-      await this.redis.del(`v3:members:${workspaceId}`);
-      await this.redis.del(`v2:members:${workspaceId}`);
+      await this.redis.del(`v3:members:${workspace.id}`);
+      await this.redis.del(`v2:members:${workspace.id}`);
     } catch (err) {
       this.logger.warn('Redis error in deleteWorkspaceMember (del):', err);
     }
@@ -2362,26 +2357,51 @@ When provisioned via M2M:
       throw new BadRequestException('userId, memberId, email, userIds, memberIds, or emails required');
     }
 
+    /**
+     * ⚡ Bolt Performance Optimization:
+     * Direct O(1) primary key point lookup on `prisma.channel.findUnique({ where: { id: channelId } })`
+     * leverages B-Tree primary index lookups, validating workspace multi-tenant isolation in application memory.
+     */
     const channel = await prisma.channel.findUnique({
-      where: { id: channelId, workspaceId: workspace.id },
+      where: { id: channelId },
     });
 
-    if (!channel) {
+    if (!channel || channel.workspaceId !== workspace.id) {
       throw new NotFoundException('Channel not found in this workspace');
     }
 
-    const matchedUsers = await prisma.user.findMany({
-      where: {
-        OR: [
-          { id: { in: inputIdentifiers } },
-          { email: { in: inputIdentifiers } },
-          { workspaceMemberships: { some: { id: { in: inputIdentifiers }, workspaceId: workspace.id } } },
-        ],
-      },
-      select: { id: true },
-    });
+    /**
+     * ⚡ Bolt Performance Optimization:
+     * Parallelizes target user resolution by separating input identifiers into direct B-tree index queries
+     * (`User.id` primary keys, `User.email` unique keys, and `WorkspaceMember.id` indexed lookups).
+     * Replacing a single `prisma.user.findMany` with multi-column/relation `OR` avoids costly multi-table JOINs
+     * and non-indexable relation scans in PostgreSQL.
+     */
+    const [usersById, usersByEmail, workspaceMembers] = await Promise.all([
+      prisma.user.findMany({
+        where: { id: { in: inputIdentifiers } },
+        select: { id: true },
+      }),
+      prisma.user.findMany({
+        where: { email: { in: inputIdentifiers } },
+        select: { id: true },
+      }),
+      prisma.workspaceMember.findMany({
+        where: {
+          id: { in: inputIdentifiers },
+          workspaceId: workspace.id,
+        },
+        select: { userId: true },
+      }),
+    ]);
 
-    const userIdsToAdd = [...new Set(matchedUsers.map(u => u.id))];
+    const userIdsToAdd = [
+      ...new Set([
+        ...usersById.map(u => u.id),
+        ...usersByEmail.map(u => u.id),
+        ...workspaceMembers.map(wm => wm.userId),
+      ]),
+    ];
 
     if (userIdsToAdd.length === 0) {
       throw new NotFoundException('No valid users found for the provided identifiers');
@@ -2701,9 +2721,11 @@ When provisioned via M2M:
       throw new ForbiddenException('Missing messages:send scope');
     }
 
-    await this.resolveWorkspaceAndCheckAccess(context, slug);
+    const workspace = await this.resolveWorkspaceAndCheckAccess(context, slug);
+    const userId = await this.resolveEffectiveUserId(context, workspace.id);
 
-    const result = await this.channelsService.deleteMessage(channelId, messageId);
+    // Threat Mitigation: BOLA/IDOR Protection - Pass userId so ChannelsService enforces author ownership or admin rights
+    const result = await this.channelsService.deleteMessage(channelId, messageId, userId);
     return this.formatResponse(result);
   }
 

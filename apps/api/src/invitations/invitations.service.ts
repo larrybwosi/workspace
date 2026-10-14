@@ -101,6 +101,54 @@ export class InvitationsService {
     const token = `inv_${crypto.randomBytes(16).toString('hex')}`;
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
+    if (data.channelId) {
+      /**
+       * 🛡️ Security Hardening (BOLA / Channel Boundary Verification):
+       * Validate target channel existence, workspace scoping, and requesting user authorization
+       * prior to creating invitations associated with a channel.
+       */
+      const channel = await prisma.channel.findUnique({
+        where: { id: data.channelId },
+        select: {
+          id: true,
+          isPrivate: true,
+          workspaceId: true,
+          workspace: {
+            select: {
+              members: {
+                where: { userId: user.id },
+                select: { role: true },
+              },
+            },
+          },
+          members: {
+            where: { userId: user.id },
+            select: { id: true },
+          },
+        },
+      });
+
+      if (!channel) {
+        throw new NotFoundException('Channel not found');
+      }
+
+      if (data.workspaceId && channel.workspaceId !== data.workspaceId) {
+        throw new BadRequestException('Channel does not belong to the specified workspace');
+      }
+
+      const workspaceMember = channel.workspace?.members?.[0];
+      if (!workspaceMember) {
+        throw new ForbiddenException('You do not have permission to invite users to this channel');
+      }
+
+      const isWorkspaceAdmin = ['owner', 'admin'].includes(workspaceMember.role);
+      const isChannelMember = channel.members.length > 0;
+
+      if (channel.isPrivate && !isWorkspaceAdmin && !isChannelMember) {
+        throw new ForbiddenException('You do not have permission to invite users to this private channel');
+      }
+    }
+
     let invitation;
     if (data.workspaceId) {
       // Check if user has permission to invite to workspace
@@ -341,6 +389,15 @@ export class InvitationsService {
     }
 
     if (workspaceInvite) {
+      /**
+       * 🛡️ Security Hardening (IDOR / Invitation Hijacking Mitigation):
+       * Validate that the accepting user's email matches the invited email address on the workspace invitation.
+       * Case-insensitive comparison prevents email format mismatch while blocking unauthorized users who obtain the token.
+       */
+      if (workspaceInvite.email && user.email && workspaceInvite.email.toLowerCase() !== user.email.toLowerCase()) {
+        throw new ForbiddenException('This invitation was sent to a different email address');
+      }
+
       if (workspaceInvite.expiresAt && workspaceInvite.expiresAt < new Date()) {
         throw new BadRequestException('Invitation has expired');
       }
@@ -408,6 +465,15 @@ export class InvitationsService {
     }
 
     if (generalInvite) {
+      /**
+       * 🛡️ Security Hardening (IDOR / Invitation Hijacking Mitigation):
+       * Validate that the accepting user's email matches the invited email address on the platform invitation.
+       * Case-insensitive comparison prevents email format mismatch while blocking unauthorized users who obtain the token.
+       */
+      if (generalInvite.email && user.email && generalInvite.email.toLowerCase() !== user.email.toLowerCase()) {
+        throw new ForbiddenException('This invitation was sent to a different email address');
+      }
+
       if (generalInvite.expiresAt && generalInvite.expiresAt < new Date()) {
         throw new BadRequestException('Invitation has expired');
       }

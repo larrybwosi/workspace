@@ -188,13 +188,21 @@ export class ApiTokensController {
     }
     const data = validatedData.data;
 
-    const token = `wst_${crypto.randomBytes(32).toString('hex')}`;
+    const rawToken = `wst_${crypto.randomBytes(32).toString('hex')}`;
+    /**
+     * 🛡️ Security Hardening:
+     * Hash API token using SHA-256 before storing it in the database.
+     * Storing plain text tokens exposes credentials if database contents are leaked.
+     * Authentication guards (AuthGuard, BetterAuthGuard, ApiV3Guard) hash incoming `wst_` tokens
+     * with SHA-256 before lookup. Storing `hashedToken` ensures consistency and prevents cleartext key storage.
+     */
+    const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
 
     const apiToken = await prisma.workspaceApiToken.create({
       data: {
         workspaceId: workspace.id,
         name: data.name,
-        token,
+        token: hashedToken,
         permissions: data.permissions as any,
         rateLimit: data.rateLimit,
         expiresAt: data.expiresAt ? new Date(data.expiresAt) : null,
@@ -221,7 +229,7 @@ export class ApiTokensController {
 
     return {
       ...apiToken,
-      token,
+      token: rawToken,
     };
   }
 

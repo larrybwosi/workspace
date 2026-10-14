@@ -51,8 +51,14 @@ export async function authenticateV1(request: NextRequest): Promise<ApiContext |
 
   // 2. Check if it's a Workspace API Token
   if (token.startsWith('wst_')) {
+    /**
+     * 🛡️ Security Hardening:
+     * Hash incoming `wst_` token using SHA-256 before looking up in database.
+     * Prevents storing cleartext secret tokens at rest and aligns with NestJS guards.
+     */
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
     const apiToken = await prisma.workspaceApiToken.findUnique({
-      where: { token },
+      where: { token: hashedToken },
     });
 
     if (apiToken && (!apiToken.expiresAt || apiToken.expiresAt > new Date())) {

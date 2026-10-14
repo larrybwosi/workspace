@@ -346,12 +346,30 @@ export class MessagesService {
     return message;
   }
 
-  async updateMessage(userId: string, messageId: string, content: string) {
+  /**
+   * 🛡️ Security Hardening (BOLA / IDOR Mitigation & Workspace/Channel Boundary Enforcement):
+   * Verifies that the target channel exists and belongs to the workspace, validates that the message
+   * exists within that channel (existingMessage.channelId === channelId), and enforces that the requesting
+   * user is the original author of the message.
+   */
+  async updateMessage(userId: string, messageId: string, content: string, channelId?: string, workspaceId?: string) {
+    if (channelId) {
+      await this.verifyChannelAccess(channelId, userId, workspaceId);
+    }
+
     const existingMessage = await prisma.message.findUnique({
       where: { id: messageId },
     });
 
-    if (!existingMessage || existingMessage.userId !== userId) {
+    if (!existingMessage) {
+      throw new NotFoundException('Message not found');
+    }
+
+    if (channelId && existingMessage.channelId !== channelId) {
+      throw new NotFoundException('Message not found in this channel');
+    }
+
+    if (existingMessage.userId !== userId) {
       throw new ForbiddenException('You can only update your own messages');
     }
 
@@ -380,7 +398,17 @@ export class MessagesService {
     return message;
   }
 
-  async deleteMessage(userId: string, messageId: string) {
+  /**
+   * 🛡️ Security Hardening (BOLA / IDOR Mitigation & Workspace/Channel Boundary Enforcement):
+   * Verifies that the target channel exists and belongs to the workspace, validates that the message
+   * exists within that channel (existingMessage.channelId === channelId), and enforces that the requesting
+   * user is the original author of the message.
+   */
+  async deleteMessage(userId: string, messageId: string, channelId?: string, workspaceId?: string) {
+    if (channelId) {
+      await this.verifyChannelAccess(channelId, userId, workspaceId);
+    }
+
     const existingMessage = await prisma.message.findUnique({
       where: { id: messageId },
       include: {
@@ -396,11 +424,15 @@ export class MessagesService {
       throw new NotFoundException('Message not found');
     }
 
+    if (channelId && existingMessage.channelId !== channelId) {
+      throw new NotFoundException('Message not found in this channel');
+    }
+
     if (existingMessage.userId !== userId) {
       throw new ForbiddenException('You can only delete your own messages');
     }
 
-    const channelId = existingMessage.channelId;
+    const targetChannelId = existingMessage.channelId;
 
     if (existingMessage.rootThread) {
       await prisma.thread.delete({
@@ -425,9 +457,9 @@ export class MessagesService {
      * ⚡ Performance Optimization:
      * Background the realtime publishing to avoid blocking the deletion response.
      */
-    publishRealtime(AblyChannels.channel(channelId), AblyEvents.MESSAGE_DELETED, {
+    publishRealtime(AblyChannels.channel(targetChannelId), AblyEvents.MESSAGE_DELETED, {
       id: messageId,
-      channelId,
+      channelId: targetChannelId,
       threadId: existingMessage.rootThread?.id,
     }).catch(err => this.logger.error('Failed to publish message deletion:', err));
 
@@ -590,17 +622,54 @@ export class MessagesService {
   }
 
   // --- Reactions ---
-  async addReaction(userId: string, messageId: string, emoji: string, customEmojiId?: string, workspaceId?: string) {
-    const targetMessage = await prisma.message.findUnique({
+
+  /**
+   * ⚡ Performance Optimization:
+   * Consolidates target message lookup and channel access verification into a single database query
+   * with nested channel selection. Performs workspace boundary and private channel checks in memory.
+   * Reduces database round-trips from 3 down to 2 for reaction additions/removals, and 4 down to 2 for reaction toggles.
+   */
+  private async getMessageWithChannelAccess(messageId: string, userId: string, workspaceId?: string) {
+    const message = await prisma.message.findUnique({
       where: { id: messageId },
-      select: { channelId: true },
+      select: {
+        id: true,
+        channelId: true,
+        channel: {
+          select: {
+            id: true,
+            workspaceId: true,
+            isPrivate: true,
+            type: true,
+            members: {
+              where: { userId },
+              select: { userId: true },
+            },
+          },
+        },
+      },
     });
 
-    if (!targetMessage) {
+    if (!message) {
       throw new NotFoundException('Message not found');
     }
 
-    await this.verifyChannelAccess(targetMessage.channelId, userId, workspaceId);
+    if (workspaceId && message.channel.workspaceId !== workspaceId) {
+      throw new NotFoundException('Channel not found in this workspace');
+    }
+
+    if (message.channel.isPrivate || message.channel.type === 'private') {
+      const isMember = message.channel.members.length > 0;
+      if (!isMember) {
+        throw new ForbiddenException('You do not have permission to access this private channel');
+      }
+    }
+
+    return message;
+  }
+
+  async addReaction(userId: string, messageId: string, emoji: string, customEmojiId?: string, workspaceId?: string) {
+    const message = await this.getMessageWithChannelAccess(messageId, userId, workspaceId);
 
     if (customEmojiId) {
       const customEmoji = await prisma.customEmoji.findUnique({
@@ -650,7 +719,7 @@ export class MessagesService {
       },
     });
 
-    const channelId = (reaction as any).message.channelId;
+    const channelId = (reaction as any).message?.channelId || message.channelId;
     /**
      * ⚡ Performance Optimization:
      * Background the realtime publishing to avoid blocking the reaction addition response.
@@ -665,16 +734,7 @@ export class MessagesService {
   }
 
   async removeReaction(userId: string, messageId: string, emoji: string, workspaceId?: string) {
-    const targetMessage = await prisma.message.findUnique({
-      where: { id: messageId },
-      select: { channelId: true },
-    });
-
-    if (!targetMessage) {
-      throw new NotFoundException('Message not found');
-    }
-
-    await this.verifyChannelAccess(targetMessage.channelId, userId, workspaceId);
+    const message = await this.getMessageWithChannelAccess(messageId, userId, workspaceId);
 
     try {
       const reaction = await prisma.reaction.delete({
@@ -694,7 +754,7 @@ export class MessagesService {
         },
       });
 
-      const channelId = (reaction as any).message.channelId;
+      const channelId = (reaction as any).message?.channelId || message.channelId;
       /**
        * ⚡ Performance Optimization:
        * Background the realtime publishing to avoid blocking the reaction removal response.
@@ -716,15 +776,15 @@ export class MessagesService {
     return { success: true };
   }
 
-  async toggleReaction(userId: string, messageId: string, emoji: string, customEmojiId?: string) {
+  async toggleReaction(userId: string, messageId: string, emoji: string, customEmojiId?: string, workspaceId?: string) {
     const existing = await prisma.reaction.findUnique({
       where: { messageId_userId_emoji: { messageId, userId, emoji } },
     });
 
     if (existing) {
-      return this.removeReaction(userId, messageId, emoji);
+      return this.removeReaction(userId, messageId, emoji, workspaceId);
     } else {
-      return this.addReaction(userId, messageId, emoji, customEmojiId);
+      return this.addReaction(userId, messageId, emoji, customEmojiId, workspaceId);
     }
   }
 
