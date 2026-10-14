@@ -114,4 +114,30 @@ class ChannelSidebarGroupingTest {
         assertEquals(1, voiceGroup!!.channels.size)
         assertEquals("Lounge", voiceGroup.channels[0].name)
     }
+
+    @Test
+    fun `channels with orphan parentId default to Text Channels group when categories exist`() {
+        val channels = listOf(
+            createChannel("cat-1", "Information", type = "category"),
+            createChannel("ch-1", "rules", type = "channel", parentId = "cat-1"),
+            createChannel("ch-2", "m2m-created-channel", type = "channel", parentId = "non-existent-cat-id")
+        )
+
+        val (uncategorized, groups) = processChannelGrouping(channels)
+
+        assertTrue(uncategorized.isEmpty())
+        assertEquals(2, groups.size)
+
+        val textGroup = groups.find { it.name == "Text Channels" }
+        val infoGroup = groups.find { it.name == "Information" }
+
+        assertTrue(textGroup != null)
+        assertTrue(infoGroup != null)
+
+        assertEquals(1, textGroup!!.channels.size)
+        assertEquals("m2m-created-channel", textGroup.channels[0].name)
+
+        assertEquals(1, infoGroup!!.channels.size)
+        assertEquals("rules", infoGroup.channels[0].name)
+    }
 }
