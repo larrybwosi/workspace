@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { V3DmsController } from './v3-dms.controller';
+import { ForbiddenException } from '@nestjs/common';
 
 vi.mock('@repo/database', () => ({
   prisma: {
@@ -39,10 +40,16 @@ import { prisma } from '@repo/database';
 
 describe('V3DmsController Actions', () => {
   let controller: V3DmsController;
+  let dmsService: any;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    controller = new V3DmsController({} as any, {} as any);
+    dmsService = {
+      createMessage: vi.fn().mockResolvedValue({ id: 'msg_1', content: 'hello' }),
+      updateMessage: vi.fn().mockResolvedValue({ id: 'msg_1', content: 'updated' }),
+      addReaction: vi.fn().mockResolvedValue({ id: 'react_1', emoji: '👍' }),
+    };
+    controller = new V3DmsController(dmsService, {} as any);
   });
 
   const mockContext = {
