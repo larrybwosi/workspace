@@ -13,6 +13,7 @@ import { useSession, authClient } from '@repo/shared';
 import { useTheme } from './theme-provider';
 import { CreateWorkspaceDialog } from '../features/workspace/create-workspace-dialog';
 import { usePresence } from '../lib/contexts/presence-context';
+import { WorkspaceIcon } from '../components/workspace-icon';
 
 interface WorkspaceRailProps {
   onPlusClick?: () => void;
@@ -76,15 +77,7 @@ export function WorkspaceRail({ onPlusClick }: WorkspaceRailProps) {
                       )}
                       onClick={() => router.push(`/workspace/${workspace.slug}`)}
                     >
-                      {workspace.icon ? (
-                        workspace.icon.startsWith('http') || workspace.icon.startsWith('/') || workspace.icon.startsWith('data:') || workspace.icon.length > 2 ? (
-                          <img src={workspace.icon} alt={workspace.name} className="h-full w-full object-cover" />
-                        ) : (
-                          <span className="text-xl">{workspace.icon}</span>
-                        )
-                      ) : (
-                        <span className="font-bold text-sm">{workspace.name.charAt(0).toUpperCase()}</span>
-                      )}
+                      <WorkspaceIcon icon={workspace.icon} name={workspace.name} />
                     </Button>
                   </div>
                 </TooltipTrigger>
@@ -146,7 +139,7 @@ export function WorkspaceRail({ onPlusClick }: WorkspaceRailProps) {
                           <Avatar className="h-full w-full rounded-2xl">
                             <AvatarImage src={friendUser?.avatar || friendUser?.image} alt={displayName} />
                             <AvatarFallback className="text-xs bg-primary/20 text-primary font-bold">
-                              {displayName.slice(0, 2).toUpperCase()}
+                              {displayName?.slice(0, 2).toUpperCase() || 'WS'}
                             </AvatarFallback>
                           </Avatar>
                           {isOnline && (

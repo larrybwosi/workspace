@@ -142,6 +142,7 @@ class WorkspaceRepository @Inject constructor(
         createdAt = createdAt,
         isPublic = isPublic,
         customDomain = customDomain,
-        industry = industry
+        industry = industry,
+        organizationId = organizationId
     )
 }

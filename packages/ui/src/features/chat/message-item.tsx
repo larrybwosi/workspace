@@ -1,9 +1,10 @@
 'use client';
+import { parseSystemReport, SystemReportCard } from './message-types/system-report-card';
 
 import { Smile, MessageSquare, Copy, Trash2, Edit, LinkIcon, MoreHorizontal, Reply, Loader2, Pin } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '../../components/avatar';
 import { Button } from '../../components/button';
-import { cn } from '../../lib/utils';
+import { cn, formatMessageTimestamp, formatCondensedTime } from '../../lib/utils';
 import { CODE_BLOCK_REGEX, renderCustomMessage, extractCodeInfo } from '../../lib/message-renderer';
 import { SyntaxHighlighter } from '../../shared/syntax-highlighter';
 import { CustomEmojiPicker } from '../../shared/custom-emoji-picker';
@@ -34,7 +35,6 @@ import { useUpdateMessage, useDeleteMessage, useTriggerAction } from '@repo/api-
 import * as React from 'react';
 import { useMemo, useState, memo, useCallback } from 'react';
 import { UserBadgeDisplay } from '../social/user-badge-display';
-import { format } from 'date-fns';
 import { useSession } from '@repo/shared';
 import { toast } from 'sonner';
 
@@ -52,11 +52,6 @@ interface MessageItemProps {
   highlightRef?: React.RefObject<HTMLDivElement>;
 }
 
-/**
- * ⚡ Performance: Memoized to prevent re-renders of the entire message list
- * when parent state changes (e.g. typing indicators, scroll events).
- * Expected impact: Reduces re-renders by >90% in active channels.
- */
 interface MessageEditorProps {
   initialContent: string;
   onSave: (content: string) => void;
@@ -67,7 +62,7 @@ const MessageEditor = memo(({ initialContent, onSave, onCancel }: MessageEditorP
   <div className="w-full mt-1">
     <textarea
       defaultValue={initialContent}
-      className="text-sm leading-relaxed text-foreground border border-border rounded bg-card p-2 w-full font-mono focus:outline-none focus:ring-1 focus:ring-primary/50 resize-none"
+      className="text-sm leading-relaxed text-foreground border border-border/80 rounded-xl bg-card p-2.5 w-full font-mono focus:outline-none focus:ring-1 focus:ring-primary/50 resize-none shadow-xs"
       rows={4}
       autoFocus
       onKeyDown={e => {
@@ -93,7 +88,7 @@ const ReplyPreview = memo(({ message }: { message: any }) => {
 
   return (
     <div className="flex items-center gap-1.5 text-[12px] text-muted-foreground/80 mb-1 pl-1">
-      <div className="relative w-8 h-3.5 flex-shrink-0">
+      <div className="relative w-7 h-3 flex-shrink-0">
         <svg className="w-full h-full text-muted-foreground/40 stroke-current fill-none" viewBox="0 0 32 14">
           <path d="M 12 0 L 12 7 A 6 6 0 0 0 18 13 L 32 13" strokeWidth="2" strokeLinecap="round" />
         </svg>
@@ -101,7 +96,7 @@ const ReplyPreview = memo(({ message }: { message: any }) => {
       <Avatar className="h-4 w-4 rounded-full overflow-hidden shrink-0">
         <AvatarImage src={replyToUser?.avatar || replyToUser?.image} alt={replyToName} />
         <AvatarFallback className="text-[8px] bg-primary/20 text-primary font-bold">
-          {replyToName.slice(0, 1).toUpperCase()}
+          {replyToName?.slice(0, 1).toUpperCase() || 'U'}
         </AvatarFallback>
       </Avatar>
       <span className="font-semibold text-foreground/80 hover:underline cursor-pointer">
@@ -117,15 +112,15 @@ const ReplyPreview = memo(({ message }: { message: any }) => {
 ReplyPreview.displayName = 'ReplyPreview';
 
 const MessageHeader = memo(({ user, message, userBadges }: { user: any, message: any, userBadges: any[] }) => {
-  const timestamp = useMemo(() => format(new Date(message.timestamp || new Date()), 'MM/dd/yyyy HH:mm'), [message.timestamp]);
+  const timestamp = useMemo(() => formatMessageTimestamp(message.timestamp), [message.timestamp]);
 
   return (
     <div className="flex flex-wrap items-baseline gap-x-2 mb-[1px]">
-      <span className="font-semibold text-[15px] leading-[22px] cursor-pointer hover:underline text-foreground">
+      <span className="font-semibold text-[14px] leading-snug cursor-pointer hover:underline text-foreground">
         {user?.name}
       </span>
       {message.metadata?.isBot && (
-        <span className="inline-flex items-center px-1 py-0 rounded text-[10px] font-bold bg-primary/10 text-primary uppercase tracking-wider border border-primary/20 leading-none">
+        <span className="inline-flex items-center px-1 py-0 rounded text-[9px] font-bold bg-primary/10 text-primary uppercase tracking-wider border border-primary/20 leading-none">
           Bot
         </span>
       )}
@@ -175,7 +170,7 @@ const MessageActions = memo(({
             key={action.id || action.actionId}
             size="sm"
             variant={variant}
-            className="h-7 text-xs px-3"
+            className="h-7 text-xs px-3 rounded-xl font-medium"
             disabled={triggerActionMutation.isPending}
             onClick={async () => {
               if (action.handler && typeof action.handler === 'function') {
@@ -213,28 +208,28 @@ const MessageReactions = memo(({
   handleAddReaction: (emoji: string, isCustom?: boolean, customEmojiId?: string) => void,
   handleToggleReaction: (emoji: string) => void
 }) => (
-  <div className="flex flex-wrap gap-1 mt-1.5">
+  <div className="flex flex-wrap gap-1.5 mt-2">
     {reactions.map((reaction: any, idx: any) => (
       <button
         key={idx}
-        className="flex items-center gap-1 px-1.5 py-0.5 rounded border border-border bg-background hover:bg-muted hover:border-primary/40 transition-colors text-xs active:scale-95"
+        className="flex items-center gap-1 px-2.5 py-0.5 rounded-full border border-border/60 bg-muted/30 hover:bg-muted/80 hover:border-border transition-all text-xs active:scale-95 shadow-2xs"
         onClick={() => handleToggleReaction(reaction.emoji)}
       >
         {reaction.emoji.startsWith(':') ? (
           <img
             src={`/placeholder.svg?height=16&width=16&query=${reaction.emoji}`}
             alt={reaction.emoji}
-            className="h-4 w-4"
+            className="h-4 w-4 object-contain"
           />
         ) : (
-          <span className="text-sm leading-none">{reaction.emoji}</span>
+          <span className="text-xs leading-none">{reaction.emoji}</span>
         )}
-        <span className="font-medium text-muted-foreground">{reaction.count}</span>
+        <span className="font-semibold text-foreground/80 text-[11px]">{reaction.count}</span>
       </button>
     ))}
 
     <CustomEmojiPicker onEmojiSelect={handleAddReaction}>
-      <button className="flex items-center justify-center h-6 w-6 rounded border border-dashed border-border hover:bg-muted hover:border-primary/40 transition-colors">
+      <button className="flex items-center justify-center h-6 w-6 rounded-full border border-dashed border-border/70 hover:bg-muted/60 transition-colors">
         <Smile className="h-3.5 w-3.5 text-muted-foreground" />
       </button>
     </CustomEmojiPicker>
@@ -262,25 +257,25 @@ const MessageToolbar = memo(({
   handleEditMessage: () => void,
   handleDeleteMessage: () => void
 }) => (
-  <div className="hidden md:flex absolute -top-4.5 right-4 items-center bg-background border border-border rounded-lg shadow-md p-0.5 z-20 animate-in fade-in zoom-in-95 duration-75 gap-0.5">
+  <div className="hidden md:flex absolute -top-4 right-4 items-center bg-card/95 backdrop-blur-sm border border-border/70 rounded-xl shadow-md p-0.5 z-20 animate-in fade-in zoom-in-95 duration-75 gap-0.5">
     <CustomEmojiPicker onEmojiSelect={handleAddReaction}>
-      <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md hover:bg-muted" title="Add reaction">
-        <Smile className="h-4 w-4 text-muted-foreground" />
+      <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground" title="Add reaction">
+        <Smile className="h-4 w-4" />
       </Button>
     </CustomEmojiPicker>
 
-    <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md hover:bg-muted" onClick={handleOpenThread} title="Open in thread">
-      <MessageSquare className="h-4 w-4 text-muted-foreground" />
+    <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground" onClick={handleOpenThread} title="Open in thread">
+      <MessageSquare className="h-4 w-4" />
     </Button>
 
-    <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md hover:bg-muted" onClick={handleReply} title="Reply">
-      <Reply className="h-4 w-4 text-muted-foreground" />
+    <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground" onClick={handleReply} title="Reply">
+      <Reply className="h-4 w-4" />
     </Button>
 
     <DropdownMenu onOpenChange={setIsMenuOpen}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md hover:bg-muted">
-          <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
+        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground">
+          <MoreHorizontal className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-52">
@@ -353,7 +348,7 @@ const MessageContent = memo(({
   return (
     <>
       {!isImplicitCode && displayContent && (
-        <div className="text-[15px] leading-[1.375rem] text-foreground break-words">
+        <div className="text-[14px] leading-[1.45] text-foreground break-words">
           <MarkdownRenderer content={displayContent} className="whitespace-pre-wrap max-w-full overflow-x-hidden" />
         </div>
       )}
@@ -380,7 +375,7 @@ const MessageThreadIndicator = memo(({
     return (
       <button
         onClick={onClick}
-        className="mt-1.5 group flex items-center gap-2 rounded-md px-2 py-1 -ml-2 hover:bg-muted/60 transition-colors"
+        className="mt-1.5 group flex items-center gap-2 rounded-lg px-2 py-1 -ml-2 hover:bg-muted/60 transition-colors"
       >
         {lastReplyUser && (
           <div className="h-5 w-5 rounded-full overflow-hidden bg-primary/20 shrink-0 flex items-center justify-center">
@@ -391,10 +386,10 @@ const MessageThreadIndicator = memo(({
             )}
           </div>
         )}
-        <span className="text-[13px] font-semibold text-primary group-hover:underline">
+        <span className="text-[12px] font-semibold text-primary group-hover:underline">
           {replyCount && replyCount > 0 ? `${replyCount} ${replyCount === 1 ? 'reply' : 'replies'}` : 'View thread'}
         </span>
-        <span className="text-[12px] text-muted-foreground group-hover:text-foreground transition-colors">
+        <span className="text-[11px] text-muted-foreground group-hover:text-foreground transition-colors">
           View thread
         </span>
       </button>
@@ -410,13 +405,17 @@ const MessageBodyRenderer = memo(({ message, handleCustomAction, isActionPending
   handleCustomAction: any,
   isActionPending: boolean
 }) => {
+  const parsedReport = parseSystemReport(message.content, message.metadata);
+  if (parsedReport) {
+    return <SystemReportCard report={parsedReport} />;
+  }
   const isImplicitCode = (!message.messageType || message.messageType === 'standard') &&
     (CODE_BLOCK_REGEX.test(message.content) || message.metadata?.isImplicit);
 
   if (isImplicitCode) {
     const { language, code } = extractCodeInfo(message.content);
     return (
-      <div className="w-full mt-2">
+      <div className="w-fit max-w-full mt-1">
         <SyntaxHighlighter
           code={code}
           language={language as string}
@@ -608,10 +607,10 @@ const MessageLayout = memo(React.forwardRef<
     ref={ref}
     className={cn(
       'group relative flex items-start px-4 gap-3 w-full select-text',
-      showAvatar ? 'pt-[6px] pb-[2px]' : 'pt-0 pb-0',
-      'hover:bg-[#0000000a] dark:hover:bg-[#ffffff05]',
-      isMenuOpen && 'bg-[#0000000a] dark:bg-[#ffffff05]',
-      isMentioned && 'bg-yellow-500/10 border-l-2 border-yellow-500 pl-[14px]',
+      showAvatar ? 'pt-1.5 pb-1' : 'py-0.5',
+      'hover:bg-muted/30 transition-colors',
+      isMenuOpen && 'bg-muted/30',
+      isMentioned && 'bg-amber-500/10 border-l-2 border-amber-500 pl-[14px]',
       isHighlighted && 'bg-primary/10'
     )}
     onMouseEnter={onMouseEnter}
@@ -651,7 +650,7 @@ const MessageMainContent = memo(({
   handleAddReaction: any,
   handleToggleReaction: any
 }) => (
-  <div className="flex-1 min-w-0 overflow-hidden pb-[2px]">
+  <div className="flex-1 min-w-0 overflow-hidden pb-0">
     {isReply && <ReplyPreview message={message} />}
     {showAvatar && <MessageHeader user={user} message={message} userBadges={(user as any)?.badges || []} />}
     <MessageContent
@@ -714,15 +713,15 @@ const MessageAvatar = memo(({ showAvatar, user, timestamp, showToolbar }: {
   timestamp: Date,
   showToolbar: boolean
 }) => {
-  const formattedTime = useMemo(() => format(new Date(timestamp || new Date()), 'HH:mm'), [timestamp]);
+  const formattedTime = useMemo(() => formatCondensedTime(timestamp), [timestamp]);
 
   return (
-    <div className={cn('flex-shrink-0 w-10 flex justify-center', showAvatar ? 'mt-0.5' : 'mt-0')}>
+    <div className={cn('flex-shrink-0 w-9 flex justify-center', showAvatar ? 'mt-0.5' : 'mt-0')}>
       {showAvatar ? (
-        <Avatar className="h-10 w-10 rounded-full overflow-hidden cursor-pointer hover:brightness-90 transition-all">
+        <Avatar className="h-9 w-9 rounded-full overflow-hidden cursor-pointer hover:brightness-95 transition-all shrink-0">
           <AvatarImage src={user?.avatar || user?.image} alt={user?.name} />
-          <AvatarFallback className="text-[10px] bg-primary text-primary-foreground">
-            {user?.name?.slice(0, 2).toUpperCase() || '??'}
+          <AvatarFallback className="text-[10px] bg-primary text-primary-foreground font-semibold">
+            {user?.name ? user?.name?.slice(0, 2).toUpperCase() : '??'}
           </AvatarFallback>
         </Avatar>
       ) : (

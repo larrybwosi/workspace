@@ -64,6 +64,11 @@ interface AuthApi {
     suspend fun searchUsers(
         @retrofit2.http.Query("query") query: String
     ): Response<List<UserDto>>
+
+    @POST("android-auth/refresh")
+    suspend fun refresh(
+        @Body request: Map<String, String>
+    ): Response<LoginResponse>
 }
 
 data class QRAuthorizeRequest(

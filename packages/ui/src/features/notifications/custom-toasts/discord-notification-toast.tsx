@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '../../../components/avatar'
 import { Button } from '../../../components/button';
 import { cn } from '../../../lib/utils';
 import Link from 'next/link';
+import { MarkdownRenderer } from '../../../shared/markdown-renderer';
 
 interface DiscordNotificationToastProps {
   notification: {
@@ -46,7 +47,7 @@ export function DiscordNotificationToast({ notification, onClose }: DiscordNotif
           <Avatar className="h-10 w-10 border-2 border-primary/20">
             <AvatarImage src={notification.avatar} />
             <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
-              {notification.title.slice(0, 2).toUpperCase()}
+              {notification.title?.slice(0, 2) || 'NT'.toUpperCase()}
             </AvatarFallback>
           </Avatar>
           <div className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-background flex items-center justify-center shadow-sm border border-border">
@@ -69,7 +70,7 @@ export function DiscordNotificationToast({ notification, onClose }: DiscordNotif
               <X className="h-3 w-3" />
             </Button>
           </div>
-          <p className="text-xs text-muted-foreground line-clamp-2 leading-tight">{notification.message}</p>
+          <div className="text-xs text-muted-foreground line-clamp-2 leading-tight"><MarkdownRenderer content={notification.message} className="text-xs text-muted-foreground prose-p:my-0 prose-p:inline" /></div>
 
           {notification.linkUrl && (
             <div className="mt-2 flex gap-2">

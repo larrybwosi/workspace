@@ -99,3 +99,103 @@ export function useDeleteM2mApplication(orgSlug: string) {
     },
   });
 }
+
+export interface OrganizationMember {
+  id: string;
+  role: string;
+  createdAt: string;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    avatar?: string;
+  };
+}
+
+export interface OrganizationInvitation {
+  id: string;
+  email: string;
+  role: string;
+  createdAt: string;
+  expiresAt: string;
+  inviter?: {
+    id: string;
+    name: string;
+    email: string;
+  };
+}
+
+export function useOrganizationMembers(orgSlug: string) {
+  return useQuery<OrganizationMember[]>({
+    queryKey: ['organization', orgSlug, 'members'],
+    queryFn: async () => {
+      const { data } = await apiClient.get(`/v3/organizations/${orgSlug}/members`);
+      return data.data?.members ?? data.members;
+    },
+    enabled: !!orgSlug,
+  });
+}
+
+export function useOrganizationInvitations(orgSlug: string) {
+  return useQuery<OrganizationInvitation[]>({
+    queryKey: ['organization', orgSlug, 'invitations'],
+    queryFn: async () => {
+      const { data } = await apiClient.get(`/v3/organizations/${orgSlug}/invitations`);
+      return data.data?.invitations ?? data.invitations;
+    },
+    enabled: !!orgSlug,
+  });
+}
+
+export function useInviteOrganizationMember(orgSlug: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (payload: { email: string; role?: string }) => {
+      const { data } = await apiClient.post(`/v3/organizations/${orgSlug}/invitations`, payload);
+      return data.data ?? data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['organization', orgSlug, 'invitations'] });
+    },
+  });
+}
+
+export function useRevokeOrganizationInvitation(orgSlug: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (invitationId: string) => {
+      const { data } = await apiClient.delete(`/v3/organizations/${orgSlug}/invitations/${invitationId}`);
+      return data.data ?? data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['organization', orgSlug, 'invitations'] });
+    },
+  });
+}
+
+export function useOrganizationInvitationByToken(token: string) {
+  return useQuery({
+    queryKey: ['organization-invitation', token],
+    queryFn: async () => {
+      const { data } = await apiClient.get(`/v3/organizations/invitations/by-token/${token}`);
+      return data.data?.invitation ?? data.invitation;
+    },
+    enabled: !!token,
+  });
+}
+
+export function useAcceptOrganizationInvitation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (token: string) => {
+      const { data } = await apiClient.post(`/v3/organizations/invitations/by-token/${token}/accept`);
+      return data.data ?? data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['organization'] });
+    },
+  });
+}

@@ -13,6 +13,7 @@ data class WorkspaceDto(
     val customDomain: String?,
     val brandingConfig: Map<String, Any>?,
     val industry: String?,
+    val organizationId: String? = null,
     val owner: UserDto?,
     val _count: WorkspaceCountDto?
 )

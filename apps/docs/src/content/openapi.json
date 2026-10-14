@@ -141,6 +141,16 @@
       "patch": {
         "operationId": "UsersController_patchMe",
         "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserProfileDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Profile updated"
@@ -159,6 +169,16 @@
       "post": {
         "operationId": "UsersController_updateMe",
         "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserProfileDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Profile updated"
@@ -220,6 +240,16 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserProfileDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Profile updated"
@@ -331,6 +361,16 @@
       "patch": {
         "operationId": "UsersController_updateMyStatus",
         "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserStatusDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "User status updated"
@@ -356,28 +396,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "required": [
-                  "token",
-                  "platform"
-                ],
-                "properties": {
-                  "token": {
-                    "type": "string"
-                  },
-                  "platform": {
-                    "type": "string",
-                    "enum": [
-                      "web",
-                      "ios",
-                      "android",
-                      "desktop"
-                    ]
-                  },
-                  "deviceInfo": {
-                    "type": "object"
-                  }
-                }
+                "$ref": "#/components/schemas/RegisterDeviceTokenDto"
               }
             }
           }
@@ -420,13 +439,23 @@
         "parameters": [
           {
             "name": "token",
-            "required": true,
+            "required": false,
             "in": "query",
             "schema": {
               "type": "string"
             }
           }
         ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteDeviceTokenDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Device token deactivated"
@@ -1563,7 +1592,7 @@
         ]
       },
       "post": {
-        "description": "Add a new member to a specific workspace. Requires members:write scope.",
+        "description": "Add a new member to a specific workspace using user email, user ID, or workspace member ID. Requires members:write scope.",
         "operationId": "V3WorkspacesController_addWorkspaceMember",
         "parameters": [
           {
@@ -1605,9 +1634,53 @@
         ]
       }
     },
-    "/api/v3/workspaces/{slug}/members/{userId}": {
+    "/api/v3/workspaces/{slug}/members/import": {
+      "post": {
+        "description": "Seamlessly imports multiple users from an external integrating system into the workspace. Creates missing users, ensures organization membership, and adds/updates workspace roles.",
+        "operationId": "V3WorkspacesController_importWorkspaceMembers",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/V3BulkImportMembersDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Members imported successfully."
+          },
+          "403": {
+            "description": "Forbidden: Missing members:write scope."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Bulk import members from external system into workspace (Enterprise M2M)",
+        "tags": [
+          "V3 Workspaces"
+        ]
+      }
+    },
+    "/api/v3/workspaces/{slug}/members/{memberId}": {
       "get": {
-        "description": "Retrieve details of a specific workspace member by userId. Requires members:read scope.",
+        "description": "Retrieve details of a specific workspace member by member ID, user ID, or user email address. Requires members:read scope.",
         "operationId": "V3WorkspacesController_getWorkspaceMember",
         "parameters": [
           {
@@ -1620,10 +1693,10 @@
             }
           },
           {
-            "name": "userId",
+            "name": "memberId",
             "required": true,
             "in": "path",
-            "description": "The user ID",
+            "description": "The workspace member ID, user ID, or user email address",
             "schema": {
               "type": "string"
             }
@@ -1651,7 +1724,7 @@
         ]
       },
       "patch": {
-        "description": "Update the role of a specific workspace member. Requires members:write scope.",
+        "description": "Update the role of a specific workspace member by member ID, user ID, or user email address. Requires members:write scope.",
         "operationId": "V3WorkspacesController_updateWorkspaceMember",
         "parameters": [
           {
@@ -1664,10 +1737,10 @@
             }
           },
           {
-            "name": "userId",
+            "name": "memberId",
             "required": true,
             "in": "path",
-            "description": "The user ID",
+            "description": "The workspace member ID, user ID, or user email address",
             "schema": {
               "type": "string"
             }
@@ -1702,7 +1775,7 @@
         ]
       },
       "delete": {
-        "description": "Remove a workspace member by userId. Requires members:write scope.",
+        "description": "Remove a workspace member by member ID, user ID, or user email address. Requires members:write scope.",
         "operationId": "V3WorkspacesController_deleteWorkspaceMember",
         "parameters": [
           {
@@ -1715,10 +1788,10 @@
             }
           },
           {
-            "name": "userId",
+            "name": "memberId",
             "required": true,
             "in": "path",
-            "description": "The user ID",
+            "description": "The workspace member ID, user ID, or user email address",
             "schema": {
               "type": "string"
             }
@@ -1741,6 +1814,917 @@
           }
         ],
         "summary": "Remove a member from the workspace (Enterprise M2M)",
+        "tags": [
+          "V3 Workspaces"
+        ]
+      }
+    },
+    "/api/v3/workspaces/{slug}/channels": {
+      "get": {
+        "description": "Retrieve all public channels and authorized private channels in a workspace. Requires channels:read scope.",
+        "operationId": "V3WorkspacesController_getChannels",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of channels returned successfully."
+          },
+          "403": {
+            "description": "Forbidden: Missing channels:read scope or unauthorized workspace access."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List channels in a workspace (Enterprise M2M)",
+        "tags": [
+          "V3 Workspaces"
+        ]
+      },
+      "post": {
+        "description": "Create a new channel with customizable visibility, icon, metadata, and members. Requires channels:write scope.",
+        "operationId": "V3WorkspacesController_createChannel",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/V3CreateChannelDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Channel created successfully."
+          },
+          "403": {
+            "description": "Forbidden: Missing channels:write scope or unauthorized access."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a channel in a workspace (Enterprise M2M)",
+        "tags": [
+          "V3 Workspaces"
+        ]
+      }
+    },
+    "/api/v3/workspaces/{slug}/channels/{channelId}": {
+      "get": {
+        "description": "Retrieve details of a specific channel in a workspace. Requires channels:read scope.",
+        "operationId": "V3WorkspacesController_getChannel",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Channel details returned successfully."
+          },
+          "404": {
+            "description": "Channel not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get channel details (Enterprise M2M)",
+        "tags": [
+          "V3 Workspaces"
+        ]
+      },
+      "patch": {
+        "description": "Update settings, name, description, icon, metadata, or visibility of a channel. Requires channels:write scope.",
+        "operationId": "V3WorkspacesController_updateChannel",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/V3UpdateChannelDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Channel updated successfully."
+          },
+          "404": {
+            "description": "Channel not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update channel configuration and visibility (Enterprise M2M)",
+        "tags": [
+          "V3 Workspaces"
+        ]
+      },
+      "delete": {
+        "description": "Permanently deletes a channel from a workspace. Requires channels:write scope.",
+        "operationId": "V3WorkspacesController_deleteChannel",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Channel deleted successfully."
+          },
+          "404": {
+            "description": "Channel not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a channel (Enterprise M2M)",
+        "tags": [
+          "V3 Workspaces"
+        ]
+      }
+    },
+    "/api/v3/workspaces/{slug}/channels/{channelId}/members": {
+      "get": {
+        "description": "Retrieve members belonging to a specific channel. Requires channels:read scope.",
+        "operationId": "V3WorkspacesController_getChannelMembers",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of channel members returned successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List channel members (Enterprise M2M)",
+        "tags": [
+          "V3 Workspaces"
+        ]
+      },
+      "post": {
+        "description": "Add user(s) to a channel using user IDs, member IDs, or email addresses with customizable role and permissions. Requires channels:write scope.",
+        "operationId": "V3WorkspacesController_addChannelMembers",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/V3AddChannelMemberDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Members added to channel successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Add members to a channel (Enterprise M2M)",
+        "tags": [
+          "V3 Workspaces"
+        ]
+      }
+    },
+    "/api/v3/workspaces/{slug}/channels/{channelId}/members/{memberId}": {
+      "patch": {
+        "description": "Update the role or bitwise permissions of a channel member using user ID, member ID, or email address. Requires channels:write scope.",
+        "operationId": "V3WorkspacesController_updateChannelMember",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "memberId",
+            "required": true,
+            "in": "path",
+            "description": "The user ID, workspace member ID, or user email address",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/V3UpdateChannelMemberDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Channel member updated successfully."
+          },
+          "404": {
+            "description": "Member not found in channel."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update channel member role and permissions (Enterprise M2M)",
+        "tags": [
+          "V3 Workspaces"
+        ]
+      },
+      "delete": {
+        "description": "Remove a specific member from a channel using user ID, workspace member ID, or email address. Requires channels:write scope.",
+        "operationId": "V3WorkspacesController_deleteChannelMember",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "memberId",
+            "required": true,
+            "in": "path",
+            "description": "The user ID, workspace member ID, or user email address",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Member removed from channel successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove a member from a channel (Enterprise M2M)",
+        "tags": [
+          "V3 Workspaces"
+        ]
+      }
+    },
+    "/api/v3/workspaces/{slug}/channels/{channelId}/messages": {
+      "get": {
+        "description": "Retrieve message history for a channel in a workspace. Requires messages:read scope.",
+        "operationId": "V3WorkspacesController_getChannelMessages",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of messages returned successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get channel messages (Enterprise M2M)",
+        "tags": [
+          "V3 Workspaces"
+        ]
+      },
+      "post": {
+        "description": "Send a message to a channel. Requires messages:send scope.",
+        "operationId": "V3WorkspacesController_createChannelMessage",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Message created successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Send a message to a channel (Enterprise M2M)",
+        "tags": [
+          "V3 Workspaces"
+        ]
+      }
+    },
+    "/api/v3/workspaces/{slug}/channels/{channelId}/messages/custom": {
+      "post": {
+        "description": "Send a structured custom message conforming to CustomMessageSchema to a channel. Requires messages:send scope.",
+        "operationId": "V3WorkspacesController_createChannelCustomMessage",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/V3CreateCustomMessageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Custom message created successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Send a custom message to a channel (Enterprise M2M V3)",
+        "tags": [
+          "V3 Workspaces"
+        ]
+      }
+    },
+    "/api/v3/workspaces/{slug}/channels/{channelId}/messages/{messageId}": {
+      "patch": {
+        "description": "Update content of a message. Requires messages:send scope.",
+        "operationId": "V3WorkspacesController_updateChannelMessage",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "messageId",
+            "required": true,
+            "in": "path",
+            "description": "The message ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Message updated successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a channel message (Enterprise M2M)",
+        "tags": [
+          "V3 Workspaces"
+        ]
+      },
+      "delete": {
+        "description": "Delete a message. Requires messages:send scope.",
+        "operationId": "V3WorkspacesController_deleteChannelMessage",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "messageId",
+            "required": true,
+            "in": "path",
+            "description": "The message ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Message deleted successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a channel message (Enterprise M2M)",
+        "tags": [
+          "V3 Workspaces"
+        ]
+      }
+    },
+    "/api/v3/workspaces/{slug}/channels/{channelId}/messages/{messageId}/reactions": {
+      "post": {
+        "description": "Add an emoji reaction to a message. Requires messages:send scope.",
+        "operationId": "V3WorkspacesController_addChannelMessageReaction",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "messageId",
+            "required": true,
+            "in": "path",
+            "description": "The message ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Reaction added successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Add a reaction to a channel message (Enterprise M2M)",
+        "tags": [
+          "V3 Workspaces"
+        ]
+      }
+    },
+    "/api/v3/workspaces/{slug}/channels/{channelId}/messages/{messageId}/reactions/{emoji}": {
+      "delete": {
+        "description": "Remove an emoji reaction from a message. Requires messages:send scope.",
+        "operationId": "V3WorkspacesController_removeChannelMessageReaction",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "messageId",
+            "required": true,
+            "in": "path",
+            "description": "The message ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "emoji",
+            "required": true,
+            "in": "path",
+            "description": "The emoji character",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reaction removed successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove a reaction from a channel message (Enterprise M2M)",
+        "tags": [
+          "V3 Workspaces"
+        ]
+      }
+    },
+    "/api/v3/workspaces/{slug}/channels/{channelId}/messages/{messageId}/actions": {
+      "post": {
+        "description": "Trigger an action on a message and submit user response or form state. Dispatches callback webhooks if configured. Requires messages:send scope.",
+        "operationId": "V3WorkspacesController_triggerMessageAction",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "messageId",
+            "required": true,
+            "in": "path",
+            "description": "The message ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/V3ActionResponseDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Action response recorded successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Submit response to a message action (Enterprise M2M V3)",
+        "tags": [
+          "V3 Workspaces"
+        ]
+      },
+      "get": {
+        "description": "Retrieve all recorded user responses and form submissions for a message. Requires messages:read scope.",
+        "operationId": "V3WorkspacesController_getMessageActionResponses",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "messageId",
+            "required": true,
+            "in": "path",
+            "description": "The message ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of action responses returned successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get responses for message actions (Enterprise M2M V3)",
+        "tags": [
+          "V3 Workspaces"
+        ]
+      }
+    },
+    "/api/v3/workspaces/{slug}/channels/{channelId}/messages/{messageId}/actions/{actionId}": {
+      "post": {
+        "description": "Trigger a specific action on a message by action ID in path. Dispatches callback webhooks. Requires messages:send scope.",
+        "operationId": "V3WorkspacesController_triggerSpecificMessageAction",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "messageId",
+            "required": true,
+            "in": "path",
+            "description": "The message ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "actionId",
+            "required": true,
+            "in": "path",
+            "description": "The action ID string",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Action triggered and response recorded."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Trigger specific message action by action ID (Enterprise M2M V3)",
         "tags": [
           "V3 Workspaces"
         ]
@@ -1939,6 +2923,37 @@
         "summary": "Delete a webhook",
         "tags": [
           "V3 Webhooks"
+        ]
+      }
+    },
+    "/api/v3/workspaces/{slug}/incoming-webhooks": {
+      "get": {
+        "description": "Requires webhooks:read scope. Retrieves all incoming webhooks configured across all channels in this workspace.",
+        "operationId": "V3ChannelIncomingWebhooksController_getWorkspaceIncomingWebhooks",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of incoming webhooks returned successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List all incoming webhooks in a workspace",
+        "tags": [
+          "V3 Channel Incoming Webhooks"
         ]
       }
     },
@@ -2540,6 +3555,1248 @@
         ]
       }
     },
+    "/api/v3/applications": {
+      "get": {
+        "operationId": "V3ApplicationsController_listApplications[0]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List bot applications",
+        "tags": [
+          "V3 Bot Applications"
+        ]
+      },
+      "post": {
+        "operationId": "V3ApplicationsController_createApplication[0]",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a bot application",
+        "tags": [
+          "V3 Bot Applications"
+        ]
+      }
+    },
+    "/api/v2/applications": {
+      "get": {
+        "operationId": "V3ApplicationsController_listApplications[1]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List bot applications",
+        "tags": [
+          "V3 Bot Applications"
+        ]
+      },
+      "post": {
+        "operationId": "V3ApplicationsController_createApplication[1]",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a bot application",
+        "tags": [
+          "V3 Bot Applications"
+        ]
+      }
+    },
+    "/api/v3/applications/{id}": {
+      "get": {
+        "operationId": "V3ApplicationsController_getApplication[0]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Application ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get application details",
+        "tags": [
+          "V3 Bot Applications"
+        ]
+      },
+      "patch": {
+        "operationId": "V3ApplicationsController_updateApplication",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Application ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update bot application",
+        "tags": [
+          "V3 Bot Applications"
+        ]
+      },
+      "delete": {
+        "operationId": "V3ApplicationsController_deleteApplication",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Application ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete bot application",
+        "tags": [
+          "V3 Bot Applications"
+        ]
+      }
+    },
+    "/api/v2/applications/{id}": {
+      "get": {
+        "operationId": "V3ApplicationsController_getApplication[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Application ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get application details",
+        "tags": [
+          "V3 Bot Applications"
+        ]
+      }
+    },
+    "/api/v3/applications/{id}/reset-token": {
+      "post": {
+        "operationId": "V3ApplicationsController_resetToken[0]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Application ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Reset bot token",
+        "tags": [
+          "V3 Bot Applications"
+        ]
+      }
+    },
+    "/api/v2/applications/{id}/reset-token": {
+      "post": {
+        "operationId": "V3ApplicationsController_resetToken[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Application ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Reset bot token",
+        "tags": [
+          "V3 Bot Applications"
+        ]
+      }
+    },
+    "/api/v3/applications/{id}/install": {
+      "post": {
+        "operationId": "V3ApplicationsController_installApplication[0]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Application ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Install bot application to a workspace",
+        "tags": [
+          "V3 Bot Applications"
+        ]
+      }
+    },
+    "/api/v2/applications/{id}/install": {
+      "post": {
+        "operationId": "V3ApplicationsController_installApplication[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Application ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Install bot application to a workspace",
+        "tags": [
+          "V3 Bot Applications"
+        ]
+      }
+    },
+    "/api/v3/workspaces/{slug}/bots": {
+      "get": {
+        "operationId": "V3ApplicationsController_listWorkspaceBots",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "Workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List installed bots in workspace",
+        "tags": [
+          "V3 Bot Applications"
+        ]
+      },
+      "post": {
+        "operationId": "V3ApplicationsController_addBotToWorkspace",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "Workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Add a bot to a workspace",
+        "tags": [
+          "V3 Bot Applications"
+        ]
+      }
+    },
+    "/api/v3/dms": {
+      "get": {
+        "description": "Retrieve active direct message conversations for the authenticated user/bot. Requires messages:read scope.",
+        "operationId": "V3DmsController_getDms",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List of DM conversations returned successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List direct message conversations (Enterprise M2M V3)",
+        "tags": [
+          "V3 Direct Messages"
+        ]
+      },
+      "post": {
+        "description": "Create a new DM conversation with a target user. Requires messages:send scope.",
+        "operationId": "V3DmsController_createDm",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/V3CreateDmDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Direct message conversation created or retrieved successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create or retrieve a direct message conversation (Enterprise M2M V3)",
+        "tags": [
+          "V3 Direct Messages"
+        ]
+      }
+    },
+    "/api/v3/dms/{dmId}": {
+      "get": {
+        "description": "Retrieve specific direct message conversation details. Requires messages:read scope.",
+        "operationId": "V3DmsController_getDm",
+        "parameters": [
+          {
+            "name": "dmId",
+            "required": true,
+            "in": "path",
+            "description": "The direct message conversation ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "DM conversation details returned successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get details of a direct message conversation (Enterprise M2M V3)",
+        "tags": [
+          "V3 Direct Messages"
+        ]
+      },
+      "delete": {
+        "description": "Delete a direct message conversation. Requires messages:send scope.",
+        "operationId": "V3DmsController_deleteDm",
+        "parameters": [
+          {
+            "name": "dmId",
+            "required": true,
+            "in": "path",
+            "description": "The direct message conversation ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "DM conversation deleted successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a direct message conversation (Enterprise M2M V3)",
+        "tags": [
+          "V3 Direct Messages"
+        ]
+      }
+    },
+    "/api/v3/dms/{dmId}/messages": {
+      "get": {
+        "description": "Retrieve message history for a direct message conversation. Requires messages:read scope.",
+        "operationId": "V3DmsController_getMessages",
+        "parameters": [
+          {
+            "name": "dmId",
+            "required": true,
+            "in": "path",
+            "description": "The direct message conversation ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of direct messages returned successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get direct message conversation messages (Enterprise M2M V3)",
+        "tags": [
+          "V3 Direct Messages"
+        ]
+      },
+      "post": {
+        "description": "Send a message in a DM conversation. Requires messages:send scope.",
+        "operationId": "V3DmsController_createMessage",
+        "parameters": [
+          {
+            "name": "dmId",
+            "required": true,
+            "in": "path",
+            "description": "The direct message conversation ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Direct message sent successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Send a message in a direct message conversation (Enterprise M2M V3)",
+        "tags": [
+          "V3 Direct Messages"
+        ]
+      }
+    },
+    "/api/v3/dms/{dmId}/messages/{messageId}": {
+      "patch": {
+        "description": "Update content of a direct message. Requires messages:send scope.",
+        "operationId": "V3DmsController_updateMessage",
+        "parameters": [
+          {
+            "name": "dmId",
+            "required": true,
+            "in": "path",
+            "description": "The direct message conversation ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "messageId",
+            "required": true,
+            "in": "path",
+            "description": "The message ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Direct message updated successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a direct message (Enterprise M2M V3)",
+        "tags": [
+          "V3 Direct Messages"
+        ]
+      },
+      "delete": {
+        "description": "Delete a direct message. Requires messages:send scope.",
+        "operationId": "V3DmsController_deleteMessage",
+        "parameters": [
+          {
+            "name": "dmId",
+            "required": true,
+            "in": "path",
+            "description": "The direct message conversation ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "messageId",
+            "required": true,
+            "in": "path",
+            "description": "The message ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Direct message deleted successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a direct message (Enterprise M2M V3)",
+        "tags": [
+          "V3 Direct Messages"
+        ]
+      }
+    },
+    "/api/v3/dms/{dmId}/messages/{messageId}/reactions": {
+      "post": {
+        "description": "Add an emoji reaction to a DM message. Requires messages:send scope.",
+        "operationId": "V3DmsController_addReaction",
+        "parameters": [
+          {
+            "name": "dmId",
+            "required": true,
+            "in": "path",
+            "description": "The direct message conversation ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "messageId",
+            "required": true,
+            "in": "path",
+            "description": "The message ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Reaction added successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Add a reaction to a direct message (Enterprise M2M V3)",
+        "tags": [
+          "V3 Direct Messages"
+        ]
+      }
+    },
+    "/api/v3/dms/{dmId}/messages/{messageId}/reactions/{emoji}": {
+      "delete": {
+        "description": "Remove an emoji reaction from a DM message. Requires messages:send scope.",
+        "operationId": "V3DmsController_removeReaction",
+        "parameters": [
+          {
+            "name": "dmId",
+            "required": true,
+            "in": "path",
+            "description": "The direct message conversation ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "messageId",
+            "required": true,
+            "in": "path",
+            "description": "The message ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "emoji",
+            "required": true,
+            "in": "path",
+            "description": "The emoji character",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reaction removed successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove a reaction from a direct message (Enterprise M2M V3)",
+        "tags": [
+          "V3 Direct Messages"
+        ]
+      }
+    },
+    "/api/v3/users": {
+      "post": {
+        "description": "Creates a new user record or updates existing user details (name/avatar). If an organization ID or context is present, ensures the user is linked to the organization. Requires users:write or members:write scope.",
+        "operationId": "V3UsersController_createUser",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/V3CreateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created or provisioned successfully."
+          },
+          "403": {
+            "description": "Forbidden: Missing users:write scope."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create or provision a user account (Enterprise M2M)",
+        "tags": [
+          "V3 Users"
+        ]
+      }
+    },
+    "/api/v3/users/by-email": {
+      "get": {
+        "description": "Retrieves user profile details by email address. Requires users:read or members:read scope.",
+        "operationId": "V3UsersController_getUserByEmail",
+        "parameters": [
+          {
+            "name": "email",
+            "required": true,
+            "in": "query",
+            "description": "The email address of the user to query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User profile returned successfully."
+          },
+          "404": {
+            "description": "User not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Find user by email address (Enterprise M2M)",
+        "tags": [
+          "V3 Users"
+        ]
+      }
+    },
+    "/api/v3/users/{userId}": {
+      "get": {
+        "description": "Retrieves user profile details by user ID. Requires users:read or members:read scope.",
+        "operationId": "V3UsersController_getUserById",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "description": "The user ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User profile returned successfully."
+          },
+          "404": {
+            "description": "User not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get user by user ID (Enterprise M2M)",
+        "tags": [
+          "V3 Users"
+        ]
+      }
+    },
+    "/api/channels": {
+      "get": {
+        "operationId": "ChannelsController_getGlobalChannels",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List of global channels"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get global channels",
+        "tags": [
+          "Channels"
+        ]
+      },
+      "post": {
+        "operationId": "ChannelsController_createChannel",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Channel created"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a global channel",
+        "tags": [
+          "Channels"
+        ]
+      }
+    },
+    "/api/channels/{channelId}/messages": {
+      "get": {
+        "operationId": "ChannelsController_getMessages",
+        "parameters": [
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of messages"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get messages from a channel",
+        "tags": [
+          "Channels"
+        ]
+      },
+      "post": {
+        "operationId": "ChannelsController_createMessage",
+        "parameters": [
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Message sent"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Send a message to a channel",
+        "tags": [
+          "Channels"
+        ]
+      }
+    },
+    "/api/channels/{channelId}/messages/{messageId}": {
+      "patch": {
+        "operationId": "ChannelsController_updateMessage",
+        "parameters": [
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "messageId",
+            "required": true,
+            "in": "path",
+            "description": "The message ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "content": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Message updated"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a message",
+        "tags": [
+          "Channels"
+        ]
+      },
+      "delete": {
+        "operationId": "ChannelsController_deleteMessage",
+        "parameters": [
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "messageId",
+            "required": true,
+            "in": "path",
+            "description": "The message ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Message deleted"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a message",
+        "tags": [
+          "Channels"
+        ]
+      }
+    },
+    "/api/channels/{channelId}/messages/read": {
+      "post": {
+        "operationId": "ChannelsController_markAsRead",
+        "parameters": [
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "messageIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Messages marked as read"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mark messages as read",
+        "tags": [
+          "Channels"
+        ]
+      }
+    },
+    "/api/channels/{channelId}/messages/{messageId}/reactions": {
+      "post": {
+        "operationId": "ChannelsController_addReaction",
+        "parameters": [
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "messageId",
+            "required": true,
+            "in": "path",
+            "description": "The message ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "emoji": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Reaction added"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Add a reaction to a message",
+        "tags": [
+          "Channels"
+        ]
+      }
+    },
+    "/api/channels/{channelId}/messages/{messageId}/reactions/{emoji}": {
+      "delete": {
+        "operationId": "ChannelsController_removeReaction",
+        "parameters": [
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "messageId",
+            "required": true,
+            "in": "path",
+            "description": "The message ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "emoji",
+            "required": true,
+            "in": "path",
+            "description": "The emoji",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reaction removed"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove a reaction from a message",
+        "tags": [
+          "Channels"
+        ]
+      }
+    },
+    "/api/channels/{channelId}/share": {
+      "post": {
+        "operationId": "ChannelsController_shareChannel",
+        "parameters": [
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Share a channel with another workspace",
+        "tags": [
+          "Channels"
+        ]
+      }
+    },
+    "/api/channels/{channelId}/messages/{messageId}/reply": {
+      "post": {
+        "operationId": "ChannelsController_createReply",
+        "parameters": [
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "messageId",
+            "required": true,
+            "in": "path",
+            "description": "The message ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Reply sent"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Reply to a message",
+        "tags": [
+          "Channels"
+        ]
+      }
+    },
     "/api/notifications": {
       "get": {
         "operationId": "NotificationsController_getNotifications",
@@ -2811,6 +5068,428 @@
         ]
       }
     },
+    "/api/dms": {
+      "get": {
+        "operationId": "DmsController_getDms",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List of DM conversations"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get all DM conversations for the current user",
+        "tags": [
+          "Direct Messages"
+        ]
+      },
+      "post": {
+        "operationId": "DmsController_createDm",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDmDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "DM conversation created"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Start a new DM conversation",
+        "tags": [
+          "Direct Messages"
+        ]
+      }
+    },
+    "/api/dms/{conversationId}": {
+      "get": {
+        "operationId": "DmsController_getDm",
+        "parameters": [
+          {
+            "name": "conversationId",
+            "required": true,
+            "in": "path",
+            "description": "The conversation ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Conversation details"
+          },
+          "404": {
+            "description": "DM not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get DM conversation details",
+        "tags": [
+          "Direct Messages"
+        ]
+      },
+      "delete": {
+        "operationId": "DmsController_deleteDm",
+        "parameters": [
+          {
+            "name": "conversationId",
+            "required": true,
+            "in": "path",
+            "description": "The conversation ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Conversation deleted successfully"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a DM conversation",
+        "tags": [
+          "Direct Messages"
+        ]
+      }
+    },
+    "/api/dms/{conversationId}/messages": {
+      "get": {
+        "operationId": "DmsController_getMessages",
+        "parameters": [
+          {
+            "name": "conversationId",
+            "required": true,
+            "in": "path",
+            "description": "The conversation ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "description": "Pagination cursor",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of messages to return",
+            "schema": {}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of messages"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get messages in a DM conversation",
+        "tags": [
+          "Direct Messages"
+        ]
+      },
+      "post": {
+        "operationId": "DmsController_createMessage",
+        "parameters": [
+          {
+            "name": "conversationId",
+            "required": true,
+            "in": "path",
+            "description": "The conversation ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDmMessageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Message sent"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Send a message in a DM",
+        "tags": [
+          "Direct Messages"
+        ]
+      }
+    },
+    "/api/dms/{conversationId}/messages/{messageId}": {
+      "patch": {
+        "operationId": "DmsController_updateMessage",
+        "parameters": [
+          {
+            "name": "conversationId",
+            "required": true,
+            "in": "path",
+            "description": "The conversation ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "messageId",
+            "required": true,
+            "in": "path",
+            "description": "The message ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDmMessageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Message updated"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a DM message",
+        "tags": [
+          "Direct Messages"
+        ]
+      },
+      "delete": {
+        "operationId": "DmsController_deleteMessage",
+        "parameters": [
+          {
+            "name": "conversationId",
+            "required": true,
+            "in": "path",
+            "description": "The conversation ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "messageId",
+            "required": true,
+            "in": "path",
+            "description": "The message ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Message deleted"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a DM message",
+        "tags": [
+          "Direct Messages"
+        ]
+      }
+    },
+    "/api/dms/{conversationId}/messages/read": {
+      "post": {
+        "operationId": "DmsController_markAsRead",
+        "parameters": [
+          {
+            "name": "conversationId",
+            "required": true,
+            "in": "path",
+            "description": "The conversation ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarkAsReadDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Messages marked as read"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mark messages as read in a DM",
+        "tags": [
+          "Direct Messages"
+        ]
+      }
+    },
+    "/api/dms/{conversationId}/messages/{messageId}/reactions": {
+      "post": {
+        "operationId": "DmsController_addReaction",
+        "parameters": [
+          {
+            "name": "conversationId",
+            "required": true,
+            "in": "path",
+            "description": "The conversation ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "messageId",
+            "required": true,
+            "in": "path",
+            "description": "The message ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "emoji": {
+                    "type": "string",
+                    "example": "👍"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Reaction added"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Add a reaction to a DM message",
+        "tags": [
+          "Direct Messages"
+        ]
+      }
+    },
+    "/api/dms/{conversationId}/messages/{messageId}/reactions/{emoji}": {
+      "delete": {
+        "operationId": "DmsController_removeReaction",
+        "parameters": [
+          {
+            "name": "conversationId",
+            "required": true,
+            "in": "path",
+            "description": "The conversation ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "messageId",
+            "required": true,
+            "in": "path",
+            "description": "The message ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "emoji",
+            "required": true,
+            "in": "path",
+            "description": "The emoji to remove",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reaction removed"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove a reaction from a DM message",
+        "tags": [
+          "Direct Messages"
+        ]
+      }
+    },
     "/api/invitations": {
       "get": {
         "operationId": "InvitationsController_getInvitations",
@@ -3052,6 +5731,16 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateIntegrationWebhookDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Webhook updated"
@@ -3160,6 +5849,16 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateApiKeyDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "API key updated"
@@ -3796,425 +6495,6 @@
         ]
       }
     },
-    "/api/channels": {
-      "get": {
-        "operationId": "ChannelsController_getGlobalChannels",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "List of global channels"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get global channels",
-        "tags": [
-          "Channels"
-        ]
-      },
-      "post": {
-        "operationId": "ChannelsController_createChannel",
-        "parameters": [],
-        "responses": {
-          "201": {
-            "description": "Channel created"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Create a global channel",
-        "tags": [
-          "Channels"
-        ]
-      }
-    },
-    "/api/channels/{channelId}/messages": {
-      "get": {
-        "operationId": "ChannelsController_getMessages",
-        "parameters": [
-          {
-            "name": "channelId",
-            "required": true,
-            "in": "path",
-            "description": "The channel ID",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "cursor",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "limit",
-            "required": false,
-            "in": "query",
-            "schema": {}
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "List of messages"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get messages from a channel",
-        "tags": [
-          "Channels"
-        ]
-      },
-      "post": {
-        "operationId": "ChannelsController_createMessage",
-        "parameters": [
-          {
-            "name": "channelId",
-            "required": true,
-            "in": "path",
-            "description": "The channel ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "Message sent"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Send a message to a channel",
-        "tags": [
-          "Channels"
-        ]
-      }
-    },
-    "/api/channels/{channelId}/messages/{messageId}": {
-      "patch": {
-        "operationId": "ChannelsController_updateMessage",
-        "parameters": [
-          {
-            "name": "channelId",
-            "required": true,
-            "in": "path",
-            "description": "The channel ID",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "messageId",
-            "required": true,
-            "in": "path",
-            "description": "The message ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "content": {
-                    "type": "string"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Message updated"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Update a message",
-        "tags": [
-          "Channels"
-        ]
-      },
-      "delete": {
-        "operationId": "ChannelsController_deleteMessage",
-        "parameters": [
-          {
-            "name": "channelId",
-            "required": true,
-            "in": "path",
-            "description": "The channel ID",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "messageId",
-            "required": true,
-            "in": "path",
-            "description": "The message ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Message deleted"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Delete a message",
-        "tags": [
-          "Channels"
-        ]
-      }
-    },
-    "/api/channels/{channelId}/messages/read": {
-      "post": {
-        "operationId": "ChannelsController_markAsRead",
-        "parameters": [
-          {
-            "name": "channelId",
-            "required": true,
-            "in": "path",
-            "description": "The channel ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "messageIds": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Messages marked as read"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Mark messages as read",
-        "tags": [
-          "Channels"
-        ]
-      }
-    },
-    "/api/channels/{channelId}/messages/{messageId}/reactions": {
-      "post": {
-        "operationId": "ChannelsController_addReaction",
-        "parameters": [
-          {
-            "name": "channelId",
-            "required": true,
-            "in": "path",
-            "description": "The channel ID",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "messageId",
-            "required": true,
-            "in": "path",
-            "description": "The message ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "emoji": {
-                    "type": "string"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Reaction added"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Add a reaction to a message",
-        "tags": [
-          "Channels"
-        ]
-      }
-    },
-    "/api/channels/{channelId}/messages/{messageId}/reactions/{emoji}": {
-      "delete": {
-        "operationId": "ChannelsController_removeReaction",
-        "parameters": [
-          {
-            "name": "channelId",
-            "required": true,
-            "in": "path",
-            "description": "The channel ID",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "messageId",
-            "required": true,
-            "in": "path",
-            "description": "The message ID",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "emoji",
-            "required": true,
-            "in": "path",
-            "description": "The emoji",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Reaction removed"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Remove a reaction from a message",
-        "tags": [
-          "Channels"
-        ]
-      }
-    },
-    "/api/channels/{channelId}/share": {
-      "post": {
-        "operationId": "ChannelsController_shareChannel",
-        "parameters": [
-          {
-            "name": "channelId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Share a channel with another workspace",
-        "tags": [
-          "Channels"
-        ]
-      }
-    },
-    "/api/channels/{channelId}/messages/{messageId}/reply": {
-      "post": {
-        "operationId": "ChannelsController_createReply",
-        "parameters": [
-          {
-            "name": "channelId",
-            "required": true,
-            "in": "path",
-            "description": "The channel ID",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "messageId",
-            "required": true,
-            "in": "path",
-            "description": "The message ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "Reply sent"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Reply to a message",
-        "tags": [
-          "Channels"
-        ]
-      }
-    },
     "/api/admin/stats": {
       "get": {
         "operationId": "AdminController_getStats",
@@ -4520,418 +6800,6 @@
         ]
       }
     },
-    "/api/dms": {
-      "get": {
-        "operationId": "DmsController_getDms",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "List of DM conversations"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get all DM conversations for the current user",
-        "tags": [
-          "Direct Messages"
-        ]
-      },
-      "post": {
-        "operationId": "DmsController_createDm",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateDmDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "DM conversation created"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Start a new DM conversation",
-        "tags": [
-          "Direct Messages"
-        ]
-      }
-    },
-    "/api/dms/{conversationId}": {
-      "get": {
-        "operationId": "DmsController_getDm",
-        "parameters": [
-          {
-            "name": "conversationId",
-            "required": true,
-            "in": "path",
-            "description": "The conversation ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Conversation details"
-          },
-          "404": {
-            "description": "DM not found"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get DM conversation details",
-        "tags": [
-          "Direct Messages"
-        ]
-      },
-      "delete": {
-        "operationId": "DmsController_deleteDm",
-        "parameters": [
-          {
-            "name": "conversationId",
-            "required": true,
-            "in": "path",
-            "description": "The conversation ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Conversation deleted successfully"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Delete a DM conversation",
-        "tags": [
-          "Direct Messages"
-        ]
-      }
-    },
-    "/api/dms/{conversationId}/messages": {
-      "get": {
-        "operationId": "DmsController_getMessages",
-        "parameters": [
-          {
-            "name": "conversationId",
-            "required": true,
-            "in": "path",
-            "description": "The conversation ID",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "cursor",
-            "required": false,
-            "in": "query",
-            "description": "Pagination cursor",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "limit",
-            "required": false,
-            "in": "query",
-            "description": "Number of messages to return",
-            "schema": {}
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "List of messages"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get messages in a DM conversation",
-        "tags": [
-          "Direct Messages"
-        ]
-      },
-      "post": {
-        "operationId": "DmsController_createMessage",
-        "parameters": [
-          {
-            "name": "conversationId",
-            "required": true,
-            "in": "path",
-            "description": "The conversation ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "Message sent"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Send a message in a DM",
-        "tags": [
-          "Direct Messages"
-        ]
-      }
-    },
-    "/api/dms/{conversationId}/messages/{messageId}": {
-      "patch": {
-        "operationId": "DmsController_updateMessage",
-        "parameters": [
-          {
-            "name": "conversationId",
-            "required": true,
-            "in": "path",
-            "description": "The conversation ID",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "messageId",
-            "required": true,
-            "in": "path",
-            "description": "The message ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateDmMessageDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Message updated"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Update a DM message",
-        "tags": [
-          "Direct Messages"
-        ]
-      },
-      "delete": {
-        "operationId": "DmsController_deleteMessage",
-        "parameters": [
-          {
-            "name": "conversationId",
-            "required": true,
-            "in": "path",
-            "description": "The conversation ID",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "messageId",
-            "required": true,
-            "in": "path",
-            "description": "The message ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Message deleted"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Delete a DM message",
-        "tags": [
-          "Direct Messages"
-        ]
-      }
-    },
-    "/api/dms/{conversationId}/messages/read": {
-      "post": {
-        "operationId": "DmsController_markAsRead",
-        "parameters": [
-          {
-            "name": "conversationId",
-            "required": true,
-            "in": "path",
-            "description": "The conversation ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/MarkAsReadDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Messages marked as read"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Mark messages as read in a DM",
-        "tags": [
-          "Direct Messages"
-        ]
-      }
-    },
-    "/api/dms/{conversationId}/messages/{messageId}/reactions": {
-      "post": {
-        "operationId": "DmsController_addReaction",
-        "parameters": [
-          {
-            "name": "conversationId",
-            "required": true,
-            "in": "path",
-            "description": "The conversation ID",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "messageId",
-            "required": true,
-            "in": "path",
-            "description": "The message ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "emoji": {
-                    "type": "string",
-                    "example": "👍"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Reaction added"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Add a reaction to a DM message",
-        "tags": [
-          "Direct Messages"
-        ]
-      }
-    },
-    "/api/dms/{conversationId}/messages/{messageId}/reactions/{emoji}": {
-      "delete": {
-        "operationId": "DmsController_removeReaction",
-        "parameters": [
-          {
-            "name": "conversationId",
-            "required": true,
-            "in": "path",
-            "description": "The conversation ID",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "messageId",
-            "required": true,
-            "in": "path",
-            "description": "The message ID",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "emoji",
-            "required": true,
-            "in": "path",
-            "description": "The emoji to remove",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Reaction removed"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Remove a reaction from a DM message",
-        "tags": [
-          "Direct Messages"
-        ]
-      }
-    },
     "/api/friends": {
       "get": {
         "operationId": "FriendsController_getFriends",
@@ -5092,7 +6960,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Friend request or friendship deleted"
+            "description": "Friend request deleted"
           }
         },
         "security": [
@@ -5100,7 +6968,40 @@
             "bearer": []
           }
         ],
-        "summary": "Delete a friend request or unfriend",
+        "summary": "Delete a friend request",
+        "tags": [
+          "Friends"
+        ]
+      }
+    },
+    "/api/friends/{friendId}": {
+      "delete": {
+        "operationId": "FriendsController_unfriend",
+        "parameters": [
+          {
+            "name": "friendId",
+            "required": true,
+            "in": "path",
+            "description": "The friend user ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Friend removed successfully"
+          },
+          "404": {
+            "description": "Friendship not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove a friend (unfriend)",
         "tags": [
           "Friends"
         ]
@@ -5254,6 +7155,9 @@
         "responses": {
           "201": {
             "description": "Joined successfully"
+          },
+          "403": {
+            "description": "Forbidden: Cannot join a private workspace"
           },
           "404": {
             "description": "Workspace not found"
@@ -5754,6 +7658,16 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddChannelMemberDto"
+              }
+            }
+          }
+        },
         "responses": {
           "201": {
             "description": "Members added to channel"
@@ -5771,6 +7685,62 @@
       }
     },
     "/api/workspaces/{slug}/channels/{channelId}/members/{targetUserId}": {
+      "patch": {
+        "operationId": "ChannelsController_updateChannelMember",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "targetUserId",
+            "required": true,
+            "in": "path",
+            "description": "The user ID to update",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateChannelMemberDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Channel member updated"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update channel member role and permissions",
+        "tags": [
+          "Channels"
+        ]
+      },
       "delete": {
         "operationId": "ChannelsController_removeChannelMember",
         "parameters": [
@@ -6737,6 +8707,158 @@
         ]
       }
     },
+    "/api/workspaces/{slug}/channels/{channelId}/messages/{messageId}/actions": {
+      "post": {
+        "operationId": "MessagesController_processActionResponse",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "messageId",
+            "required": true,
+            "in": "path",
+            "description": "The message ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActionResponseDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Action response recorded"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Submit response to a message action",
+        "tags": [
+          "Channels & Messages"
+        ]
+      },
+      "get": {
+        "operationId": "MessagesController_getActionResponses",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "messageId",
+            "required": true,
+            "in": "path",
+            "description": "The message ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of action responses"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get responses for message actions",
+        "tags": [
+          "Channels & Messages"
+        ]
+      }
+    },
+    "/api/workspaces/{slug}/channels/{channelId}/messages/v2/workspaces/{slug}/messages/{messageId}/actions/{actionId}": {
+      "post": {
+        "operationId": "MessagesController_triggerActionV2",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "messageId",
+            "required": true,
+            "in": "path",
+            "description": "The message ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "actionId",
+            "required": true,
+            "in": "path",
+            "description": "The action identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Action triggered"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Trigger message action (V2 path)",
+        "tags": [
+          "Channels & Messages"
+        ]
+      }
+    },
     "/api/workspaces/{slug}/emojis": {
       "get": {
         "operationId": "EmojisController_getEmojis",
@@ -7555,22 +9677,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "action": {
-                    "type": "string",
-                    "enum": [
-                      "pause",
-                      "resume"
-                    ]
-                  },
-                  "title": {
-                    "type": "string"
-                  },
-                  "message": {
-                    "type": "string"
-                  }
-                }
+                "$ref": "#/components/schemas/UpdateScheduledNotificationDto"
               }
             }
           }
@@ -7643,6 +9750,16 @@
       "post": {
         "operationId": "SupportController_createTicket",
         "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTicketDto"
+              }
+            }
+          }
+        },
         "responses": {
           "201": {
             "description": ""
@@ -7690,6 +9807,16 @@
       "post": {
         "operationId": "SupportController_startLiveChat",
         "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartLiveChatDto"
+              }
+            }
+          }
+        },
         "responses": {
           "201": {
             "description": ""
@@ -7748,6 +9875,16 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTicketStatusDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": ""
@@ -7777,6 +9914,16 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignTicketDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": ""
@@ -7797,6 +9944,16 @@
       "post": {
         "operationId": "SupportController_createCustomerProfile",
         "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCustomerProfileDto"
+              }
+            }
+          }
+        },
         "responses": {
           "201": {
             "description": ""
@@ -7842,8 +9999,8 @@
     }
   },
   "info": {
-    "title": "Scyrme Chat API",
-    "description": "Comprehensive API documentation for Scyrme Chat V2 and V3 Enterprise. This documentation describes both standard V2 integrations and high-performance, secure V3 Enterprise M2M interfaces.",
+    "title": "Skyrme Chat API",
+    "description": "Comprehensive API documentation for Skyrme Chat V2 and V3 Enterprise. This documentation describes both standard V2 integrations and high-performance, secure V3 Enterprise M2M interfaces.",
     "version": "3.0",
     "contact": {}
   },
@@ -7919,6 +10076,112 @@
       }
     },
     "schemas": {
+      "UpdateUserStatusDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "User online status",
+            "example": "online",
+            "enum": [
+              "online",
+              "offline",
+              "away",
+              "dnd"
+            ]
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "UpdateUserProfileDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Full display name"
+          },
+          "username": {
+            "type": "string",
+            "description": "Unique handle/username"
+          },
+          "avatar": {
+            "type": "string",
+            "description": "Avatar image URL"
+          },
+          "image": {
+            "type": "string",
+            "description": "Profile image URL"
+          },
+          "banner": {
+            "type": "string",
+            "description": "Banner image URL"
+          },
+          "statusText": {
+            "type": "string",
+            "description": "Custom status text"
+          },
+          "statusEmoji": {
+            "type": "string",
+            "description": "Custom status emoji"
+          },
+          "bio": {
+            "type": "string",
+            "description": "User biography"
+          },
+          "status": {
+            "type": "string",
+            "description": "Online presence status",
+            "enum": [
+              "online",
+              "offline",
+              "away",
+              "dnd"
+            ]
+          },
+          "notificationPreferences": {
+            "type": "object",
+            "description": "Notification settings object"
+          }
+        }
+      },
+      "RegisterDeviceTokenDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "Push notification device token"
+          },
+          "platform": {
+            "type": "string",
+            "description": "Device platform",
+            "enum": [
+              "web",
+              "ios",
+              "android",
+              "desktop"
+            ]
+          },
+          "deviceInfo": {
+            "type": "object",
+            "description": "Metadata regarding the target device"
+          }
+        },
+        "required": [
+          "token",
+          "platform"
+        ]
+      },
+      "DeleteDeviceTokenDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "Push notification device token to deactivate"
+          }
+        }
+      },
       "V3TokenRequestDto": {
         "type": "object",
         "properties": {
@@ -7970,6 +10233,16 @@
             "example": "admin@acme.com",
             "description": "The email of the workspace owner. Must exist in the organization."
           },
+          "ownerName": {
+            "type": "string",
+            "example": "Alice Smith",
+            "description": "Display name of the workspace owner"
+          },
+          "ownerAvatar": {
+            "type": "string",
+            "example": "https://example.com/avatar.png",
+            "description": "Avatar URL of the workspace owner"
+          },
           "industry": {
             "type": "string",
             "example": "Technology",
@@ -8009,6 +10282,14 @@
                 "email": {
                   "type": "string",
                   "example": "user@acme.com"
+                },
+                "name": {
+                  "type": "string",
+                  "example": "Bob Johnson"
+                },
+                "avatar": {
+                  "type": "string",
+                  "example": "https://example.com/bob.png"
                 },
                 "role": {
                   "type": "string",
@@ -8057,6 +10338,59 @@
           }
         }
       },
+      "V3ImportMemberItemDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "user@acme.com",
+            "description": "Member email address"
+          },
+          "name": {
+            "type": "string",
+            "example": "Bob Johnson",
+            "description": "Member full name"
+          },
+          "avatar": {
+            "type": "string",
+            "example": "https://example.com/avatar.png",
+            "description": "Member avatar image URL"
+          },
+          "role": {
+            "type": "string",
+            "example": "member",
+            "enum": [
+              "admin",
+              "member",
+              "owner"
+            ],
+            "description": "Role in workspace"
+          },
+          "externalId": {
+            "type": "string",
+            "example": "ext_12345",
+            "description": "External system user identifier"
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "V3BulkImportMembersDto": {
+        "type": "object",
+        "properties": {
+          "members": {
+            "description": "List of members/users to import from the integrating system into the workspace",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/V3ImportMemberItemDto"
+            }
+          }
+        },
+        "required": [
+          "members"
+        ]
+      },
       "V3AddMemberDto": {
         "type": "object",
         "properties": {
@@ -8065,16 +10399,23 @@
             "example": "user@example.com",
             "description": "The email of the user to add"
           },
+          "userId": {
+            "type": "string",
+            "example": "usr_123",
+            "description": "The user ID of the user to add"
+          },
+          "memberId": {
+            "type": "string",
+            "example": "wsm_123",
+            "description": "The workspace member ID of the user to add"
+          },
           "role": {
             "type": "string",
             "example": "member",
             "description": "The role of the member",
             "default": "member"
           }
-        },
-        "required": [
-          "email"
-        ]
+        }
       },
       "V3UpdateMemberRoleDto": {
         "type": "object",
@@ -8093,6 +10434,292 @@
         },
         "required": [
           "role"
+        ]
+      },
+      "V3CreateChannelDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "engineering",
+            "description": "Name of the channel"
+          },
+          "description": {
+            "type": "string",
+            "example": "Engineering discussion channel"
+          },
+          "type": {
+            "type": "string",
+            "example": "public",
+            "enum": [
+              "public",
+              "private"
+            ],
+            "default": "public"
+          },
+          "isPrivate": {
+            "type": "boolean",
+            "example": false,
+            "description": "Explicit private status flag"
+          },
+          "icon": {
+            "type": "string",
+            "example": "code",
+            "description": "Icon identifier"
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Custom channel metadata"
+          },
+          "initialMembers": {
+            "type": "array",
+            "description": "Initial members to add to the channel",
+            "items": {
+              "type": "object",
+              "properties": {
+                "userId": {
+                  "type": "string",
+                  "example": "usr_123"
+                },
+                "role": {
+                  "type": "string",
+                  "example": "member",
+                  "enum": [
+                    "admin",
+                    "moderator",
+                    "member"
+                  ]
+                },
+                "permissions": {
+                  "type": "string",
+                  "example": "2048"
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "V3UpdateChannelDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "eng-tech"
+          },
+          "description": {
+            "type": "string",
+            "example": "Updated engineering channel description"
+          },
+          "type": {
+            "type": "string",
+            "example": "private",
+            "enum": [
+              "public",
+              "private"
+            ]
+          },
+          "isPrivate": {
+            "type": "boolean",
+            "example": true
+          },
+          "icon": {
+            "type": "string",
+            "example": "terminal"
+          },
+          "metadata": {
+            "type": "object"
+          }
+        }
+      },
+      "V3AddChannelMemberDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "example": "usr_123",
+            "description": "User ID, Member ID, or Email to add to channel"
+          },
+          "memberId": {
+            "type": "string",
+            "example": "wsm_123",
+            "description": "Workspace member ID to add to channel"
+          },
+          "email": {
+            "type": "string",
+            "example": "user@example.com",
+            "description": "Email address of user to add to channel"
+          },
+          "userIds": {
+            "example": [
+              "usr_123",
+              "user@example.com"
+            ],
+            "description": "Array of user IDs, member IDs, or emails to add",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "memberIds": {
+            "example": [
+              "wsm_123",
+              "wsm_456"
+            ],
+            "description": "Array of workspace member IDs to add",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "emails": {
+            "example": [
+              "user1@example.com",
+              "user2@example.com"
+            ],
+            "description": "Array of user emails to add",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "role": {
+            "type": "string",
+            "example": "member",
+            "default": "member",
+            "description": "Channel role"
+          },
+          "permissions": {
+            "type": "object",
+            "example": "2048",
+            "description": "Bitwise permission string or integer value"
+          }
+        }
+      },
+      "V3UpdateChannelMemberDto": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "example": "admin",
+            "enum": [
+              "admin",
+              "moderator",
+              "member"
+            ]
+          },
+          "permissions": {
+            "type": "object",
+            "example": "2048",
+            "description": "Bitwise permission string or integer value"
+          }
+        }
+      },
+      "V3MessageActionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "approve",
+            "description": "Unique action identifier"
+          },
+          "label": {
+            "type": "string",
+            "example": "Approve",
+            "description": "Button text label"
+          },
+          "type": {
+            "type": "string",
+            "example": "PRIMARY",
+            "enum": [
+              "PRIMARY",
+              "SECONDARY",
+              "DESTRUCTIVE",
+              "GHOST"
+            ]
+          },
+          "icon": {
+            "type": "string",
+            "example": "Check"
+          },
+          "handler": {
+            "type": "object",
+            "description": "Action handler configuration"
+          }
+        },
+        "required": [
+          "id",
+          "label"
+        ]
+      },
+      "V3CreateCustomMessageDto": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "example": "Approval Request",
+            "description": "Plain text fallback or message title content"
+          },
+          "customMessage": {
+            "type": "object",
+            "description": "Custom message schema object conforming to CustomMessageSchema",
+            "example": {
+              "version": "v1",
+              "type": "APPROVAL",
+              "context": {
+                "title": "Expense Claim",
+                "priority": "high"
+              },
+              "root": {
+                "type": "Layout.Card",
+                "children": []
+              },
+              "actions": [
+                {
+                  "id": "approve",
+                  "label": "Approve",
+                  "type": "PRIMARY"
+                }
+              ]
+            }
+          },
+          "actions": {
+            "description": "Interactive action buttons",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/V3MessageActionDto"
+            }
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Additional message metadata such as callbackUrl"
+          }
+        },
+        "required": [
+          "customMessage"
+        ]
+      },
+      "V3ActionResponseDto": {
+        "type": "object",
+        "properties": {
+          "actionId": {
+            "type": "string",
+            "example": "approve",
+            "description": "Action identifier string"
+          },
+          "comment": {
+            "type": "string",
+            "example": "Approved for deployment"
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Optional form state or payload metadata"
+          }
+        },
+        "required": [
+          "actionId"
         ]
       },
       "V3CreateWebhookDto": {
@@ -8286,6 +10913,49 @@
           }
         }
       },
+      "V3CreateDmDto": {
+        "type": "object",
+        "properties": {
+          "targetUserId": {
+            "type": "string",
+            "example": "usr_123",
+            "description": "Target user ID to start direct message conversation with"
+          },
+          "userId": {
+            "type": "string",
+            "example": "usr_123",
+            "description": "Target user ID (alias)"
+          }
+        }
+      },
+      "V3CreateUserDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "user@acme.com",
+            "description": "The unique email address of the user to create or provision"
+          },
+          "name": {
+            "type": "string",
+            "example": "Jane Doe",
+            "description": "The full name of the user"
+          },
+          "avatar": {
+            "type": "string",
+            "example": "https://example.com/avatar.png",
+            "description": "Profile avatar image URL"
+          },
+          "organizationId": {
+            "type": "string",
+            "example": "org_12345",
+            "description": "Optional organization ID to automatically associate user with"
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
       "WorkspaceSettingsDto": {
         "type": "object",
         "properties": {
@@ -8343,6 +11013,74 @@
           "isRead"
         ]
       },
+      "CreateDmDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "example": "user_123",
+            "description": "The ID of the user to start a DM with"
+          }
+        },
+        "required": [
+          "userId"
+        ]
+      },
+      "CreateDmMessageDto": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "example": "Hello there!",
+            "description": "The content of the direct message"
+          },
+          "replyToId": {
+            "type": "string",
+            "example": "msg_123",
+            "description": "Optional message ID being replied to"
+          },
+          "attachments": {
+            "description": "Optional list of file attachments",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "content"
+        ]
+      },
+      "UpdateDmMessageDto": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "example": "Updated message content"
+          }
+        },
+        "required": [
+          "content"
+        ]
+      },
+      "MarkAsReadDto": {
+        "type": "object",
+        "properties": {
+          "messageIds": {
+            "example": [
+              "msg_1",
+              "msg_2"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "messageIds"
+        ]
+      },
       "CreateInvitationDto": {
         "type": "object",
         "properties": {
@@ -8396,6 +11134,49 @@
           "url",
           "events"
         ]
+      },
+      "UpdateIntegrationWebhookDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Updated Webhook"
+          },
+          "url": {
+            "type": "string",
+            "example": "https://example.com/webhook"
+          },
+          "events": {
+            "example": [
+              "event.name"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "isActive": {
+            "type": "boolean",
+            "example": true
+          }
+        }
+      },
+      "UpdateApiKeyDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Updated API Key"
+          },
+          "isActive": {
+            "type": "boolean",
+            "example": true
+          },
+          "rateLimit": {
+            "type": "number",
+            "example": 1000
+          }
+        }
       },
       "CreateIntegrationDto": {
         "type": "object",
@@ -8508,49 +11289,6 @@
       "SoundboardSoundDto": {
         "type": "object",
         "properties": {}
-      },
-      "CreateDmDto": {
-        "type": "object",
-        "properties": {
-          "userId": {
-            "type": "string",
-            "example": "user_123",
-            "description": "The ID of the user to start a DM with"
-          }
-        },
-        "required": [
-          "userId"
-        ]
-      },
-      "UpdateDmMessageDto": {
-        "type": "object",
-        "properties": {
-          "content": {
-            "type": "string",
-            "example": "Updated message content"
-          }
-        },
-        "required": [
-          "content"
-        ]
-      },
-      "MarkAsReadDto": {
-        "type": "object",
-        "properties": {
-          "messageIds": {
-            "example": [
-              "msg_1",
-              "msg_2"
-            ],
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        },
-        "required": [
-          "messageIds"
-        ]
       },
       "SendFriendRequestDto": {
         "type": "object",
@@ -8696,6 +11434,11 @@
             ],
             "default": "public"
           },
+          "isPrivate": {
+            "type": "boolean",
+            "example": false,
+            "description": "Explicit private status flag"
+          },
           "departmentId": {
             "type": "string",
             "example": "dept_123"
@@ -8703,6 +11446,10 @@
           "icon": {
             "type": "string",
             "example": "Hash"
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Custom channel metadata or branding settings"
           }
         },
         "required": [
@@ -8727,9 +11474,68 @@
               "private"
             ]
           },
+          "isPrivate": {
+            "type": "boolean",
+            "example": true,
+            "description": "Explicit private status flag"
+          },
           "icon": {
             "type": "string",
             "example": "MessageSquare"
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Custom channel metadata or branding settings"
+          }
+        }
+      },
+      "AddChannelMemberDto": {
+        "type": "object",
+        "properties": {
+          "userIds": {
+            "example": [
+              "usr_123",
+              "usr_456"
+            ],
+            "description": "Array of user IDs to add",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "userId": {
+            "type": "string",
+            "example": "usr_123",
+            "description": "User ID to add"
+          },
+          "role": {
+            "type": "string",
+            "example": "member",
+            "description": "Channel role"
+          },
+          "permissions": {
+            "type": "object",
+            "example": "2048",
+            "description": "Bitwise permission string or integer value"
+          }
+        }
+      },
+      "UpdateChannelMemberDto": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "example": "admin",
+            "enum": [
+              "admin",
+              "moderator",
+              "member"
+            ]
+          },
+          "permissions": {
+            "type": "object",
+            "example": "2048",
+            "description": "Bitwise permission string or integer value"
           }
         }
       },
@@ -9025,6 +11831,25 @@
           "emoji"
         ]
       },
+      "ActionResponseDto": {
+        "type": "object",
+        "properties": {
+          "actionId": {
+            "type": "string",
+            "example": "approve"
+          },
+          "comment": {
+            "type": "string",
+            "example": "Looks good"
+          },
+          "metadata": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "actionId"
+        ]
+      },
       "CreateEmojiDto": {
         "type": "object",
         "properties": {
@@ -9207,6 +12032,60 @@
           "scheduleType",
           "scheduledFor"
         ]
+      },
+      "UpdateScheduledNotificationDto": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "pause",
+              "resume"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "example": "Updated title"
+          },
+          "message": {
+            "type": "string",
+            "example": "Updated message"
+          },
+          "scheduleType": {
+            "type": "string",
+            "enum": [
+              "custom",
+              "once",
+              "daily",
+              "weekly",
+              "monthly"
+            ]
+          },
+          "scheduledFor": {
+            "type": "string",
+            "description": "ISO format datetime"
+          }
+        }
+      },
+      "CreateTicketDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "StartLiveChatDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateTicketStatusDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "AssignTicketDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateCustomerProfileDto": {
+        "type": "object",
+        "properties": {}
       }
     }
   }

@@ -18,13 +18,13 @@ interface UserMentionProps {
 export function UserMention({ username, isSpecial }: UserMentionProps) {
   const { data: users, isLoading } = useUsers();
   const user = users?.find(
-    (u: any) => u.username?.toLowerCase() === username.toLowerCase() || u.name.toLowerCase() === username.toLowerCase()
+    (u: any) => u.username?.toLowerCase() === username.toLowerCase() || u.name?.toLowerCase() === username.toLowerCase()
   );
   const [isOpen, setIsOpen] = useState(false);
 
   if (isSpecial) {
     return (
-      <span className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 px-1 rounded font-medium cursor-pointer hover:underline">
+      <span className="bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/50 px-1.5 py-0.5 rounded-md text-[13px] font-semibold cursor-pointer hover:underline">
         @{username}
       </span>
     );
@@ -32,14 +32,18 @@ export function UserMention({ username, isSpecial }: UserMentionProps) {
 
   if (isLoading) {
     return (
-      <span className="bg-primary/10 text-primary px-1 rounded font-medium inline-flex items-center gap-1">
+      <span className="bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/50 px-1.5 py-0.5 rounded-md text-[13px] font-semibold inline-flex items-center gap-1">
         <Loader2 className="h-3 w-3 animate-spin" />@{username}
       </span>
     );
   }
 
   if (!user) {
-    return <span className="bg-primary/10 text-primary px-1 rounded font-medium">@{username}</span>;
+    return (
+      <span className="bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/50 px-1.5 py-0.5 rounded-md text-[13px] font-semibold">
+        @{username}
+      </span>
+    );
   }
 
   const UserCard = () => (
@@ -47,7 +51,7 @@ export function UserMention({ username, isSpecial }: UserMentionProps) {
       <div className="flex justify-between items-start">
         <Avatar className="h-16 w-16 border-4 border-background shadow-sm">
           <AvatarImage src={user.avatar || user.image} alt={user.name} />
-          <AvatarFallback>{user.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+          <AvatarFallback>{user.name ? user.name.slice(0, 2).toUpperCase() : '??'}</AvatarFallback>
         </Avatar>
         <div className="flex gap-2">
           <Button size="sm" variant="outline">
@@ -62,7 +66,7 @@ export function UserMention({ username, isSpecial }: UserMentionProps) {
           {user.username && <span className="text-muted-foreground text-sm">@{user.username}</span>}
         </div>
         <p className="text-sm text-muted-foreground capitalize">
-          {user.role} • {user.status}
+          {user.role || 'Member'} • {user.status || 'Active'}
         </p>
       </div>
       <div className="grid gap-2">
@@ -72,7 +76,7 @@ export function UserMention({ username, isSpecial }: UserMentionProps) {
         </div>
         <div className="flex items-center gap-2 text-sm">
           <Shield className="h-4 w-4 opacity-70" />
-          <span>{user.role} Team</span>
+          <span>{user.role || 'Member'} Team</span>
         </div>
         <div className="flex items-center gap-2 text-sm">
           <CalendarDays className="h-4 w-4 opacity-70" />
@@ -90,7 +94,7 @@ export function UserMention({ username, isSpecial }: UserMentionProps) {
         <HoverCardTrigger asChild>
           <PopoverTrigger asChild>
             <span
-              className="bg-primary/10 text-primary px-1 rounded font-medium cursor-pointer hover:bg-primary/20 transition-colors"
+              className="bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/50 px-1.5 py-0.5 rounded-md text-[13px] font-semibold cursor-pointer hover:bg-blue-100/80 dark:hover:bg-blue-900/60 transition-colors inline-inline-block"
               onClick={e => {
                 e.preventDefault();
                 setIsOpen(true);

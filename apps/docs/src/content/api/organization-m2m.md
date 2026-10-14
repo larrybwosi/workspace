@@ -189,3 +189,40 @@ curl -X POST https://api.chat.scryme.tech/v3/workspaces \
     "ownerEmail": "admin@org.com"
   }'
 ```
+
+
+---
+
+## Standalone User Account Provisioning (V3)
+
+In addition to provisioning workspaces, M2M applications can pre-provision individual user accounts before assigning them to workspaces or channels.
+
+### Create / Provision User
+
+Creates or updates a user account in the system with display name and avatar URL.
+
+**Endpoint:**
+
+**Required Scope:**  or  or
+
+**Body:**
+
+
+
+**Response:**
+
+
+
+### Find User by Email
+
+**Endpoint:**
+
+**Required Scope:**  or  or
+
+---
+
+### Get User by ID
+
+**Endpoint:**
+
+**Required Scope:**  or  or

@@ -1,6 +1,6 @@
 # Messages & Channels
 
-Communication in Scrymechat happens through channels or direct messages. The API allows you to automate these interactions, from simple notifications to complex interactive bots.
+Communication in Scrymechat happens through channels or direct messages. The API allows you to automate these interactions, from simple notifications to complex interactive bots and customized UI cards.
 
 ## Channels
 
@@ -57,14 +57,22 @@ Send a standard message to a specific channel.
 
 ---
 
-### Send Custom Message
+### Send Custom Message (`CustomMessageSchema`)
 
 Send a structured, node-based interactive message conforming to `CustomMessageSchema`.
 
 **Endpoint:** `POST /v3/workspaces/:slug/channels/:channelId/messages/custom`
 **Required Scope:** `messages:send` or `*`
 
-**Request Body:**
+#### Request Body Structure
+
+| Field | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `content` | `string` | No | Fallback plain text string for notifications or simplified clients. |
+| `customMessage` | `object` | Yes | Custom message payload object matching `CustomMessageSchema`. |
+| `replyToId` | `string` | No | ID of message thread to reply to. |
+
+#### Custom Message JSON Payload (`customMessage`)
 
 ```json
 {
@@ -78,12 +86,28 @@ Send a structured, node-based interactive message conforming to `CustomMessageSc
       "icon": "Rocket",
       "priority": "urgent"
     },
+    "theme": {
+      "accentColor": "#6366f1",
+      "backgroundColor": "#111827",
+      "textColor": "#ffffff",
+      "primaryButtonColor": "#4f46e5"
+    },
     "root": {
       "type": "Layout.Card",
       "children": [
         {
-          "type": "Display.Field",
-          "properties": { "label": "Environment", "value": "Production (us-east-1)" }
+          "type": "Layout.Grid",
+          "properties": { "columns": 2 },
+          "children": [
+            { "type": "Display.Field", "properties": { "label": "Environment", "value": "Production (us-east-1)" } },
+            { "type": "Display.Field", "properties": { "label": "Triggered By", "value": "GitHub Actions" } }
+          ]
+        },
+        {
+          "id": "deployment_reason",
+          "type": "Input.Text",
+          "properties": { "label": "Approval Comment / Reason", "placeholder": "Enter notes..." },
+          "validation": { "required": true, "errorMessage": "Comment is required" }
         }
       ]
     },
@@ -96,7 +120,8 @@ Send a structured, node-based interactive message conforming to `CustomMessageSc
         "handler": {
           "type": "CALLBACK",
           "callbackId": "deploy-pipeline-8042",
-          "payload": { "buildId": "8042" }
+          "payload": { "buildId": "8042", "action": "approve" },
+          "includeFormState": true
         }
       },
       {
@@ -107,16 +132,33 @@ Send a structured, node-based interactive message conforming to `CustomMessageSc
         "handler": {
           "type": "CALLBACK",
           "callbackId": "deploy-pipeline-8042",
-          "payload": { "buildId": "8042" }
+          "payload": { "buildId": "8042", "action": "reject" },
+          "includeFormState": true
         }
       }
     ],
-    "metadata": {
-      "callbackUrl": "https://ci.acme.com/api/webhooks/deploy-callback"
+    "data": {
+      "buildId": "8042"
     }
   }
 }
 ```
+
+#### Node Types Reference
+
+| Component Node Type | Category | Properties |
+| :--- | :--- | :--- |
+| `Layout.Card` | Layout | `className`: string CSS helper. |
+| `Layout.Stack` | Layout | `className`: string CSS helper. |
+| `Layout.Grid` | Layout | `columns`: number of grid columns (default 1). |
+| `Text.Heading` | Display | `content`: heading text string (supports Mustache interpolation `{{var}}`). |
+| `Text.Paragraph` | Display | `content`: body markdown text. |
+| `Display.Field` | Display | `label`: string label, `value`: string value. |
+| `Data.StatsGrid` | Display | Grid wrapper for metric stats. |
+| `Data.Stat` | Display | `label`: metric name, `value`: metric value. |
+| `Input.Text` | Input | `label`, `placeholder`, `multiline`: boolean, `inputType`: `"text"` \| `"number"` \| `"email"`. |
+| `Input.Select` | Input | `label`, `dataSource`: `{ type: "STATIC" \| "API" \| "VARIABLE", items: [{label, value}] }`. |
+| `Input.Checkbox` | Input | `label`: boolean toggle label. |
 
 ---
 
@@ -140,7 +182,7 @@ When a user clicks an action button or submits form data, send an HTTP POST requ
   "metadata": {
     "environment": "production",
     "formState": {
-      "reason": "Security patch passed QA"
+      "deployment_reason": "Security patch passed QA"
     }
   }
 }
@@ -175,7 +217,10 @@ Retrieve all recorded user responses and form submissions for a specific message
       "actionValue": "approve",
       "comment": "Approved for deployment",
       "metadata": {
-        "environment": "staging"
+        "environment": "staging",
+        "formState": {
+          "deployment_reason": "Approved by release lead"
+        }
       },
       "respondedAt": "2026-09-01T12:00:00.000Z",
       "user": {

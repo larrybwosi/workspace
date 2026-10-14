@@ -72,6 +72,7 @@ vi.mock('@repo/database', () => ({
     },
     messageActionResponse: {
       findUnique: vi.fn(),
+      findFirst: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
       findMany: vi.fn(),
@@ -1280,6 +1281,7 @@ describe('V3WorkspacesController', () => {
         (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
         (prisma.message.findUnique as any).mockResolvedValue(mockMessage);
         (prisma.messageActionResponse.findUnique as any).mockResolvedValue(null);
+        (prisma.messageActionResponse.findFirst as any).mockResolvedValue(null);
         (prisma.messageActionResponse.create as any).mockResolvedValue(mockResponse);
 
         const result = await controller.triggerMessageAction(context as any, 'acme-slug', 'ch-1', 'msg-1', {
@@ -1329,6 +1331,7 @@ describe('V3WorkspacesController', () => {
         (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
         (prisma.message.findUnique as any).mockResolvedValue(mockMessage);
         (prisma.messageActionResponse.findUnique as any).mockResolvedValue(null);
+        (prisma.messageActionResponse.findFirst as any).mockResolvedValue(null);
         (prisma.messageActionResponse.create as any).mockResolvedValue(mockResponse);
 
         const result = await controller.triggerSpecificMessageAction(

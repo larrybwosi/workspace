@@ -444,17 +444,31 @@ const updateWorkspace = await sdk.m2m.workspace.update('partner-tenant', {
 });
 const deleteWorkspace = await sdk.m2m.workspace.delete('partner-tenant');
 
-// --- Membership Syncing & Admin ---
+// --- Membership Syncing & Bulk Import ---
 const workspaceMembers = await sdk.m2m.member.list('partner-tenant');
 const addedMember = await sdk.m2m.member.add('partner-tenant', {
   email: 'collaborator@partner.com',
   role: 'member',
+});
+const bulkImportResult = await sdk.m2m.member.import('partner-tenant', {
+  members: [
+    { email: 'user1@partner.com', name: 'User One', avatar: 'https://cdn.example.com/1.png', role: 'member' },
+    { email: 'user2@partner.com', name: 'User Two', avatar: 'https://cdn.example.com/2.png', role: 'admin' },
+  ],
 });
 const getMember = await sdk.m2m.member.get('partner-tenant', 'user_id_xyz');
 const updatedMember = await sdk.m2m.member.update('partner-tenant', 'user_id_xyz', {
   role: 'moderator',
 });
 const removedMember = await sdk.m2m.member.delete('partner-tenant', 'user_id_xyz');
+
+// --- User Account Provisioning ---
+const newUser = await sdk.m2m.user.create({
+  email: 'employee@partner.com',
+  name: 'Employee Name',
+  avatar: 'https://cdn.example.com/avatar.png',
+});
+const userProfile = await sdk.m2m.user.get('employee@partner.com');
 
 // --- Authentication & Token Exchange Utilities ---
 // Manually fetch or exchange credentials for an access token

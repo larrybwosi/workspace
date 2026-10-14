@@ -4,16 +4,20 @@ import { ScrymeSDK } from '../sdk';
 
 vi.mock('axios', async () => {
   const actual = await vi.importActual<typeof axios>('axios');
+  const instanceFn = vi.fn(async (config) => ({
+    data: { success: true, data: { importedCount: 1, members: [], user: { id: 'usr_123' } } },
+    headers: {},
+  }));
+  (instanceFn as any).interceptors = {
+    request: { use: vi.fn(), eject: vi.fn() },
+    response: { use: vi.fn(), eject: vi.fn() },
+  };
+  (instanceFn as any).defaults = { headers: {} };
+
   return {
     default: {
       ...actual,
-      create: vi.fn(() => ({
-        interceptors: {
-          request: { use: vi.fn(), eject: vi.fn() },
-          response: { use: vi.fn(), eject: vi.fn() },
-        },
-        defaults: { headers: {} },
-      })),
+      create: vi.fn(() => instanceFn),
       post: vi.fn(),
     },
   };
@@ -632,6 +636,29 @@ describe('ScrymeSDK', () => {
 
       const custGet = await sdk.support.customer.getProfiles('ws-123') as any;
       expect(custGet.workspaceId).toBe('ws-123');
+    });
+
+    it('should support bulk member import and user creation in workspace, user, and m2m namespaces', async () => {
+      const sdk = new ScrymeSDK({
+        baseURL: 'https://api.test.com',
+        token: 'active-token',
+      });
+
+      const importRes = await sdk.workspace.members.import('acme-corp', {
+        members: [{ email: 'alice@acme.com', name: 'Alice' }, { email: 'bob@acme.com', name: 'Bob' }],
+      });
+      expect(importRes).toBeDefined();
+
+      const createRes = await sdk.user.create({ email: 'charlie@acme.com', name: 'Charlie' });
+      expect(createRes).toBeDefined();
+
+      const m2mImportRes = await sdk.m2m.member.import('acme-corp', {
+        members: [{ email: 'david@acme.com', name: 'David' }],
+      });
+      expect(m2mImportRes).toBeDefined();
+
+      const m2mCreateRes = await sdk.m2m.user.create({ email: 'eve@acme.com', name: 'Eve' });
+      expect(m2mCreateRes).toBeDefined();
     });
   });
 });

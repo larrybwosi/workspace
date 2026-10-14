@@ -1,12 +1,12 @@
 import { config } from 'dotenv';
 import { resolve } from 'path';
 import '@prisma/client-runtime-utils';
-import { PrismaClient } from './src/generated';
+import { PrismaClient } from './src/generated/index.js';
 import { PrismaPg } from '@prisma/adapter-pg';
 
 config({ path: resolve(process.cwd(), '../../.env') });
 
-export * from './src/generated';
+export * from './src/generated/index.js';
 
 const adapter = new PrismaPg({
   connectionString:

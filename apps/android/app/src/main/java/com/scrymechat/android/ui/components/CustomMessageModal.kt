@@ -35,46 +35,53 @@ fun CustomMessageModal(
     ) {
         Surface(
             modifier = Modifier
-                .fillMaxWidth(0.9f)
-                .fillMaxHeight(0.8f),
+                .fillMaxWidth(0.92f)
+                .fillMaxHeight(0.82f),
             shape = RoundedCornerShape(16.dp),
-            color = ScrymeDarkSurface
+            color = ScrymeDarkSurface,
+            tonalElevation = 8.dp
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
                 // Header
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
+                        .padding(horizontal = 18.dp, vertical = 14.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
                         text = customMessage.context.title,
                         color = ScrymeDarkTextPrimary,
-                        fontSize = 20.sp,
+                        fontSize = 18.sp,
                         fontWeight = FontWeight.Bold
                     )
-                    IconButton(onClick = onDismiss) {
-                        Icon(Icons.Default.Close, contentDescription = "Close", tint = ScrymeDarkTextSecondary)
+                    IconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
+                        Icon(
+                            Icons.Default.Close,
+                            contentDescription = "Close",
+                            tint = ScrymeDarkTextSecondary,
+                            modifier = Modifier.size(18.dp)
+                        )
                     }
                 }
 
-                HorizontalDivider(color = Color.Gray.copy(alpha = 0.2f))
+                HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
 
                 // Content
                 Column(
                     modifier = Modifier
                         .weight(1f)
-                        .padding(16.dp)
+                        .padding(18.dp)
                         .verticalScroll(rememberScrollState())
                 ) {
                     customMessage.context.description?.let {
                         Text(
                             text = it,
                             color = ScrymeDarkTextSecondary,
-                            fontSize = 14.sp,
-                            modifier = Modifier.padding(bottom = 16.dp)
+                            fontSize = 13.5.sp,
+                            lineHeight = 18.sp,
+                            modifier = Modifier.padding(bottom = 14.dp)
                         )
                     }
 
@@ -86,38 +93,20 @@ fun CustomMessageModal(
                     )
                 }
 
-                HorizontalDivider(color = Color.Gray.copy(alpha = 0.2f))
+                HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
 
                 // Footer Actions
                 if (!customMessage.actions.isNullOrEmpty()) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        customMessage.actions.forEach { action ->
-                            val color = when (action.type) {
-                                "PRIMARY" -> ScrymeDarkAccent
-                                "DESTRUCTIVE" -> Color.Red
-                                else -> Color.Gray
-                            }
-
-                            Button(
-                                onClick = {
-                                    onActionTriggered(action)
-                                    onDismiss()
-                                },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (action.type == "GHOST") Color.Transparent else color,
-                                    contentColor = if (action.type == "GHOST") color else Color.White
-                                ),
-                                modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(8.dp)
-                            ) {
-                                Text(text = action.label, fontWeight = FontWeight.Bold)
-                            }
-                        }
+                    Box(modifier = Modifier.padding(16.dp)) {
+                        ActionButtonsRenderer(
+                            actions = customMessage.actions,
+                            onActionTriggered = {
+                                onActionTriggered(it)
+                                onDismiss()
+                            },
+                            formState = formState,
+                            data = customMessage.data ?: emptyMap()
+                        )
                     }
                 }
             }

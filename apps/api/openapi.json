@@ -1634,6 +1634,50 @@
         ]
       }
     },
+    "/api/v3/workspaces/{slug}/members/import": {
+      "post": {
+        "description": "Seamlessly imports multiple users from an external integrating system into the workspace. Creates missing users, ensures organization membership, and adds/updates workspace roles.",
+        "operationId": "V3WorkspacesController_importWorkspaceMembers",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/V3BulkImportMembersDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Members imported successfully."
+          },
+          "403": {
+            "description": "Forbidden: Missing members:write scope."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Bulk import members from external system into workspace (Enterprise M2M)",
+        "tags": [
+          "V3 Workspaces"
+        ]
+      }
+    },
     "/api/v3/workspaces/{slug}/members/{memberId}": {
       "get": {
         "description": "Retrieve details of a specific workspace member by member ID, user ID, or user email address. Requires members:read scope.",
@@ -2269,6 +2313,56 @@
         ]
       }
     },
+    "/api/v3/workspaces/{slug}/channels/{channelId}/messages/custom": {
+      "post": {
+        "description": "Send a structured custom message conforming to CustomMessageSchema to a channel. Requires messages:send scope.",
+        "operationId": "V3WorkspacesController_createChannelCustomMessage",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/V3CreateCustomMessageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Custom message created successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Send a custom message to a channel (Enterprise M2M V3)",
+        "tags": [
+          "V3 Workspaces"
+        ]
+      }
+    },
     "/api/v3/workspaces/{slug}/channels/{channelId}/messages/{messageId}": {
       "patch": {
         "description": "Update content of a message. Requires messages:send scope.",
@@ -2467,6 +2561,170 @@
           }
         ],
         "summary": "Remove a reaction from a channel message (Enterprise M2M)",
+        "tags": [
+          "V3 Workspaces"
+        ]
+      }
+    },
+    "/api/v3/workspaces/{slug}/channels/{channelId}/messages/{messageId}/actions": {
+      "post": {
+        "description": "Trigger an action on a message and submit user response or form state. Dispatches callback webhooks if configured. Requires messages:send scope.",
+        "operationId": "V3WorkspacesController_triggerMessageAction",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "messageId",
+            "required": true,
+            "in": "path",
+            "description": "The message ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/V3ActionResponseDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Action response recorded successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Submit response to a message action (Enterprise M2M V3)",
+        "tags": [
+          "V3 Workspaces"
+        ]
+      },
+      "get": {
+        "description": "Retrieve all recorded user responses and form submissions for a message. Requires messages:read scope.",
+        "operationId": "V3WorkspacesController_getMessageActionResponses",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "messageId",
+            "required": true,
+            "in": "path",
+            "description": "The message ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of action responses returned successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get responses for message actions (Enterprise M2M V3)",
+        "tags": [
+          "V3 Workspaces"
+        ]
+      }
+    },
+    "/api/v3/workspaces/{slug}/channels/{channelId}/messages/{messageId}/actions/{actionId}": {
+      "post": {
+        "description": "Trigger a specific action on a message by action ID in path. Dispatches callback webhooks. Requires messages:send scope.",
+        "operationId": "V3WorkspacesController_triggerSpecificMessageAction",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "messageId",
+            "required": true,
+            "in": "path",
+            "description": "The message ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "actionId",
+            "required": true,
+            "in": "path",
+            "description": "The action ID string",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Action triggered and response recorded."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Trigger specific message action by action ID (Enterprise M2M V3)",
         "tags": [
           "V3 Workspaces"
         ]
@@ -4018,6 +4276,108 @@
         ]
       }
     },
+    "/api/v3/users": {
+      "post": {
+        "description": "Creates a new user record or updates existing user details (name/avatar). If an organization ID or context is present, ensures the user is linked to the organization. Requires users:write or members:write scope.",
+        "operationId": "V3UsersController_createUser",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/V3CreateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created or provisioned successfully."
+          },
+          "403": {
+            "description": "Forbidden: Missing users:write scope."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create or provision a user account (Enterprise M2M)",
+        "tags": [
+          "V3 Users"
+        ]
+      }
+    },
+    "/api/v3/users/by-email": {
+      "get": {
+        "description": "Retrieves user profile details by email address. Requires users:read or members:read scope.",
+        "operationId": "V3UsersController_getUserByEmail",
+        "parameters": [
+          {
+            "name": "email",
+            "required": true,
+            "in": "query",
+            "description": "The email address of the user to query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User profile returned successfully."
+          },
+          "404": {
+            "description": "User not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Find user by email address (Enterprise M2M)",
+        "tags": [
+          "V3 Users"
+        ]
+      }
+    },
+    "/api/v3/users/{userId}": {
+      "get": {
+        "description": "Retrieves user profile details by user ID. Requires users:read or members:read scope.",
+        "operationId": "V3UsersController_getUserById",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "description": "The user ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User profile returned successfully."
+          },
+          "404": {
+            "description": "User not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get user by user ID (Enterprise M2M)",
+        "tags": [
+          "V3 Users"
+        ]
+      }
+    },
     "/api/channels": {
       "get": {
         "operationId": "ChannelsController_getGlobalChannels",
@@ -4875,6 +5235,16 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDmMessageDto"
+              }
+            }
+          }
+        },
         "responses": {
           "201": {
             "description": "Message sent"
@@ -5361,6 +5731,16 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateIntegrationWebhookDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Webhook updated"
@@ -5469,6 +5849,16 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateApiKeyDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "API key updated"
@@ -6570,7 +6960,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Friend request or friendship deleted"
+            "description": "Friend request deleted"
           }
         },
         "security": [
@@ -6578,7 +6968,40 @@
             "bearer": []
           }
         ],
-        "summary": "Delete a friend request or unfriend",
+        "summary": "Delete a friend request",
+        "tags": [
+          "Friends"
+        ]
+      }
+    },
+    "/api/friends/{friendId}": {
+      "delete": {
+        "operationId": "FriendsController_unfriend",
+        "parameters": [
+          {
+            "name": "friendId",
+            "required": true,
+            "in": "path",
+            "description": "The friend user ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Friend removed successfully"
+          },
+          "404": {
+            "description": "Friendship not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove a friend (unfriend)",
         "tags": [
           "Friends"
         ]
@@ -8284,6 +8707,158 @@
         ]
       }
     },
+    "/api/workspaces/{slug}/channels/{channelId}/messages/{messageId}/actions": {
+      "post": {
+        "operationId": "MessagesController_processActionResponse",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "messageId",
+            "required": true,
+            "in": "path",
+            "description": "The message ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActionResponseDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Action response recorded"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Submit response to a message action",
+        "tags": [
+          "Channels & Messages"
+        ]
+      },
+      "get": {
+        "operationId": "MessagesController_getActionResponses",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "description": "The channel ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "messageId",
+            "required": true,
+            "in": "path",
+            "description": "The message ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of action responses"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get responses for message actions",
+        "tags": [
+          "Channels & Messages"
+        ]
+      }
+    },
+    "/api/workspaces/{slug}/channels/{channelId}/messages/v2/workspaces/{slug}/messages/{messageId}/actions/{actionId}": {
+      "post": {
+        "operationId": "MessagesController_triggerActionV2",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "The workspace slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "messageId",
+            "required": true,
+            "in": "path",
+            "description": "The message ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "actionId",
+            "required": true,
+            "in": "path",
+            "description": "The action identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Action triggered"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Trigger message action (V2 path)",
+        "tags": [
+          "Channels & Messages"
+        ]
+      }
+    },
     "/api/workspaces/{slug}/emojis": {
       "get": {
         "operationId": "EmojisController_getEmojis",
@@ -9658,6 +10233,16 @@
             "example": "admin@acme.com",
             "description": "The email of the workspace owner. Must exist in the organization."
           },
+          "ownerName": {
+            "type": "string",
+            "example": "Alice Smith",
+            "description": "Display name of the workspace owner"
+          },
+          "ownerAvatar": {
+            "type": "string",
+            "example": "https://example.com/avatar.png",
+            "description": "Avatar URL of the workspace owner"
+          },
           "industry": {
             "type": "string",
             "example": "Technology",
@@ -9697,6 +10282,14 @@
                 "email": {
                   "type": "string",
                   "example": "user@acme.com"
+                },
+                "name": {
+                  "type": "string",
+                  "example": "Bob Johnson"
+                },
+                "avatar": {
+                  "type": "string",
+                  "example": "https://example.com/bob.png"
                 },
                 "role": {
                   "type": "string",
@@ -9744,6 +10337,59 @@
             "description": "Custom branding configuration"
           }
         }
+      },
+      "V3ImportMemberItemDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "user@acme.com",
+            "description": "Member email address"
+          },
+          "name": {
+            "type": "string",
+            "example": "Bob Johnson",
+            "description": "Member full name"
+          },
+          "avatar": {
+            "type": "string",
+            "example": "https://example.com/avatar.png",
+            "description": "Member avatar image URL"
+          },
+          "role": {
+            "type": "string",
+            "example": "member",
+            "enum": [
+              "admin",
+              "member",
+              "owner"
+            ],
+            "description": "Role in workspace"
+          },
+          "externalId": {
+            "type": "string",
+            "example": "ext_12345",
+            "description": "External system user identifier"
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "V3BulkImportMembersDto": {
+        "type": "object",
+        "properties": {
+          "members": {
+            "description": "List of members/users to import from the integrating system into the workspace",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/V3ImportMemberItemDto"
+            }
+          }
+        },
+        "required": [
+          "members"
+        ]
       },
       "V3AddMemberDto": {
         "type": "object",
@@ -9971,6 +10617,111 @@
           }
         }
       },
+      "V3MessageActionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "approve",
+            "description": "Unique action identifier"
+          },
+          "label": {
+            "type": "string",
+            "example": "Approve",
+            "description": "Button text label"
+          },
+          "type": {
+            "type": "string",
+            "example": "PRIMARY",
+            "enum": [
+              "PRIMARY",
+              "SECONDARY",
+              "DESTRUCTIVE",
+              "GHOST"
+            ]
+          },
+          "icon": {
+            "type": "string",
+            "example": "Check"
+          },
+          "handler": {
+            "type": "object",
+            "description": "Action handler configuration"
+          }
+        },
+        "required": [
+          "id",
+          "label"
+        ]
+      },
+      "V3CreateCustomMessageDto": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "example": "Approval Request",
+            "description": "Plain text fallback or message title content"
+          },
+          "customMessage": {
+            "type": "object",
+            "description": "Custom message schema object conforming to CustomMessageSchema",
+            "example": {
+              "version": "v1",
+              "type": "APPROVAL",
+              "context": {
+                "title": "Expense Claim",
+                "priority": "high"
+              },
+              "root": {
+                "type": "Layout.Card",
+                "children": []
+              },
+              "actions": [
+                {
+                  "id": "approve",
+                  "label": "Approve",
+                  "type": "PRIMARY"
+                }
+              ]
+            }
+          },
+          "actions": {
+            "description": "Interactive action buttons",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/V3MessageActionDto"
+            }
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Additional message metadata such as callbackUrl"
+          }
+        },
+        "required": [
+          "customMessage"
+        ]
+      },
+      "V3ActionResponseDto": {
+        "type": "object",
+        "properties": {
+          "actionId": {
+            "type": "string",
+            "example": "approve",
+            "description": "Action identifier string"
+          },
+          "comment": {
+            "type": "string",
+            "example": "Approved for deployment"
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Optional form state or payload metadata"
+          }
+        },
+        "required": [
+          "actionId"
+        ]
+      },
       "V3CreateWebhookDto": {
         "type": "object",
         "properties": {
@@ -10177,6 +10928,34 @@
           }
         }
       },
+      "V3CreateUserDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "user@acme.com",
+            "description": "The unique email address of the user to create or provision"
+          },
+          "name": {
+            "type": "string",
+            "example": "Jane Doe",
+            "description": "The full name of the user"
+          },
+          "avatar": {
+            "type": "string",
+            "example": "https://example.com/avatar.png",
+            "description": "Profile avatar image URL"
+          },
+          "organizationId": {
+            "type": "string",
+            "example": "org_12345",
+            "description": "Optional organization ID to automatically associate user with"
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
       "WorkspaceSettingsDto": {
         "type": "object",
         "properties": {
@@ -10245,6 +11024,31 @@
         },
         "required": [
           "userId"
+        ]
+      },
+      "CreateDmMessageDto": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "example": "Hello there!",
+            "description": "The content of the direct message"
+          },
+          "replyToId": {
+            "type": "string",
+            "example": "msg_123",
+            "description": "Optional message ID being replied to"
+          },
+          "attachments": {
+            "description": "Optional list of file attachments",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "content"
         ]
       },
       "UpdateDmMessageDto": {
@@ -10330,6 +11134,49 @@
           "url",
           "events"
         ]
+      },
+      "UpdateIntegrationWebhookDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Updated Webhook"
+          },
+          "url": {
+            "type": "string",
+            "example": "https://example.com/webhook"
+          },
+          "events": {
+            "example": [
+              "event.name"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "isActive": {
+            "type": "boolean",
+            "example": true
+          }
+        }
+      },
+      "UpdateApiKeyDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Updated API Key"
+          },
+          "isActive": {
+            "type": "boolean",
+            "example": true
+          },
+          "rateLimit": {
+            "type": "number",
+            "example": 1000
+          }
+        }
       },
       "CreateIntegrationDto": {
         "type": "object",
@@ -10982,6 +11829,25 @@
         },
         "required": [
           "emoji"
+        ]
+      },
+      "ActionResponseDto": {
+        "type": "object",
+        "properties": {
+          "actionId": {
+            "type": "string",
+            "example": "approve"
+          },
+          "comment": {
+            "type": "string",
+            "example": "Looks good"
+          },
+          "metadata": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "actionId"
         ]
       },
       "CreateEmojiDto": {

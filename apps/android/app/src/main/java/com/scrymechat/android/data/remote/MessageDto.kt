@@ -80,7 +80,11 @@ data class MessagesResponse(
 )
 
 fun MessageDto.toEntity(): com.scrymechat.android.data.local.entities.MessageEntity {
-    val type = (metadata?.get("type") as? String) ?: "standard"
+    val metaType = (metadata?.get("type") as? String)
+    val customObj = metadata?.get("customMessage") ?: metadata
+    val customType = if (customObj is Map<*, *>) customObj["type"] as? String else null
+    val effectiveType = metaType ?: customType ?: "standard"
+
     val entity = com.scrymechat.android.data.local.entities.MessageEntity(
         id = id,
         content = content,
@@ -98,17 +102,25 @@ fun MessageDto.toEntity(): com.scrymechat.android.data.local.entities.MessageEnt
         attachments = attachments,
         metadata = metadata,
         reactions = reactions,
-        messageType = type,
+        messageType = effectiveType,
         threadId = threadId,
         replyCount = replyCount,
         isPinned = isPinned,
         senderRole = user?.role ?: author?.role
     )
 
-    if (type == "custom" || type == "approval" || type == "report") {
+    val isCustomCandidate = effectiveType.lowercase() in setOf("custom", "approval", "report", "form", "survey", "task_card", "feedback") ||
+            (metadata?.containsKey("context") == true && metadata.containsKey("root")) ||
+            (metadata?.containsKey("customMessage") == true)
+
+    if (isCustomCandidate) {
         try {
-            val json = com.google.gson.Gson().toJson(metadata)
-            entity.customMessage = com.google.gson.Gson().fromJson(json, com.scrymechat.android.data.remote.CustomMessageDto::class.java)
+            val gson = com.google.gson.Gson()
+            val targetObj = metadata?.get("customMessage") ?: metadata
+            if (targetObj != null) {
+                val json = gson.toJson(targetObj)
+                entity.customMessage = gson.fromJson(json, com.scrymechat.android.data.remote.CustomMessageDto::class.java)
+            }
         } catch (e: Exception) {
             e.printStackTrace()
         }

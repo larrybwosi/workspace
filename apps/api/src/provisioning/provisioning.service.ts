@@ -1,12 +1,17 @@
 import { Injectable, BadRequestException, InternalServerErrorException, Logger } from '@nestjs/common';
 import { prisma } from '@repo/database';
+import { sendSetPasswordEmail, validateEnv } from '@repo/shared';
+import { auth } from '@repo/auth';
 import * as crypto from 'crypto';
 
 @Injectable()
 export class ProvisioningService {
   private readonly logger = new Logger(ProvisioningService.name);
+
   async provisionWorkspace(context: any, data: any) {
-    return await prisma
+    const createdUsers: Array<{ id: string; email: string; name: string }> = [];
+
+    const result = await prisma
       .$transaction(async tx => {
         // Check if slug exists
         const existing = await tx.workspace.findUnique({ where: { slug: data.slug } });
@@ -14,32 +19,26 @@ export class ProvisioningService {
           throw new BadRequestException(`Workspace slug "${data.slug}" is already taken. Please choose a unique slug.`);
         }
 
-        // Find owner
-        const owner = await tx.user.findUnique({ where: { email: data.ownerEmail } });
+        // Find or create owner
+        let owner = await tx.user.findUnique({ where: { email: data.ownerEmail } });
         if (!owner) {
-          throw new BadRequestException(`Owner user with email "${data.ownerEmail}" not found. Please ensure the user exists in your organization before provisioning.`);
-        }
-
-        // If M2M, verify owner belongs to organization
-        if (context.organizationId) {
-          /**
-           * ⚡ Performance Optimization:
-           * Leverages direct O(1) primary key point lookup on 'tx.organization.findUnique' with nested
-           * relation filtering instead of non-unique index scans on 'tx.member.findFirst'.
-           */
-          const org = await tx.organization.findUnique({
-            where: { id: context.organizationId },
-            select: {
-              members: {
-                where: { userId: owner.id },
-                select: { id: true },
-              },
+          const name = data.ownerName || data.ownerEmail.split('@')[0] || data.ownerEmail;
+          owner = await tx.user.create({
+            data: {
+              email: data.ownerEmail,
+              name,
+              ...(data.ownerAvatar ? { avatar: data.ownerAvatar } : {}),
             },
           });
-          const isMember = org && org.members.length > 0;
-          if (!isMember) {
-            throw new BadRequestException('Workspace owner must be a member of your organization');
-          }
+          createdUsers.push({ id: owner.id, email: owner.email, name: owner.name });
+        } else if (data.ownerName || data.ownerAvatar) {
+          owner = await tx.user.update({
+            where: { id: owner.id },
+            data: {
+              ...(data.ownerName ? { name: data.ownerName } : {}),
+              ...(data.ownerAvatar ? { avatar: data.ownerAvatar } : {}),
+            },
+          });
         }
 
         // 1. Create Workspace
@@ -64,11 +63,6 @@ export class ProvisioningService {
 
         // 2. Create Channels
         if (data.channels && data.channels.length > 0) {
-          /**
-           * ⚡ Performance Optimization:
-           * Replaces sequential single-record channel inserts inside a loop with a single batch `createMany` query.
-           * This reduces database round-trips from N down to 1 inside the provisioning transaction.
-           */
           await tx.channel.createMany({
             data: data.channels.map((channelName: string) => ({
               workspaceId: workspace.id,
@@ -83,28 +77,28 @@ export class ProvisioningService {
         // 3. Add initial members
         if (data.initialMembers && data.initialMembers.length > 0) {
           for (const member of data.initialMembers) {
-            const user = await tx.user.findUnique({ where: { email: member.email } });
-            if (user) {
-              // Verify member belongs to organization if M2M
-              if (context.organizationId) {
-                /**
-                 * ⚡ Performance Optimization:
-                 * Direct O(1) primary key lookup on 'tx.organization.findUnique' replaces non-unique
-                 * index scans on 'tx.member.findFirst'.
-                 */
-                const org = await tx.organization.findUnique({
-                  where: { id: context.organizationId },
-                  select: {
-                    members: {
-                      where: { userId: user.id },
-                      select: { id: true },
-                    },
-                  },
-                });
-                const isOrgMember = org && org.members.length > 0;
-                if (!isOrgMember) continue;
-              }
+            let user = await tx.user.findUnique({ where: { email: member.email } });
+            if (!user) {
+              const name = member.name || member.email.split('@')[0] || member.email;
+              user = await tx.user.create({
+                data: {
+                  email: member.email,
+                  name,
+                  ...(member.avatar ? { avatar: member.avatar } : {}),
+                },
+              });
+              createdUsers.push({ id: user.id, email: user.email, name: user.name });
+            } else if (member.name || member.avatar) {
+              user = await tx.user.update({
+                where: { id: user.id },
+                data: {
+                  ...(member.name ? { name: member.name } : {}),
+                  ...(member.avatar ? { avatar: member.avatar } : {}),
+                },
+              });
+            }
 
+            if (user) {
               await tx.workspaceMember.upsert({
                 where: {
                   workspaceId_userId: {
@@ -112,11 +106,11 @@ export class ProvisioningService {
                     userId: user.id,
                   },
                 },
-                update: { role: member.role },
+                update: { role: member.role || 'member' },
                 create: {
                   workspaceId: workspace.id,
                   userId: user.id,
-                  role: member.role,
+                  role: member.role || 'member',
                 },
               });
             }
@@ -163,7 +157,7 @@ export class ProvisioningService {
         await tx.workspaceAuditLog.create({
           data: {
             workspaceId: workspace.id,
-            userId: context.userId,
+            userId: context.userId || owner.id,
             action: 'workspace.provisioned',
             resource: 'workspace',
             resourceId: workspace.id,
@@ -190,5 +184,39 @@ export class ProvisioningService {
         this.logger.error('Provisioning failed:', err?.stack || err);
         throw new InternalServerErrorException('Failed to provision workspace');
       });
+
+    // Send email to all newly created users outside transaction
+    if (createdUsers.length > 0) {
+      const env = validateEnv();
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || (env as any).NEXT_PUBLIC_APP_URL || 'http://localhost:3001';
+
+      for (const u of createdUsers) {
+        try {
+          let verificationUrl: string;
+          try {
+            const tokenRes = await (auth.api as any).requestPasswordReset({
+              body: { email: u.email, redirectTo: `${appUrl}/verify-email` },
+            });
+            verificationUrl = (tokenRes as any)?.url || `${appUrl}/verify-email?email=${encodeURIComponent(u.email)}`;
+          } catch (e) {
+            verificationUrl = `${appUrl}/verify-email?email=${encodeURIComponent(u.email)}`;
+          }
+
+          await sendSetPasswordEmail({
+            to: u.email,
+            url: verificationUrl,
+            user: {
+              name: u.name,
+              email: u.email,
+            },
+            isNewUser: true,
+          });
+        } catch (err) {
+          this.logger.error(`Failed to send verification/set password email to ${u.email}:`, err);
+        }
+      }
+    }
+
+    return result;
   }
 }

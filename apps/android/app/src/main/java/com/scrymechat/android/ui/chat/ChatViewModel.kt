@@ -54,6 +54,15 @@ class ChatViewModel @Inject constructor(
         observeRealtimeMessages()
         observeTypingStatus()
         observeCurrentUser()
+        observeReadEvents()
+    }
+
+    private fun observeReadEvents() {
+        viewModelScope.launch {
+            realtimeRepository.observeReadEvents().collect { event ->
+                chatRepository.handleReadEvent(event)
+            }
+        }
     }
 
     private fun observeCurrentUser() {
@@ -61,6 +70,7 @@ class ChatViewModel @Inject constructor(
             sessionManager.getActiveSessionFlow().collect { session ->
                 if (session != null) {
                     activeUserId = session.userId
+                    realtimeRepository.joinRoom("user:${session.userId}")
                     sessionManager.getUserFlow(session.userId).collect { user ->
                         if (user != null) {
                             activeUserName = user.name

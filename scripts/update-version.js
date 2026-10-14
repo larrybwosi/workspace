@@ -100,7 +100,7 @@ if (fs.existsSync(appsDir)) {
         if (fs.existsSync(cargoPath)) {
             let cargoContent = fs.readFileSync(cargoPath, 'utf8');
             cargoContent = cargoContent.replace(/^version = \".*\"/m, `version = "${semverVersion}"`);
-            cargoContent = cargoContent.replace(/^scryme-sdk = \".*\"/m, `scryme-sdk = "${semverVersion}"`);
+            cargoContent = cargoContent.replace(/^scryme-chat-sdk = \".*\"/m, `scryme-chat-sdk = "${semverVersion}"`);
             fs.writeFileSync(cargoPath, cargoContent);
             console.log(`Updated ${cargoPath}`);
         }

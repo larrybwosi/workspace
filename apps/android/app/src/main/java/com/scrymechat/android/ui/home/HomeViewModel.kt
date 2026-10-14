@@ -44,6 +44,7 @@ class HomeViewModel @Inject constructor(
         loadDms()
         observeCurrentUser()
         observeRealtimeMessages()
+        observeReadEvents()
         observePresence()
     }
 
@@ -59,12 +60,32 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    private fun observeReadEvents() {
+        viewModelScope.launch {
+            realtimeRepository.observeReadEvents().collect { event ->
+                if (event.messageIds.isNotEmpty()) {
+                    messageDao.markMessagesAsRead(event.messageIds)
+                }
+                if (event.channelId != null) {
+                    messageDao.markChannelMessagesAsRead(event.channelId)
+                    channelDao.clearUnreadCount(event.channelId)
+                }
+                if (event.dmId != null) {
+                    messageDao.markDmMessagesAsRead(event.dmId)
+                    dmDao.clearUnreadCount(event.dmId)
+                }
+            }
+        }
+    }
+
     private fun observePresence() {
         viewModelScope.launch {
             sessionManager.getActiveSessionFlow().collect { session ->
                 session?.userId?.let { userId ->
                     // Join the global-presence room and notify others that we are online
                     realtimeRepository.joinRoom("global-presence")
+                    realtimeRepository.joinRoom("user:$userId")
+                    realtimeRepository.joinRoom("notifications:$userId")
                     realtimeRepository.enterPresence("global-presence", userId, mapOf("status" to "online"))
                 }
             }
@@ -85,13 +106,7 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Atomically and sequentially selects a workspace and a channel within it.
-     * This avoids race conditions between parallel async operations that can result
-     * in the selected channel being wiped out, which would cause the workspace
-     * welcome screen to be shown instead of the chat view.
-     */
-    fun selectWorkspaceAndChannel(workspaceSlug: String, channelId: String) {
+        fun selectWorkspaceAndChannel(workspaceSlug: String, channelId: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isChannelLoading = true) }
 
@@ -254,13 +269,21 @@ class HomeViewModel @Inject constructor(
             channelRepository.getWorkspaceChannels(workspaceSlug).collect { resource ->
                 when (resource) {
                     is Resource.Success -> {
-                        _uiState.update { it.copy(channels = resource.data ?: emptyList()) }
+                        val channels = resource.data ?: emptyList()
+                        _uiState.update { state ->
+                            val currentSelected = state.selectedChannel
+                            val defaultChannel = channels.firstOrNull { it.type.lowercase() != "category" }
+                            val updatedSelected = currentSelected?.let { sel ->
+                                channels.find { it.id == sel.id }
+                            } ?: defaultChannel
+                            state.copy(channels = channels, selectedChannel = updatedSelected)
+                        }
                     }
                     is Resource.Error -> {
-                        // Handle error
+                        // Keep cached channels if error occurs
                     }
                     is Resource.Loading -> {
-                        // Handle loading
+                        // Keep loading state if necessary
                     }
                 }
             }
@@ -433,16 +456,27 @@ class HomeViewModel @Inject constructor(
             val workspaceSlug = _uiState.value.selectedWorkspace?.slug ?: return@launch
             _uiState.update { it.copy(isCreatingChannel = true, error = null) }
             val finalRequest = if (categoryId != null) {
-                request.copy(departmentId = categoryId) // Using departmentId as parentId based on CreateChannelRequest
+                request.copy(departmentId = categoryId)
             } else {
                 request
             }
             val result = channelRepository.createChannel(workspaceSlug, finalRequest)
-            if (result is Resource.Success) {
-                _uiState.update { it.copy(isCreatingChannel = false, isCreateChannelDialogOpen = false) }
+            if (result is Resource.Success && result.data != null) {
+                val createdChannel = result.data
+                _uiState.update { state ->
+                    val updatedChannels = state.channels.filter { it.id != createdChannel.id } + createdChannel
+                    state.copy(
+                        isCreatingChannel = false,
+                        isCreateChannelDialogOpen = false,
+                        channels = updatedChannels,
+                        selectedChannel = createdChannel,
+                        selectedDm = null,
+                        isHomeSelected = false
+                    )
+                }
                 loadChannels(workspaceSlug)
             } else {
-                _uiState.update { it.copy(isCreatingChannel = false, error = result.message) }
+                _uiState.update { it.copy(isCreatingChannel = false, error = result.message ?: "Failed to create channel") }
             }
         }
     }

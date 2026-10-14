@@ -16,7 +16,7 @@ import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { EmojiPicker } from '@/components/shared/emoji-picker';
 import { useCurrentUser, useUpdateUser, useUpdateUserStatus, useEligibleAssets } from '@repo/api-client';
-import { useSession } from '@repo/shared';
+import { useSession, signOut } from '@repo/shared';
 import { useTheme } from '@repo/ui';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -541,7 +541,7 @@ export default function SettingsPage() {
                         variant="destructive"
                         className="gap-2"
                         onClick={() => {
-                          window.location.href = '/api/auth/sign-out';
+                          signOut({ fetchOptions: { onSuccess: () => { window.location.href = '/login'; } } });
                         }}
                       >
                         <LogOut className="h-4 w-4" />

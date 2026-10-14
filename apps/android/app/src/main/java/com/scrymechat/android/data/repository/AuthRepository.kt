@@ -49,6 +49,21 @@ class AuthRepository @Inject constructor(
         }
     }
 
+    suspend fun refreshToken(currentToken: String): Result<String> {
+        return try {
+            val response = authApi.refresh(mapOf("token" to currentToken))
+            if (response.isSuccessful && response.body() != null) {
+                val body = response.body()!!
+                handleAuthResponse(response)
+                Result.success(body.token)
+            } else {
+                Result.failure(Exception("Session refresh failed with code ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     private suspend fun handleAuthResponse(response: retrofit2.Response<LoginResponse>): Result<Unit> {
         if (response.isSuccessful) {
             val body = response.body()

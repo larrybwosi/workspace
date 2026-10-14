@@ -729,7 +729,7 @@ export function VideoCallContent({
                         <Avatar className="h-7 w-7">
                           <AvatarImage src={member.user.avatar || member.user.image} />
                           <AvatarFallback className="text-[10px] bg-zinc-700 font-bold">
-                            {member.user.name.slice(0, 2).toUpperCase()}
+                            {member.user?.name?.slice(0, 2).toUpperCase() || 'U'}
                           </AvatarFallback>
                         </Avatar>
                         <span className="truncate font-medium">{member.user.name}</span>

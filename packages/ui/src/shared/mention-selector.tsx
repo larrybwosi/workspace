@@ -66,51 +66,53 @@ export function MentionSelector({ items, onSelect, searchTerm, position, type }:
 
   return (
     <div
-      className="absolute z-50 w-72 bg-popover border border-border rounded-lg shadow-lg"
+      className="absolute z-50 w-72 bg-popover/95 backdrop-blur-md border border-border/80 rounded-2xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-100"
       style={{ top: position.top, left: position.left }}
     >
-      <Command className="rounded-lg">
-        <CommandList className="max-h-64">
-          <CommandGroup heading={type === 'user' ? 'Mention user' : 'Mention channel'}>
+      <Command className="rounded-2xl">
+        <CommandList className="max-h-64 p-1">
+          <CommandGroup heading={type === 'user' ? 'Members' : 'Channels'} className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-2 pt-1 pb-0.5">
             {filteredItems.map((item, index) => (
               <CommandItem
                 key={`${item.type}-${item.id}`}
                 onSelect={() => onSelect(item)}
                 className={cn(
-                  'flex items-center gap-2 px-3 py-2 cursor-pointer',
-                  index === selectedIndex && 'bg-accent'
+                  'flex items-center gap-2.5 px-3 py-2 cursor-pointer rounded-xl transition-colors text-sm',
+                  index === selectedIndex ? 'bg-accent text-accent-foreground font-medium' : 'hover:bg-muted/60'
                 )}
               >
                 {item.type === 'user' && (
-                  <Avatar className="h-6 w-6">
+                  <Avatar className="h-7 w-7 rounded-full overflow-hidden shrink-0">
                     <AvatarImage src={item.image} alt={item.name} />
-                    <AvatarFallback className="text-xs">{item.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                    <AvatarFallback className="text-[10px] font-bold bg-primary/10 text-primary">
+                      {item.name ? item.name.slice(0, 2).toUpperCase() : '??'}
+                    </AvatarFallback>
                   </Avatar>
                 )}
                 {item.type === 'channel' && (
-                  <div className="h-6 w-6 rounded bg-muted flex items-center justify-center">
-                    <Hash className="h-3.5 w-3.5 text-muted-foreground" />
+                  <div className="h-7 w-7 rounded-xl bg-muted/80 flex items-center justify-center shrink-0">
+                    <Hash className="h-4 w-4 text-muted-foreground" />
                   </div>
                 )}
                 {item.type === 'special' && (
-                  <div className="h-6 w-6 rounded bg-amber-100 flex items-center justify-center">
+                  <div className="h-7 w-7 rounded-xl bg-amber-500/15 flex items-center justify-center shrink-0">
                     {item.id === 'all' ? (
-                      <Users className="h-3.5 w-3.5 text-amber-700" />
+                      <Users className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                     ) : (
-                      <Zap className="h-3.5 w-3.5 text-amber-700" />
+                      <Zap className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                     )}
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium truncate">{item.name}</p>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-[13px] font-medium truncate leading-none">{item.name}</p>
                     {item.type === 'special' && (
-                      <span className="text-[10px] font-bold text-amber-700 uppercase bg-amber-50 px-1 rounded">
-                        Notify All
+                      <span className="text-[9px] font-bold text-amber-600 dark:text-amber-400 uppercase bg-amber-500/10 px-1.5 py-0.5 rounded-md">
+                        Notify
                       </span>
                     )}
                   </div>
-                  {item.description && <p className="text-xs text-muted-foreground truncate">{item.description}</p>}
+                  {item.description && <p className="text-[11px] text-muted-foreground truncate mt-0.5">{item.description}</p>}
                 </div>
               </CommandItem>
             ))}

@@ -19,6 +19,7 @@ describe('Custom Message Schema & Helper Builders', () => {
         ],
         callbackId: 'reimbursement_123',
         priority: 'urgent',
+        allowMultipleResponses: true,
       });
 
       expect(approval.type).toBe('APPROVAL');
@@ -26,6 +27,7 @@ describe('Custom Message Schema & Helper Builders', () => {
       expect(approval.context.priority).toBe('urgent');
       expect(approval.actions).toHaveLength(2);
       expect(approval.actions?.[0].id).toBe('approve');
+      expect(approval.actions?.[0].allowMultipleResponses).toBe(true);
       expect(approval.actions?.[1].id).toBe('reject');
 
       const validationResult = CustomMessageSchema.safeParse(approval);
@@ -54,7 +56,7 @@ describe('Custom Message Schema & Helper Builders', () => {
   });
 
   describe('createFormMessage', () => {
-    it('should generate a valid CustomMessage for forms and surveys', () => {
+    it('should generate a valid CustomMessage for forms and surveys with Radio and Switch inputs', () => {
       const form = createFormMessage({
         title: 'User Feedback Survey',
         description: 'Please rate your experience',
@@ -72,6 +74,20 @@ describe('Custom Message Schema & Helper Builders', () => {
             ],
           },
           {
+            id: 'frequency',
+            label: 'Usage Frequency',
+            type: 'radio',
+            options: [
+              { label: 'Daily', value: 'daily' },
+              { label: 'Weekly', value: 'weekly' },
+            ],
+          },
+          {
+            id: 'newsletter',
+            label: 'Subscribe to product newsletter',
+            type: 'switch',
+          },
+          {
             id: 'comments',
             label: 'Additional Comments',
             type: 'textarea',
@@ -80,9 +96,10 @@ describe('Custom Message Schema & Helper Builders', () => {
       });
 
       expect(form.type).toBe('FORM');
-      expect(form.root.children).toHaveLength(2);
+      expect(form.root.children).toHaveLength(4);
       expect(form.root.children?.[0].type).toBe('Input.Select');
-      expect(form.root.children?.[0].validation?.required).toBe(true);
+      expect(form.root.children?.[1].type).toBe('Input.RadioGroup');
+      expect(form.root.children?.[2].type).toBe('Input.Switch');
 
       const validationResult = CustomMessageSchema.safeParse(form);
       expect(validationResult.success).toBe(true);

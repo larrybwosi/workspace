@@ -8,7 +8,23 @@ data class CustomMessageDto(
     val root: MessageNodeDto,
     val actions: List<MessageActionDto>? = null,
     val data: Map<String, Any>? = null,
-    val constraints: MessageConstraintsDto? = null
+    val constraints: MessageConstraintsDto? = null,
+    val theme: CustomMessageThemeDto? = null,
+    val actionResponses: List<ActionResponseDto>? = null
+)
+
+data class CustomMessageThemeDto(
+    val backgroundColor: String? = null,
+    val borderColor: String? = null,
+    val textColor: String? = null,
+    val className: String? = null
+)
+
+data class ActionResponseDto(
+    val actionId: String? = null,
+    val actionValue: String? = null,
+    val userId: String? = null,
+    val createdAt: String? = null
 )
 
 data class CustomMessageContext(
@@ -51,7 +67,9 @@ data class MessageActionDto(
     val type: String = "SECONDARY",
     val icon: String? = null,
     val handler: MessageActionHandlerDto,
-    val condition: MessageConditionDto? = null
+    val condition: MessageConditionDto? = null,
+    val allowMultipleResponses: Boolean? = null,
+    val allowMultiple: Boolean? = null
 )
 
 data class MessageActionHandlerDto(

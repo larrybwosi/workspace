@@ -6,6 +6,7 @@ import { V3ChannelIncomingWebhooksController } from './v3-channel-incoming-webho
 import { V3OrganizationsController } from './v3-organizations.controller';
 import { V3ApplicationsController } from './v3-applications.controller';
 import { V3DmsController } from './v3-dms.controller';
+import { V3UsersController } from './v3-users.controller';
 import { ApiV3Guard } from '../auth/api-v3.guard';
 import { ProvisioningService } from '../provisioning/provisioning.service';
 import { PrismaService } from '../prisma.service';
@@ -23,6 +24,7 @@ import { DmsModule } from '../dms/dms.module';
     V3OrganizationsController,
     V3ApplicationsController,
     V3DmsController,
+    V3UsersController,
   ],
   providers: [
     ApiV3Guard,

@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient, useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { apiClient } from '../client';
 import type { Message } from '@repo/types';
+import { notificationKeys } from './use-notifications';
 
 export const messageKeys = {
   all: ['messages'] as const,
@@ -266,7 +267,7 @@ export function useMarkMessagesAsRead(workspaceSlug?: string) {
           } catch (error) {
             resolvers.forEach(res => res.reject(error));
           }
-        }, 1000); // 1 second buffer
+        }, 200); // 200ms fast buffer
       });
     },
     onSuccess: (data: unknown) => {
@@ -289,12 +290,13 @@ export function useMarkMessagesAsRead(workspaceSlug?: string) {
         };
       });
 
-      // Invalidate sidebar channel / DM query cache to refresh unread counts immediately
+      // Invalidate sidebar channel, DM, and notification query caches to refresh unread counts immediately
       if (workspaceSlug) {
         queryClient.invalidateQueries({ queryKey: ['workspace-channels', workspaceSlug] });
-      } else {
-        queryClient.invalidateQueries({ queryKey: dmKeys.conversations() });
       }
+      queryClient.invalidateQueries({ queryKey: ['workspace-channels'] });
+      queryClient.invalidateQueries({ queryKey: dmKeys.conversations() });
+      queryClient.invalidateQueries({ queryKey: notificationKeys.all });
     },
   });
 }

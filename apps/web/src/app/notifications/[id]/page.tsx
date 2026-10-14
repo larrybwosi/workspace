@@ -28,6 +28,7 @@ import {
 } from '@repo/api-client';
 import { Sidebar } from '@/components/layout/sidebar';
 import { DynamicHeader } from '@/components/layout/dynamic-header';
+import { MarkdownRenderer } from '@repo/ui';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 
@@ -206,9 +207,7 @@ export default function NotificationDetailPage({
 
                 <CardContent className="space-y-6 pt-2">
                   <div className="bg-muted/30 p-4 rounded-lg border border-border/50">
-                    <p className="text-foreground text-base leading-relaxed whitespace-pre-wrap">
-                      {notification.message}
-                    </p>
+                    <MarkdownRenderer content={notification.message} className="text-foreground text-base leading-relaxed" />
                   </div>
 
                   {/* Actions section for friend requests */}

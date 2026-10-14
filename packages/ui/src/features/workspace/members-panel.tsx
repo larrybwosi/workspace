@@ -135,7 +135,7 @@ export function MembersPanel() {
                         <Avatar className="h-8 w-8">
                           <AvatarImage src={m.user.avatar || m.user.image} />
                           <AvatarFallback className="text-[10px] bg-primary text-primary-foreground">
-                            {m.user.name.slice(0, 2).toUpperCase()}
+                            {m.user?.name?.slice(0, 2).toUpperCase() || 'U'}
                           </AvatarFallback>
                         </Avatar>
                         <div className="absolute bottom-0 right-0 h-2.5 w-2.5 bg-green-500 border-2 border-background rounded-full" />
@@ -170,7 +170,7 @@ export function MembersPanel() {
                         <Avatar className="h-8 w-8">
                           <AvatarImage src={m.user.avatar || m.user.image} />
                           <AvatarFallback className="text-[10px] bg-muted text-muted-foreground">
-                            {m.user.name.slice(0, 2).toUpperCase()}
+                            {m.user?.name?.slice(0, 2).toUpperCase() || 'U'}
                           </AvatarFallback>
                         </Avatar>
                       </div>

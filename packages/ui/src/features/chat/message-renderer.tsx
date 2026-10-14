@@ -19,13 +19,13 @@ export function MessageRenderer({ content, metadata = {}, className }: MessageRe
   if (!content) return null;
 
   return (
-    <div className={cn('prose prose-neutral dark:prose-invert max-w-none w-full break-words', className)}>
+    <div className={cn('prose prose-neutral dark:prose-invert max-w-none w-full break-words text-[14px] leading-[1.45]', className)}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
-          p: ({ children }) => <p className="leading-7 mb-4 last:mb-0">{children}</p>,
-          ul: ({ children }) => <ul className="my-6 ml-6 list-disc [&>li]:mt-2">{children}</ul>,
-          ol: ({ children }) => <ol className="my-6 ml-6 list-decimal [&>li]:mt-2">{children}</ol>,
+          p: ({ children }) => <p className="leading-[1.45] text-[14px] mb-2 last:mb-0">{children}</p>,
+          ul: ({ children }) => <ul className="my-2 ml-5 list-disc [&>li]:mt-1 text-[14px] leading-[1.45]">{children}</ul>,
+          ol: ({ children }) => <ol className="my-2 ml-5 list-decimal [&>li]:mt-1 text-[14px] leading-[1.45]">{children}</ol>,
           code({ node, inline, className, children, ...props }: any) {
             const match = /language-(\w+)/.exec(className || '');
             const language = match ? match[1] : metadata.language || 'text';
@@ -37,7 +37,7 @@ export function MessageRenderer({ content, metadata = {}, className }: MessageRe
 
             return (
               <code
-                className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono text-foreground font-semibold"
+                className="bg-muted/70 dark:bg-muted/40 border border-border/50 px-1.5 py-0.5 rounded-md text-[13px] font-mono text-foreground font-medium"
                 {...props}
               >
                 {children}

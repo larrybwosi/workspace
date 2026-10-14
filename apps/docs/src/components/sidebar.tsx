@@ -10,11 +10,13 @@ export function Sidebar({ type }: { type: 'user-guide' | 'api-reference' }) {
         { href: '/user-guide/joining-workspace', label: 'Joining a Workspace', category: 'Getting Started' },
         { href: '/user-guide/sending-messages', label: 'Sending Messages', category: 'Basics' },
         { href: '/user-guide/custom-messages', label: 'Custom Messages', category: 'Basics' },
+        { href: '/user-guide/message-actions-integration', label: 'Message Actions & Interactions', category: 'Integrations' },
         { href: '/user-guide/making-calls', label: 'Making Calls', category: 'Advanced' },
         { href: '/user-guide/inviting-members', label: 'Inviting Members', category: 'Advanced' },
         { href: '/user-guide/webhooks', label: 'Webhook Integrations', category: 'Integrations' },
         { href: '/user-guide/applications', label: 'Applications', category: 'Integrations' },
         { href: '/user-guide/m2m-integration', label: 'M2M Integration', category: 'Integrations' },
+        { href: '/user-guide/m2m-provisioning-import', label: 'M2M Provisioning & System Import', category: 'Integrations' },
         { href: '/user-guide/bot-provisioning', label: 'Bot Provisioning', category: 'Integrations' },
         { href: '/user-guide/mcp', label: 'Model Context Protocol', category: 'Integrations' },
       ]
@@ -39,6 +41,7 @@ export function Sidebar({ type }: { type: 'user-guide' | 'api-reference' }) {
         { href: '/api-reference/recipe-file-uploads', label: 'File Uploads Recipe', category: 'Guides' },
         { href: '/api-reference/recipe-slash-commands', label: 'Slash Commands Recipe', category: 'Guides' },
         { href: '/api-reference/recipe-sync-members', label: 'Sync Members Recipe', category: 'Guides' },
+        { href: '/api-reference/recipe-import-members', label: 'Import Members Recipe', category: 'Guides' },
         { href: '/api-reference/discord-v10', label: 'Discord V10 Gateway', category: 'Guides' },
       ];
 

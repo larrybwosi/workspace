@@ -29,17 +29,23 @@ export default function LoginPage() {
     try {
       const callbackURL = inviteToken ? `/invite/${inviteToken}` : '/';
 
-      await signIn.email({
+      const res = await signIn.email({
         email,
         password,
         callbackURL,
       });
 
-      toast.success("Welcome back! You've successfully logged in.");
+      if (res?.error) {
+        toast.error(res.error.message || 'Invalid email or password. Please try again.');
+        setIsLoading(false);
+        return;
+      }
 
+      toast.success("Welcome back! You've successfully logged in.");
       router.push(callbackURL);
-    } catch (error) {
-      toast.error('Invalid email or password. Please try again.');
+      router.refresh();
+    } catch (error: any) {
+      toast.error(error?.message || 'Invalid email or password. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -66,6 +72,7 @@ export default function LoginPage() {
       setIsLoading(false);
     }
   };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md">
@@ -116,7 +123,6 @@ export default function LoginPage() {
                 className="w-full"
                 size="sm"
               >
-                {/*<Github className="mr-2 h-4 w-4" />*/}
                 Github
               </Button>
               <Button
@@ -173,44 +179,44 @@ export default function LoginPage() {
 
                 {/* Email Login Form */}
                 <form onSubmit={handleEmailLogin} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="name@example.com"
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    disabled={isLoading}
-                    required
-                    className="pl-10"
-                  />
-                </div>
-              </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="name@example.com"
+                        value={email}
+                        onChange={e => setEmail(e.target.value)}
+                        disabled={isLoading}
+                        required
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
 
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
-                  <Link href="/forgot-password" className="text-sm text-primary hover:underline">
-                    Forgot password?
-                  </Link>
-                </div>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Enter your password"
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    disabled={isLoading}
-                    required
-                    className="pl-10"
-                  />
-                </div>
-              </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="password">Password</Label>
+                      <Link href="/forgot-password" className="text-sm text-primary hover:underline">
+                        Forgot password?
+                      </Link>
+                    </div>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="password"
+                        type="password"
+                        placeholder="Enter your password"
+                        value={password}
+                        onChange={e => setPassword(e.target.value)}
+                        disabled={isLoading}
+                        required
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
 
                   <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

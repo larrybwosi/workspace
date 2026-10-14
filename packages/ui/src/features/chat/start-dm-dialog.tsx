@@ -147,7 +147,7 @@ export function StartDMDialog({ open, onOpenChange }: StartDMDialogProps) {
                       <Avatar className="h-10 w-10">
                         <AvatarImage src={friendship.friend.avatar || friendship.friend.image} />
                         <AvatarFallback className="bg-primary text-primary-foreground">
-                          {friendship.friend.name.slice(0, 2).toUpperCase()}
+                          {friendship.friend?.name?.slice(0, 2).toUpperCase() || 'F'}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
@@ -249,7 +249,7 @@ export function StartDMDialog({ open, onOpenChange }: StartDMDialogProps) {
                       <Avatar className="h-10 w-10">
                         <AvatarImage src={user.avatar} />
                         <AvatarFallback className="bg-primary text-primary-foreground">
-                          {user.name.slice(0, 2).toUpperCase()}
+                          {user.name?.slice(0, 2).toUpperCase() || 'U'}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">

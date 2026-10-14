@@ -61,6 +61,8 @@ export const serverEnvSchema = baseEnvSchema.extend({
   GITHUB_CLIENT_SECRET: z.string().optional(),
   INSTAGRAM_CLIENT_ID: z.string().optional(),
   INSTAGRAM_CLIENT_SECRET: z.string().optional(),
+  RESEND_API_KEY: z.string().optional(),
+  RESEND_FROM_EMAIL: z.string().optional(),
 });
 
 /**

@@ -243,7 +243,7 @@ export function ChannelView({
           channelName={channelData?.name || (isDm ? dmUser?.name : undefined)}
         />
 
-        <div className="shrink-0 px-6 py-6 bg-background">
+        <div className="shrink-0 px-4 pb-4 pt-1 bg-background">
           <MessageComposer
             onSend={handleSendMessage}
             placeholder={placeholderText}

@@ -77,7 +77,7 @@ export function CallChat({ callId }: CallChatProps) {
               <Avatar className="h-8 w-8">
                 <AvatarImage src={msg.userImage} />
                 <AvatarFallback className="text-[10px] bg-zinc-700">
-                  {msg.userName.slice(0, 2).toUpperCase()}
+                  {msg.userName?.slice(0, 2).toUpperCase() || 'U'}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">

@@ -220,6 +220,22 @@ Returns a list of all members in the workspace, including their profile details 
 
 ---
 
+### Bulk Import Members (System Integration)
+
+Bulk import members from an external system into a workspace. Automatically creates missing users, updates profile names/avatars, ensures organization membership, and assigns workspace roles.
+
+**Endpoint:**
+
+**Required Scope:**  or
+
+**Body:**
+
+
+**Response:**
+
+
+---
+
 ### Add Member
 
 Adds an existing Scrymechat user to the workspace.

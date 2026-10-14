@@ -25,6 +25,12 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Scrymechat">
+
+        <!-- Default notification channel for FCM when no explicit channel is specified in message payload -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="@string/default_notification_channel_id" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
