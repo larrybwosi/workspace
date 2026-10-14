@@ -52,6 +52,49 @@ export class V3ApplicationsController {
   }
 
   /**
+   * Threat Mitigation: BOLA / IDOR Protection
+   * Verify workspace existence and check that the requesting user or organization context
+   * has authorized access to the target workspace before listing or mutating workspace bots.
+   */
+  private async checkWorkspaceAccess(workspaceIdOrSlug: { id?: string; slug?: string }, context: ApiV3Context) {
+    const where = workspaceIdOrSlug.id
+      ? { id: workspaceIdOrSlug.id }
+      : { slug: workspaceIdOrSlug.slug };
+
+    const workspace = await prisma.workspace.findUnique({
+      where: where as any,
+      select: {
+        id: true,
+        slug: true,
+        ownerId: true,
+        organizationId: true,
+        members: context.userId
+          ? {
+              where: { userId: context.userId },
+              select: { id: true, role: true },
+            }
+          : undefined,
+      },
+    });
+
+    if (!workspace) {
+      throw new NotFoundException('Workspace not found');
+    }
+
+    if (context.organizationId) {
+      if (workspace.organizationId !== context.organizationId) {
+        throw new ForbiddenException('M2M application is not authorized to access this workspace');
+      }
+    } else if (context.userId) {
+      if (!workspace.members || workspace.members.length === 0) {
+        throw new ForbiddenException('You do not have access to this workspace');
+      }
+    }
+
+    return workspace;
+  }
+
+  /**
    * List applications owned by user or organization
    */
   @Get(['v3/applications', 'v2/applications'])
@@ -148,20 +191,16 @@ export class V3ApplicationsController {
 
     if (body.workspaceId || body.workspaceSlug) {
       /**
-       * ⚡ Performance Optimization:
-       * Replaces `prisma.workspace.findFirst` with `OR` filter with serial `findUnique` point lookups.
-       * Direct O(1) primary key or unique slug B-Tree lookups avoid multi-column index scans.
+       * Threat Mitigation: BOLA / IDOR Protection
+       * Verify requesting user or organization has membership access to the target workspace.
        */
-      const workspace = body.workspaceId
-        ? await prisma.workspace.findUnique({ where: { id: body.workspaceId }, select: { id: true, ownerId: true } })
-        : body.workspaceSlug
-        ? await prisma.workspace.findUnique({ where: { slug: body.workspaceSlug }, select: { id: true, ownerId: true } })
-        : null;
-      if (workspace) {
-        targetWorkspaceId = workspace.id;
-        if (context.organizationId) {
-          targetOwnerId = workspace.ownerId;
-        }
+      const workspace = await this.checkWorkspaceAccess(
+        body.workspaceId ? { id: body.workspaceId } : { slug: body.workspaceSlug },
+        context
+      );
+      targetWorkspaceId = workspace.id;
+      if (context.organizationId) {
+        targetOwnerId = workspace.ownerId;
       }
     }
 
@@ -395,17 +434,17 @@ export class V3ApplicationsController {
     }
 
     /**
-     * ⚡ Performance Optimization:
-     * Replaces `prisma.workspace.findFirst` with `OR` filter with serial `findUnique` point lookups.
-     * Direct O(1) primary key or unique slug B-Tree lookups avoid multi-column index scans.
+     * Threat Mitigation: BOLA / IDOR / Privilege Escalation Protection
+     * Verify that the requesting user owns the application AND has access to the target workspace.
      */
-    const workspace = body.workspaceId
-      ? await prisma.workspace.findUnique({ where: { id: body.workspaceId } })
-      : await prisma.workspace.findUnique({ where: { slug: workspaceIdOrSlug } });
+    const app = await prisma.botApplication.findUnique({ where: { id } });
+    if (!app) throw new NotFoundException('Application not found');
+    await this.checkAppAccess(app, context);
 
-    if (!workspace) {
-      throw new NotFoundException('Workspace not found');
-    }
+    const workspace = await this.checkWorkspaceAccess(
+      body.workspaceId ? { id: body.workspaceId } : { slug: workspaceIdOrSlug },
+      context
+    );
 
     return this.installBotToWorkspace(id, workspace.id, workspace.ownerId || context.userId);
   }
@@ -417,8 +456,14 @@ export class V3ApplicationsController {
   @ApiOperation({ summary: 'List installed bots in workspace' })
   @ApiParam({ name: 'slug', description: 'Workspace slug' })
   async listWorkspaceBots(@V3Context() context: ApiV3Context, @Param('slug') slug: string) {
+    /**
+     * Threat Mitigation: BOLA / IDOR Protection
+     * Verify requesting user/organization has workspace membership before returning installed bots.
+     */
+    const workspaceAccess = await this.checkWorkspaceAccess({ slug }, context);
+
     const workspace = await prisma.workspace.findUnique({
-      where: { slug },
+      where: { id: workspaceAccess.id },
       select: {
         id: true,
         members: {
@@ -465,8 +510,16 @@ export class V3ApplicationsController {
   @ApiParam({ name: 'slug', description: 'Workspace slug' })
   async addBotToWorkspace(@V3Context() context: ApiV3Context, @Param('slug') slug: string, @Body() body: { applicationId: string }) {
     if (!body.applicationId) throw new BadRequestException('applicationId is required');
-    const workspace = await prisma.workspace.findUnique({ where: { slug } });
-    if (!workspace) throw new NotFoundException('Workspace not found');
+
+    /**
+     * Threat Mitigation: BOLA / IDOR / Privilege Escalation Protection
+     * Verify that the requesting user owns the application AND has access to the target workspace.
+     */
+    const app = await prisma.botApplication.findUnique({ where: { id: body.applicationId } });
+    if (!app) throw new NotFoundException('Application not found');
+    await this.checkAppAccess(app, context);
+
+    const workspace = await this.checkWorkspaceAccess({ slug }, context);
 
     return this.installBotToWorkspace(body.applicationId, workspace.id, workspace.ownerId || context.userId);
   }

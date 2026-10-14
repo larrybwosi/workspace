@@ -216,10 +216,11 @@ describe('V3ApplicationsController', () => {
 
   describe('installApplication', () => {
     it('should install bot to workspace and provision team & channel definitions', async () => {
-      const mockWorkspace = { id: 'ws-1', slug: 'acme-ws' };
+      const mockWorkspace = { id: 'ws-1', slug: 'acme-ws', ownerId: 'user-1', members: [{ id: 'wm-1', role: 'admin' }] };
       const mockApp = {
         id: 'app-1',
         name: 'Deploy Bot',
+        ownerId: 'user-1',
         workspaceId: null,
         bot: { id: 'bot-1', name: 'Deploy Bot' },
         channelDefinitions: [
@@ -259,10 +260,36 @@ describe('V3ApplicationsController', () => {
       expect(result.success).toBe(true);
       expect(result.botId).toBe('bot-1');
     });
+
+    it('should throw ForbiddenException if user is not a member of target workspace', async () => {
+      const mockApp = { id: 'app-1', ownerId: 'user-1' };
+      const mockWorkspace = { id: 'ws-1', slug: 'acme-ws', ownerId: 'user-2', members: [] };
+
+      (prisma.botApplication.findUnique as any).mockResolvedValue(mockApp);
+      (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
+
+      await expect(
+        controller.installApplication(mockContext, 'app-1', { workspaceSlug: 'acme-ws' })
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should throw ForbiddenException if user does not own the bot application', async () => {
+      const mockApp = { id: 'app-1', ownerId: 'other-user' };
+      (prisma.botApplication.findUnique as any).mockResolvedValue(mockApp);
+
+      await expect(
+        controller.installApplication(mockContext, 'app-1', { workspaceSlug: 'acme-ws' })
+      ).rejects.toThrow(ForbiddenException);
+    });
   });
 
   describe('listWorkspaceBots', () => {
     it('should return list of bot users installed in a workspace', async () => {
+      const mockWorkspaceAccess = {
+        id: 'ws-1',
+        slug: 'acme-ws',
+        members: [{ id: 'wm-user', role: 'member' }],
+      };
       const mockWorkspace = {
         id: 'ws-1',
         members: [
@@ -280,16 +307,54 @@ describe('V3ApplicationsController', () => {
         ],
       };
 
-      (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
+      (prisma.workspace.findUnique as any)
+        .mockResolvedValueOnce(mockWorkspaceAccess)
+        .mockResolvedValueOnce(mockWorkspace);
 
       const result = await controller.listWorkspaceBots(mockContext, 'acme-ws');
 
-      expect(prisma.workspace.findUnique).toHaveBeenCalledWith({
-        where: { slug: 'acme-ws' },
-        select: expect.any(Object),
-      });
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe('bot-1');
+    });
+
+    it('should throw ForbiddenException if user is not a member of the workspace', async () => {
+      const mockWorkspaceAccess = {
+        id: 'ws-1',
+        slug: 'acme-ws',
+        members: [],
+      };
+
+      (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspaceAccess);
+
+      await expect(controller.listWorkspaceBots(mockContext, 'acme-ws')).rejects.toThrow(ForbiddenException);
+    });
+  });
+
+  describe('addBotToWorkspace', () => {
+    it('should add bot to workspace if user owns app and is member of workspace', async () => {
+      const mockApp = { id: 'app-1', ownerId: 'user-1', bot: { id: 'bot-1' } };
+      const mockWorkspace = { id: 'ws-1', slug: 'acme-ws', ownerId: 'user-1', members: [{ id: 'wm-user' }] };
+
+      (prisma.botApplication.findUnique as any).mockResolvedValue(mockApp);
+      (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
+      (prisma.workspaceMember.upsert as any).mockResolvedValue({});
+
+      const result = await controller.addBotToWorkspace(mockContext, 'acme-ws', { applicationId: 'app-1' });
+
+      expect(result.success).toBe(true);
+      expect(result.botId).toBe('bot-1');
+    });
+
+    it('should throw ForbiddenException if user is not a workspace member when adding bot', async () => {
+      const mockApp = { id: 'app-1', ownerId: 'user-1' };
+      const mockWorkspace = { id: 'ws-1', slug: 'acme-ws', ownerId: 'other-user', members: [] };
+
+      (prisma.botApplication.findUnique as any).mockResolvedValue(mockApp);
+      (prisma.workspace.findUnique as any).mockResolvedValue(mockWorkspace);
+
+      await expect(
+        controller.addBotToWorkspace(mockContext, 'acme-ws', { applicationId: 'app-1' })
+      ).rejects.toThrow(ForbiddenException);
     });
   });
 });

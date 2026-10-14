@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { ForbiddenException } from '@nestjs/common';
 import { V3DmsController } from './v3-dms.controller';
 
 vi.mock('@repo/database', () => ({
@@ -39,10 +40,16 @@ import { prisma } from '@repo/database';
 
 describe('V3DmsController Actions', () => {
   let controller: V3DmsController;
+  let dmsService: any;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    controller = new V3DmsController({} as any, {} as any);
+    dmsService = {
+      createMessage: vi.fn().mockResolvedValue({ id: 'msg_created' }),
+      updateMessage: vi.fn().mockResolvedValue({ id: 'msg_updated' }),
+      addReaction: vi.fn().mockResolvedValue({ id: 'react_added' }),
+    };
+    controller = new V3DmsController(dmsService, {} as any);
   });
 
   const mockContext = {
@@ -128,6 +135,7 @@ describe('V3DmsController Actions', () => {
     });
 
     it('should create message with valid DTO payload', async () => {
+      (prisma.user.findUnique as any).mockResolvedValue({ id: 'usr_1', name: 'User 1' });
       const context: any = { scopes: ['messages:send'], userId: 'usr_1' };
       const dto = {
         content: 'hello',
@@ -142,6 +150,7 @@ describe('V3DmsController Actions', () => {
 
   describe('updateMessage', () => {
     it('should update message with valid DTO payload', async () => {
+      (prisma.user.findUnique as any).mockResolvedValue({ id: 'usr_1', name: 'User 1' });
       const context: any = { scopes: ['messages:send'], userId: 'usr_1' };
       const res = await controller.updateMessage(context, 'dm_1', 'msg_1', { content: 'updated' });
       expect(res.success).toBe(true);
@@ -151,6 +160,7 @@ describe('V3DmsController Actions', () => {
 
   describe('addReaction', () => {
     it('should add reaction with valid DTO payload', async () => {
+      (prisma.user.findUnique as any).mockResolvedValue({ id: 'usr_1', name: 'User 1' });
       const context: any = { scopes: ['messages:send'], userId: 'usr_1' };
       const res = await controller.addReaction(context, 'dm_1', 'msg_1', { emoji: '👍' });
       expect(res.success).toBe(true);
