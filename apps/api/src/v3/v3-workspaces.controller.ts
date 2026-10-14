@@ -258,6 +258,11 @@ export class V3CreateChannelDto {
   @ApiProperty({ example: 'code', required: false, description: 'Icon identifier' })
   icon?: string;
 
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ example: 'cat_123', required: false, description: 'Parent category ID' })
+  parentId?: string;
+
   @IsOptional()
   @ApiProperty({ required: false, description: 'Custom channel metadata' })
   metadata?: any;
@@ -285,6 +290,7 @@ const v3CreateChannelSchema = z.object({
   description: z.string().optional(),
   type: z.enum(['public', 'private']).optional(),
   isPrivate: z.boolean().optional(),
+  parentId: z.string().optional(),
   icon: z.string().optional().default('#'),
   metadata: z.any().optional(),
   initialMembers: z
@@ -2046,6 +2052,7 @@ When provisioned via M2M:
         isPrivate,
         icon: data.icon || '#',
         metadata: data.metadata ?? undefined,
+        parentId: data.parentId,
         workspaceId: workspace.id,
         createdById,
         members: {
