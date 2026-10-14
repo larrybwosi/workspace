@@ -1,3 +1,9 @@
+## 2026-10-10 - [Prisma/Performance] Single-Query Eager Workspace Membership Selection for Support Operations
+
+**Learning:** In `SupportService` (`apps/api/src/support/support.service.ts`), methods `endLiveChat`, `updateTicketStatus`, and `assignTicket` previously performed `prisma.findUnique` for the primary record followed by sequential `prisma.workspaceMember.findUnique` calls to verify workspace agent authorization. Eagerly including `workspace: { select: { members: { where: { userId: { in: targetUserIds } }, select: { userId: true, role: true } } } }` in the initial `findUnique` query retrieves entity data and workspace agent membership in a single query. Evaluating authorization in-memory using `checkAgentRole` cuts database round-trips from 2-4 down to 1-2 per request.
+
+**Action:** Eagerly select required relation membership roles (`workspace.members`) in initial primary key `findUnique` lookups to evaluate entity authorization in-memory.
+
 ## 2026-10-06 - [Prisma/Performance] Parallelizing Workspace and Channel Access Checks in Calls Verification
 
 **Learning:** In `CallsService.verifyCallAccess`, validating workspace membership (`prisma.workspaceMember.findUnique`) and private channel membership (`prisma.channel.findUnique`) previously executed sequentially with `await`. For workspace channel calls, this required 3 sequential database round-trips (RTT) on every call verification action (join, leave, update state, promote, remove, invite, list participants). Executing both membership queries concurrently via `Promise.all` after retrieving the call record reduces database RTTs from 3 down to 2, cutting access authorization query latency by up to 50% on high-frequency call endpoints.
