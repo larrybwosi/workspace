@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { V3DmsController } from './v3-dms.controller';
 
 vi.mock('@repo/database', () => ({
@@ -39,10 +40,23 @@ import { prisma } from '@repo/database';
 
 describe('V3DmsController Actions', () => {
   let controller: V3DmsController;
+  let dmsService: any;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    controller = new V3DmsController({} as any, {} as any);
+    dmsService = {
+      getDm: vi.fn(),
+      getDms: vi.fn(),
+      createDm: vi.fn(),
+      deleteDm: vi.fn(),
+      getMessages: vi.fn(),
+      createMessage: vi.fn().mockResolvedValue({ id: 'msg_created' }),
+      updateMessage: vi.fn().mockResolvedValue({ id: 'msg_updated' }),
+      deleteMessage: vi.fn().mockResolvedValue({ success: true }),
+      addReaction: vi.fn().mockResolvedValue({ id: 'rxn_1' }),
+      removeReaction: vi.fn().mockResolvedValue({ success: true }),
+    };
+    controller = new V3DmsController(dmsService as any, {} as any);
   });
 
   const mockContext = {
@@ -52,8 +66,11 @@ describe('V3DmsController Actions', () => {
 
   it('should trigger DM message action and record response', async () => {
     (prisma.user.findUnique as any).mockResolvedValue({ id: 'usr_1', name: 'User 1' });
+    dmsService.getDm.mockResolvedValue({ id: 'dm_1', members: [] });
+
     const mockMessage = {
       id: 'msg_dm_1',
+      dmId: 'dm_1',
       conversationId: 'dm_1',
       content: 'Approval required',
       senderId: 'bot_1',
@@ -97,7 +114,20 @@ describe('V3DmsController Actions', () => {
     expect(prisma.messageActionResponse.create).toHaveBeenCalled();
   });
 
-  it('should get DM message action responses', async () => {
+  it('should throw ForbiddenException on triggerDmMessageAction when user is not a DM participant', async () => {
+    (prisma.user.findUnique as any).mockResolvedValue({ id: 'usr_1', name: 'User 1' });
+    dmsService.getDm.mockRejectedValue(new ForbiddenException('You do not have access to this DM conversation'));
+
+    await expect(
+      controller.triggerDmMessageAction(mockContext as any, 'dm_1', 'msg_dm_1', { actionId: 'approve' })
+    ).rejects.toThrow(ForbiddenException);
+  });
+
+  it('should get DM message action responses for authorized participant', async () => {
+    (prisma.user.findUnique as any).mockResolvedValue({ id: 'usr_1', name: 'User 1' });
+    dmsService.getDm.mockResolvedValue({ id: 'dm_1', members: [] });
+    (prisma.dMMessage.findUnique as any).mockResolvedValue({ id: 'msg_dm_1', dmId: 'dm_1' });
+
     (prisma.messageActionResponse.findMany as any).mockResolvedValue([
       {
         id: 'resp_1',
@@ -121,6 +151,25 @@ describe('V3DmsController Actions', () => {
     expect(result.data.responses[0].id).toBe('resp_1');
   });
 
+  it('should throw ForbiddenException on getDmMessageActionResponses when user is not a DM participant', async () => {
+    (prisma.user.findUnique as any).mockResolvedValue({ id: 'usr_1', name: 'User 1' });
+    dmsService.getDm.mockRejectedValue(new ForbiddenException('You do not have access to this DM conversation'));
+
+    await expect(
+      controller.getDmMessageActionResponses(mockContext as any, 'dm_1', 'msg_dm_1')
+    ).rejects.toThrow(ForbiddenException);
+  });
+
+  it('should throw NotFoundException on getDmMessageActionResponses when message belongs to another conversation', async () => {
+    (prisma.user.findUnique as any).mockResolvedValue({ id: 'usr_1', name: 'User 1' });
+    dmsService.getDm.mockResolvedValue({ id: 'dm_1', members: [] });
+    (prisma.dMMessage.findUnique as any).mockResolvedValue({ id: 'msg_dm_1', dmId: 'dm_OTHER' });
+
+    await expect(
+      controller.getDmMessageActionResponses(mockContext as any, 'dm_1', 'msg_dm_1')
+    ).rejects.toThrow(NotFoundException);
+  });
+
   describe('createMessage', () => {
     it('should throw ForbiddenException if missing messages:send scope', async () => {
       const context: any = { scopes: ['messages:read'], userId: 'usr_1' };
@@ -128,6 +177,7 @@ describe('V3DmsController Actions', () => {
     });
 
     it('should create message with valid DTO payload', async () => {
+      (prisma.user.findUnique as any).mockResolvedValue({ id: 'usr_1', name: 'User 1' });
       const context: any = { scopes: ['messages:send'], userId: 'usr_1' };
       const dto = {
         content: 'hello',
@@ -142,6 +192,7 @@ describe('V3DmsController Actions', () => {
 
   describe('updateMessage', () => {
     it('should update message with valid DTO payload', async () => {
+      (prisma.user.findUnique as any).mockResolvedValue({ id: 'usr_1', name: 'User 1' });
       const context: any = { scopes: ['messages:send'], userId: 'usr_1' };
       const res = await controller.updateMessage(context, 'dm_1', 'msg_1', { content: 'updated' });
       expect(res.success).toBe(true);
@@ -151,6 +202,7 @@ describe('V3DmsController Actions', () => {
 
   describe('addReaction', () => {
     it('should add reaction with valid DTO payload', async () => {
+      (prisma.user.findUnique as any).mockResolvedValue({ id: 'usr_1', name: 'User 1' });
       const context: any = { scopes: ['messages:send'], userId: 'usr_1' };
       const res = await controller.addReaction(context, 'dm_1', 'msg_1', { emoji: '👍' });
       expect(res.success).toBe(true);

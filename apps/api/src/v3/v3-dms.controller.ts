@@ -463,6 +463,28 @@ export class V3DmsController {
       throw new ForbiddenException('Missing messages:read scope');
     }
 
+    /**
+     * THREAT MITIGATION: BOLA/IDOR & Information Disclosure Prevention
+     * 1. Resolve requesting user/bot context.
+     * 2. Verify DM conversation exists and requesting user is an active participant (throws ForbiddenException/NotFoundException).
+     * 3. Verify message exists and belongs directly to this DM conversation (`message.dmId === dmId`).
+     * Prevents unauthorized callers from probing user action responses, emails, and comments across DM conversations.
+     */
+    const user = await this.resolveEffectiveUserId(context);
+    const dm = await this.dmsService.getDm(dmId, user.id);
+    if (!dm) {
+      throw new NotFoundException('DM conversation not found');
+    }
+
+    const message = await prisma.dMMessage.findUnique({
+      where: { id: messageId },
+      select: { id: true, dmId: true },
+    });
+
+    if (!message || message.dmId !== dmId) {
+      throw new NotFoundException('Message not found in this DM conversation');
+    }
+
     const responses = await prisma.messageActionResponse.findMany({
       where: { messageId },
       include: {
@@ -490,6 +512,15 @@ export class V3DmsController {
     comment?: string,
     metadataPayload?: any
   ) {
+    /**
+     * THREAT MITIGATION: BOLA/IDOR Prevention
+     * Verify user is an active participant in the target DM conversation before processing action response or webhooks.
+     */
+    const dm = await this.dmsService.getDm(dmId, userId);
+    if (!dm) {
+      throw new NotFoundException('DM conversation not found');
+    }
+
     const message = (await prisma.dMMessage.findUnique({
       where: { id: messageId },
       include: {
