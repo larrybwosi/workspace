@@ -276,8 +276,12 @@ export class ChannelsController {
     }
 
     return workspace.channels.map(channel => {
+      const channelSlug = channel.slug || channel.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "general";
+      const channelType = !channel.type || channel.type === "channel" ? (channel.isPrivate ? "private" : "public") : channel.type;
       return {
         ...channel,
+        slug: channelSlug,
+        type: channelType,
         unreadCount: unreadMap.get(channel.id) || 0,
         mentionCount: mentionMap.get(channel.id) || 0,
       };
@@ -423,8 +427,14 @@ export class ChannelsController {
 
     // Omit workspace from the returned channel object to strictly match public API response schema/contract
     const { workspace: _workspace, ...channelResponse } = channel;
+    const channelSlug = channelResponse.slug || channelResponse.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "general";
+    const channelType = !channelResponse.type || channelResponse.type === "channel" ? (channelResponse.isPrivate ? "private" : "public") : channelResponse.type;
 
-    return channelResponse;
+    return {
+      ...channelResponse,
+      slug: channelSlug,
+      type: channelType,
+    };
   }
 
   @Patch(':channelId')

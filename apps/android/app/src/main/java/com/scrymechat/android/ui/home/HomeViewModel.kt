@@ -116,11 +116,13 @@ class HomeViewModel @Inject constructor(
                 ?: workspaceRepository.getWorkspaceBySlug(workspaceSlug)
             val channel = channelRepository.getChannel(channelId)
 
-            if (workspace != null && channel != null) {
+            if (workspace != null) {
                 _uiState.update { state ->
+                    val channels = if (state.selectedWorkspace?.id == workspace.id) state.channels else emptyList()
                     state.copy(
                         selectedWorkspace = workspace,
-                        selectedChannel = channel,
+                        channels = channels,
+                        selectedChannel = channel ?: (if (state.selectedWorkspace?.id == workspace.id) state.selectedChannel else null),
                         selectedDm = null,
                         isHomeSelected = false
                     )
@@ -239,7 +241,8 @@ class HomeViewModel @Inject constructor(
             } else {
                 null
             }
-            state.copy(selectedWorkspace = workspace, selectedChannel = channel, isHomeSelected = workspace == null)
+            val channels = if (state.selectedWorkspace?.id == workspace?.id) state.channels else emptyList()
+            state.copy(selectedWorkspace = workspace, channels = channels, selectedChannel = channel, isHomeSelected = workspace == null)
         }
         if (workspace != null) {
             loadChannels(workspace.slug)
