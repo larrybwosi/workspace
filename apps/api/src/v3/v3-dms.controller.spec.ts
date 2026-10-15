@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { V3DmsController } from './v3-dms.controller';
+import { ForbiddenException } from '@nestjs/common';
 
 vi.mock('@repo/database', () => ({
   prisma: {
@@ -39,10 +40,16 @@ import { prisma } from '@repo/database';
 
 describe('V3DmsController Actions', () => {
   let controller: V3DmsController;
+  let mockDmsService: any;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    controller = new V3DmsController({} as any, {} as any);
+    mockDmsService = {
+      createMessage: vi.fn().mockResolvedValue({ id: 'msg_1', content: 'hello' }),
+      updateMessage: vi.fn().mockResolvedValue({ id: 'msg_1', content: 'updated' }),
+      addReaction: vi.fn().mockResolvedValue({ emoji: '👍' }),
+    };
+    controller = new V3DmsController(mockDmsService, {} as any);
   });
 
   const mockContext = {
@@ -136,7 +143,7 @@ describe('V3DmsController Actions', () => {
       };
       const res = await controller.createMessage(context, 'dm_1', dto);
       expect(res.success).toBe(true);
-      expect(dmsService.createMessage).toHaveBeenCalledWith('dm_1', 'usr_1', dto);
+      expect(mockDmsService.createMessage).toHaveBeenCalledWith('dm_1', 'usr_1', dto);
     });
   });
 
@@ -145,7 +152,7 @@ describe('V3DmsController Actions', () => {
       const context: any = { scopes: ['messages:send'], userId: 'usr_1' };
       const res = await controller.updateMessage(context, 'dm_1', 'msg_1', { content: 'updated' });
       expect(res.success).toBe(true);
-      expect(dmsService.updateMessage).toHaveBeenCalledWith('dm_1', 'msg_1', 'usr_1', 'updated');
+      expect(mockDmsService.updateMessage).toHaveBeenCalledWith('dm_1', 'msg_1', 'usr_1', 'updated');
     });
   });
 
@@ -154,7 +161,7 @@ describe('V3DmsController Actions', () => {
       const context: any = { scopes: ['messages:send'], userId: 'usr_1' };
       const res = await controller.addReaction(context, 'dm_1', 'msg_1', { emoji: '👍' });
       expect(res.success).toBe(true);
-      expect(dmsService.addReaction).toHaveBeenCalledWith('dm_1', 'msg_1', 'usr_1', '👍');
+      expect(mockDmsService.addReaction).toHaveBeenCalledWith('dm_1', 'msg_1', 'usr_1', '👍');
     });
   });
 });
