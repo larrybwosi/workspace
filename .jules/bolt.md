@@ -1,3 +1,9 @@
+## 2026-10-15 - [Prisma/Performance] Parallel B-Tree Single-Column Index Queries for Symmetric Relation OR Filters
+
+**Learning:** In `AblyController.getToken` (`apps/api/src/common/ably/ably.controller.ts`), querying direct messages where the user is a participant using `prisma.directMessage.findMany({ where: { OR: [{ participant1Id: user.id }, { participant2Id: user.id }] } })` caused PostgreSQL to execute multi-column index scan / union operations. Replacing this multi-column `OR` query with two parallelized single-column index queries (`where: { participant1Id: user.id }` and `where: { participant2Id: user.id }`) inside `Promise.all` allows PostgreSQL to utilize dedicated B-Tree indexes (`@@index([participant1Id])` and `@@index([participant2Id])`) concurrently, eliminating multi-column index union scan overhead on real-time Ably token generation.
+
+**Action:** Replace `findMany` queries containing multi-column `OR` filters across single-column indexed fields with parallel `Promise.all` queries targeting each indexed column individually and combine the results in Node.js.
+
 ## 2026-10-10 - [Prisma/Performance] Single-Query Eager Workspace Membership Selection for Support Operations
 
 **Learning:** In `SupportService` (`apps/api/src/support/support.service.ts`), methods `endLiveChat`, `updateTicketStatus`, and `assignTicket` previously performed `prisma.findUnique` for the primary record followed by sequential `prisma.workspaceMember.findUnique` calls to verify workspace agent authorization. Eagerly including `workspace: { select: { members: { where: { userId: { in: targetUserIds } }, select: { userId: true, role: true } } } }` in the initial `findUnique` query retrieves entity data and workspace agent membership in a single query. Evaluating authorization in-memory using `checkAgentRole` cuts database round-trips from 2-4 down to 1-2 per request.

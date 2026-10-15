@@ -30,7 +30,14 @@ export class AblyController {
        * 3. DM conversations where the user is a participant.
        * Dynamically grant Ably token capabilities only for authorized channel names.
        */
-      const [workspaceMemberships, channelMemberships, dmConversations] = await Promise.all([
+      /**
+       * ⚡ Bolt Performance Optimization:
+       * Replaces multi-column `OR` query across `participant1Id` and `participant2Id` with two parallelized,
+       * single-column index queries (`where: { participant1Id: user.id }` and `where: { participant2Id: user.id }`).
+       * This leverages direct single-column B-tree indexes (`@@index([participant1Id])` and `@@index([participant2Id])`),
+       * eliminating database index union overhead during real-time Ably token creation.
+       */
+      const [workspaceMemberships, channelMemberships, dmsAsParticipant1, dmsAsParticipant2] = await Promise.all([
         prisma.workspaceMember.findMany({
           where: { userId: user.id },
           select: { workspaceId: true },
@@ -40,12 +47,16 @@ export class AblyController {
           select: { channelId: true },
         }),
         prisma.directMessage.findMany({
-          where: {
-            OR: [{ participant1Id: user.id }, { participant2Id: user.id }],
-          },
+          where: { participant1Id: user.id },
+          select: { id: true },
+        }),
+        prisma.directMessage.findMany({
+          where: { participant2Id: user.id },
           select: { id: true },
         }),
       ]);
+
+      const dmConversations = [...dmsAsParticipant1, ...dmsAsParticipant2];
 
       const workspaceIds = workspaceMemberships.map(m => m.workspaceId);
 

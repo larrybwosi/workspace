@@ -87,9 +87,9 @@ describe('AblyController', () => {
       (prisma.channelMember.findMany as any).mockResolvedValue([
         { channelId: 'ch-private-1' },
       ]);
-      (prisma.directMessage.findMany as any).mockResolvedValue([
-        { id: 'dm-1' },
-      ]);
+      (prisma.directMessage.findMany as any)
+        .mockResolvedValueOnce([{ id: 'dm-1' }])
+        .mockResolvedValueOnce([{ id: 'dm-2' }]);
       (prisma.channel.findMany as any).mockResolvedValue([
         { id: 'ch-public-1' },
       ]);
@@ -110,6 +110,7 @@ describe('AblyController', () => {
           'thread:ch-public-1': ['subscribe', 'publish', 'history', 'presence'],
           'presence:ch-public-1': ['subscribe', 'publish', 'history', 'presence'],
           'dm:dm-1': ['subscribe', 'publish', 'history', 'presence'],
+          'dm:dm-2': ['subscribe', 'publish', 'history', 'presence'],
         },
         ttl: 3600 * 1000,
         timestamp: expect.any(Number),
