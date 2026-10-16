@@ -7,16 +7,44 @@ import { CurrentBot } from '../auth/current-bot.decorator';
 @UseGuards(ApiV10Guard)
 export class V10UsersController {
   @Get(':id')
-  async getUser(@Param('id') id: string) {
-    if (id === '@me') {
-      // This is handled by getMe but just in case
-      return null;
+  async getUser(@CurrentBot() bot: any, @Param('id') id: string) {
+    if (id === '@me' || id === bot.id) {
+      return this.getMe(bot);
     }
-    const user = await prisma.user.findUnique({
-      where: { id },
+
+    /**
+     * THREAT MITIGATION: Broken Object Level Authorization (BOLA / IDOR) & User Profile Enumeration
+     * Risk Level: High
+     * Verify that the requesting bot shares at least one workspace with the target user before
+     * exposing user profile details. Prevents unauthorized bots from enumerating and scraping
+     * user accounts across external workspaces.
+     */
+    const sharedWorkspace = await prisma.workspaceMember.findFirst({
+      where: {
+        userId: id,
+        workspace: {
+          members: {
+            some: { userId: bot.id },
+          },
+        },
+      },
+      select: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true,
+            isBot: true,
+          },
+        },
+      },
     });
 
-    if (!user) throw new NotFoundException('Unknown User');
+    if (!sharedWorkspace || !sharedWorkspace.user) {
+      throw new NotFoundException('Unknown User');
+    }
+
+    const user = sharedWorkspace.user;
 
     return {
       id: user.id,
