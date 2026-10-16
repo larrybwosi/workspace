@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { V3DmsController } from './v3-dms.controller';
+import { ForbiddenException } from '@nestjs/common';
 
 vi.mock('@repo/database', () => ({
   prisma: {
