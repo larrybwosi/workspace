@@ -138,6 +138,89 @@ function StatusDot({ status, className }: { status?: string; className?: string 
   );
 }
 
+
+interface ChannelGroup {
+  id: string;
+  name: string;
+  channels: any[];
+}
+
+function processWebChannelGrouping(channels: any[] = []): ChannelGroup[] {
+  const categoryEntities = channels.filter(c => c.type?.toLowerCase() === "category");
+  const normalChannels = channels.filter(c => c.type?.toLowerCase() !== "category");
+
+  const isVoiceChannel = (c: any) => {
+    const t = c.type?.toLowerCase();
+    return t === "voice" || t === "stage";
+  };
+
+  if (categoryEntities.length > 0) {
+    const categoryIds = new Set(categoryEntities.map(c => c.id));
+    const uncategorized = normalChannels.filter(c => !c.parentId || !categoryIds.has(c.parentId));
+    const uncategorizedText = uncategorized.filter(c => !isVoiceChannel(c));
+    const uncategorizedVoice = uncategorized.filter(c => isVoiceChannel(c));
+
+    const groups: ChannelGroup[] = [];
+    let mergedText = false;
+    let mergedVoice = false;
+
+    categoryEntities.forEach(cat => {
+      let catChannels = normalChannels.filter(c => c.parentId === cat.id || c.departmentId === cat.id);
+      if (cat.name.toLowerCase() === "text channels") {
+        catChannels = [...catChannels, ...uncategorizedText];
+        mergedText = true;
+      } else if (cat.name.toLowerCase() === "voice channels") {
+        catChannels = [...catChannels, ...uncategorizedVoice];
+        mergedVoice = true;
+      }
+      groups.push({
+        id: cat.id,
+        name: cat.name,
+        channels: catChannels,
+      });
+    });
+
+    if (!mergedText && uncategorizedText.length > 0) {
+      groups.unshift({
+        id: "cat_text_default",
+        name: "Text Channels",
+        channels: uncategorizedText,
+      });
+    }
+
+    if (!mergedVoice && uncategorizedVoice.length > 0) {
+      groups.push({
+        id: "cat_voice_default",
+        name: "Voice Channels",
+        channels: uncategorizedVoice,
+      });
+    }
+
+    return groups;
+  }
+
+  const textChannels = normalChannels.filter(c => !isVoiceChannel(c));
+  const voiceChannels = normalChannels.filter(c => isVoiceChannel(c));
+
+  const defaultGroups: ChannelGroup[] = [];
+  if (textChannels.length > 0) {
+    defaultGroups.push({
+      id: "cat_text_default",
+      name: "Text Channels",
+      channels: textChannels,
+    });
+  }
+  if (voiceChannels.length > 0) {
+    defaultGroups.push({
+      id: "cat_voice_default",
+      name: "Voice Channels",
+      channels: voiceChannels,
+    });
+  }
+
+  return defaultGroups;
+}
+
 // Collapsible section wrapper
 function CollapsibleSection({
   label,
@@ -206,10 +289,12 @@ export function WorkspaceSidebar({ isOpen, onClose, onWorkspaceChange, onChannel
   const [createWorkspaceOpen, setCreateWorkspaceOpen] = React.useState(false);
   const [createTicketOpen, setCreateTicketOpen] = React.useState(false);
   const [channelsCollapsed, setChannelsCollapsed] = React.useState(false);
+  const [collapsedGroups, setCollapsedGroups] = React.useState<Record<string, boolean>>({});
   const [dmsCollapsed, setDmsCollapsed] = React.useState(false);
 
   const { data: workspace } = useWorkspace(workspaceSlug ?? '');
   const { data: channels, isLoading: channelsLoading } = useWorkspaceChannels(workspaceSlug ?? '');
+  const channelGroups = React.useMemo(() => processWebChannelGrouping(channels ?? []), [channels]);
   const createChannelMutation = useCreateWorkspaceChannel(workspaceSlug ?? '');
   const session = useSession();
   const sessionUser = session.data?.user;
@@ -371,58 +456,88 @@ export function WorkspaceSidebar({ isOpen, onClose, onWorkspaceChange, onChannel
 
               <Separator className="bg-sidebar-border" />
 
-              {/* Channels — collapsible */}
-              <CollapsibleSection
-                label="Channels"
-                isCollapsed={channelsCollapsed}
-                onToggle={() => setChannelsCollapsed(v => !v)}
-                actionIcon={<Plus className="h-3.5 w-3.5" />}
-                actionLabel="New channel"
-                onAction={() => setCreateChannelOpen(true)}
-              >
-                {channelsLoading ? (
+              {/* Channels — grouped by Text Channels / categories */}
+              {channelsLoading ? (
+                <CollapsibleSection
+                  label="Channels"
+                  isCollapsed={channelsCollapsed}
+                  onToggle={() => setChannelsCollapsed(v => !v)}
+                  actionIcon={<Plus className="h-3.5 w-3.5" />}
+                  actionLabel="New channel"
+                  onAction={() => setCreateChannelOpen(true)}
+                >
                   <ChannelSkeleton />
-                ) : channels?.length > 0 ? (
-                  channels.map((channel: any) => {
-                    const href = `/workspace/${slug}/channels/${channel.slug ?? channel.id}`;
-                    const isActive = pathname === href;
-                    const Icon = channel.type === 'private' ? Lock : Hash;
-                    const hasUnread = (channel.unreadCount ?? 0) > 0;
+                </CollapsibleSection>
+              ) : channelGroups.length > 0 ? (
+                channelGroups.map(group => (
+                  <CollapsibleSection
+                    key={group.id}
+                    label={group.name}
+                    isCollapsed={collapsedGroups[group.id] ?? false}
+                    onToggle={() =>
+                      setCollapsedGroups(prev => ({
+                        ...prev,
+                        [group.id]: !prev[group.id],
+                      }))
+                    }
+                    actionIcon={<Plus className="h-3.5 w-3.5" />}
+                    actionLabel="New channel"
+                    onAction={() => setCreateChannelOpen(true)}
+                  >
+                    {group.channels.length > 0 ? (
+                      group.channels.map((channel: any) => {
+                        const href = `/workspace/${slug}/channels/${channel.slug ?? channel.id}`;
+                        const isActive = pathname === href;
+                        const Icon = channel.type === 'private' ? Lock : Hash;
+                        const hasUnread = (channel.unreadCount ?? 0) > 0;
 
-                    return (
-                      <Button
-                        key={channel.id}
-                        variant="ghost"
-                        size="sm"
-                        className={cn(
-                          'w-full justify-start gap-2.5 h-9 px-3 rounded-md text-sm font-medium transition-all',
-                          isActive
-                            ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                            : hasUnread
-                              ? 'text-sidebar-foreground font-semibold hover:bg-sidebar-accent/50'
-                              : 'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50'
-                        )}
-                        onClick={() => handleNavigate(href, channel.slug ?? channel.id)}
-                      >
-                        <Icon
-                          className={cn(
-                            'h-3.5 w-3.5 shrink-0',
-                            isActive ? 'text-sidebar-accent-foreground' : 'text-muted-foreground'
-                          )}
-                        />
-                        <span className="flex-1 truncate text-left">{channel.name}</span>
-                        {hasUnread && (
-                          <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
-                            {channel.unreadCount > 99 ? '99+' : channel.unreadCount}
-                          </span>
-                        )}
-                      </Button>
-                    );
-                  })
-                ) : (
+                        return (
+                          <Button
+                            key={channel.id}
+                            variant="ghost"
+                            size="sm"
+                            className={cn(
+                              'w-full justify-start gap-2.5 h-9 px-3 rounded-md text-sm font-medium transition-all',
+                              isActive
+                                ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                                : hasUnread
+                                  ? 'text-sidebar-foreground font-semibold hover:bg-sidebar-accent/50'
+                                  : 'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50'
+                            )}
+                            onClick={() => handleNavigate(href, channel.slug ?? channel.id)}
+                          >
+                            <Icon
+                              className={cn(
+                                'h-3.5 w-3.5 shrink-0',
+                                isActive ? 'text-sidebar-accent-foreground' : 'text-muted-foreground'
+                              )}
+                            />
+                            <span className="flex-1 truncate text-left">{channel.name}</span>
+                            {hasUnread && (
+                              <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
+                                {channel.unreadCount > 99 ? '99+' : channel.unreadCount}
+                              </span>
+                            )}
+                          </Button>
+                        );
+                      })
+                    ) : (
+                      <p className="px-3 py-2 text-xs text-muted-foreground/60 italic text-center">No channels</p>
+                    )}
+                  </CollapsibleSection>
+                ))
+              ) : (
+                <CollapsibleSection
+                  label="Channels"
+                  isCollapsed={channelsCollapsed}
+                  onToggle={() => setChannelsCollapsed(v => !v)}
+                  actionIcon={<Plus className="h-3.5 w-3.5" />}
+                  actionLabel="New channel"
+                  onAction={() => setCreateChannelOpen(true)}
+                >
                   <p className="px-3 py-3 text-xs text-muted-foreground/60 italic text-center">No channels yet</p>
-                )}
-              </CollapsibleSection>
+                </CollapsibleSection>
+              )}
 
             </div>
           </ScrollArea>

@@ -143,14 +143,14 @@ class ChannelRepository @Inject constructor(
     private fun ChannelDto.toEntity() = ChannelEntity(
         id = id,
         name = name,
-        slug = slug,
-        type = type,
+        slug = if (!slug.isNullOrBlank()) slug else name.lowercase().replace(" ", "-").replace(Regex("[^a-z0-9-]"), ""),
+        type = if (!type.isNullOrBlank()) type else "public",
         description = description,
-        icon = icon,
-        workspaceId = workspaceId,
+        icon = icon ?: "#",
+        workspaceId = workspaceId ?: "",
         parentId = parentId,
-        createdAt = createdAt,
-        updatedAt = updatedAt,
+        createdAt = createdAt ?: "",
+        updatedAt = updatedAt ?: "",
         unreadCount = unreadCount ?: 0,
         mentionCount = mentionCount ?: 0
     )
