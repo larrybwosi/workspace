@@ -186,8 +186,14 @@ export class IntegrationsService {
   }
 
   async handleHulyWebhook(id: string, body: any) {
+    /**
+     * ⚡ Performance Optimization:
+     * Uses `select: { service: true, config: true }` to project only the required properties.
+     * This avoids pulling unneeded scalar columns from the database and reduces memory overhead.
+     */
     const integration = await prisma.workspaceIntegration.findUnique({
       where: { id },
+      select: { service: true, config: true },
     });
 
     if (!integration || integration.service !== 'huly') {
