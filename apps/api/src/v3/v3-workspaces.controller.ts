@@ -1387,14 +1387,24 @@ When provisioned via M2M:
       throw new BadRequestException('members array must not be empty');
     }
 
+    const emails = [...new Set(body.members.map(m => m.email).filter((e): e is string => Boolean(e)))];
+
+    /**
+     * ⚡ Bolt Performance Optimization:
+     * Pre-fetches existing users by email in a single batched `prisma.user.findMany` query prior to the import loop.
+     * Replaces N sequential `prisma.user.findUnique` database queries with 1 batch lookup, reducing user resolution round-trips from O(N) down to O(1).
+     */
+    const existingUsers = emails.length > 0
+      ? await prisma.user.findMany({ where: { email: { in: emails } } })
+      : [];
+    const userMap = new Map<string, (typeof existingUsers)[0]>(existingUsers.map(u => [u.email, u]));
+
     const results = [];
 
     for (const item of body.members) {
       if (!item.email) continue;
 
-      let user = await prisma.user.findUnique({
-        where: { email: item.email },
-      });
+      let user = userMap.get(item.email);
 
       if (!user) {
         const userName = item.name || item.email.split('@')[0] || item.email;
@@ -1405,6 +1415,7 @@ When provisioned via M2M:
             avatar: item.avatar || null,
           },
         });
+        userMap.set(user.email, user);
       } else if (item.name || item.avatar) {
         user = await prisma.user.update({
           where: { id: user.id },
@@ -1413,6 +1424,7 @@ When provisioned via M2M:
             ...(item.avatar ? { avatar: item.avatar } : {}),
           },
         });
+        userMap.set(user.email, user);
       }
 
       const orgId = workspace.organizationId || context.organizationId;
