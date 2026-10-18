@@ -92,6 +92,13 @@ describe('V3ChannelIncomingWebhooksController', () => {
         select: {
           workspaceId: true,
           incomingWebhooks: {
+            select: expect.objectContaining({
+              id: true,
+              channelId: true,
+              name: true,
+              token: true,
+              isActive: true,
+            }),
             orderBy: { createdAt: 'desc' },
           },
         },

@@ -68,6 +68,14 @@ describe('V3WebhooksController', () => {
       expect(redisClient.get).toHaveBeenCalledWith('v3:workspace:ws-123:webhooks');
       expect(prisma.workspaceWebhook.findMany).toHaveBeenCalledWith({
         where: { workspaceId: 'ws-123' },
+        select: expect.objectContaining({
+          id: true,
+          workspaceId: true,
+          name: true,
+          url: true,
+          events: true,
+          active: true,
+        }),
         orderBy: { createdAt: 'desc' },
       });
       expect(redisClient.setex).toHaveBeenCalledWith('v3:workspace:ws-123:webhooks', 600, JSON.stringify(mockWebhooks));

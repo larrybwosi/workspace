@@ -166,13 +166,29 @@ export class V3ChannelIncomingWebhooksController {
       throw new BadRequestException('Workspace ID not resolved');
     }
 
+    /**
+     * 🛡️ Security Hardening (Credential Disclosure Mitigation & BOLA Prevention):
+     * Explicitly select non-sensitive fields and omit HMAC signing keys (`secret`) from bulk query projections
+     * to prevent unauthorized disclosure of signing secrets in workspace incoming webhook listings.
+     */
     const webhooks = await prisma.channelIncomingWebhook.findMany({
       where: {
         channel: {
           workspaceId: context.workspaceId,
         },
       },
-      include: {
+      select: {
+        id: true,
+        channelId: true,
+        name: true,
+        description: true,
+        token: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
+        lastReceivedAt: true,
+        totalReceived: true,
+        createdBy: true,
         channel: {
           select: {
             id: true,
@@ -216,11 +232,31 @@ export class V3ChannelIncomingWebhooksController {
      * 2. Reduces database round-trips (RTT) from 2 to 1.
      * 3. Uses 'select' to fetch only essential fields to minimize payload and memory overhead.
      */
+    /**
+     * ⚡ Performance & Security Optimization:
+     * 1. Consolidates channel existence/workspace verification and incoming webhooks retrieval into a single query.
+     * 2. Reduces database round-trips (RTT) from 2 to 1.
+     * 3. Uses explicit field selection on `incomingWebhooks` to fetch essential properties while omitting
+     *    sensitive HMAC signing keys (`secret`) to prevent credential exposure in bulk channel webhook listings.
+     */
     const channel = await prisma.channel.findUnique({
       where: { id: channelId },
       select: {
         workspaceId: true,
         incomingWebhooks: {
+          select: {
+            id: true,
+            channelId: true,
+            name: true,
+            description: true,
+            token: true,
+            isActive: true,
+            createdAt: true,
+            updatedAt: true,
+            lastReceivedAt: true,
+            totalReceived: true,
+            createdBy: true,
+          },
           orderBy: { createdAt: 'desc' },
         },
       },
