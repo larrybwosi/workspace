@@ -143,8 +143,6 @@ export class V3WebhooksController {
         events: true,
         active: true,
         createdAt: true,
-        updatedAt: true,
-        createdById: true,
       },
       orderBy: { createdAt: 'desc' },
     });
