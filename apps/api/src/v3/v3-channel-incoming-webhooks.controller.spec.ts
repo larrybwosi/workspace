@@ -68,8 +68,45 @@ describe('V3ChannelIncomingWebhooksController', () => {
     vi.clearAllMocks();
   });
 
+  describe('getWorkspaceIncomingWebhooks', () => {
+    it('should list workspace webhooks and omit sensitive HMAC secret from select query', async () => {
+      const context = {
+        scopes: ['webhooks:read'],
+        workspaceId: 'ws-123',
+        userId: 'user-xyz',
+      };
+
+      const mockWebhooks = [
+        { id: 'wh-1', name: 'Hook 1', token: 'tok-1', channelId: 'ch-1' },
+      ];
+
+      (prisma.channelIncomingWebhook.findMany as any).mockResolvedValue(mockWebhooks);
+
+      const result = await controller.getWorkspaceIncomingWebhooks(context as any, 'acme-slug');
+
+      expect(result.success).toBe(true);
+      expect(result.data.webhooks).toEqual(mockWebhooks);
+      expect(prisma.channelIncomingWebhook.findMany).toHaveBeenCalledWith({
+        where: {
+          channel: {
+            workspaceId: 'ws-123',
+          },
+        },
+        select: expect.objectContaining({
+          id: true,
+          token: true,
+          channel: expect.anything(),
+        }),
+        orderBy: { createdAt: 'desc' },
+      });
+      // Verify secret is NOT included in the select projection
+      const selectObj = (prisma.channelIncomingWebhook.findMany as any).mock.calls[0][0].select;
+      expect(selectObj.secret).toBeUndefined();
+    });
+  });
+
   describe('getChannelWebhooks', () => {
-    it('should list channel webhooks if scopes and channel workspace match', async () => {
+    it('should list channel webhooks and omit sensitive HMAC secret from select query', async () => {
       const context = {
         scopes: ['webhooks:read'],
         workspaceId: 'ws-123',
@@ -92,10 +129,17 @@ describe('V3ChannelIncomingWebhooksController', () => {
         select: {
           workspaceId: true,
           incomingWebhooks: {
+            select: expect.objectContaining({
+              id: true,
+              token: true,
+            }),
             orderBy: { createdAt: 'desc' },
           },
         },
       });
+      // Verify secret is NOT included in incomingWebhooks select projection
+      const selectObj = (prisma.channel.findUnique as any).mock.calls[0][0].select.incomingWebhooks.select;
+      expect(selectObj.secret).toBeUndefined();
     });
 
     it('should throw ForbiddenException if missing webhooks:read scope', async () => {
