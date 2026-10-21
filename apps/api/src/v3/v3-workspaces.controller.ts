@@ -631,11 +631,21 @@ export class V3WorkspacesController {
       false;
 
     if (!allowMultiple) {
-      const existingResponse = await prisma.messageActionResponse.findFirst({
+      /**
+       * ⚡ Performance Optimization:
+       * Replaces `prisma.messageActionResponse.findFirst` with a direct O(1) point lookup via `findUnique`
+       * targeting the compound unique constraint `actionId_userId` (`@@unique([actionId, userId])`).
+       * Projected `select: { id: true }` avoids over-fetching unused columns.
+       * Expected impact: Replaces multi-column query scans with direct O(1) B-tree unique index point lookups.
+       */
+      const existingResponse = await prisma.messageActionResponse.findUnique({
         where: {
-          actionId: action.id,
-          userId,
+          actionId_userId: {
+            actionId: action.id,
+            userId,
+          },
         },
+        select: { id: true },
       });
 
       if (existingResponse) {
@@ -649,7 +659,12 @@ export class V3WorkspacesController {
       (action as any)?.handler?.url;
 
     if (!callbackUrl && (message as any).user?.isBot) {
-      const app = await prisma.botApplication.findFirst({
+      /**
+       * ⚡ Performance Optimization:
+       * Replaces `prisma.botApplication.findFirst` on `@unique` field `botId` with a direct O(1) B-tree unique point lookup via `findUnique`.
+       * Expected impact: Eliminates query planner scan overhead on bot application resolution.
+       */
+      const app = await prisma.botApplication.findUnique({
         where: { botId: (message as any).userId },
         select: { interactionsUrl: true },
       });

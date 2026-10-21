@@ -596,7 +596,12 @@ export class V3DmsController {
       metaAct?.handler?.url;
 
     if (!callbackUrl && message.sender?.isBot) {
-      const app = await prisma.botApplication.findFirst({
+      /**
+       * ⚡ Performance Optimization:
+       * Replaces `prisma.botApplication.findFirst` on `@unique` field `botId` with a direct O(1) B-tree unique point lookup via `findUnique`.
+       * Expected impact: Eliminates query planner scan overhead on bot application resolution.
+       */
+      const app = await prisma.botApplication.findUnique({
         where: { botId: message.senderId },
         select: { interactionsUrl: true },
       });

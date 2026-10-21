@@ -24,6 +24,7 @@ vi.mock('@repo/database', () => ({
       findMany: vi.fn(),
     },
     botApplication: {
+      findUnique: vi.fn(),
       findFirst: vi.fn(),
     },
   },
