@@ -80,3 +80,7 @@
 ## 2026-10-16 - Enforce Mutual Workspace Membership Verification on V10 User Profile Lookup Endpoint
 **Learning:** `GET /bot/v10/users/:id` in `V10UsersController` fetched user details by `userId` using `prisma.user.findUnique` without extracting `@CurrentBot()` or checking if the requesting bot shared any workspace with the target user. Any authenticated bot application could query or enumerate user profile data across external workspaces (BOLA / IDOR / User Profile Enumeration).
 **Action:** Always inject bot context and perform explicit mutual workspace checks (`prisma.workspaceMember.findFirst` matching `userId` and `workspace.members` containing `bot.id`) before exposing user profile details to bot applications.
+
+## 2026-10-18 - Enforce Constant-Time HMAC Signature Verification and Bot Workspace Membership on Interaction Callbacks
+**Learning:** `V10InteractionsService.handleCallback` used loose string inequality (`signature !== expectedSignature`) for HMAC interaction token verification and created channel messages directly from `data.channel_id` without verifying channel existence or bot workspace membership. This exposed interaction token verification to timing side-channel attacks and allowed cross-workspace message injection (BOLA / IDOR / Timing Attack).
+**Action:** Always use `crypto.timingSafeEqual` for secret/signature verification, and explicitly verify target channel existence (`prisma.channel.findUnique`) and bot workspace membership (`prisma.workspaceMember.findUnique`) before creating channel messages in bot interaction callbacks.
