@@ -14,37 +14,37 @@ export class V10UsersController {
 
     /**
      * THREAT MITIGATION: Broken Object Level Authorization (BOLA / IDOR) & User Profile Enumeration
-     * Risk Level: High
-     * Verify that the requesting bot shares at least one workspace with the target user before
-     * exposing user profile details. Prevents unauthorized bots from enumerating and scraping
-     * user accounts across external workspaces.
+     * ⚡ Performance Optimization:
+     * Leverages direct O(1) primary key lookup on `User.id` (`prisma.user.findUnique`) instead of
+     * non-primary table scan on `workspaceMember.findFirst`.
+     * If the target user does not exist, `findUnique` short-circuits instantly in O(1) without joining
+     * `workspace_members` or `workspaces`. If the user exists, it verifies shared workspace membership
+     * via nested `workspaceMemberships` relation filter in a single query.
      */
-    const sharedWorkspace = await prisma.workspaceMember.findFirst({
-      where: {
-        userId: id,
-        workspace: {
-          members: {
-            some: { userId: bot.id },
-          },
-        },
-      },
+    const user = await prisma.user.findUnique({
+      where: { id },
       select: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            avatar: true,
-            isBot: true,
+        id: true,
+        name: true,
+        avatar: true,
+        isBot: true,
+        workspaceMemberships: {
+          where: {
+            workspace: {
+              members: {
+                some: { userId: bot.id },
+              },
+            },
           },
+          select: { id: true },
+          take: 1,
         },
       },
     });
 
-    if (!sharedWorkspace || !sharedWorkspace.user) {
+    if (!user || user.workspaceMemberships.length === 0) {
       throw new NotFoundException('Unknown User');
     }
-
-    const user = sharedWorkspace.user;
 
     return {
       id: user.id,

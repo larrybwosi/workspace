@@ -4,8 +4,8 @@ import { V10UsersController } from './users.controller';
 
 vi.mock('@repo/database', () => ({
   prisma: {
-    workspaceMember: {
-      findFirst: vi.fn(),
+    user: {
+      findUnique: vi.fn(),
     },
   },
 }));
@@ -39,34 +39,35 @@ describe('V10UsersController', () => {
     });
 
     it('should return user details when bot and target user share a workspace', async () => {
-      (prisma.workspaceMember.findFirst as any).mockResolvedValue({
-        user: {
-          id: 'usr_202',
-          name: 'Jane Doe',
-          avatar: 'https://example.com/jane.png',
-          isBot: false,
-        },
+      (prisma.user.findUnique as any).mockResolvedValue({
+        id: 'usr_202',
+        name: 'Jane Doe',
+        avatar: 'https://example.com/jane.png',
+        isBot: false,
+        workspaceMemberships: [{ id: 'wm_1' }],
       });
 
       const res = await controller.getUser(mockBot, 'usr_202');
 
-      expect(prisma.workspaceMember.findFirst).toHaveBeenCalledWith({
+      expect(prisma.user.findUnique).toHaveBeenCalledWith({
         where: {
-          userId: 'usr_202',
-          workspace: {
-            members: {
-              some: { userId: 'bot_101' },
-            },
-          },
+          id: 'usr_202',
         },
         select: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              avatar: true,
-              isBot: true,
+          id: true,
+          name: true,
+          avatar: true,
+          isBot: true,
+          workspaceMemberships: {
+            where: {
+              workspace: {
+                members: {
+                  some: { userId: 'bot_101' },
+                },
+              },
             },
+            select: { id: true },
+            take: 1,
           },
         },
       });
@@ -82,9 +83,23 @@ describe('V10UsersController', () => {
     });
 
     it('should throw NotFoundException when bot and target user do not share a workspace', async () => {
-      (prisma.workspaceMember.findFirst as any).mockResolvedValue(null);
+      (prisma.user.findUnique as any).mockResolvedValue({
+        id: 'usr_unauthorized',
+        name: 'John Doe',
+        avatar: null,
+        isBot: false,
+        workspaceMemberships: [],
+      });
 
       await expect(controller.getUser(mockBot, 'usr_unauthorized')).rejects.toThrow(
+        NotFoundException
+      );
+    });
+
+    it('should throw NotFoundException when target user does not exist', async () => {
+      (prisma.user.findUnique as any).mockResolvedValue(null);
+
+      await expect(controller.getUser(mockBot, 'non_existent_user')).rejects.toThrow(
         NotFoundException
       );
     });
