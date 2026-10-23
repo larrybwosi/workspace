@@ -641,36 +641,56 @@ export class ChannelsController {
     @Param('channelId') channelId: string,
     @Body() body: AddChannelMemberDto
   ) {
-    const workspace = await prisma.workspace.findUnique({
-      where: { slug },
-      select: {
-        id: true,
-        members: {
-          where: { userId: user.id },
-          select: { role: true },
-        },
-      },
-    });
-
-    if (!workspace) {
-      throw new NotFoundException('Workspace not found');
-    }
-
-    if (workspace.members.length === 0) {
-      throw new ForbiddenException('Forbidden');
-    }
-
     const userIdsToAdd = body.userIds || (body.userId ? [body.userId] : []);
     if (userIdsToAdd.length === 0) {
       throw new BadRequestException('userId or userIds required');
     }
 
+    /**
+     * ⚡ Performance Optimization:
+     * Consolidates workspace lookup, membership authorization, and channel resolution into a single `prisma.channel.findUnique` point query.
+     * Reduces database round-trips from 2 down to 1 on the happy path.
+     */
     const channel = await prisma.channel.findUnique({
-      where: { id: channelId, workspaceId: workspace.id },
+      where: { id: channelId },
+      select: {
+        id: true,
+        workspaceId: true,
+        workspace: {
+          select: {
+            id: true,
+            slug: true,
+            members: {
+              where: { userId: user.id },
+              select: { role: true },
+            },
+          },
+        },
+      },
     });
 
-    if (!channel) {
+    if (!channel || !channel.workspace || channel.workspace.slug !== slug) {
+      const workspace = await prisma.workspace.findUnique({
+        where: { slug },
+        select: {
+          id: true,
+          members: {
+            where: { userId: user.id },
+            select: { role: true },
+          },
+        },
+      });
+      if (!workspace) {
+        throw new NotFoundException('Workspace not found');
+      }
+      if (workspace.members.length === 0) {
+        throw new ForbiddenException('Forbidden');
+      }
       throw new NotFoundException('Channel not found');
+    }
+
+    if (channel.workspace.members.length === 0) {
+      throw new ForbiddenException('Forbidden');
     }
 
     let permissionsBigInt: bigint | null = null;
@@ -719,39 +739,28 @@ export class ChannelsController {
     @Body() body: UpdateChannelMemberDto
   ) {
     /**
-     * Threat Mitigation (BOLA / Cross-Tenant & Unauthorized Privilege Escalation):
-     * 1. Validate workspace existence and verify requesting user's workspace membership.
-     * 2. Verify target channel belongs to the current workspace scope (`channel.workspaceId === workspace.id`)
-     *    to prevent cross-tenant/cross-workspace channel member manipulation.
-     * 3. Enforce least privilege access control: requiring either workspace owner/admin role OR channel admin/moderator role
+     * ⚡ Performance Optimization & Threat Mitigation (BOLA / Cross-Tenant Privilege Escalation):
+     * 1. Consolidates workspace resolution, user workspace authorization, target channel verification,
+     *    and requesting user channel membership lookup into a single `prisma.channel.findUnique` point query.
+     * 2. Reduces database round-trips from 2 down to 1 on member role updates.
+     * 3. Enforces least privilege access control: requiring either workspace owner/admin role OR channel admin/moderator role
      *    before granting permission to mutate member roles and permissions.
      */
-    const workspace = await prisma.workspace.findUnique({
-      where: { slug },
-      select: {
-        id: true,
-        members: {
-          where: { userId: user.id },
-          select: { role: true },
-        },
-      },
-    });
-
-    if (!workspace) {
-      throw new NotFoundException('Workspace not found');
-    }
-
-    const workspaceMember = workspace.members[0];
-    if (!workspaceMember) {
-      throw new ForbiddenException('Forbidden');
-    }
-
-    // Verify channel exists and belongs strictly to the requested workspace
     const channel = await prisma.channel.findUnique({
       where: { id: channelId },
       select: {
         id: true,
         workspaceId: true,
+        workspace: {
+          select: {
+            id: true,
+            slug: true,
+            members: {
+              where: { userId: user.id },
+              select: { role: true },
+            },
+          },
+        },
         members: {
           where: { userId: user.id },
           select: { role: true },
@@ -759,8 +768,29 @@ export class ChannelsController {
       },
     });
 
-    if (!channel || channel.workspaceId !== workspace.id) {
+    if (!channel || !channel.workspace || channel.workspace.slug !== slug) {
+      const workspace = await prisma.workspace.findUnique({
+        where: { slug },
+        select: {
+          id: true,
+          members: {
+            where: { userId: user.id },
+            select: { role: true },
+          },
+        },
+      });
+      if (!workspace) {
+        throw new NotFoundException('Workspace not found');
+      }
+      if (workspace.members.length === 0) {
+        throw new ForbiddenException('Forbidden');
+      }
       throw new NotFoundException('Channel not found');
+    }
+
+    const workspaceMember = channel.workspace.members[0];
+    if (!workspaceMember) {
+      throw new ForbiddenException('Forbidden');
     }
 
     const isWorkspaceAdmin = ['owner', 'admin'].includes(workspaceMember.role);
