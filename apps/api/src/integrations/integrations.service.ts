@@ -109,15 +109,22 @@ export class IntegrationsService {
 
     /**
      * ⚡ Performance Optimization:
-     * Explicitly orders channels by `createdAt: 'asc'` alongside `select: { id: true }` to ensure
-     * predictable PostgreSQL index ordering and retrieve the primary workspace channel deterministically.
-     * This prevents unindexed table scans and reduces memory overhead.
+     * Leverages a direct O(1) primary key point lookup on `Workspace` (`id`) with nested `channels`
+     * selection (`take: 1`, `orderBy: { createdAt: 'asc' }`) instead of `prisma.channel.findFirst`.
+     * This avoids unindexed table/index scans on the Channel table and reduces query execution latency.
      */
-    const channel = await prisma.channel.findFirst({
-      where: { workspaceId: workspaceId as string },
-      orderBy: { createdAt: 'asc' },
-      select: { id: true },
+    const workspace = await prisma.workspace.findUnique({
+      where: { id: workspaceId as string },
+      select: {
+        channels: {
+          orderBy: { createdAt: 'asc' },
+          select: { id: true },
+          take: 1,
+        },
+      },
     });
+
+    const channel = workspace?.channels[0];
 
     if (!channel) throw new NotFoundException('Channel not found');
 
@@ -145,18 +152,25 @@ export class IntegrationsService {
   async createHulyTask(workspaceId: string, data: { title: string; description?: string }) {
     /**
      * ⚡ Performance Optimization:
-     * Uses `select: { config: true }` to retrieve only the JSON `config` from the Integration row.
-     * Since only the integration's configuration is needed for executing HTTP requests to Huly,
-     * this avoids over-fetching other scalar fields and speeds up the integration execution path.
+     * Leverages a direct O(1) primary key point lookup on `Workspace` (`id`) with nested `integrations`
+     * selection (`take: 1`, `where: { service: 'huly', active: true }`) instead of `prisma.workspaceIntegration.findFirst`.
+     * This avoids unindexed relation scans on `workspace_integrations` and optimizes execution latency.
      */
-    const integration = await prisma.workspaceIntegration.findFirst({
-      where: {
-        workspaceId,
-        service: 'huly',
-        active: true,
+    const workspace = await prisma.workspace.findUnique({
+      where: { id: workspaceId },
+      select: {
+        integrations: {
+          where: {
+            service: 'huly',
+            active: true,
+          },
+          select: { config: true },
+          take: 1,
+        },
       },
-      select: { config: true },
     });
+
+    const integration = workspace?.integrations[0];
 
     if (!integration) throw new NotFoundException('Huly integration not found or inactive');
 
