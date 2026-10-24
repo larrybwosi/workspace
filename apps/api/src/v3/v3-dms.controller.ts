@@ -538,9 +538,24 @@ export class V3DmsController {
       metaAct = customMsgActions.find((a: any) => a.id === actionIdParam || a.actionId === actionIdParam);
     }
 
-    let action = await prisma.messageAction.findFirst({
-      where: { messageId: message.id, OR: [{ actionId: actionIdParam }, { id: actionIdParam }] },
+    /**
+     * ⚡ Bolt Performance Optimization:
+     * Replaces `prisma.messageAction.findFirst` with `OR` filters by utilizing serial short-circuiting
+     * `findUnique` point lookups targeting compound constraint `messageId_actionId` and primary key `id`.
+     * Direct O(1) B-tree point lookups eliminate multi-column query scans and index union overhead while
+     * preserving message ownership scoping in memory (`actionById.messageId === message.id`).
+     */
+    let action = await prisma.messageAction.findUnique({
+      where: { messageId_actionId: { messageId: message.id, actionId: actionIdParam } },
     });
+    if (!action) {
+      const actionById = await prisma.messageAction.findUnique({
+        where: { id: actionIdParam },
+      });
+      if (actionById && actionById.messageId === message.id) {
+        action = actionById;
+      }
+    }
 
     if (!action && metaAct) {
       action = await prisma.messageAction.upsert({
@@ -590,6 +605,21 @@ export class V3DmsController {
       }
     }
 
+    let createdActionId = action.id;
+    if (action.id.startsWith('act_')) {
+      const dbAction = await prisma.messageAction.upsert({
+        where: { messageId_actionId: { messageId: message.id, actionId: actionIdParam } },
+        update: {},
+        create: {
+          messageId: message.id,
+          actionId: actionIdParam,
+          label: metaAct?.label || actionIdParam,
+          style: (metaAct?.type || 'default').toLowerCase(),
+        },
+      });
+      createdActionId = dbAction.id;
+    }
+
     let callbackUrl =
       (message.metadata as any)?.callbackUrl ||
       (message.metadata as any)?.customMessage?.metadata?.callbackUrl ||
@@ -608,21 +638,6 @@ export class V3DmsController {
       if (app?.interactionsUrl) {
         callbackUrl = app.interactionsUrl;
       }
-    }
-
-    let createdActionId = action.id;
-    if (action.id.startsWith('act_')) {
-      const dbAction = await prisma.messageAction.upsert({
-        where: { messageId_actionId: { messageId: message.id, actionId: actionIdParam } },
-        update: {},
-        create: {
-          messageId: message.id,
-          actionId: actionIdParam,
-          label: metaAct?.label || actionIdParam,
-          style: (metaAct?.type || 'default').toLowerCase(),
-        },
-      });
-      createdActionId = dbAction.id;
     }
 
     const response = await prisma.messageActionResponse.create({
