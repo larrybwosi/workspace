@@ -16,6 +16,9 @@ vi.mock('@repo/database', () => ({
       findFirst: vi.fn(),
       create: vi.fn(),
     },
+    workspaceMember: {
+      findFirst: vi.fn(),
+    },
   },
 }));
 
@@ -141,6 +144,101 @@ describe('V3UsersController', () => {
       await expect(controller.getUserByEmail(context, 'notfound@example.com')).rejects.toThrow(
         NotFoundException
       );
+    });
+
+    it('enforces organization boundary scoping when organizationId is present in context', async () => {
+      const context = { scopes: ['users:read'], organizationId: 'org_123' } as any;
+      (prisma.user.findUnique as any).mockResolvedValue({
+        id: 'usr_1',
+        email: 'found@example.com',
+        name: 'Found User',
+      });
+      (prisma.member.findFirst as any).mockResolvedValue(null);
+
+      await expect(controller.getUserByEmail(context, 'found@example.com')).rejects.toThrow(
+        NotFoundException
+      );
+
+      (prisma.member.findFirst as any).mockResolvedValue({ id: 'mem_1' });
+      const res = await controller.getUserByEmail(context, 'found@example.com');
+      expect(res.data.user.email).toBe('found@example.com');
+    });
+
+    it('enforces workspace boundary scoping when workspaceId is present in context', async () => {
+      const context = { scopes: ['users:read'], workspaceId: 'ws_123' } as any;
+      (prisma.user.findUnique as any).mockResolvedValue({
+        id: 'usr_1',
+        email: 'found@example.com',
+        name: 'Found User',
+      });
+      (prisma.workspaceMember.findFirst as any).mockResolvedValue(null);
+
+      await expect(controller.getUserByEmail(context, 'found@example.com')).rejects.toThrow(
+        NotFoundException
+      );
+
+      (prisma.workspaceMember.findFirst as any).mockResolvedValue({ id: 'wsm_1' });
+      const res = await controller.getUserByEmail(context, 'found@example.com');
+      expect(res.data.user.email).toBe('found@example.com');
+    });
+  });
+
+  describe('getUserById', () => {
+    it('returns user profile if found', async () => {
+      const context = { scopes: ['users:read'] } as any;
+      (prisma.user.findUnique as any).mockResolvedValue({
+        id: 'usr_1',
+        email: 'user1@example.com',
+        name: 'User One',
+      });
+
+      const res = await controller.getUserById(context, 'usr_1');
+      expect(res.data.user.id).toBe('usr_1');
+    });
+
+    it('throws NotFoundException if user not found', async () => {
+      const context = { scopes: ['users:read'] } as any;
+      (prisma.user.findUnique as any).mockResolvedValue(null);
+
+      await expect(controller.getUserById(context, 'nonexistent')).rejects.toThrow(
+        NotFoundException
+      );
+    });
+
+    it('enforces organization boundary scoping when organizationId is present in context', async () => {
+      const context = { scopes: ['users:read'], organizationId: 'org_123' } as any;
+      (prisma.user.findUnique as any).mockResolvedValue({
+        id: 'usr_1',
+        email: 'user1@example.com',
+        name: 'User One',
+      });
+      (prisma.member.findFirst as any).mockResolvedValue(null);
+
+      await expect(controller.getUserById(context, 'usr_1')).rejects.toThrow(
+        NotFoundException
+      );
+
+      (prisma.member.findFirst as any).mockResolvedValue({ id: 'mem_1' });
+      const res = await controller.getUserById(context, 'usr_1');
+      expect(res.data.user.id).toBe('usr_1');
+    });
+
+    it('enforces workspace boundary scoping when workspaceId is present in context', async () => {
+      const context = { scopes: ['users:read'], workspaceId: 'ws_123' } as any;
+      (prisma.user.findUnique as any).mockResolvedValue({
+        id: 'usr_1',
+        email: 'user1@example.com',
+        name: 'User One',
+      });
+      (prisma.workspaceMember.findFirst as any).mockResolvedValue(null);
+
+      await expect(controller.getUserById(context, 'usr_1')).rejects.toThrow(
+        NotFoundException
+      );
+
+      (prisma.workspaceMember.findFirst as any).mockResolvedValue({ id: 'wsm_1' });
+      const res = await controller.getUserById(context, 'usr_1');
+      expect(res.data.user.id).toBe('usr_1');
     });
   });
 });

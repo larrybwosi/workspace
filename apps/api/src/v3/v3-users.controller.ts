@@ -202,6 +202,30 @@ export class V3UsersController {
       throw new NotFoundException('User with specified email not found');
     }
 
+    /**
+     * THREAT MITIGATION: Broken Object Level Authorization (BOLA / IDOR / User Profile Enumeration)
+     * Risk Level: High
+     * Verify that the target user belongs to the requesting M2M token's organization or workspace context
+     * before exposing user profile details. This prevents cross-tenant user profile harvesting.
+     */
+    if (context.organizationId) {
+      const isOrgMember = await prisma.member.findFirst({
+        where: { organizationId: context.organizationId, userId: user.id },
+        select: { id: true },
+      });
+      if (!isOrgMember) {
+        throw new NotFoundException('User with specified email not found');
+      }
+    } else if (context.workspaceId) {
+      const isWorkspaceMember = await prisma.workspaceMember.findFirst({
+        where: { workspaceId: context.workspaceId, userId: user.id },
+        select: { id: true },
+      });
+      if (!isWorkspaceMember) {
+        throw new NotFoundException('User with specified email not found');
+      }
+    }
+
     return this.formatResponse({ user });
   }
 
@@ -238,6 +262,30 @@ export class V3UsersController {
 
     if (!user) {
       throw new NotFoundException('User not found');
+    }
+
+    /**
+     * THREAT MITIGATION: Broken Object Level Authorization (BOLA / IDOR / User Profile Enumeration)
+     * Risk Level: High
+     * Verify that the target user belongs to the requesting M2M token's organization or workspace context
+     * before exposing user profile details. This prevents cross-tenant user profile harvesting.
+     */
+    if (context.organizationId) {
+      const isOrgMember = await prisma.member.findFirst({
+        where: { organizationId: context.organizationId, userId: user.id },
+        select: { id: true },
+      });
+      if (!isOrgMember) {
+        throw new NotFoundException('User not found');
+      }
+    } else if (context.workspaceId) {
+      const isWorkspaceMember = await prisma.workspaceMember.findFirst({
+        where: { workspaceId: context.workspaceId, userId: user.id },
+        select: { id: true },
+      });
+      if (!isWorkspaceMember) {
+        throw new NotFoundException('User not found');
+      }
     }
 
     return this.formatResponse({ user });
