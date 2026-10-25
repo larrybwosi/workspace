@@ -15,10 +15,12 @@ vi.mock('@repo/database', () => ({
       findUnique: vi.fn(),
     },
     messageAction: {
+      findUnique: vi.fn(),
       findFirst: vi.fn(),
       upsert: vi.fn(),
     },
     messageActionResponse: {
+      findUnique: vi.fn(),
       findFirst: vi.fn(),
       create: vi.fn(),
       findMany: vi.fn(),
@@ -85,7 +87,7 @@ describe('V3DmsController Actions', () => {
     };
 
     (prisma.dMMessage.findUnique as any).mockResolvedValue(mockMessage);
-    (prisma.messageAction.findFirst as any).mockResolvedValue(null);
+    (prisma.messageAction.findUnique as any).mockResolvedValue(null);
     (prisma.messageAction.upsert as any).mockResolvedValue({
       id: 'act_db_1',
       messageId: 'msg_dm_1',
