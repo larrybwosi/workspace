@@ -94,6 +94,7 @@ describe('V3DmsController Actions', () => {
       actionId: 'approve',
       label: 'Approve',
     });
+    (prisma.messageActionResponse.findUnique as any).mockResolvedValue(null);
     (prisma.messageActionResponse.findFirst as any).mockResolvedValue(null);
     (prisma.messageActionResponse.create as any).mockResolvedValue({
       id: 'resp_1',

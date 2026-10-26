@@ -592,12 +592,21 @@ export class V3DmsController {
       false;
 
     if (!allowMultiple) {
-      const existingResponse = await prisma.messageActionResponse.findFirst({
+      /**
+       * ⚡ Bolt Performance Optimization:
+       * Replaces `prisma.messageActionResponse.findFirst` with a direct O(1) point lookup via `findUnique`
+       * targeting the compound unique constraint `actionId_userId` (`@@unique([actionId, userId])`).
+       * Projected `select: { id: true }` avoids over-fetching unused columns.
+       * Expected impact: Replaces multi-column query scans with direct O(1) B-tree unique index point lookups.
+       */
+      const existingResponse = await prisma.messageActionResponse.findUnique({
         where: {
-          messageId: message.id,
-          userId,
-          actionValue: actionIdParam,
+          actionId_userId: {
+            actionId: action.id,
+            userId,
+          },
         },
+        select: { id: true },
       });
 
       if (existingResponse) {
