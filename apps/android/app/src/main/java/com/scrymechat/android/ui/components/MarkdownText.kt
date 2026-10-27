@@ -25,46 +25,45 @@ fun MarkdownText(
     onChannelTagClick: (String) -> Unit = {}
 ) {
     val annotatedString = buildAnnotatedString {
-        val boldRegex = """\*\*(.*?)\*\*""".toRegex()
-        val italicRegex = """\*(.*?)\*""".toRegex()
-        val codeRegex = """`(.*?)`""".toRegex()
-        val mentionRegex = """@([\w.]+)""".toRegex()
-        val channelRegex = """#(\w+)""".toRegex()
-
-        val allMatches = (boldRegex.findAll(content).map { it to "bold" } +
-                          italicRegex.findAll(content).map { it to "italic" } +
-                          codeRegex.findAll(content).map { it to "code" } +
-                          mentionRegex.findAll(content).map { it to "mention" } +
-                          channelRegex.findAll(content).map { it to "channel" })
-                          .sortedBy { it.first.range.first }
-
+        val combinedRegex = """(\*\*(.*?)\*\*|\*(.*?)\*|`(.*?)`|@([\w.]+)|#(\w+))""".toRegex()
         var lastIndex = 0
-        allMatches.forEach { (match, type) ->
+
+        combinedRegex.findAll(content).forEach { match ->
+            if (match.range.first < lastIndex) {
+                return@forEach
+            }
+
             if (match.range.first > lastIndex) {
                 append(content.substring(lastIndex, match.range.first))
             }
 
-            when (type) {
-                "bold" -> {
+            val boldText = match.groups[2]?.value
+            val italicText = match.groups[3]?.value
+            val codeText = match.groups[4]?.value
+            val mentionTag = match.groups[5]?.value
+            val channelTag = match.groups[6]?.value
+
+            when {
+                boldText != null -> {
                     withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                        append(match.groupValues[1])
+                        append(boldText)
                     }
                 }
-                "italic" -> {
+                italicText != null -> {
                     withStyle(style = SpanStyle(fontStyle = FontStyle.Italic)) {
-                        append(match.groupValues[1])
+                        append(italicText)
                     }
                 }
-                "code" -> {
+                codeText != null -> {
                     withStyle(style = SpanStyle(fontFamily = FontFamily.Monospace, background = androidx.compose.ui.graphics.Color.DarkGray.copy(alpha = 0.5f))) {
-                        append(match.groupValues[1])
+                        append(codeText)
                     }
                 }
-                "mention" -> {
+                mentionTag != null -> {
                     val start = length
                     withStyle(style = SpanStyle(
                         fontWeight = FontWeight.Bold,
-                        color = androidx.compose.ui.graphics.Color(0xFF818CF8), // Palette accent
+                        color = androidx.compose.ui.graphics.Color(0xFF818CF8),
                         background = androidx.compose.ui.graphics.Color(0xFF818CF8).copy(alpha = 0.15f)
                     )) {
                         append(match.value)
@@ -72,16 +71,16 @@ fun MarkdownText(
                     val end = length
                     addStringAnnotation(
                         tag = "mention",
-                        annotation = match.groupValues[1],
+                        annotation = mentionTag,
                         start = start,
                         end = end
                     )
                 }
-                "channel" -> {
+                channelTag != null -> {
                     val start = length
                     withStyle(style = SpanStyle(
                         fontWeight = FontWeight.Bold,
-                        color = androidx.compose.ui.graphics.Color(0xFF818CF8), // Palette accent
+                        color = androidx.compose.ui.graphics.Color(0xFF818CF8),
                         background = androidx.compose.ui.graphics.Color(0xFF818CF8).copy(alpha = 0.15f)
                     )) {
                         append(match.value)
@@ -89,10 +88,13 @@ fun MarkdownText(
                     val end = length
                     addStringAnnotation(
                         tag = "channel",
-                        annotation = match.groupValues[1],
+                        annotation = channelTag,
                         start = start,
                         end = end
                     )
+                }
+                else -> {
+                    append(match.value)
                 }
             }
             lastIndex = match.range.last + 1

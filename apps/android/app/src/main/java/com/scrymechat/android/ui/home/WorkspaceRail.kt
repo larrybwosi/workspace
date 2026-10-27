@@ -105,7 +105,7 @@ fun WorkspaceRail(
                             Box(
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .border(1.dp, SidebarTokens.Hairline, CircleShape),
+                                    .border(1.dp, SidebarTokens.Hairline, RoundedCornerShape(16.dp)),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
@@ -264,11 +264,11 @@ fun WorkspaceIcon(
         Surface(
             modifier = Modifier
                 .size(48.dp)
-                .clip(if (isSelected) RoundedCornerShape(16.dp) else CircleShape)
+                .clip(RoundedCornerShape(16.dp))
                 .border(
                     width = 1.dp,
                     color = if (isSelected) indicatorColor else SidebarTokens.Hairline,
-                    shape = if (isSelected) RoundedCornerShape(16.dp) else CircleShape
+                    shape = RoundedCornerShape(16.dp)
                 ),
             color = Color.Transparent
         ) {
