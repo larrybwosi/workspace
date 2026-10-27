@@ -62,20 +62,62 @@ export class V10GatewayController {
         throw new InternalServerErrorException('ABLY_API_KEY is not defined');
       }
 
+      /**
+       * THREAT MITIGATION: Broken Object Level Authorization (BOLA / Realtime IDOR)
+       * Instead of issuing blanket wildcard capabilities ('channel:*', 'workspace:*', 'dm:*'),
+       * query the database for resources the bot is explicitly authorized to access:
+       * 1. Workspaces the bot belongs to.
+       * 2. Direct channel memberships + public channels in member workspaces.
+       * Dynamically scope Ably token capabilities to prevent unauthorized cross-tenant realtime eavesdropping.
+       */
+      const [workspaceMemberships, channelMemberships] = await Promise.all([
+        prisma.workspaceMember.findMany({
+          where: { userId: bot.id },
+          select: { workspaceId: true },
+        }),
+        prisma.channelMember.findMany({
+          where: { userId: bot.id },
+          select: { channelId: true },
+        }),
+      ]);
+
+      const workspaceIds = workspaceMemberships.map((m) => m.workspaceId);
+
+      const publicChannels = workspaceIds.length
+        ? await prisma.channel.findMany({
+            where: {
+              workspaceId: { in: workspaceIds },
+              isPrivate: false,
+            },
+            select: { id: true },
+          })
+        : [];
+
+      const channelIdSet = new Set<string>([
+        ...channelMemberships.map((m) => m.channelId),
+        ...publicChannels.map((c) => c.id),
+      ]);
+
+      const ops = ['subscribe', 'publish', 'history', 'presence'];
+
+      const capability: Record<string, string[]> = {
+        [`user:${bot.id}:*`]: ops,
+      };
+
+      for (const wId of workspaceIds) {
+        capability[`workspace:${wId}`] = ops;
+      }
+
+      for (const cId of channelIdSet) {
+        capability[`channel:${cId}`] = ops;
+        capability[`thread:${cId}`] = ops;
+        capability[`presence:${cId}`] = ops;
+      }
+
       const ably = new Ably.Rest({ key: ablyKey });
       const tokenRequest = await ably.auth.requestToken({
         clientId: bot.id,
-        capability: JSON.stringify({
-          'channel:*': ['subscribe', 'publish', 'history', 'presence'],
-          'workspace:*': ['subscribe', 'publish', 'history', 'presence'],
-          'user:*': ['subscribe', 'publish', 'history', 'presence'],
-          'notifications:*': ['subscribe', 'publish', 'history', 'presence'],
-          'presence:*': ['subscribe', 'publish', 'history', 'presence'],
-          'thread:*': ['subscribe', 'publish', 'history', 'presence'],
-          'dm:*': ['subscribe', 'publish', 'history', 'presence'],
-          'call:*': ['subscribe', 'publish', 'history', 'presence'],
-          'call-chat:*': ['subscribe', 'publish', 'history', 'presence'],
-        }),
+        capability: JSON.stringify(capability),
         ttl: 3600 * 1000,
       });
       return tokenRequest;
@@ -87,6 +129,7 @@ export class V10GatewayController {
 
   private validateBotToken(token: string): string | null {
     try {
+      if (!token || typeof token !== 'string') return null;
       const parts = token.split('.');
       if (parts.length !== 3) return null;
 
@@ -97,7 +140,20 @@ export class V10GatewayController {
         .update(`${base64Id}.${timestamp}`)
         .digest('base64url');
 
-      if (signature !== expectedSignature) return null;
+      /**
+       * THREAT MITIGATION: Timing Side-Channel Attack
+       * Use constant-time buffer comparison (crypto.timingSafeEqual) rather than standard string equality
+       * to prevent attackers from inferring HMAC signature bytes via response timing differences.
+       */
+      const sigBuffer = Buffer.from(signature);
+      const expectedBuffer = Buffer.from(expectedSignature);
+
+      if (
+        sigBuffer.length !== expectedBuffer.length ||
+        !crypto.timingSafeEqual(sigBuffer, expectedBuffer)
+      ) {
+        return null;
+      }
 
       const userId = Buffer.from(base64Id, 'base64').toString('utf-8');
       return userId;
