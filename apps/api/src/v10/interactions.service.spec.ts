@@ -103,9 +103,8 @@ describe('V10InteractionsService', () => {
       (prisma.channel.findUnique as any).mockResolvedValue({
         id: 'chan-1',
         workspaceId: 'ws-unauthorized',
+        workspace: { members: [] },
       });
-
-      (prisma.workspaceMember.findUnique as any).mockResolvedValue(null);
 
       await expect(
         service.handleCallback(interactionId, token, { type: 4, data: { channel_id: 'chan-1', content: 'hi' } })
@@ -126,11 +125,7 @@ describe('V10InteractionsService', () => {
       (prisma.channel.findUnique as any).mockResolvedValue({
         id: 'chan-1',
         workspaceId: 'ws-1',
-      });
-
-      (prisma.workspaceMember.findUnique as any).mockResolvedValue({
-        workspaceId: 'ws-1',
-        userId: botId,
+        workspace: { members: [{ id: 'wm-1' }] },
       });
 
       (prisma.message.create as any).mockResolvedValue({
