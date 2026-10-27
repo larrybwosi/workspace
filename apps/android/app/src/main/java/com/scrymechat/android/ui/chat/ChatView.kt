@@ -1203,7 +1203,7 @@ fun ChatView(
                         Text(
                             text = "Replying to ${reply.senderName ?: "User"}",
                             color = palette.textPrimary,
-                            fontSize = 12.5.sp,
+                            fontSize = 12.sp,
                             fontWeight = FontWeight.Medium,
                             modifier = Modifier.weight(1f)
                         )
@@ -1245,7 +1245,7 @@ fun ChatView(
                         Text(
                             text = if (isDm) "Message @$cleanTitle" else "Message #$cleanTitle",
                             color = palette.textTertiary,
-                            fontSize = 14.sp
+                            fontSize = 13.sp
                         )
                     },
                     colors = TextFieldDefaults.colors(
@@ -1258,7 +1258,7 @@ fun ChatView(
                         unfocusedTextColor = palette.textPrimary,
                         cursorColor = palette.accent
                     ),
-                    textStyle = LocalTextStyle.current.copy(fontSize = 14.5.sp),
+                    textStyle = LocalTextStyle.current.copy(fontSize = 13.5.sp),
                     maxLines = 5
                 )
 
