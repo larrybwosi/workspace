@@ -83,14 +83,15 @@ private fun getInitials(name: String): String {
 }
 
 private fun getAvatarColor(name: String): Color {
+    val clean = name.trim().removePrefix("m2m:").removePrefix("user_").substringBefore("@").trim()
     val colors = listOf(
         Color(0xFF5865F2), // Blurple
-        Color(0xFF3BA55C), // Green
-        Color(0xFFFAA61A), // Yellow
+        Color(0xFF57F287), // Green
+        Color(0xFFFEE75C), // Yellow
         Color(0xFFED4245), // Red
         Color(0xFFEB459E)  // Fuchsia
     )
-    if (name.isBlank()) return colors[0]
-    val index = (name.hashCode() and 0x7FFFFFFF) % colors.size
+    if (clean.isBlank()) return colors[0]
+    val index = (clean.hashCode() and 0x7FFFFFFF) % colors.size
     return colors[index]
 }

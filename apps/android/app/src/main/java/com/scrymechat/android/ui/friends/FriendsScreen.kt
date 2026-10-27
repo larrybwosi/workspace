@@ -1,5 +1,7 @@
 package com.scrymechat.android.ui.friends
 
+import androidx.activity.compose.BackHandler
+
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -30,11 +32,14 @@ import com.scrymechat.android.ui.theme.*
 
 @Composable
 fun FriendsScreen(
+    onBack: () -> Unit = {},
+
     onDmClick: (String) -> Unit,
     onUserProfileClick: (String) -> Unit = {},
     viewModel: FriendsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    BackHandler { onBack() }
     var selectedTab by remember { mutableIntStateOf(0) }
     var showAddFriendDialog by remember { mutableStateOf(false) }
     var showInviteDialog by remember { mutableStateOf(false) }
