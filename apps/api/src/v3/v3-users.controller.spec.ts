@@ -18,6 +18,7 @@ vi.mock('@repo/database', () => ({
     },
     workspaceMember: {
       findFirst: vi.fn(),
+      findUnique: vi.fn(),
     },
   },
 }));
@@ -171,14 +172,18 @@ describe('V3UsersController', () => {
         email: 'found@example.com',
         name: 'Found User',
       });
-      (prisma.workspaceMember.findFirst as any).mockResolvedValue(null);
+      (prisma.workspaceMember.findUnique as any).mockResolvedValue(null);
 
       await expect(controller.getUserByEmail(context, 'found@example.com')).rejects.toThrow(
         NotFoundException
       );
 
-      (prisma.workspaceMember.findFirst as any).mockResolvedValue({ id: 'wsm_1' });
+      (prisma.workspaceMember.findUnique as any).mockResolvedValue({ id: 'wsm_1' });
       const res = await controller.getUserByEmail(context, 'found@example.com');
+      expect(prisma.workspaceMember.findUnique).toHaveBeenCalledWith({
+        where: { workspaceId_userId: { workspaceId: 'ws_123', userId: 'usr_1' } },
+        select: { id: true },
+      });
       expect(res.data.user.email).toBe('found@example.com');
     });
   });
@@ -230,14 +235,18 @@ describe('V3UsersController', () => {
         email: 'user1@example.com',
         name: 'User One',
       });
-      (prisma.workspaceMember.findFirst as any).mockResolvedValue(null);
+      (prisma.workspaceMember.findUnique as any).mockResolvedValue(null);
 
       await expect(controller.getUserById(context, 'usr_1')).rejects.toThrow(
         NotFoundException
       );
 
-      (prisma.workspaceMember.findFirst as any).mockResolvedValue({ id: 'wsm_1' });
+      (prisma.workspaceMember.findUnique as any).mockResolvedValue({ id: 'wsm_1' });
       const res = await controller.getUserById(context, 'usr_1');
+      expect(prisma.workspaceMember.findUnique).toHaveBeenCalledWith({
+        where: { workspaceId_userId: { workspaceId: 'ws_123', userId: 'usr_1' } },
+        select: { id: true },
+      });
       expect(res.data.user.id).toBe('usr_1');
     });
   });
