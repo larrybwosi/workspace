@@ -108,7 +108,7 @@ fun MarkdownText(
     ClickableText(
         text = annotatedString,
         modifier = modifier,
-        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp, color = color),
+        style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 19.sp, color = color),
         onClick = { offset ->
             annotatedString.getStringAnnotations(tag = "mention", start = offset, end = offset)
                 .firstOrNull()?.let { annotation ->
