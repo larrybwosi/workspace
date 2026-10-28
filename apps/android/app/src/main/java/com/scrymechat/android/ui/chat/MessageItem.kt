@@ -583,11 +583,9 @@ fun MessageItem(
 ) {
     val cleanName = remember(message.senderName) {
         val rawName = message.senderName ?: "Unknown User"
-        if (rawName.contains("@")) {
-            rawName.substringBefore("@")
-        } else {
-            rawName
-        }
+        var formatted = if (rawName.contains("@")) rawName.substringBefore("@") else rawName
+        formatted = formatted.removePrefix("user_").removePrefix("m2m:")
+        if (formatted.isBlank()) "Unknown User" else formatted
     }
 
     val isReply = message.replyToId != null
@@ -1012,20 +1010,43 @@ fun MessageItem(
 
 private fun formatMessageTimestamp(createdAt: String, shortOnly: Boolean = false): String {
     return try {
-        val timePart = createdAt.split("T").getOrNull(1) ?: return createdAt.split("T").getOrNull(0) ?: ""
-        val hhmm = timePart.substringBefore(".").substringBefore("Z")
-        val parts = hhmm.split(":")
-        if (parts.size < 2) return createdAt.split("T").getOrNull(0) ?: ""
-        var hour = parts[0].toIntOrNull() ?: return hhmm
-        val minute = parts[1]
+        val instant = Instant.parse(createdAt)
+        val zoneId = java.time.ZoneId.systemDefault()
+        val dateTime = instant.atZone(zoneId)
+        val now = java.time.ZonedDateTime.now(zoneId)
+
+        val messageDate = dateTime.toLocalDate()
+        val nowDate = now.toLocalDate()
+
+        val timeFormatter = java.time.format.DateTimeFormatter.ofPattern("h:mm a")
+        val formattedTime = dateTime.format(timeFormatter)
+
         if (shortOnly) {
-            return String.format("%02d:%s", hour, minute)
+            return formattedTime
         }
-        val suffix = if (hour >= 12) "PM" else "AM"
-        if (hour == 0) hour = 12 else if (hour > 12) hour -= 12
-        "$hour:$minute $suffix"
+
+        when {
+            messageDate.isEqual(nowDate) -> "Today at $formattedTime"
+            messageDate.isEqual(nowDate.minusDays(1)) -> "Yesterday at $formattedTime"
+            else -> {
+                val dateFormatter = java.time.format.DateTimeFormatter.ofPattern("MM/dd/yyyy")
+                "${dateTime.format(dateFormatter)} $formattedTime"
+            }
+        }
     } catch (e: Exception) {
-        createdAt.split("T").getOrNull(0) ?: createdAt
+        try {
+            val timePart = createdAt.split("T").getOrNull(1) ?: return createdAt.split("T").getOrNull(0) ?: ""
+            val hhmm = timePart.substringBefore(".").substringBefore("Z")
+            val parts = hhmm.split(":")
+            if (parts.size < 2) return createdAt.split("T").getOrNull(0) ?: ""
+            var hour = parts[0].toIntOrNull() ?: return hhmm
+            val minute = parts[1]
+            val suffix = if (hour >= 12) "PM" else "AM"
+            if (hour == 0) hour = 12 else if (hour > 12) hour -= 12
+            if (shortOnly) "$hour:$minute $suffix" else "Today at $hour:$minute $suffix"
+        } catch (ex: Exception) {
+            createdAt.split("T").getOrNull(0) ?: createdAt
+        }
     }
 }
 
