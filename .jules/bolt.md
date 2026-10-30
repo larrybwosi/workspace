@@ -1,3 +1,9 @@
+## 2026-10-30 - [Prisma/Performance] Pre-fetching Organization Members in Bulk Workspace Member Import
+
+**Learning:** In `V3WorkspacesController.importWorkspaceMembers` (`apps/api/src/v3/v3-workspaces.controller.ts`), validating user organization membership previously executed `prisma.member.findFirst({ where: { organizationId: orgId, userId: user.id } })` inside the member import loop for every user. For bulk imports of N members, this created an O(N) database query bottleneck. Pre-fetching existing organization memberships for all pre-resolved users in a single batched `prisma.member.findMany` query before the loop and tracking user IDs in a Node.js `Set<string>` eliminates N sequential database calls and reduces organization membership resolution database round-trips from O(N) down to O(1).
+
+**Action:** Always pre-fetch relation records into a Set or Map data structure prior to processing loops in bulk import handlers to eliminate N+1 database queries.
+
 ## 2026-10-22 - [Prisma/Performance] Direct O(1) User Primary Key Point Lookup in V10 Users Controller
 
 **Learning:** In `V10UsersController.getUser` (`apps/api/src/v10/users.controller.ts`), querying target user profile details previously executed `prisma.workspaceMember.findFirst` with a nested relation filter (`workspace: { members: { some: { userId: bot.id } } }`). In PostgreSQL, querying `workspace_members` with nested relation filters forces multi-table JOIN scans across `workspace_members` -> `workspaces` -> `workspace_members`. Replacing `findFirst` on `workspaceMember` with a direct primary key point lookup on `User` (`prisma.user.findUnique({ where: { id }, select: { ... } })`) leverages O(1) B-tree primary key indexing on `User.id` and short-circuits non-existent user lookups instantly without relational joins, while maintaining BOLA authorization checks in-memory via `workspaceMemberships` relation filtering.
