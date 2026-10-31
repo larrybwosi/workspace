@@ -859,30 +859,93 @@ export class ChannelsController {
     @Param('channelId') channelId: string,
     @Param('targetUserId') targetUserId: string
   ) {
-    const workspace = await prisma.workspace.findUnique({
-      where: { slug },
+    /**
+     * ⚡ Performance Optimization & Threat Mitigation (BOLA / Unauthorized Channel Ejection / CWE-639):
+     * 1. Consolidates workspace scoping, requester workspace authorization, channel validation,
+     *    and channel memberships for requester and target user into a single point query.
+     * 2. Enforces least-privilege authorization: users can remove themselves (leave channel),
+     *    but removing other members requires workspace owner/admin or channel admin/moderator permissions.
+     * 3. Enforces role hierarchy: channel moderators are barred from removing channel admins.
+     */
+    const channel = await prisma.channel.findUnique({
+      where: { id: channelId },
       select: {
         id: true,
+        workspaceId: true,
+        workspace: {
+          select: {
+            id: true,
+            slug: true,
+            members: {
+              where: { userId: user.id },
+              select: { role: true },
+            },
+          },
+        },
         members: {
-          where: { userId: user.id },
-          select: { role: true },
+          where: {
+            userId: { in: [user.id, targetUserId] },
+          },
+          select: {
+            userId: true,
+            role: true,
+          },
         },
       },
     });
 
-    if (!workspace) {
-      throw new NotFoundException('Workspace not found');
+    if (!channel || !channel.workspace || channel.workspace.slug !== slug) {
+      const workspace = await prisma.workspace.findUnique({
+        where: { slug },
+        select: {
+          id: true,
+          members: {
+            where: { userId: user.id },
+            select: { role: true },
+          },
+        },
+      });
+      if (!workspace) {
+        throw new NotFoundException('Workspace not found');
+      }
+      if (workspace.members.length === 0) {
+        throw new ForbiddenException('Forbidden');
+      }
+      throw new NotFoundException('Channel not found');
     }
 
-    if (workspace.members.length === 0) {
+    const workspaceMember = channel.workspace.members[0];
+    if (!workspaceMember) {
       throw new ForbiddenException('Forbidden');
     }
 
-    await prisma.channelMember.deleteMany({
+    const targetMember = channel.members.find(m => m.userId === targetUserId);
+    if (!targetMember) {
+      throw new NotFoundException('Member not found in this channel');
+    }
+
+    const isSelfRemoval = targetUserId === user.id;
+
+    if (!isSelfRemoval) {
+      const isWorkspaceAdmin = ['owner', 'admin'].includes(workspaceMember.role);
+      const requestingChannelMember = channel.members.find(m => m.userId === user.id);
+      const isChannelAdminOrMod = requestingChannelMember && ['admin', 'moderator'].includes(requestingChannelMember.role);
+
+      if (!isWorkspaceAdmin && !isChannelAdminOrMod) {
+        throw new ForbiddenException('Only workspace admins or channel admins/moderators can remove channel members');
+      }
+
+      if (!isWorkspaceAdmin && requestingChannelMember?.role === 'moderator' && targetMember.role === 'admin') {
+        throw new ForbiddenException('Channel moderators cannot remove channel admins');
+      }
+    }
+
+    await prisma.channelMember.delete({
       where: {
-        channelId,
-        userId: targetUserId,
-        channel: { workspaceId: workspace.id },
+        channelId_userId: {
+          channelId: channel.id,
+          userId: targetUserId,
+        },
       },
     });
 
