@@ -7,16 +7,44 @@ import { CurrentBot } from '../auth/current-bot.decorator';
 @UseGuards(ApiV10Guard)
 export class V10UsersController {
   @Get(':id')
-  async getUser(@Param('id') id: string) {
-    if (id === '@me') {
-      // This is handled by getMe but just in case
-      return null;
+  async getUser(@CurrentBot() bot: any, @Param('id') id: string) {
+    if (id === '@me' || id === bot.id) {
+      return this.getMe(bot);
     }
+
+    /**
+     * THREAT MITIGATION: Broken Object Level Authorization (BOLA / IDOR) & User Profile Enumeration
+     * ⚡ Performance Optimization:
+     * Leverages direct O(1) primary key lookup on `User.id` (`prisma.user.findUnique`) instead of
+     * non-primary table scan on `workspaceMember.findFirst`.
+     * If the target user does not exist, `findUnique` short-circuits instantly in O(1) without joining
+     * `workspace_members` or `workspaces`. If the user exists, it verifies shared workspace membership
+     * via nested `workspaceMemberships` relation filter in a single query.
+     */
     const user = await prisma.user.findUnique({
       where: { id },
+      select: {
+        id: true,
+        name: true,
+        avatar: true,
+        isBot: true,
+        workspaceMemberships: {
+          where: {
+            workspace: {
+              members: {
+                some: { userId: bot.id },
+              },
+            },
+          },
+          select: { id: true },
+          take: 1,
+        },
+      },
     });
 
-    if (!user) throw new NotFoundException('Unknown User');
+    if (!user || user.workspaceMemberships.length === 0) {
+      throw new NotFoundException('Unknown User');
+    }
 
     return {
       id: user.id,

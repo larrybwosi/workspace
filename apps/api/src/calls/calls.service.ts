@@ -145,7 +145,7 @@ export class CallsService {
         }
         agoraChannelName = call.channelName;
 
-        const targetWorkspaceId = (call.metadata as any)?.workspaceId || workspaceId;
+        const targetWorkspaceId = (call.metadata as any)?.workspaceId || call.workspaceId || workspaceId;
 
         const isMember = await prisma.workspaceMember.findUnique({
           where: { workspaceId_userId: { workspaceId: targetWorkspaceId, userId: user.id } },
@@ -183,6 +183,29 @@ export class CallsService {
         throw new NotFoundException('Call not found');
       } else {
         throw new BadRequestException('channelId, recipientId, or callId is required');
+      }
+
+      // Hardening / BOLA Prevention: Verify workspace membership and channel access prior to initiating a new call
+      if (workspaceId) {
+        const isMember = await prisma.workspaceMember.findUnique({
+          where: { workspaceId_userId: { workspaceId, userId: user.id } },
+        });
+        if (!isMember) {
+          throw new ForbiddenException('Unauthorized: Not a workspace member');
+        }
+      }
+
+      if (channelId) {
+        const channel = await prisma.channel.findUnique({
+          where: { id: channelId },
+          include: { members: { where: { userId: user.id } } },
+        });
+        if (!channel || (workspaceId && channel.workspaceId !== workspaceId)) {
+          throw new NotFoundException('Channel not found in workspace');
+        }
+        if (channel.isPrivate && channel.members.length === 0) {
+          throw new ForbiddenException('Unauthorized: Not a channel member');
+        }
       }
     }
 
@@ -902,6 +925,11 @@ export class CallsService {
   async playSoundboardSound(user: User, body: SoundboardSoundDto) {
     const { soundId, callId } = body;
 
+    // Hardening / BOLA Prevention: Verify requesting user has access authorization to the call prior to playing soundboard audio
+    if (callId) {
+      await this.verifyCallAccess(user, callId);
+    }
+
     const sound = await prisma.soundboardSound.findUnique({
       where: { id: soundId },
     });
@@ -923,12 +951,14 @@ export class CallsService {
      * blocking the soundboard play HTTP response path on database write latency.
      * Expected impact: Cuts soundboard playback API response latency by 1 DB write RTT (~15-30ms).
      */
-    logAssetUsage({
-      assetId: soundId,
-      assetType: 'sound',
-      userId: user.id,
-      workspaceId: sound.workspaceId || undefined,
-    }).catch(err => this.logger.error('Failed to log soundboard asset usage:', err));
+    Promise.resolve(
+      logAssetUsage({
+        assetId: soundId,
+        assetType: 'sound',
+        userId: user.id,
+        workspaceId: sound.workspaceId || undefined,
+      })
+    ).catch(err => this.logger.error('Failed to log soundboard asset usage:', err));
 
     if (callId) {
       await publishRealtime(AblyChannels.call(callId), AblyEvents.SOUNDBOARD_PLAYED, {

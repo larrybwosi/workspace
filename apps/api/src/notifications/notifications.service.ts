@@ -243,20 +243,22 @@ export class NotificationsService {
 
   async deleteNotification(userId: string, notificationId: string) {
     /**
-     * Security Mitigation (BOLA / IDOR Protection):
-     * Verify that the notification exists and belongs to the requesting user before performing deletion.
+     * ⚡ Bolt Performance Optimization:
+     * Consolidates read existence check, user ownership authorization, and record deletion into a single atomic operation.
+     * Uses `deleteMany` with compound authorization filters (`id` and `userId`).
+     * Reduces database round-trips from 2 to 1 on the happy path while preventing read-then-delete race conditions.
      */
-    const notification = await prisma.notification.findUnique({
-      where: { id: notificationId },
+    const result = await prisma.notification.deleteMany({
+      where: {
+        id: notificationId,
+        userId,
+      },
     });
 
-    if (!notification || notification.userId !== userId) {
+    if (result.count === 0) {
       throw new NotFoundException('Notification not found');
     }
 
-    await prisma.notification.delete({
-      where: { id: notificationId },
-    });
     return { success: true };
   }
 

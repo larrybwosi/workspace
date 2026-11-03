@@ -703,4 +703,129 @@ describe('IntegrationsService - GitHub integration (PR change)', () => {
       });
     });
   });
+
+  describe('handlePlaneWebhook', () => {
+    it('should throw NotFoundException if workspace or channel is not found', async () => {
+      mockPrisma.workspace.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.handlePlaneWebhook({
+          event: 'issue.created',
+          data: { name: 'Bug' },
+          workspaceId: 'ws-1',
+        })
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should create a system message and return success for issue.created', async () => {
+      mockPrisma.workspace.findUnique.mockResolvedValue({
+        id: 'ws-1',
+        channels: [{ id: 'ch-primary' }],
+      });
+
+      const result = await service.handlePlaneWebhook({
+        event: 'issue.created',
+        data: { name: 'Fix login crash' },
+        workspaceId: 'ws-1',
+      });
+
+      expect(mockPrisma.workspace.findUnique).toHaveBeenCalledWith({
+        where: { id: 'ws-1' },
+        select: {
+          channels: {
+            orderBy: { createdAt: 'asc' },
+            select: { id: true },
+            take: 1,
+          },
+        },
+      });
+
+      expect(mockSystemMessagesService.createSystemMessage).toHaveBeenCalledWith(
+        expect.stringContaining('Fix login crash'),
+        expect.objectContaining({
+          channelId: 'ch-primary',
+          metadata: expect.objectContaining({ source: 'plane', event: 'issue.created' }),
+          broadcast: true,
+        })
+      );
+
+      expect(result).toEqual({ success: true });
+    });
+  });
+
+  describe('createHulyTask', () => {
+    it('should throw NotFoundException if workspace or active Huly integration is not found', async () => {
+      mockPrisma.workspace.findUnique.mockResolvedValue({
+        id: 'ws-1',
+        integrations: [],
+      });
+
+      await expect(
+        service.createHulyTask('ws-1', { title: 'New task' })
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw BadRequestException if Huly integration is missing config details', async () => {
+      mockPrisma.workspace.findUnique.mockResolvedValue({
+        id: 'ws-1',
+        integrations: [{ config: {} }],
+      });
+
+      await expect(
+        service.createHulyTask('ws-1', { title: 'New task' })
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should create task via HTTP request when properly configured', async () => {
+      mockPrisma.workspace.findUnique.mockResolvedValue({
+        id: 'ws-1',
+        integrations: [
+          {
+            config: {
+              hulyUrl: 'https://huly.example.com',
+              apiKey: 'huly_key_123',
+              projectId: 'proj-1',
+            },
+          },
+        ],
+      });
+
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ id: 'task-100', title: 'New task' }),
+      });
+      global.fetch = mockFetch as any;
+
+      const result = await service.createHulyTask('ws-1', {
+        title: 'New task',
+        description: 'Task details',
+      });
+
+      expect(mockPrisma.workspace.findUnique).toHaveBeenCalledWith({
+        where: { id: 'ws-1' },
+        select: {
+          integrations: {
+            where: {
+              service: 'huly',
+              active: true,
+            },
+            select: { config: true },
+            take: 1,
+          },
+        },
+      });
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        'https://huly.example.com/api/v1/projects/proj-1/tasks',
+        expect.objectContaining({
+          method: 'POST',
+          headers: expect.objectContaining({
+            Authorization: 'Bearer huly_key_123',
+          }),
+        })
+      );
+
+      expect(result).toEqual({ id: 'task-100', title: 'New task' });
+    });
+  });
 });

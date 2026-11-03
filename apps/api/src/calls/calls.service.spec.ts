@@ -385,6 +385,12 @@ describe('CallsService', () => {
 
     it('should resolve workspaceId from workspaceSlug when workspaceId is absent', async () => {
       mockPrisma.workspace.findUnique.mockResolvedValue({ id: 'resolved-id' });
+      mockPrisma.channel.findUnique.mockResolvedValue({
+        id: 'ch-1',
+        workspaceId: 'resolved-id',
+        isPrivate: false,
+        members: [],
+      });
       mockPrisma.call.findFirst.mockResolvedValue(null);
       mockPrisma.call.create.mockResolvedValue({
         id: 'new-call',
@@ -740,6 +746,104 @@ describe('CallsService', () => {
         },
       });
       expect(mockPrisma.dMMessage.create).toHaveBeenCalled();
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // playSoundboardSound – Call Authorization & BOLA/IDOR Hardening
+  // ─────────────────────────────────────────────────────────────────────────────
+  describe('playSoundboardSound – Call Authorization', () => {
+    const mockUser = { id: 'user-1' } as any;
+
+    it('should throw NotFoundException if callId is specified but call does not exist', async () => {
+      mockPrisma.call.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.playSoundboardSound(mockUser, { soundId: 'sound-1', callId: 'nonexistent-call' })
+      ).rejects.toThrow('Call not found');
+    });
+
+    it('should throw ForbiddenException if callId is specified but user is not a workspace member', async () => {
+      mockPrisma.call.findUnique.mockResolvedValue({
+        id: 'call-1',
+        workspaceId: 'ws-victim',
+        participants: [],
+      });
+      mockPrisma.workspaceMember.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.playSoundboardSound(mockUser, { soundId: 'sound-1', callId: 'call-1' })
+      ).rejects.toThrow('Unauthorized: Not a workspace member');
+    });
+
+    it('should play soundboard sound when call access authorization is verified', async () => {
+      mockPrisma.call.findUnique.mockResolvedValue({
+        id: 'call-1',
+        workspaceId: 'ws-1',
+        participants: [],
+      });
+      mockPrisma.workspaceMember.findUnique.mockResolvedValue({ userId: 'user-1' });
+      mockPrisma.soundboardSound.findUnique.mockResolvedValue({
+        id: 'sound-1',
+        url: 'http://example.com/sound.mp3',
+        volume: 1,
+        emoji: '🔔',
+      });
+
+      const result = await service.playSoundboardSound(mockUser, { soundId: 'sound-1', callId: 'call-1' });
+
+      expect(result).toEqual({ success: true });
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // startCall – New Call Authorization & BOLA Hardening
+  // ─────────────────────────────────────────────────────────────────────────────
+  describe('startCall – Authorization Checks', () => {
+    const mockUser = { id: 'user-1', name: 'Alice' } as any;
+
+    it('should throw ForbiddenException when user is not a workspace member when initiating a new call', async () => {
+      mockPrisma.workspaceMember.findUnique.mockResolvedValue(null);
+
+      const body = { type: 'video' as const, workspaceId: 'ws-foreign', channelId: 'ch-1' };
+
+      await expect(service.startCall(mockUser, body)).rejects.toThrow('Unauthorized: Not a workspace member');
+    });
+
+    it('should throw ForbiddenException when user attempts to start call in a private channel they do not belong to', async () => {
+      mockPrisma.workspaceMember.findUnique.mockResolvedValue({ userId: 'user-1' });
+      mockPrisma.channel.findUnique.mockResolvedValue({
+        id: 'ch-private',
+        workspaceId: 'ws-1',
+        isPrivate: true,
+        members: [], // User not a member
+      });
+
+      const body = { type: 'video' as const, workspaceId: 'ws-1', channelId: 'ch-private' };
+
+      await expect(service.startCall(mockUser, body)).rejects.toThrow('Unauthorized: Not a channel member');
+    });
+
+    it('should prioritize call.workspaceId over caller-supplied workspaceId when joining existing call by ID', async () => {
+      mockPrisma.call.findUnique.mockResolvedValue({
+        id: 'call-1',
+        workspaceId: 'ws-victim',
+        channelName: 'workspace-call-1',
+        participants: [],
+      });
+      // User is NOT a member of ws-victim
+      mockPrisma.workspaceMember.findUnique.mockResolvedValue(null);
+
+      const body = {
+        type: 'video' as const,
+        workspaceId: 'ws-attacker',
+        callId: 'call-1',
+      };
+
+      await expect(service.startCall(mockUser, body)).rejects.toThrow('Unauthorized: Not a workspace member');
+      expect(mockPrisma.workspaceMember.findUnique).toHaveBeenCalledWith({
+        where: { workspaceId_userId: { workspaceId: 'ws-victim', userId: 'user-1' } },
+      });
     });
   });
 });

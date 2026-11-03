@@ -50,6 +50,7 @@ describe('TeamsController', () => {
     id: 'ws-1',
     slug: 'acme',
     members: [{ role: 'admin' }],
+    teams: [{ id: 'team-1' }],
   };
 
   beforeEach(async () => {
@@ -74,7 +75,6 @@ describe('TeamsController', () => {
   describe('addMember', () => {
     it('should successfully add a member when team belongs to the workspace', async () => {
       mockPrisma.workspace.findUnique.mockResolvedValue(mockWorkspace);
-      mockPrisma.workspaceTeam.findUnique.mockResolvedValue({ id: 'team-1', workspaceId: 'ws-1' });
       mockPrisma.workspaceTeamMember.create.mockResolvedValue({
         id: 'member-1',
         teamId: 'team-1',
@@ -85,16 +85,28 @@ describe('TeamsController', () => {
       const result = await controller.addMember(mockUser, 'acme', 'team-1', { userId: 'user-2' });
 
       expect(result).toEqual({ id: 'member-1', teamId: 'team-1', userId: 'user-2', role: 'member' });
-      expect(mockPrisma.workspaceTeam.findUnique).toHaveBeenCalledWith({
-        where: { id: 'team-1' },
-        select: { workspaceId: true },
+      expect(mockPrisma.workspace.findUnique).toHaveBeenCalledWith({
+        where: { slug: 'acme' },
+        select: {
+          id: true,
+          members: {
+            where: { userId: mockUser.id },
+            select: { role: true },
+          },
+          teams: {
+            where: { id: 'team-1' },
+            select: { id: true },
+          },
+        },
       });
       expect(teamSyncService.syncTeamMemberToChannel).toHaveBeenCalledWith('team-1', 'user-2', 'add');
     });
 
-    it('should throw NotFoundException when team belongs to a different workspace (BOLA / IDOR protection)', async () => {
-      mockPrisma.workspace.findUnique.mockResolvedValue(mockWorkspace);
-      mockPrisma.workspaceTeam.findUnique.mockResolvedValue({ id: 'team-other', workspaceId: 'ws-2' });
+    it('should throw NotFoundException when team belongs to a different workspace / does not exist (BOLA / IDOR protection)', async () => {
+      mockPrisma.workspace.findUnique.mockResolvedValue({
+        ...mockWorkspace,
+        teams: [],
+      });
 
       await expect(
         controller.addMember(mockUser, 'acme', 'team-other', { userId: 'user-2' })
@@ -103,9 +115,8 @@ describe('TeamsController', () => {
       expect(mockPrisma.workspaceTeamMember.create).not.toHaveBeenCalled();
     });
 
-    it('should throw NotFoundException when team does not exist', async () => {
-      mockPrisma.workspace.findUnique.mockResolvedValue(mockWorkspace);
-      mockPrisma.workspaceTeam.findUnique.mockResolvedValue(null);
+    it('should throw NotFoundException when workspace does not exist', async () => {
+      mockPrisma.workspace.findUnique.mockResolvedValue(null);
 
       await expect(
         controller.addMember(mockUser, 'acme', 'team-nonexistent', { userId: 'user-2' })
@@ -130,7 +141,6 @@ describe('TeamsController', () => {
   describe('removeMember', () => {
     it('should successfully remove a member when team belongs to the workspace', async () => {
       mockPrisma.workspace.findUnique.mockResolvedValue(mockWorkspace);
-      mockPrisma.workspaceTeam.findUnique.mockResolvedValue({ id: 'team-1', workspaceId: 'ws-1' });
       mockPrisma.workspaceTeamMember.delete.mockResolvedValue({});
 
       const result = await controller.removeMember(mockUser, 'acme', 'team-1', 'user-2');
@@ -147,9 +157,11 @@ describe('TeamsController', () => {
       expect(teamSyncService.syncTeamMemberToChannel).toHaveBeenCalledWith('team-1', 'user-2', 'remove');
     });
 
-    it('should throw NotFoundException when team belongs to a different workspace (BOLA / IDOR protection)', async () => {
-      mockPrisma.workspace.findUnique.mockResolvedValue(mockWorkspace);
-      mockPrisma.workspaceTeam.findUnique.mockResolvedValue({ id: 'team-other', workspaceId: 'ws-2' });
+    it('should throw NotFoundException when team belongs to a different workspace / does not exist (BOLA / IDOR protection)', async () => {
+      mockPrisma.workspace.findUnique.mockResolvedValue({
+        ...mockWorkspace,
+        teams: [],
+      });
 
       await expect(
         controller.removeMember(mockUser, 'acme', 'team-other', 'user-2')

@@ -11,6 +11,7 @@ vi.mock('@repo/database', () => ({
       findUnique: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
+      deleteMany: vi.fn(),
     },
     workspaceMember: {
       findUnique: vi.fn(),
@@ -133,26 +134,22 @@ describe('NotificationsService', () => {
   });
 
   describe('deleteNotification (BOLA/IDOR Protection)', () => {
-    it('should throw NotFoundException if notification does not exist', async () => {
-      (prisma.notification.findUnique as any).mockResolvedValue(null);
+    it('should throw NotFoundException if notification does not exist or belongs to another user', async () => {
+      (prisma.notification.deleteMany as any).mockResolvedValue({ count: 0 });
 
       await expect(service.deleteNotification('user-1', 'notif-1')).rejects.toThrow('Notification not found');
-    });
-
-    it('should throw NotFoundException if notification belongs to another user', async () => {
-      (prisma.notification.findUnique as any).mockResolvedValue({ id: 'notif-1', userId: 'other-user' });
-
-      await expect(service.deleteNotification('user-1', 'notif-1')).rejects.toThrow('Notification not found');
+      expect(prisma.notification.deleteMany).toHaveBeenCalledWith({
+        where: { id: 'notif-1', userId: 'user-1' },
+      });
     });
 
     it('should delete notification when user is the owner', async () => {
-      (prisma.notification.findUnique as any).mockResolvedValue({ id: 'notif-1', userId: 'user-1' });
-      (prisma.notification.delete as any).mockResolvedValue({ id: 'notif-1' });
+      (prisma.notification.deleteMany as any).mockResolvedValue({ count: 1 });
 
       const result = await service.deleteNotification('user-1', 'notif-1');
       expect(result).toEqual({ success: true });
-      expect(prisma.notification.delete).toHaveBeenCalledWith({
-        where: { id: 'notif-1' },
+      expect(prisma.notification.deleteMany).toHaveBeenCalledWith({
+        where: { id: 'notif-1', userId: 'user-1' },
       });
     });
   });

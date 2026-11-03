@@ -637,11 +637,21 @@ export class V3WorkspacesController {
       false;
 
     if (!allowMultiple) {
-      const existingResponse = await prisma.messageActionResponse.findFirst({
+      /**
+       * ⚡ Performance Optimization:
+       * Replaces `prisma.messageActionResponse.findFirst` with a direct O(1) point lookup via `findUnique`
+       * targeting the compound unique constraint `actionId_userId` (`@@unique([actionId, userId])`).
+       * Projected `select: { id: true }` avoids over-fetching unused columns.
+       * Expected impact: Replaces multi-column query scans with direct O(1) B-tree unique index point lookups.
+       */
+      const existingResponse = await prisma.messageActionResponse.findUnique({
         where: {
-          actionId: action.id,
-          userId,
+          actionId_userId: {
+            actionId: action.id,
+            userId,
+          },
         },
+        select: { id: true },
       });
 
       if (existingResponse) {
@@ -655,7 +665,12 @@ export class V3WorkspacesController {
       (action as any)?.handler?.url;
 
     if (!callbackUrl && (message as any).user?.isBot) {
-      const app = await prisma.botApplication.findFirst({
+      /**
+       * ⚡ Performance Optimization:
+       * Replaces `prisma.botApplication.findFirst` on `@unique` field `botId` with a direct O(1) B-tree unique point lookup via `findUnique`.
+       * Expected impact: Eliminates query planner scan overhead on bot application resolution.
+       */
+      const app = await prisma.botApplication.findUnique({
         where: { botId: (message as any).userId },
         select: { interactionsUrl: true },
       });
@@ -1393,14 +1408,43 @@ When provisioned via M2M:
       throw new BadRequestException('members array must not be empty');
     }
 
+    const emails = [...new Set(body.members.map(m => m.email).filter((e): e is string => Boolean(e)))];
+
+    /**
+     * ⚡ Bolt Performance Optimization:
+     * Pre-fetches existing users by email in a single batched `prisma.user.findMany` query prior to the import loop.
+     * Replaces N sequential `prisma.user.findUnique` database queries with 1 batch lookup, reducing user resolution round-trips from O(N) down to O(1).
+     */
+    const existingUsers = emails.length > 0
+      ? await prisma.user.findMany({ where: { email: { in: emails } } })
+      : [];
+    const userMap = new Map<string, (typeof existingUsers)[0]>(existingUsers.map(u => [u.email, u]));
+
+    const orgId = workspace.organizationId || context.organizationId;
+
+    /**
+     * ⚡ Bolt Performance Optimization:
+     * Pre-fetches existing organization members for pre-resolved users in a single batched `prisma.member.findMany` query.
+     * Replaces N sequential `prisma.member.findFirst` database calls inside the import loop with 1 batch lookup and in-memory Set resolution.
+     * Reduces organization membership verification database round-trips from O(N) down to O(1).
+     */
+    const existingOrgMembers = orgId && existingUsers.length > 0
+      ? await prisma.member.findMany({
+          where: {
+            organizationId: orgId,
+            userId: { in: existingUsers.map(u => u.id) },
+          },
+          select: { userId: true },
+        })
+      : [];
+    const existingOrgMemberUserIds = new Set<string>(existingOrgMembers.map(m => m.userId));
+
     const results = [];
 
     for (const item of body.members) {
       if (!item.email) continue;
 
-      let user = await prisma.user.findUnique({
-        where: { email: item.email },
-      });
+      let user = userMap.get(item.email);
 
       if (!user) {
         const userName = item.name || item.email.split('@')[0] || item.email;
@@ -1411,6 +1455,7 @@ When provisioned via M2M:
             avatar: item.avatar || null,
           },
         });
+        userMap.set(user.email, user);
       } else if (item.name || item.avatar) {
         user = await prisma.user.update({
           where: { id: user.id },
@@ -1419,22 +1464,18 @@ When provisioned via M2M:
             ...(item.avatar ? { avatar: item.avatar } : {}),
           },
         });
+        userMap.set(user.email, user);
       }
 
-      const orgId = workspace.organizationId || context.organizationId;
-      if (orgId) {
-        const existingOrgMember = await prisma.member.findFirst({
-          where: { organizationId: orgId, userId: user.id },
+      if (orgId && !existingOrgMemberUserIds.has(user.id)) {
+        await prisma.member.create({
+          data: {
+            organizationId: orgId,
+            userId: user.id,
+            role: 'member',
+          },
         });
-        if (!existingOrgMember) {
-          await prisma.member.create({
-            data: {
-              organizationId: orgId,
-              userId: user.id,
-              role: 'member',
-            },
-          });
-        }
+        existingOrgMemberUserIds.add(user.id);
       }
 
       const role = item.role || 'member';

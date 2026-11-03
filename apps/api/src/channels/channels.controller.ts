@@ -10,11 +10,55 @@ import {
   UseGuards,
   BadRequestException,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery, ApiBody, ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsString, IsNotEmpty, IsOptional, IsBoolean, IsArray } from 'class-validator';
 import { AuthGuard } from '../auth/auth.guard';
+import { AdminGuard } from '../auth/admin.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { User } from '@repo/database';
 import { ChannelsService } from './channels.service';
+
+/**
+ * THREAT MITIGATION: Mass Assignment & Unvalidated Property Injection (CWE-915 / CWE-20)
+ * Explicit DTO validation schema prevents arbitrary property injection and enforces type boundaries.
+ */
+export class CreateChannelDto {
+  @ApiProperty({ description: 'The channel name', example: 'announcements' })
+  @IsString()
+  @IsNotEmpty()
+  name!: string;
+
+  @ApiPropertyOptional({ description: 'Channel icon symbol or URL', example: '#' })
+  @IsOptional()
+  @IsString()
+  icon?: string;
+
+  @ApiPropertyOptional({ description: 'Channel type', example: 'channel' })
+  @IsOptional()
+  @IsString()
+  type?: string;
+
+  @ApiPropertyOptional({ description: 'Channel description' })
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @ApiPropertyOptional({ description: 'Whether the channel is private' })
+  @IsOptional()
+  @IsBoolean()
+  isPrivate?: boolean;
+
+  @ApiPropertyOptional({ description: 'Parent category or channel ID' })
+  @IsOptional()
+  @IsString()
+  parentId?: string;
+
+  @ApiPropertyOptional({ description: 'Initial member user IDs', type: [String] })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  members?: string[];
+}
 
 @ApiTags('Channels')
 @ApiBearerAuth()
@@ -30,10 +74,17 @@ export class ChannelsController {
     return this.channelsService.getGlobalChannels();
   }
 
+  /**
+   * THREAT MITIGATION: System Admin Authorization & Mass Assignment Prevention
+   * Restricts global channel creation to system administrators using AdminGuard,
+   * preventing non-admin users from creating system-wide channels or escalating privileges.
+   */
   @Post()
+  @UseGuards(AdminGuard)
   @ApiOperation({ summary: 'Create a global channel' })
+  @ApiBody({ type: CreateChannelDto })
   @ApiResponse({ status: 201, description: 'Channel created' })
-  async createChannel(@Body() body: any) {
+  async createChannel(@Body() body: CreateChannelDto) {
     return this.channelsService.createChannel(body);
   }
 

@@ -166,13 +166,29 @@ export class V3ChannelIncomingWebhooksController {
       throw new BadRequestException('Workspace ID not resolved');
     }
 
+    /**
+     * SECURITY MITIGATION (BOLA / Information Disclosure):
+     * Bulk listing queries explicitly omit the sensitive HMAC signing secret (`secret`) from the
+     * select projection so that reading incoming webhooks does not leak secret credentials.
+     */
     const webhooks = await prisma.channelIncomingWebhook.findMany({
       where: {
         channel: {
           workspaceId: context.workspaceId,
         },
       },
-      include: {
+      select: {
+        id: true,
+        channelId: true,
+        name: true,
+        description: true,
+        token: true,
+        isActive: true,
+        createdBy: true,
+        lastReceivedAt: true,
+        totalReceived: true,
+        createdAt: true,
+        updatedAt: true,
         channel: {
           select: {
             id: true,
@@ -211,16 +227,30 @@ export class V3ChannelIncomingWebhooksController {
     }
 
     /**
-     * ⚡ Performance Optimization:
+     * ⚡ Performance Optimization & Security Mitigation:
      * 1. Consolidates channel existence/workspace verification and incoming webhooks retrieval into a single query.
      * 2. Reduces database round-trips (RTT) from 2 to 1.
-     * 3. Uses 'select' to fetch only essential fields to minimize payload and memory overhead.
+     * 3. SECURITY (BOLA / Information Disclosure): Explicitly selects non-sensitive scalar fields and
+     *    omits the sensitive HMAC signing secret (`secret`).
      */
     const channel = await prisma.channel.findUnique({
       where: { id: channelId },
       select: {
         workspaceId: true,
         incomingWebhooks: {
+          select: {
+            id: true,
+            channelId: true,
+            name: true,
+            description: true,
+            token: true,
+            isActive: true,
+            createdBy: true,
+            lastReceivedAt: true,
+            totalReceived: true,
+            createdAt: true,
+            updatedAt: true,
+          },
           orderBy: { createdAt: 'desc' },
         },
       },

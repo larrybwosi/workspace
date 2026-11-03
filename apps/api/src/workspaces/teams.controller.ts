@@ -313,6 +313,13 @@ export class TeamsController {
     @Param('teamId') teamId: string,
     @Body() body: AddTeamMemberDto
   ) {
+    /**
+     * ⚡ Performance Optimization:
+     * Consolidates workspace lookup, user membership authorization, and team workspace context verification
+     * into a single database query using nested relations (`members` and `teams`).
+     * Reduces database round-trips from 2 down to 1 while maintaining BOLA/IDOR protection.
+     * Expected impact: Cuts database latency by ~50% (1 DB RTT instead of 2).
+     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
       select: {
@@ -320,6 +327,10 @@ export class TeamsController {
         members: {
           where: { userId: user.id },
           select: { role: true },
+        },
+        teams: {
+          where: { id: teamId },
+          select: { id: true },
         },
       },
     });
@@ -334,14 +345,9 @@ export class TeamsController {
       throw new ForbiddenException('Forbidden');
     }
 
-    // Security Mitigation (BOLA / IDOR):
-    // Ensure team exists and strictly belongs to the current workspace before mutating members.
-    const team = await prisma.workspaceTeam.findUnique({
-      where: { id: teamId },
-      select: { workspaceId: true },
-    });
+    const team = workspace.teams[0];
 
-    if (!team || team.workspaceId !== workspace.id) {
+    if (!team) {
       throw new NotFoundException('Team not found in this workspace');
     }
 
@@ -372,8 +378,10 @@ export class TeamsController {
   ) {
     /**
      * ⚡ Performance Optimization:
-     * Consolidates workspace lookup and membership verification into a single database query.
-     * Reduces database round-trips from 2 down to 1.
+     * Consolidates workspace lookup, user membership authorization, and team workspace context verification
+     * into a single database query using nested relations (`members` and `teams`).
+     * Reduces database round-trips from 2 down to 1 while maintaining BOLA/IDOR protection.
+     * Expected impact: Cuts database latency by ~50% (1 DB RTT instead of 2).
      */
     const workspace = await prisma.workspace.findUnique({
       where: { slug },
@@ -382,6 +390,10 @@ export class TeamsController {
         members: {
           where: { userId: user.id },
           select: { role: true },
+        },
+        teams: {
+          where: { id: teamId },
+          select: { id: true },
         },
       },
     });
@@ -396,14 +408,9 @@ export class TeamsController {
       throw new ForbiddenException('Forbidden');
     }
 
-    // Security Mitigation (BOLA / IDOR):
-    // Ensure team exists and strictly belongs to the current workspace before deleting members.
-    const team = await prisma.workspaceTeam.findUnique({
-      where: { id: teamId },
-      select: { workspaceId: true },
-    });
+    const team = workspace.teams[0];
 
-    if (!team || team.workspaceId !== workspace.id) {
+    if (!team) {
       throw new NotFoundException('Team not found in this workspace');
     }
 

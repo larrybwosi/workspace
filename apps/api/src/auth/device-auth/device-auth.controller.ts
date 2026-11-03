@@ -12,12 +12,31 @@ import {
   Logger,
 } from '@nestjs/common';
 import type { FastifyRequest } from 'fastify';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiBody, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsString, IsOptional } from 'class-validator';
 import { fromNodeHeaders } from 'better-auth/node';
 import { AllowAnonymous } from '@thallesp/nestjs-better-auth';
 import { AuthGuard } from '../auth.guard';
 import { auth } from '@repo/auth';
 import { publishRealtime } from '@repo/shared/server';
 import { prisma } from '@repo/database';
+
+/**
+ * THREAT MITIGATION: Input Validation & Mass Assignment Prevention (CWE-20 / CWE-915)
+ * Strict class-validator DTO enforces property type constraints and eliminates unvalidated payload injection
+ * on device approval and denial routes.
+ */
+export class AuthorizeDeviceDto {
+  @ApiPropertyOptional({ description: 'User verification code from scanned QR code or URL', example: 'ABCD-1234' })
+  @IsOptional()
+  @IsString()
+  userCode?: string;
+
+  @ApiPropertyOptional({ description: 'Fallback session token identifier', example: 'SESS-1234' })
+  @IsOptional()
+  @IsString()
+  sessionId?: string;
+}
 
 /**
  * OAuth client id for the desktop app. If you want to restrict which
@@ -168,8 +187,10 @@ export class DeviceAuthController {
    */
   @Post('qr/authorize')
   @UseGuards(AuthGuard)
+  @ApiOperation({ summary: 'Authorize a pending device authorization request' })
+  @ApiBody({ type: AuthorizeDeviceDto })
   async authorize(
-    @Body() body: { userCode?: string; sessionId?: string },
+    @Body() body: AuthorizeDeviceDto,
     @Req() req: FastifyRequest
   ) {
     const rawCode = body?.userCode || body?.sessionId;
@@ -226,8 +247,10 @@ export class DeviceAuthController {
    */
   @Post('qr/deny')
   @UseGuards(AuthGuard)
+  @ApiOperation({ summary: 'Deny a pending device authorization request' })
+  @ApiBody({ type: AuthorizeDeviceDto })
   async deny(
-    @Body() body: { userCode?: string; sessionId?: string },
+    @Body() body: AuthorizeDeviceDto,
     @Req() req: FastifyRequest
   ) {
     const rawCode = body?.userCode || body?.sessionId;

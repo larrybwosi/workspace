@@ -463,6 +463,28 @@ export class V3DmsController {
       throw new ForbiddenException('Missing messages:read scope');
     }
 
+    /**
+     * THREAT MITIGATION: BOLA/IDOR & Information Disclosure Prevention
+     * 1. Resolve requesting user/bot context.
+     * 2. Verify DM conversation exists and requesting user is an active participant (throws ForbiddenException/NotFoundException).
+     * 3. Verify message exists and belongs directly to this DM conversation (`message.dmId === dmId`).
+     * Prevents unauthorized callers from probing user action responses, emails, and comments across DM conversations.
+     */
+    const user = await this.resolveEffectiveUserId(context);
+    const dm = await this.dmsService.getDm(dmId, user.id);
+    if (!dm) {
+      throw new NotFoundException('DM conversation not found');
+    }
+
+    const message = await prisma.dMMessage.findUnique({
+      where: { id: messageId },
+      select: { id: true, dmId: true },
+    });
+
+    if (!message || message.dmId !== dmId) {
+      throw new NotFoundException('Message not found in this DM conversation');
+    }
+
     const responses = await prisma.messageActionResponse.findMany({
       where: { messageId },
       include: {
@@ -490,6 +512,15 @@ export class V3DmsController {
     comment?: string,
     metadataPayload?: any
   ) {
+    /**
+     * THREAT MITIGATION: BOLA/IDOR Prevention
+     * Verify user is an active participant in the target DM conversation before processing action response or webhooks.
+     */
+    const dm = await this.dmsService.getDm(dmId, userId);
+    if (!dm) {
+      throw new NotFoundException('DM conversation not found');
+    }
+
     const message = (await prisma.dMMessage.findUnique({
       where: { id: messageId },
       include: {
@@ -507,9 +538,24 @@ export class V3DmsController {
       metaAct = customMsgActions.find((a: any) => a.id === actionIdParam || a.actionId === actionIdParam);
     }
 
-    let action = await prisma.messageAction.findFirst({
-      where: { messageId: message.id, OR: [{ actionId: actionIdParam }, { id: actionIdParam }] },
+    /**
+     * ⚡ Bolt Performance Optimization:
+     * Replaces `prisma.messageAction.findFirst` with `OR` filters by utilizing serial short-circuiting
+     * `findUnique` point lookups targeting compound constraint `messageId_actionId` and primary key `id`.
+     * Direct O(1) B-tree point lookups eliminate multi-column query scans and index union overhead while
+     * preserving message ownership scoping in memory (`actionById.messageId === message.id`).
+     */
+    let action = await prisma.messageAction.findUnique({
+      where: { messageId_actionId: { messageId: message.id, actionId: actionIdParam } },
     });
+    if (!action) {
+      const actionById = await prisma.messageAction.findUnique({
+        where: { id: actionIdParam },
+      });
+      if (actionById && actionById.messageId === message.id) {
+        action = actionById;
+      }
+    }
 
     if (!action && metaAct) {
       action = await prisma.messageAction.upsert({
@@ -546,31 +592,25 @@ export class V3DmsController {
       false;
 
     if (!allowMultiple) {
-      const existingResponse = await prisma.messageActionResponse.findFirst({
+      /**
+       * ⚡ Bolt Performance Optimization:
+       * Replaces `prisma.messageActionResponse.findFirst` with a direct O(1) point lookup via `findUnique`
+       * targeting the compound unique constraint `actionId_userId` (`@@unique([actionId, userId])`).
+       * Projected `select: { id: true }` avoids over-fetching unused columns.
+       * Expected impact: Replaces multi-column query scans with direct O(1) B-tree unique index point lookups.
+       */
+      const existingResponse = await prisma.messageActionResponse.findUnique({
         where: {
-          messageId: message.id,
-          userId,
-          actionValue: actionIdParam,
+          actionId_userId: {
+            actionId: action.id,
+            userId,
+          },
         },
+        select: { id: true },
       });
 
       if (existingResponse) {
         throw new BadRequestException('Action already responded by this user');
-      }
-    }
-
-    let callbackUrl =
-      (message.metadata as any)?.callbackUrl ||
-      (message.metadata as any)?.customMessage?.metadata?.callbackUrl ||
-      metaAct?.handler?.url;
-
-    if (!callbackUrl && message.sender?.isBot) {
-      const app = await prisma.botApplication.findFirst({
-        where: { botId: message.senderId },
-        select: { interactionsUrl: true },
-      });
-      if (app?.interactionsUrl) {
-        callbackUrl = app.interactionsUrl;
       }
     }
 
@@ -587,6 +627,26 @@ export class V3DmsController {
         },
       });
       createdActionId = dbAction.id;
+    }
+
+    let callbackUrl =
+      (message.metadata as any)?.callbackUrl ||
+      (message.metadata as any)?.customMessage?.metadata?.callbackUrl ||
+      metaAct?.handler?.url;
+
+    if (!callbackUrl && message.sender?.isBot) {
+      /**
+       * ⚡ Performance Optimization:
+       * Replaces `prisma.botApplication.findFirst` on `@unique` field `botId` with a direct O(1) B-tree unique point lookup via `findUnique`.
+       * Expected impact: Eliminates query planner scan overhead on bot application resolution.
+       */
+      const app = await prisma.botApplication.findUnique({
+        where: { botId: message.senderId },
+        select: { interactionsUrl: true },
+      });
+      if (app?.interactionsUrl) {
+        callbackUrl = app.interactionsUrl;
+      }
     }
 
     const response = await prisma.messageActionResponse.create({
