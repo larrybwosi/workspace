@@ -2,190 +2,70 @@ name: Release
 
 on:
   push:
-    branches: [main, dev]
+    branches: [main]
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 permissions:
   contents: write
+  pull-requests: write
+  packages: write
 
 jobs:
-  # Check if changeset files exist (.changeset/*.md excluding README.md)
-  detect-changeset:
+  release:
+    name: Changesets Release & Versioning
     runs-on: ubuntu-latest
     outputs:
-      has_changeset: ${{ steps.filter.outputs.changeset }}
-      has_android_changes: ${{ steps.filter.outputs.android }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.ref }}
-      - uses: dorny/paths-filter@v3
-        id: filter
-        with:
-          filters: |
-            changeset:
-              - '.changeset/*.md'
-              - '! .changeset/README.md'
-            android:
-              - 'apps/android/**'
-
-  # =======================================================================
-  # DEV: patch release, runs when a merge/push to dev is made and changeset files exist
-  # =======================================================================
-  version-dev:
-    needs: [detect-changeset]
-    if: github.ref == 'refs/heads/dev' && needs.detect-changeset.outputs.has_changeset == 'true'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    outputs:
-      version: ${{ steps.bump.outputs.version }}
-      has_android_changes: ${{ needs.detect-changeset.outputs.has_android_changes }}
+      published: ${{ steps.changesets.outputs.published }}
+      version: ${{ steps.get_version.outputs.version }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           token: ${{ github.token }}
-          ref: ${{ github.ref }}
+
       - uses: pnpm/action-setup@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: 'pnpm'
           registry-url: 'https://registry.npmjs.org'
+
       - run: pnpm install --no-frozen-lockfile --dangerously-allow-all-builds
-      - name: Bump patch version
-        id: bump
-        run: |
-          git fetch --tags || true
-          npm version patch --no-git-tag-version
-          node scripts/ensure-unique-version.js
-          pnpm install --no-frozen-lockfile
-          node scripts/update-version.js android
-          VERSION=$(node -p "require('./package.json').version")
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-      - name: Commit and tag
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add .
-          git commit -m "chore: bump patch version to ${{ steps.bump.outputs.version }} (android) [skip ci]" || echo "No changes to commit"
-          git tag v${{ steps.bump.outputs.version }}
-          git pull --rebase origin dev || true
-          git push origin dev --tags
 
-  create-release-dev:
-    needs: [version-dev]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    outputs:
-      version: ${{ needs.version-dev.outputs.version }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          token: ${{ github.token }}
-          ref: ${{ github.ref }}
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ needs.version-dev.outputs.version }}
-          name: v${{ needs.version-dev.outputs.version }}
-          draft: false
-          prerelease: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  android-release-dev:
-    needs: [version-dev, create-release-dev]
-    if: needs.version-dev.outputs.has_android_changes == 'true'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          token: ${{ github.token }}
-          ref: ${{ github.ref }}
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: gradle
-      - name: Grant execute permission for gradlew
-        run: chmod +x apps/android/gradlew
-      - name: Build Release APK
-        env:
-          API_URL: http://localhost:3000
-          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-        run: cd apps/android && ./gradlew assembleRelease
-      - name: Upload to Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ needs.version-dev.outputs.version }}
-          files: apps/android/app/build/outputs/apk/release/app-release.apk
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  # =======================================================================
-  # MAIN: runs when a merge/push to main is made and changeset files exist.
-  # =======================================================================
-  version-main:
-    needs: [detect-changeset]
-    if: github.ref == 'refs/heads/main' && needs.detect-changeset.outputs.has_changeset == 'true'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    outputs:
-      version: ${{ steps.bump.outputs.version }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          token: ${{ github.token }}
-          ref: ${{ github.ref }}
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: 'pnpm'
-          registry-url: 'https://registry.npmjs.org'
-      - run: pnpm install --no-frozen-lockfile --dangerously-allow-all-builds
-      - name: Bump patch version
-        id: bump
-        run: |
-          git fetch --tags || true
-          npm version patch --no-git-tag-version
-          node scripts/ensure-unique-version.js
-          pnpm install --no-frozen-lockfile
-          node scripts/update-version.js
-          VERSION=$(node -p "require('./package.json').version")
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-      - name: Commit and tag
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add .
-          git commit -m "chore: bump version to ${{ steps.bump.outputs.version }} [skip ci]" || echo "No changes to commit"
-          git tag v${{ steps.bump.outputs.version }}
-          git pull --rebase origin main || true
-          git push origin main --tags
-      - name: Publish to npm
-        run: pnpm publish -r --no-git-checks --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPS_TOKEN || secrets.NPM_TOKEN }}
-        continue-on-error: true
-      - name: Generate Rust SDK
-        run: pnpm --filter @scryme/chat run generate:rust
       - name: Install Rust Toolchain
         uses: dtolnay/rust-toolchain@stable
-      - name: Publish Rust SDK to Cargo
-        run: cd packages/sdk/rust && cargo publish --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        continue-on-error: true
+
+      - name: Create Release PR or Publish
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          version: pnpm changeset version
+          publish: pnpm changeset publish
+          title: "chore: version packages"
+          commit: "chore: version packages"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPS_TOKEN || secrets.NPM_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPS_TOKEN || secrets.NPM_TOKEN }}
+
+      - name: Post-publish Tasks (Cargo SDK & Version output)
+        if: steps.changesets.outputs.published == 'true'
+        id: get_version
+        run: |
+          node scripts/update-version.js || true
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+          pnpm --filter @scryme/chat run generate:rust || true
+          cd packages/sdk/rust && cargo publish --token ${{ secrets.CARGO_REGISTRY_TOKEN }} || true
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
 
   docker-publish:
-    needs: [version-main]
-    if: github.ref == 'refs/heads/main'
+    needs: [release]
+    if: needs.release.outputs.published == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -208,7 +88,7 @@ jobs:
       - name: Get version
         id: get_version
         run: |
-          VERSION=${{ needs.version-main.outputs.version }}
+          VERSION=${{ needs.release.outputs.version }}
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
       - name: Lowercase repo name
         run: |
@@ -237,13 +117,13 @@ jobs:
           cache-to: type=gha,mode=min,scope=${{ matrix.apps }}
 
   create-release-main:
-    needs: [version-main]
-    if: github.ref == 'refs/heads/main'
+    needs: [release]
+    if: needs.release.outputs.published == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write
     outputs:
-      version: ${{ needs.version-main.outputs.version }}
+      version: ${{ needs.release.outputs.version }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -252,15 +132,16 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ needs.version-main.outputs.version }}
-          name: v${{ needs.version-main.outputs.version }}
+          tag_name: v${{ needs.release.outputs.version }}
+          name: v${{ needs.release.outputs.version }}
           draft: false
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   native-android-release:
-    needs: [version-main, create-release-main]
+    needs: [release, create-release-main]
+    if: needs.release.outputs.published == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -285,13 +166,14 @@ jobs:
       - name: Upload to Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ needs.version-main.outputs.version }}
+          tag_name: v${{ needs.release.outputs.version }}
           files: apps/android/app/build/outputs/apk/release/app-release.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   desktop-release:
-    needs: [version-main, create-release-main]
+    needs: [release, create-release-main]
+    if: needs.release.outputs.published == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -331,7 +213,7 @@ jobs:
       - name: Wait for scryme-chat-sdk on crates.io
         shell: bash
         run: |
-          VERSION="${{ needs.version-main.outputs.version }}"
+          VERSION="${{ needs.release.outputs.version }}"
           echo "Waiting for scryme-chat-sdk version $VERSION to be available on crates.io..."
           for i in {1..30}; do
             STATUS=$(curl -s -o /dev/null -w "%{http_code}" -H "User-Agent: github-actions" "https://crates.io/api/v1/crates/scryme-chat-sdk/$VERSION")
@@ -352,5 +234,5 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           projectPath: apps/desktop
-          tagName: v${{ needs.version-main.outputs.version }}
+          tagName: v${{ needs.release.outputs.version }}
           args: ${{ matrix.settings.host == 'windows-latest' && '--bundles msi' || '' }}
