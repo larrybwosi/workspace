@@ -118,11 +118,6 @@ export class EmojisController {
       throw new ForbiddenException('Only workspace owners and admins can create custom emojis');
     }
 
-    /**
-     * 🛡️ Security Hardening (Input Validation & Malformed Payload Mitigation):
-     * Strict Zod schema validation enforces payload types, string bounds, regex pattern constraints on shortcodes,
-     * and valid URL structures on imageUrl to prevent stored XSS, malformed database state, and unhandled runtime exceptions.
-     */
     const validated = createEmojiSchema.safeParse(body);
     if (!validated.success) {
       throw new BadRequestException(validated.error.issues);

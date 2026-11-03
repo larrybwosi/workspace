@@ -379,11 +379,6 @@ export class WorkspaceIntegrationsController {
     @Param('integrationId') integrationId: string,
     @Body() body: UpdateWorkspaceIntegrationDto
   ) {
-    /**
-     * 🛡️ Threat Model: Unsanitized Request Payload Modification
-     * Risk Level: Medium
-     * Mitigation: Validate payload with Zod schema before executing update in service layer.
-     */
     const validatedData = updateWorkspaceIntegrationSchema.parse(body);
     return this.integrationsService.updateWorkspaceIntegration(user.id, slug, integrationId, validatedData);
   }

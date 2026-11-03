@@ -195,12 +195,6 @@ export class MembersController {
     }
     const { role } = validatedData.data;
 
-    /**
-     * 🛡️ Security Hardening (Privilege Escalation & Owner Demotion Mitigation):
-     * 1. Only workspace owners can alter the role of an existing owner.
-     * 2. Only workspace owners can promote members to the owner role.
-     * Prevents workspace admins from demoting owners or performing unauthorized ownership takeover.
-     */
     if (targetMember.role === 'owner' && requesterMember.role !== 'owner') {
       throw new ForbiddenException('Forbidden: Only workspace owners can modify owner roles');
     }
@@ -301,11 +295,6 @@ export class MembersController {
       throw new BadRequestException('Cannot remove workspace owner');
     }
 
-    /**
-     * 🛡️ Security Hardening (Admin Privilege Abuse Mitigation):
-     * Workspace admins cannot remove other workspace admins unless they are performing self-removal.
-     * Only workspace owners can remove admin members from a workspace.
-     */
     if (memberToRemove.role === 'admin' && requesterMember.role !== 'owner' && memberToRemove.id !== requesterMember.id) {
       throw new ForbiddenException('Forbidden: Only workspace owners can remove admins');
     }

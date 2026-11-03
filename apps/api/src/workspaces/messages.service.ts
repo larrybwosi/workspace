@@ -52,11 +52,6 @@ export class MessagesService {
     return workspace;
   }
 
-  /**
-   * 🛡️ Security Hardening (BOLA / IDOR Mitigation & Workspace/Channel Boundary Enforcement):
-   * Verifies that the target channel exists, strictly belongs to the requested workspace (workspaceId),
-   * and enforces membership checks if the channel is marked private.
-   */
   async verifyChannelAccess(channelId: string, userId: string, workspaceId?: string) {
     if (!channelId) {
       throw new BadRequestException('Channel ID required');
@@ -346,12 +341,6 @@ export class MessagesService {
     return message;
   }
 
-  /**
-   * 🛡️ Security Hardening (BOLA / IDOR Mitigation & Workspace/Channel Boundary Enforcement):
-   * Verifies that the target channel exists and belongs to the workspace, validates that the message
-   * exists within that channel (existingMessage.channelId === channelId), and enforces that the requesting
-   * user is the original author of the message.
-   */
   async updateMessage(userId: string, messageId: string, content: string, channelId?: string, workspaceId?: string) {
     if (channelId) {
       await this.verifyChannelAccess(channelId, userId, workspaceId);
@@ -398,12 +387,6 @@ export class MessagesService {
     return message;
   }
 
-  /**
-   * 🛡️ Security Hardening (BOLA / IDOR Mitigation & Workspace/Channel Boundary Enforcement):
-   * Verifies that the target channel exists and belongs to the workspace, validates that the message
-   * exists within that channel (existingMessage.channelId === channelId), and enforces that the requesting
-   * user is the original author of the message.
-   */
   async deleteMessage(userId: string, messageId: string, channelId?: string, workspaceId?: string) {
     if (channelId) {
       await this.verifyChannelAccess(channelId, userId, workspaceId);

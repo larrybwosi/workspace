@@ -71,11 +71,6 @@ export class InviteLinksController {
       throw new NotFoundException('Workspace not found');
     }
 
-    /**
-     * 🛡️ Security Hardening (Privilege Escalation / BOLA Mitigation):
-     * Verify that requesting user is a workspace owner or admin before returning invite links.
-     * Prevents standard members from retrieving or harvesting workspace invite links.
-     */
     const member = workspace.members[0];
     if (!member || !['owner', 'admin'].includes(member.role)) {
       throw new ForbiddenException('Forbidden - Only workspace owners and admins can view invite links');
@@ -133,11 +128,6 @@ export class InviteLinksController {
       throw new NotFoundException('Workspace not found');
     }
 
-    /**
-     * 🛡️ Security Hardening (Privilege Escalation / BOLA Mitigation):
-     * Verify that requesting user is a workspace owner or admin before generating invite links.
-     * Prevents standard members from bypassing invitation workflows and creating unauthorized workspace invite links.
-     */
     const member = workspace.members[0];
     if (!member || !['owner', 'admin'].includes(member.role)) {
       throw new ForbiddenException('Forbidden - Only workspace owners and admins can create invite links');

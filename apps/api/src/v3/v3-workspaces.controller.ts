@@ -499,12 +499,6 @@ export class V3WorkspacesController {
     private readonly webhooksService?: WebhooksService
   ) {}
 
-  /**
-   * ⚡ Bolt Performance Optimization:
-   * Replaces sequential `prisma.botApplication.findFirst` and `prisma.workspace.findUnique` lookups
-   * with a single O(1) primary key point lookup on `prisma.workspace.findUnique` including nested `botApplications` relation.
-   * This cuts database round-trips from 2 down to 1 on the workspace bot creation path and avoids unindexed relation scans.
-   */
   private async resolveEffectiveUserId(context: ApiV3Context, workspaceId?: string): Promise<string> {
     if (context.userId && !context.userId.startsWith('m2m:')) {
       return context.userId;
@@ -1333,11 +1327,6 @@ When provisioned via M2M:
       throw new ForbiddenException('Missing members:read scope');
     }
 
-    /**
-     * ⚡ Bolt Performance Optimization:
-     * Resolves workspace context dynamically by `slug` using `resolveWorkspaceAndCheckAccess`,
-     * allowing organization-level M2M tokens (`oat_...`) and workspace tokens to access members smoothly.
-     */
     const workspace = await this.resolveWorkspaceAndCheckAccess(context, slug);
     const workspaceId = workspace.id;
 
@@ -1410,11 +1399,6 @@ When provisioned via M2M:
 
     const emails = [...new Set(body.members.map(m => m.email).filter((e): e is string => Boolean(e)))];
 
-    /**
-     * ⚡ Bolt Performance Optimization:
-     * Pre-fetches existing users by email in a single batched `prisma.user.findMany` query prior to the import loop.
-     * Replaces N sequential `prisma.user.findUnique` database queries with 1 batch lookup, reducing user resolution round-trips from O(N) down to O(1).
-     */
     const existingUsers = emails.length > 0
       ? await prisma.user.findMany({ where: { email: { in: emails } } })
       : [];
@@ -1422,12 +1406,6 @@ When provisioned via M2M:
 
     const orgId = workspace.organizationId || context.organizationId;
 
-    /**
-     * ⚡ Bolt Performance Optimization:
-     * Pre-fetches existing organization members for pre-resolved users in a single batched `prisma.member.findMany` query.
-     * Replaces N sequential `prisma.member.findFirst` database calls inside the import loop with 1 batch lookup and in-memory Set resolution.
-     * Reduces organization membership verification database round-trips from O(N) down to O(1).
-     */
     const existingOrgMembers = orgId && existingUsers.length > 0
       ? await prisma.member.findMany({
           where: {
@@ -1574,12 +1552,6 @@ When provisioned via M2M:
       if (existingWsm?.user) {
         existingUser = existingWsm.user;
       } else {
-        /**
-         * ⚡ Bolt Performance Optimization:
-         * Replaces `prisma.user.findFirst` with `OR` filter across `id` and `email` with serial short-circuiting `findUnique` point lookups.
-         * Primary key (`id`) and unique key (`email`) lookups leverage direct O(1) B-tree indexes,
-         * avoiding costly index union scans.
-         */
         existingUser = await prisma.user.findUnique({
           where: { id: memberId },
           select: { id: true, email: true, name: true },
@@ -1629,12 +1601,6 @@ When provisioned via M2M:
         throw error;
       }
     } else if (targetEmail) {
-      /**
-       * ⚡ Bolt Performance Optimization:
-       * Projecting only `id` and `token` via Prisma `select` avoids over-fetching unused scalar columns
-       * (`permissions`, `invitedBy`, `expiresAt`, `acceptedAt`, `createdAt`, `updatedAt`, `role`, `userId`)
-       * during pending invitation lookups in workspace member invitations.
-       */
       const existingInvite = await prisma.workspaceInvitation.findFirst({
         where: {
           workspaceId: workspace.id,
@@ -1783,13 +1749,6 @@ When provisioned via M2M:
       throw new NotFoundException('Member not found in this workspace');
     }
 
-    /**
-     * 🛡️ Security Hardening (Privilege Escalation & Owner Demotion Mitigation):
-     * 1. Only workspace owners can alter the role of an existing owner.
-     * 2. Only workspace owners can promote members to the owner role.
-     * Prevents non-owner admins or API callers with members:write scope from demoting owners
-     * or performing unauthorized ownership takeover (BOLA / Privilege Escalation).
-     */
     if (existingMember.role === 'owner' && context.userId !== workspace.ownerId) {
       throw new ForbiddenException('Forbidden: Only workspace owners can modify owner roles');
     }
@@ -1881,12 +1840,6 @@ When provisioned via M2M:
     return this.formatResponse({ success: true });
   }
 
-  /**
-   * Bolt Performance Optimization:
-   * Replaces `findFirst` / `OR` relation queries with serial short-circuiting `findUnique` point lookups.
-   * Primary key (`id`) and compound unique key (`workspaceId_userId`) lookups leverage O(1) B-tree indexes,
-   * avoiding costly multi-table joins and index union scans.
-   */
   private async findWorkspaceMemberByIdentifier<T>(
     workspaceId: string,
     memberIdParam: string,
@@ -2405,11 +2358,6 @@ When provisioned via M2M:
       throw new BadRequestException('userId, memberId, email, userIds, memberIds, or emails required');
     }
 
-    /**
-     * ⚡ Bolt Performance Optimization:
-     * Direct O(1) primary key point lookup on `prisma.channel.findUnique({ where: { id: channelId } })`
-     * leverages B-Tree primary index lookups, validating workspace multi-tenant isolation in application memory.
-     */
     const channel = await prisma.channel.findUnique({
       where: { id: channelId },
     });
@@ -2418,13 +2366,6 @@ When provisioned via M2M:
       throw new NotFoundException('Channel not found in this workspace');
     }
 
-    /**
-     * ⚡ Bolt Performance Optimization:
-     * Parallelizes target user resolution by separating input identifiers into direct B-tree index queries
-     * (`User.id` primary keys, `User.email` unique keys, and `WorkspaceMember.id` indexed lookups).
-     * Replacing a single `prisma.user.findMany` with multi-column/relation `OR` avoids costly multi-table JOINs
-     * and non-indexable relation scans in PostgreSQL.
-     */
     const [usersById, usersByEmail, workspaceMembers] = await Promise.all([
       prisma.user.findMany({
         where: { id: { in: inputIdentifiers } },

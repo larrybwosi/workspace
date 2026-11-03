@@ -100,11 +100,6 @@ export class WebhooksController {
 
     const member = workspace.members[0];
 
-    /**
-     * 🛡️ Security Hardening (BOLA / Information Disclosure Mitigation):
-     * Restrict webhook listing to workspace owners and admins.
-     * Prevents regular non-admin workspace members from viewing outgoing webhooks and their HMAC signing secrets.
-     */
     if (!member || !['owner', 'admin'].includes(member.role)) {
       throw new ForbiddenException('Forbidden: Only owners and admins can view webhooks');
     }
@@ -254,11 +249,6 @@ export class WebhooksController {
       throw new ForbiddenException('Forbidden');
     }
 
-    /**
-     * 🛡️ Security Hardening (BOLA / IDOR Mitigation):
-     * Perform an atomic deletion with workspace boundary validation (workspaceId: workspace.id).
-     * Prevents cross-workspace deletion if an attacker provides a webhook ID belonging to another workspace.
-     */
     const result = await prisma.workspaceWebhook.deleteMany({
       where: {
         id: webhookId,

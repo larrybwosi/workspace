@@ -242,12 +242,6 @@ export class NotificationsService {
   }
 
   async deleteNotification(userId: string, notificationId: string) {
-    /**
-     * ⚡ Bolt Performance Optimization:
-     * Consolidates read existence check, user ownership authorization, and record deletion into a single atomic operation.
-     * Uses `deleteMany` with compound authorization filters (`id` and `userId`).
-     * Reduces database round-trips from 2 to 1 on the happy path while preventing read-then-delete race conditions.
-     */
     const result = await prisma.notification.deleteMany({
       where: {
         id: notificationId,

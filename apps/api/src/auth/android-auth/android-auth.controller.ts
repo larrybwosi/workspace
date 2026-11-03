@@ -249,11 +249,6 @@ export class AndroidAuthController {
     // Fallback: If no token/session yet but we have user, try to find latest session for user
     if (!session && !token && response.user?.id) {
       this.logger.log(`No token or session in response, searching for latest session for user ${response.user.id}`);
-      /**
-       * ⚡ Bolt Performance Optimization:
-       * Projecting targeted scalar fields via Prisma `select` avoids fetching unused relations
-       * and extra session metadata when retrieving fallback user session records.
-       */
       session = await prisma.session.findFirst({
         where: { userId: response.user.id },
         orderBy: { createdAt: 'desc' },
@@ -275,12 +270,6 @@ export class AndroidAuthController {
       throw new BadRequestException(errorMessage);
     }
 
-    /**
-     * ⚡ Bolt Performance Optimization:
-     * Targeted Prisma `select` projection prevents over-fetching unneeded scalar/relation columns
-     * (e.g. workspace relations, department info, or custom metadata) during Android auth membership fetching.
-     * Reduces database I/O payload and JSON serialization overhead on authentication hot paths.
-     */
     const memberships = await prisma.workspaceMember.findMany({
       where: { userId: user.id },
       select: {

@@ -128,12 +128,6 @@ export class V3WebhooksController {
       this.logger.warn('Redis error in getWebhooks (get):', err);
     }
 
-    /**
-     * 🛡️ SECURITY MITIGATION (BOLA / Credential Disclosure):
-     * Bulk listing queries explicitly omit the sensitive HMAC signing key (`secret`) from the
-     * database selection projection so that listing webhooks does not leak HMAC secrets or store
-     * them in the Redis cache.
-     */
     const webhooks = await prisma.workspaceWebhook.findMany({
       where: { workspaceId: context.workspaceId },
       select: {

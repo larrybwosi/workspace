@@ -82,14 +82,6 @@ export class FriendsService {
   }
 
   async sendFriendRequest(senderId: string, senderName: string, receiverEmailOrUsername: string, message?: string) {
-    /**
-     * ⚡ Bolt Performance Optimization:
-     * Replaces `prisma.user.findFirst` with `OR` filters across `id`, `email`, and `username` with serial
-     * short-circuiting `prisma.user.findUnique` point lookups targeting `@unique` B-tree index fields.
-     * `findFirst` with `OR` forces multi-index union scans or sequential table scans in PostgreSQL.
-     * Chaining direct O(1) `findUnique` point lookups resolves receiver identities in 1 index hit
-     * while retaining consolidated nested relation selections (`friendOf`, `receivedFriendRequests`, `sentFriendRequests`).
-     */
     const selectProjection = {
       id: true,
       // Check if already friends
