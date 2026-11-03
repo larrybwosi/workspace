@@ -102,11 +102,6 @@ export class InvitationsService {
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
     if (data.channelId) {
-      /**
-       * 🛡️ Security Hardening (BOLA / Channel Boundary Verification):
-       * Validate target channel existence, workspace scoping, and requesting user authorization
-       * prior to creating invitations associated with a channel.
-       */
       const channel = await prisma.channel.findUnique({
         where: { id: data.channelId },
         select: {
@@ -389,11 +384,6 @@ export class InvitationsService {
     }
 
     if (workspaceInvite) {
-      /**
-       * 🛡️ Security Hardening (IDOR / Invitation Hijacking Mitigation):
-       * Validate that the accepting user's email matches the invited email address on the workspace invitation.
-       * Case-insensitive comparison prevents email format mismatch while blocking unauthorized users who obtain the token.
-       */
       if (workspaceInvite.email && user.email && workspaceInvite.email.toLowerCase() !== user.email.toLowerCase()) {
         throw new ForbiddenException('This invitation was sent to a different email address');
       }
@@ -465,11 +455,6 @@ export class InvitationsService {
     }
 
     if (generalInvite) {
-      /**
-       * 🛡️ Security Hardening (IDOR / Invitation Hijacking Mitigation):
-       * Validate that the accepting user's email matches the invited email address on the platform invitation.
-       * Case-insensitive comparison prevents email format mismatch while blocking unauthorized users who obtain the token.
-       */
       if (generalInvite.email && user.email && generalInvite.email.toLowerCase() !== user.email.toLowerCase()) {
         throw new ForbiddenException('This invitation was sent to a different email address');
       }

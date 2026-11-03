@@ -70,12 +70,6 @@ export class AuditLogsController {
 
     const member = workspace.members[0];
 
-    /**
-     * 🛡️ Security Hardening (Broken Object Level Authorization / Privileged Access Enforcement):
-     * Restrict audit log reading strictly to workspace 'owner' and 'admin' roles.
-     * Prevents lower-privileged workspace members ('member' role) from inspecting sensitive system audit trails,
-     * token creations, member mutations, and Administrative actions.
-     */
     if (!member || !['owner', 'admin'].includes(member.role)) {
       throw new ForbiddenException('Forbidden - Admin access required');
     }

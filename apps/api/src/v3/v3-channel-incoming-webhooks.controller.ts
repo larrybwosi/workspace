@@ -317,12 +317,6 @@ export class V3ChannelIncomingWebhooksController {
       },
     });
 
-    /**
-     * ⚡ Bolt Performance Optimization:
-     * Background non-critical audit log creation using `.catch()` error handling to prevent
-     * database write latency from blocking the HTTP response.
-     * Expected impact: Eliminates 1 blocking DB write RTT (~15-30ms) from the request latency path.
-     */
     prisma.workspaceAuditLog
       .create({
         data: {
@@ -458,12 +452,6 @@ export class V3ChannelIncomingWebhooksController {
       data: validatedData.data,
     });
 
-    /**
-     * ⚡ Bolt Performance Optimization:
-     * Background non-critical audit log creation using `.catch()` error handling to prevent
-     * database write latency from blocking the HTTP response.
-     * Expected impact: Eliminates 1 blocking DB write RTT (~15-30ms) from the request latency path.
-     */
     prisma.workspaceAuditLog
       .create({
         data: {
@@ -537,12 +525,6 @@ export class V3ChannelIncomingWebhooksController {
       where: { id: webhookId },
     });
 
-    /**
-     * ⚡ Bolt Performance Optimization:
-     * Background non-critical audit log creation using `.catch()` error handling to prevent
-     * database write latency from blocking the HTTP response.
-     * Expected impact: Eliminates 1 blocking DB write RTT (~15-30ms) from the request latency path.
-     */
     prisma.workspaceAuditLog
       .create({
         data: {

@@ -314,11 +314,6 @@ export class IntegrationsService {
   }
 
   async updateWebhook(userId: string, webhookId: string, data: any) {
-    /**
-     * 🛡️ Security Hardening (BOLA / IDOR Mitigation):
-     * Verify webhook existence and ownership (`userId`) prior to executing mutations.
-     * Prevents unauthorized users from modifying webhooks belonging to other users.
-     */
     const existingWebhook = await prisma.webhook.findUnique({
       where: { id: webhookId },
       select: { id: true, userId: true },
@@ -335,11 +330,6 @@ export class IntegrationsService {
   }
 
   async deleteWebhook(userId: string, webhookId: string) {
-    /**
-     * 🛡️ Security Hardening (BOLA / IDOR Mitigation):
-     * Perform an atomic deletion with owner boundary validation (`userId`).
-     * Prevents unauthorized deletion of webhooks belonging to other users.
-     */
     const result = await prisma.webhook.deleteMany({
       where: {
         id: webhookId,
@@ -393,11 +383,6 @@ export class IntegrationsService {
   }
 
   async updateApiKey(userId: string, keyId: string, data: any) {
-    /**
-     * 🛡️ Security Hardening (BOLA / IDOR Mitigation):
-     * Verify API key existence and ownership (`userId`) prior to executing mutations.
-     * Prevents unauthorized users from modifying API keys belonging to other users.
-     */
     const existingApiKey = await prisma.apiKey.findUnique({
       where: { id: keyId },
       select: { id: true, userId: true },
@@ -414,11 +399,6 @@ export class IntegrationsService {
   }
 
   async deleteApiKey(userId: string, keyId: string) {
-    /**
-     * 🛡️ Security Hardening (BOLA / IDOR Mitigation):
-     * Perform an atomic deletion with owner boundary validation (`userId`).
-     * Prevents unauthorized deletion of API keys belonging to other users.
-     */
     const result = await prisma.apiKey.deleteMany({
       where: {
         id: keyId,
@@ -555,11 +535,6 @@ export class IntegrationsService {
   }
 
   async getWorkspaceIntegration(userId: string, workspaceSlug: string, integrationId: string) {
-    /**
-     * 🛡️ Security Hardening (BOLA / IDOR Mitigation):
-     * Verify workspace existence, integration ownership, and user workspace membership (`workspace.members`).
-     * Prevents unauthorized users from viewing integration details for workspaces they are not members of.
-     */
     const integration = await prisma.workspaceIntegration.findUnique({
       where: { id: integrationId },
       select: {
@@ -717,11 +692,6 @@ export class IntegrationsService {
   }
 
   async testWorkspaceIntegration(userId: string, workspaceSlug: string, integrationId: string) {
-    /**
-     * 🛡️ Security Hardening (BOLA / IDOR & Privilege Escalation Mitigation):
-     * Verify workspace membership and enforce workspace owner/admin role authorization (`['owner', 'admin'].includes(member.role)`).
-     * Prevents non-members or lower-privileged members from executing test webhooks and integration checks.
-     */
     const integration = await prisma.workspaceIntegration.findUnique({
       where: { id: integrationId },
       select: {
@@ -868,11 +838,6 @@ export class IntegrationsService {
   }
 
   async getWorkspaceWebhooks(userId: string, workspaceSlug: string) {
-    /**
-     * 🛡️ Security Hardening (BOLA / Privilege Escalation Mitigation):
-     * Enforce workspace owner or admin role authorization (`['owner', 'admin'].includes(member.role)`).
-     * Prevents non-admin workspace members from accessing sensitive webhook signing secrets and configurations.
-     */
     const workspace = await prisma.workspace.findUnique({
       where: { slug: workspaceSlug },
       select: {

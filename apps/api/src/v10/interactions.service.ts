@@ -175,10 +175,6 @@ export class V10InteractionsService {
       .update(tokenPayload)
       .digest('hex');
 
-    /**
-     * 🛡️ Security Hardening (Timing Side-Channel Attack Prevention):
-     * Use crypto.timingSafeEqual for constant-time HMAC signature comparison to prevent timing attacks.
-     */
     const signatureBuf = Buffer.from(signature, 'hex');
     const expectedBuf = Buffer.from(expectedSignature, 'hex');
     if (signatureBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(signatureBuf, expectedBuf)) {

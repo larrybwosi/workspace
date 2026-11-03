@@ -217,12 +217,6 @@ export class V3UsersController {
         throw new NotFoundException('User with specified email not found');
       }
     } else if (context.workspaceId) {
-      /**
-       * ⚡ Bolt Performance Optimization:
-       * Replaces `prisma.workspaceMember.findFirst` with `prisma.workspaceMember.findUnique` on compound unique index
-       * `@@unique([workspaceId, userId])` (`workspaceId_userId`). Direct compound key point lookup leverages O(1)
-       * B-tree indexing instead of non-primary/secondary index scans.
-       */
       const isWorkspaceMember = await prisma.workspaceMember.findUnique({
         where: {
           workspaceId_userId: { workspaceId: context.workspaceId, userId: user.id },
@@ -287,12 +281,6 @@ export class V3UsersController {
         throw new NotFoundException('User not found');
       }
     } else if (context.workspaceId) {
-      /**
-       * ⚡ Bolt Performance Optimization:
-       * Replaces `prisma.workspaceMember.findFirst` with `prisma.workspaceMember.findUnique` on compound unique index
-       * `@@unique([workspaceId, userId])` (`workspaceId_userId`). Direct compound key point lookup leverages O(1)
-       * B-tree indexing instead of non-primary/secondary index scans.
-       */
       const isWorkspaceMember = await prisma.workspaceMember.findUnique({
         where: {
           workspaceId_userId: { workspaceId: context.workspaceId, userId: user.id },

@@ -223,12 +223,6 @@ export class ApiV3Guard implements CanActivate {
             where: { id: context.organizationId },
           });
         } else if (oauthToken.clientId) {
-          /**
-           * ⚡ Bolt Performance Optimization:
-           * Replaces `prisma.organization.findFirst` with `prisma.organization.findUnique` on `@unique` field `clientId`.
-           * Direct O(1) unique key point lookup avoids query planning and index scans during OAuth M2M requests,
-           * enabling Prisma query engine batching and DataLoader optimizations.
-           */
           org = await prisma.organization.findUnique({
             where: { clientId: oauthToken.clientId },
           });

@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { V3DmsController } from './v3-dms.controller';
-import { ForbiddenException } from '@nestjs/common';
 
 vi.mock('@repo/database', () => ({
   prisma: {
@@ -191,7 +190,7 @@ describe('V3DmsController Actions', () => {
       };
       const res = await controller.createMessage(context, 'dm_1', dto);
       expect(res.success).toBe(true);
-      expect(mockDmsService.createMessage).toHaveBeenCalledWith('dm_1', 'usr_1', dto);
+      expect(dmsService.createMessage).toHaveBeenCalledWith('dm_1', 'usr_1', dto);
     });
   });
 
@@ -201,7 +200,7 @@ describe('V3DmsController Actions', () => {
       const context: any = { scopes: ['messages:send'], userId: 'usr_1' };
       const res = await controller.updateMessage(context, 'dm_1', 'msg_1', { content: 'updated' });
       expect(res.success).toBe(true);
-      expect(mockDmsService.updateMessage).toHaveBeenCalledWith('dm_1', 'msg_1', 'usr_1', 'updated');
+      expect(dmsService.updateMessage).toHaveBeenCalledWith('dm_1', 'msg_1', 'usr_1', 'updated');
     });
   });
 
@@ -211,7 +210,7 @@ describe('V3DmsController Actions', () => {
       const context: any = { scopes: ['messages:send'], userId: 'usr_1' };
       const res = await controller.addReaction(context, 'dm_1', 'msg_1', { emoji: '👍' });
       expect(res.success).toBe(true);
-      expect(mockDmsService.addReaction).toHaveBeenCalledWith('dm_1', 'msg_1', 'usr_1', '👍');
+      expect(dmsService.addReaction).toHaveBeenCalledWith('dm_1', 'msg_1', 'usr_1', '👍');
     });
   });
 });

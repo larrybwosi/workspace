@@ -237,13 +237,6 @@ export class DmsService {
   }
 
   async getMessages(dmId: string, userId: string, cursor?: string, limitNum = 50) {
-    /**
-     * ⚡ Bolt Performance Optimization:
-     * Query `prisma.dMMessage.findMany` directly with relational ownership filter (`dm: { OR: [...] }`).
-     * On the happy path (messages exist), this cuts database round-trips (RTT) from 2 down to 1.
-     * Fallback O(1) point lookup on `prisma.directMessage.findUnique` is only executed when `messages` is empty
-     * to preserve exact `NotFoundException` and `ForbiddenException` semantics for invalid or unauthorized DMs.
-     */
     const messages = (await prisma.dMMessage.findMany({
       where: {
         dmId,

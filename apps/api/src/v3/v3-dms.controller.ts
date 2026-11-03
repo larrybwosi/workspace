@@ -140,12 +140,6 @@ export class V3DmsController {
       if (u) return { id: u.id, name: u.name };
     }
 
-    /**
-     * ⚡ Bolt Performance Optimization:
-     * Replaces `prisma.user.findFirst` on non-unique field `isBot` with a direct O(1) primary key point lookup on `id`.
-     * Direct B-tree point lookup (`findUnique({ where: { id: 'system_bot_v3_m2m' } })`) avoids full table/index scans.
-     * Uses `upsert` with deterministic ID `system_bot_v3_m2m` to guarantee O(1) resolution for M2M fallback context.
-     */
     const systemBot = await prisma.user.upsert({
       where: { id: 'system_bot_v3_m2m' },
       update: {},
@@ -538,13 +532,6 @@ export class V3DmsController {
       metaAct = customMsgActions.find((a: any) => a.id === actionIdParam || a.actionId === actionIdParam);
     }
 
-    /**
-     * ⚡ Bolt Performance Optimization:
-     * Replaces `prisma.messageAction.findFirst` with `OR` filters by utilizing serial short-circuiting
-     * `findUnique` point lookups targeting compound constraint `messageId_actionId` and primary key `id`.
-     * Direct O(1) B-tree point lookups eliminate multi-column query scans and index union overhead while
-     * preserving message ownership scoping in memory (`actionById.messageId === message.id`).
-     */
     let action = await prisma.messageAction.findUnique({
       where: { messageId_actionId: { messageId: message.id, actionId: actionIdParam } },
     });
@@ -592,13 +579,6 @@ export class V3DmsController {
       false;
 
     if (!allowMultiple) {
-      /**
-       * ⚡ Bolt Performance Optimization:
-       * Replaces `prisma.messageActionResponse.findFirst` with a direct O(1) point lookup via `findUnique`
-       * targeting the compound unique constraint `actionId_userId` (`@@unique([actionId, userId])`).
-       * Projected `select: { id: true }` avoids over-fetching unused columns.
-       * Expected impact: Replaces multi-column query scans with direct O(1) B-tree unique index point lookups.
-       */
       const existingResponse = await prisma.messageActionResponse.findUnique({
         where: {
           actionId_userId: {

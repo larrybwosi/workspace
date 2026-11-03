@@ -1,5 +1,4 @@
 import {
-  // Bolt: Break duplication with OrganizationsController
   Controller,
   Get,
   Param,
