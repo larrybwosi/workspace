@@ -89,9 +89,24 @@ fun HomeScreen(
         }
     }
 
-    if (channelId != null) {
-        androidx.activity.compose.BackHandler {
-            onWorkspaceClick(workspaceSlug)
+    // System Back button handling
+    androidx.activity.compose.BackHandler(enabled = true) {
+        when {
+            drawerState.isOpen -> {
+                scope.launch { drawerState.close() }
+            }
+            chatUiState.isThread -> {
+                uiState.selectedChannel?.let { channel ->
+                    chatViewModel.setChannel(channel.id)
+                }
+            }
+            uiState.selectedChannel != null || uiState.selectedDm != null -> {
+                viewModel.selectHome()
+            }
+            else -> {
+                // Return to home state or let system handle it
+                viewModel.selectHome()
+            }
         }
     }
 
@@ -279,8 +294,12 @@ fun HomeScreen(
                 },
                 onForward = { forwardingMessage = it },
                 onBack = {
-                    uiState.selectedChannel?.let { channel ->
-                        chatViewModel.setChannel(channel.id)
+                    if (chatUiState.isThread) {
+                        uiState.selectedChannel?.let { channel ->
+                            chatViewModel.setChannel(channel.id)
+                        }
+                    } else {
+                        viewModel.selectHome()
                     }
                 },
                 isDm = uiState.selectedDm != null,

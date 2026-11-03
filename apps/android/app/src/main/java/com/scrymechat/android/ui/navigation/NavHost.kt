@@ -167,6 +167,7 @@ fun ScrymeNavHost(
         }
         composable(Screen.Friends.route) {
             FriendsScreen(
+                onBack = { navController.popBackStack() },
                 onDmClick = { userId ->
                     navController.navigate(Screen.Chat.createRoute(userId, isUserId = true))
                 },

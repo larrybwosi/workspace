@@ -194,7 +194,7 @@ private fun ForwardedHeader(count: Int, palette: ChatPalette) {
         Text(
             text = if (count > 1) "Forwarded \u00B7 $count messages" else "Forwarded",
             color = palette.textTertiary,
-            fontSize = 12.5.sp,
+            fontSize = 11.5.sp,
             fontStyle = FontStyle.Italic,
             fontWeight = FontWeight.Medium
         )
@@ -251,13 +251,13 @@ private fun ForwardedSnapshotCard(
                             text = senderName,
                             color = palette.textPrimary,
                             fontWeight = FontWeight.SemiBold,
-                            fontSize = 13.5.sp
+                            fontSize = 12.5.sp
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = formatMessageTimestamp(snapshot.createdAt),
                             color = palette.textTertiary,
-                            fontSize = 10.5.sp
+                            fontSize = 10.sp
                         )
                     }
 
@@ -273,7 +273,7 @@ private fun ForwardedSnapshotCard(
                         Text(
                             text = "Original message was deleted or unavailable",
                             color = palette.textTertiary,
-                            fontSize = 13.sp,
+                            fontSize = 12.sp,
                             fontStyle = FontStyle.Italic
                         )
                     }
@@ -322,7 +322,7 @@ private fun ForwardedSnapshotCard(
                                 Text(
                                     text = attachment.name,
                                     color = palette.textPrimary,
-                                    fontSize = 12.sp,
+                                    fontSize = 11.sp,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,
                                     modifier = Modifier.weight(1f, fill = false)
@@ -583,11 +583,9 @@ fun MessageItem(
 ) {
     val cleanName = remember(message.senderName) {
         val rawName = message.senderName ?: "Unknown User"
-        if (rawName.contains("@")) {
-            rawName.substringBefore("@")
-        } else {
-            rawName
-        }
+        var formatted = if (rawName.contains("@")) rawName.substringBefore("@") else rawName
+        formatted = formatted.removePrefix("user_").removePrefix("m2m:")
+        if (formatted.isBlank()) "Unknown User" else formatted
     }
 
     val isReply = message.replyToId != null
@@ -642,7 +640,7 @@ fun MessageItem(
                 Text(
                     text = "@$repliedName",
                     color = palette.replyStripAccent,
-                    fontSize = 13.sp,
+                    fontSize = 12.sp,
                     fontWeight = FontWeight.Medium,
                     maxLines = 1
                 )
@@ -652,7 +650,7 @@ fun MessageItem(
                 Text(
                     text = previewText,
                     color = if (hasContent) palette.textSecondary else palette.textTertiary,
-                    fontSize = 13.sp,
+                    fontSize = 12.sp,
                     fontStyle = if (hasContent) FontStyle.Normal else FontStyle.Italic,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -687,7 +685,7 @@ fun MessageItem(
                     Text(
                         text = formatMessageTimestamp(message.createdAt, shortOnly = true),
                         color = palette.textTertiary.copy(alpha = 0.5f),
-                        fontSize = 9.5.sp
+                        fontSize = 9.sp
                     )
                 }
             }
@@ -701,7 +699,7 @@ fun MessageItem(
                             text = cleanName,
                             color = palette.textPrimary,
                             fontWeight = FontWeight.SemiBold,
-                            fontSize = 16.sp,
+                            fontSize = 14.sp,
                             modifier = Modifier.clickable { onAvatarClick(message.senderId) }
                         )
 
@@ -747,7 +745,7 @@ fun MessageItem(
                         Text(
                             text = formatMessageTimestamp(message.createdAt),
                             color = palette.textTertiary,
-                            fontSize = 11.5.sp
+                            fontSize = 10.5.sp
                         )
                         if (currentUserId != null && currentUserId == message.senderId) {
                             Spacer(modifier = Modifier.width(4.dp))
@@ -951,7 +949,7 @@ fun MessageItem(
                             Text(
                                 text = attachment.name,
                                 color = palette.textPrimary,
-                                fontSize = 13.5.sp,
+                                fontSize = 12.5.sp,
                                 fontWeight = FontWeight.Medium,
                                 modifier = Modifier.weight(1f)
                             )
@@ -977,7 +975,7 @@ fun MessageItem(
                         Text(
                             text = if (message.replyCount > 0) "${message.replyCount} ${if (message.replyCount == 1) "reply" else "replies"}" else "View thread",
                             color = palette.accent,
-                            fontSize = 13.sp,
+                            fontSize = 12.sp,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -997,9 +995,9 @@ fun MessageItem(
                                     .padding(horizontal = 8.dp, vertical = 4.dp)
                             ) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(text = reaction.emoji, fontSize = 12.sp)
+                                    Text(text = reaction.emoji, fontSize = 11.sp)
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text(text = reaction.count.toString(), color = palette.textSecondary, fontSize = 11.5.sp, fontWeight = FontWeight.Medium)
+                                    Text(text = reaction.count.toString(), color = palette.textSecondary, fontSize = 11.sp, fontWeight = FontWeight.Medium)
                                 }
                             }
                         }
@@ -1012,20 +1010,43 @@ fun MessageItem(
 
 private fun formatMessageTimestamp(createdAt: String, shortOnly: Boolean = false): String {
     return try {
-        val timePart = createdAt.split("T").getOrNull(1) ?: return createdAt.split("T").getOrNull(0) ?: ""
-        val hhmm = timePart.substringBefore(".").substringBefore("Z")
-        val parts = hhmm.split(":")
-        if (parts.size < 2) return createdAt.split("T").getOrNull(0) ?: ""
-        var hour = parts[0].toIntOrNull() ?: return hhmm
-        val minute = parts[1]
+        val instant = Instant.parse(createdAt)
+        val zoneId = java.time.ZoneId.systemDefault()
+        val dateTime = instant.atZone(zoneId)
+        val now = java.time.ZonedDateTime.now(zoneId)
+
+        val messageDate = dateTime.toLocalDate()
+        val nowDate = now.toLocalDate()
+
+        val timeFormatter = java.time.format.DateTimeFormatter.ofPattern("h:mm a")
+        val formattedTime = dateTime.format(timeFormatter)
+
         if (shortOnly) {
-            return String.format("%02d:%s", hour, minute)
+            return formattedTime
         }
-        val suffix = if (hour >= 12) "PM" else "AM"
-        if (hour == 0) hour = 12 else if (hour > 12) hour -= 12
-        "$hour:$minute $suffix"
+
+        when {
+            messageDate.isEqual(nowDate) -> "Today at $formattedTime"
+            messageDate.isEqual(nowDate.minusDays(1)) -> "Yesterday at $formattedTime"
+            else -> {
+                val dateFormatter = java.time.format.DateTimeFormatter.ofPattern("MM/dd/yyyy")
+                "${dateTime.format(dateFormatter)} $formattedTime"
+            }
+        }
     } catch (e: Exception) {
-        createdAt.split("T").getOrNull(0) ?: createdAt
+        try {
+            val timePart = createdAt.split("T").getOrNull(1) ?: return createdAt.split("T").getOrNull(0) ?: ""
+            val hhmm = timePart.substringBefore(".").substringBefore("Z")
+            val parts = hhmm.split(":")
+            if (parts.size < 2) return createdAt.split("T").getOrNull(0) ?: ""
+            var hour = parts[0].toIntOrNull() ?: return hhmm
+            val minute = parts[1]
+            val suffix = if (hour >= 12) "PM" else "AM"
+            if (hour == 0) hour = 12 else if (hour > 12) hour -= 12
+            if (shortOnly) "$hour:$minute $suffix" else "Today at $hour:$minute $suffix"
+        } catch (ex: Exception) {
+            createdAt.split("T").getOrNull(0) ?: createdAt
+        }
     }
 }
 
