@@ -1414,6 +1414,25 @@ When provisioned via M2M:
       : [];
     const userMap = new Map<string, (typeof existingUsers)[0]>(existingUsers.map(u => [u.email, u]));
 
+    const orgId = workspace.organizationId || context.organizationId;
+
+    /**
+     * ⚡ Bolt Performance Optimization:
+     * Pre-fetches existing organization members for pre-resolved users in a single batched `prisma.member.findMany` query.
+     * Replaces N sequential `prisma.member.findFirst` database calls inside the import loop with 1 batch lookup and in-memory Set resolution.
+     * Reduces organization membership verification database round-trips from O(N) down to O(1).
+     */
+    const existingOrgMembers = orgId && existingUsers.length > 0
+      ? await prisma.member.findMany({
+          where: {
+            organizationId: orgId,
+            userId: { in: existingUsers.map(u => u.id) },
+          },
+          select: { userId: true },
+        })
+      : [];
+    const existingOrgMemberUserIds = new Set<string>(existingOrgMembers.map(m => m.userId));
+
     const results = [];
 
     for (const item of body.members) {
@@ -1442,20 +1461,15 @@ When provisioned via M2M:
         userMap.set(user.email, user);
       }
 
-      const orgId = workspace.organizationId || context.organizationId;
-      if (orgId) {
-        const existingOrgMember = await prisma.member.findFirst({
-          where: { organizationId: orgId, userId: user.id },
+      if (orgId && !existingOrgMemberUserIds.has(user.id)) {
+        await prisma.member.create({
+          data: {
+            organizationId: orgId,
+            userId: user.id,
+            role: 'member',
+          },
         });
-        if (!existingOrgMember) {
-          await prisma.member.create({
-            data: {
-              organizationId: orgId,
-              userId: user.id,
-              role: 'member',
-            },
-          });
-        }
+        existingOrgMemberUserIds.add(user.id);
       }
 
       const role = item.role || 'member';
