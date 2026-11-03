@@ -1,5 +1,11 @@
 # api
 
+## 2.2.0
+
+### Minor Changes
+
+- 22537a8: Update
+
 ## 2.1.0
 
 ### Minor Changes
@@ -19,7 +25,7 @@
 ## 2.1.0-dev.31
 
 ### Minor Changes
- 
+
 - Automatic minor release for branch dev
 
 ### Patch Changes
