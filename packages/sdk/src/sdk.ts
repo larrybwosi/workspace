@@ -1,5 +1,9 @@
-import axios, { AxiosRequestConfig } from 'axios';
-import { setGlobalToken, parseSDKError, customInstance } from './custom-instance';
+import {
+  setGlobalToken,
+  parseSDKError,
+  customInstance,
+  CustomRequestConfig,
+} from './custom-instance';
 import { getSkyrmeChatAPI } from './generated/v3-server';
 import type {
   V3ProvisionWorkspaceDto,
@@ -689,34 +693,28 @@ export class ScrymeSDK {
 
     if (this.clientId && this.clientSecret) {
       try {
-        const response = await axios.post(
-          `${this.baseURL}/api/v3/oauth/token`,
-          {
+        const responseData = await customInstance<any>({
+          url: '/api/v3/oauth/token',
+          baseURL: this.baseURL,
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          data: {
             client_id: this.clientId,
             client_secret: this.clientSecret,
             grant_type: 'client_credentials',
           },
-          {
-            headers: { 'Content-Type': 'application/json' },
-          }
-        );
+        });
 
-        if (response.data?.success && response.data?.data?.access_token) {
-          this.token = response.data.data.access_token;
+        const tokenData = responseData?.data || responseData;
+        const accessToken = tokenData?.access_token;
+        const expiresIn = tokenData?.expires_in;
+
+        if (accessToken) {
+          this.token = accessToken;
           this.syncToken(this.token);
-          if (response.data.data.expires_in) {
+          if (expiresIn) {
             // Expire 10 seconds early as a safety buffer
-            this.tokenExpiresAt = Date.now() + (response.data.data.expires_in - 10) * 1000;
-          } else {
-            this.tokenExpiresAt = null;
-          }
-          return this.token;
-        } else if (response.data?.access_token) {
-          // Fallback in case response is not wrapped
-          this.token = response.data.access_token;
-          this.syncToken(this.token);
-          if (response.data.expires_in) {
-            this.tokenExpiresAt = Date.now() + (response.data.expires_in - 10) * 1000;
+            this.tokenExpiresAt = Date.now() + (expiresIn - 10) * 1000;
           } else {
             this.tokenExpiresAt = null;
           }
@@ -735,7 +733,7 @@ export class ScrymeSDK {
    * Generates the default request configuration containing the authorization headers and baseURL.
    * @returns Request configuration object.
    */
-  private async getRequestConfig(): Promise<AxiosRequestConfig> {
+  private async getRequestConfig(): Promise<CustomRequestConfig> {
     const token = await this.getOrFetchToken();
     return {
       baseURL: this.baseURL,
@@ -772,7 +770,7 @@ export class ScrymeSDK {
               lastArg !== null;
 
             if (isLastArgOptions) {
-              const userOptions = lastArg as AxiosRequestConfig;
+              const userOptions = lastArg as CustomRequestConfig;
               cleanArgs[cleanArgs.length - 1] = {
                 ...userOptions,
                 baseURL: config.baseURL,
@@ -813,7 +811,7 @@ export class ScrymeSDK {
        * @param options Optional request config override.
        * @returns List of workspaces returned exactly from the endpoint.
        */
-      list: async (options?: AxiosRequestConfig): Promise<V3WorkspacesResponse> => {
+      list: async (options?: CustomRequestConfig): Promise<V3WorkspacesResponse> => {
         return this.raw.v3WorkspacesControllerGetWorkspaces(options) as unknown as V3WorkspacesResponse;
       },
       /**
@@ -822,7 +820,7 @@ export class ScrymeSDK {
        * @param options Optional request config override.
        * @returns Workspace details returned exactly from the endpoint.
        */
-      get: async (slug: string, options?: AxiosRequestConfig): Promise<V3WorkspaceResponse> => {
+      get: async (slug: string, options?: CustomRequestConfig): Promise<V3WorkspaceResponse> => {
         return this.raw.v3WorkspacesControllerGetWorkspaceBySlug(slug, options) as unknown as V3WorkspaceResponse;
       },
       /**
@@ -833,7 +831,7 @@ export class ScrymeSDK {
        */
       create: async (
         data: V3ProvisionWorkspaceDto,
-        options?: AxiosRequestConfig
+        options?: CustomRequestConfig
       ): Promise<V3ProvisionWorkspaceResponse> => {
         return this.raw.v3WorkspacesControllerProvisionWorkspace(data, options) as unknown as V3ProvisionWorkspaceResponse;
       },
@@ -847,7 +845,7 @@ export class ScrymeSDK {
       update: async (
         slug: string,
         data: V3UpdateWorkspaceDto,
-        options?: AxiosRequestConfig
+        options?: CustomRequestConfig
       ): Promise<V3WorkspaceResponse> => {
         return this.raw.v3WorkspacesControllerUpdateWorkspace(slug, data, options) as unknown as V3WorkspaceResponse;
       },
@@ -857,7 +855,7 @@ export class ScrymeSDK {
        * @param options Optional request config override.
        * @returns Deletion status response exactly from the endpoint.
        */
-      delete: async (slug: string, options?: AxiosRequestConfig): Promise<V3DeleteWorkspaceResponse> => {
+      delete: async (slug: string, options?: CustomRequestConfig): Promise<V3DeleteWorkspaceResponse> => {
         return this.raw.v3WorkspacesControllerDeleteWorkspace(slug, options) as unknown as V3DeleteWorkspaceResponse;
       },
       /**
@@ -870,7 +868,7 @@ export class ScrymeSDK {
          * @param options Optional request config override.
          * @returns List of workspace members exactly from the endpoint.
          */
-        list: async (slug: string, options?: AxiosRequestConfig): Promise<V3WorkspaceMembersResponse> => {
+        list: async (slug: string, options?: CustomRequestConfig): Promise<V3WorkspaceMembersResponse> => {
           return this.raw.v3WorkspacesControllerGetWorkspaceMembers(slug, options) as unknown as V3WorkspaceMembersResponse;
         },
         /**
@@ -884,7 +882,7 @@ export class ScrymeSDK {
         add: async (
           slug: string,
           data: V3AddMemberDto,
-          options?: AxiosRequestConfig
+          options?: CustomRequestConfig
         ): Promise<V3AddWorkspaceMemberResponse> => {
           return this.raw.v3WorkspacesControllerAddWorkspaceMember(slug, data, options) as unknown as V3AddWorkspaceMemberResponse;
         },
@@ -899,7 +897,7 @@ export class ScrymeSDK {
         get: async (
           slug: string,
           memberId: string,
-          options?: AxiosRequestConfig
+          options?: CustomRequestConfig
         ): Promise<V3GetWorkspaceMemberResponse> => {
           return this.raw.v3WorkspacesControllerGetWorkspaceMember(slug, memberId, options) as unknown as V3GetWorkspaceMemberResponse;
         },
@@ -916,7 +914,7 @@ export class ScrymeSDK {
           slug: string,
           memberId: string,
           data: V3UpdateMemberRoleDto,
-          options?: AxiosRequestConfig
+          options?: CustomRequestConfig
         ): Promise<V3UpdateWorkspaceMemberResponse> => {
           return this.raw.v3WorkspacesControllerUpdateWorkspaceMember(slug, memberId, data, options) as unknown as V3UpdateWorkspaceMemberResponse;
         },
@@ -931,7 +929,7 @@ export class ScrymeSDK {
         delete: async (
           slug: string,
           memberId: string,
-          options?: AxiosRequestConfig
+          options?: CustomRequestConfig
         ): Promise<V3DeleteWorkspaceMemberResponse> => {
           return this.raw.v3WorkspacesControllerDeleteWorkspaceMember(slug, memberId, options) as unknown as V3DeleteWorkspaceMemberResponse;
         },
@@ -952,7 +950,7 @@ export class ScrymeSDK {
               externalId?: string;
             }>;
           },
-          options?: AxiosRequestConfig
+          options?: CustomRequestConfig
         ): Promise<{ success: boolean; data: { importedCount: number; members: any[] } }> => {
           return customInstance({
             url: `/api/v3/workspaces/${encodeURIComponent(slug)}/members/import`,
@@ -973,7 +971,7 @@ export class ScrymeSDK {
          * @param options Optional request config override.
          * @returns List of channels returned from the endpoint.
          */
-        list: async (slug: string, options?: AxiosRequestConfig): Promise<WorkspaceChannel[]> => {
+        list: async (slug: string, options?: CustomRequestConfig): Promise<WorkspaceChannel[]> => {
           const res = (await this.raw.v3WorkspacesControllerGetChannels(slug, options)) as unknown as {
             success: boolean;
             data: { channels: WorkspaceChannel[] };
@@ -990,7 +988,7 @@ export class ScrymeSDK {
         create: async (
           slug: string,
           data: V3CreateChannelDto | CreateWorkspaceChannelDto,
-          options?: AxiosRequestConfig
+          options?: CustomRequestConfig
         ): Promise<WorkspaceChannel> => {
           const res = (await this.raw.v3WorkspacesControllerCreateChannel(
             slug,
@@ -1018,7 +1016,7 @@ export class ScrymeSDK {
        * @param options Optional request config override.
        * @returns Channel details returned from the V3 endpoint.
        */
-      get: async (slug: string, channelId: string, options?: AxiosRequestConfig): Promise<WorkspaceChannel> => {
+      get: async (slug: string, channelId: string, options?: CustomRequestConfig): Promise<WorkspaceChannel> => {
         const res = (await this.raw.v3WorkspacesControllerGetChannel(slug, channelId, options)) as unknown as {
           success: boolean;
           data: { channel: WorkspaceChannel };
@@ -1037,7 +1035,7 @@ export class ScrymeSDK {
         slug: string,
         channelId: string,
         data: V3UpdateChannelDto | UpdateWorkspaceChannelDto,
-        options?: AxiosRequestConfig
+        options?: CustomRequestConfig
       ): Promise<WorkspaceChannel> => {
         const res = (await this.raw.v3WorkspacesControllerUpdateChannel(
           slug,
@@ -1057,7 +1055,7 @@ export class ScrymeSDK {
        * @param options Optional request config override.
        * @returns Success status indicating that the channel was deleted from the V3 endpoint.
        */
-      delete: async (slug: string, channelId: string, options?: AxiosRequestConfig): Promise<{ success: boolean }> => {
+      delete: async (slug: string, channelId: string, options?: CustomRequestConfig): Promise<{ success: boolean }> => {
         const res = (await this.raw.v3WorkspacesControllerDeleteChannel(slug, channelId, options)) as unknown as {
           success: boolean;
           data?: { success: boolean };
@@ -1074,7 +1072,7 @@ export class ScrymeSDK {
          * @param channelId Unique identifier of the channel.
          * @param options Optional request config override.
          */
-        list: async (slug: string, channelId: string, options?: AxiosRequestConfig): Promise<any[]> => {
+        list: async (slug: string, channelId: string, options?: CustomRequestConfig): Promise<any[]> => {
           const res = (await this.raw.v3WorkspacesControllerGetChannelMembers(
             slug,
             channelId,
@@ -1096,7 +1094,7 @@ export class ScrymeSDK {
           slug: string,
           channelId: string,
           data: V3AddChannelMemberDto | { userIds?: string[]; userId?: string; role?: string; permissions?: string | number },
-          options?: AxiosRequestConfig
+          options?: CustomRequestConfig
         ): Promise<any[]> => {
           const res = (await this.raw.v3WorkspacesControllerAddChannelMembers(
             slug,
@@ -1122,7 +1120,7 @@ export class ScrymeSDK {
           channelId: string,
           targetUserId: string,
           data: V3UpdateChannelMemberDto | UpdateChannelMemberDto,
-          options?: AxiosRequestConfig
+          options?: CustomRequestConfig
         ): Promise<any> => {
           const res = (await this.raw.v3WorkspacesControllerUpdateChannelMember(
             slug,
@@ -1147,7 +1145,7 @@ export class ScrymeSDK {
           slug: string,
           channelId: string,
           targetUserId: string,
-          options?: AxiosRequestConfig
+          options?: CustomRequestConfig
         ): Promise<{ success: boolean }> => {
           const res = (await this.raw.v3WorkspacesControllerDeleteChannelMember(
             slug,
@@ -1176,7 +1174,7 @@ export class ScrymeSDK {
           slug: string,
           channelId: string,
           params?: { cursor?: string; limit?: string },
-          options?: AxiosRequestConfig
+          options?: CustomRequestConfig
         ): Promise<{ messages: ChannelMessage[]; nextCursor?: string }> => {
           const queryParams: any = {};
           if (params?.cursor) queryParams.cursor = params.cursor;
@@ -1201,7 +1199,7 @@ export class ScrymeSDK {
           slug: string,
           channelId: string,
           data: CreateMessageDto | string,
-          options?: AxiosRequestConfig
+          options?: CustomRequestConfig
         ): Promise<ChannelMessage> => {
           const payload = typeof data === 'string' ? { content: data } : data;
           const mergedConfig = { ...options, data: payload };
@@ -1224,7 +1222,7 @@ export class ScrymeSDK {
           channelId: string,
           messageId: string,
           data: ChannelsControllerUpdateMessageBody,
-          options?: AxiosRequestConfig
+          options?: CustomRequestConfig
         ): Promise<ChannelMessage> => {
           const mergedConfig = { ...options, data };
           const res = (await this.raw.v3WorkspacesControllerUpdateChannelMessage(
@@ -1246,7 +1244,7 @@ export class ScrymeSDK {
           slug: string,
           channelId: string,
           messageId: string,
-          options?: AxiosRequestConfig
+          options?: CustomRequestConfig
         ): Promise<{ success: boolean }> => {
           const res = (await this.raw.v3WorkspacesControllerDeleteChannelMessage(
             slug,
@@ -1269,7 +1267,7 @@ export class ScrymeSDK {
           channelId: string,
           messageId: string,
           data: ChannelsControllerAddReactionBody,
-          options?: AxiosRequestConfig
+          options?: CustomRequestConfig
         ): Promise<any> => {
           const mergedConfig = { ...options, data };
           const res = (await this.raw.v3WorkspacesControllerAddChannelMessageReaction(
@@ -1293,7 +1291,7 @@ export class ScrymeSDK {
           channelId: string,
           messageId: string,
           emoji: string,
-          options?: AxiosRequestConfig
+          options?: CustomRequestConfig
         ): Promise<{ success: boolean }> => {
           const res = (await this.raw.v3WorkspacesControllerRemoveChannelMessageReaction(
             slug,
@@ -1326,7 +1324,7 @@ export class ScrymeSDK {
         channelId: string,
         messageId: string,
         data: ChannelsControllerUpdateMessageBody | UpdateDmMessageDto,
-        options?: AxiosRequestConfig
+        options?: CustomRequestConfig
       ): Promise<ChannelMessage> => {
         if (channelId.startsWith('dm-')) {
           return this.raw.dmsControllerUpdateMessage(channelId, messageId, data as UpdateDmMessageDto, options) as unknown as ChannelMessage;
@@ -1343,7 +1341,7 @@ export class ScrymeSDK {
       delete: async (
         channelId: string,
         messageId: string,
-        options?: AxiosRequestConfig
+        options?: CustomRequestConfig
       ): Promise<{ success: boolean }> => {
         if (channelId.startsWith('dm-')) {
           return this.raw.dmsControllerDeleteMessage(channelId, messageId, options) as unknown as { success: boolean };
@@ -1362,7 +1360,7 @@ export class ScrymeSDK {
         channelId: string,
         messageId: string,
         data: ChannelsControllerAddReactionBody | DmsControllerAddReactionBody,
-        options?: AxiosRequestConfig
+        options?: CustomRequestConfig
       ): Promise<ChannelsControllerAddReactionResult | DmsControllerAddReactionResult> => {
         if (channelId.startsWith('dm-')) {
           return this.raw.dmsControllerAddReaction(channelId, messageId, data as DmsControllerAddReactionBody, options) as unknown as DmsControllerAddReactionResult;
@@ -1381,7 +1379,7 @@ export class ScrymeSDK {
         channelId: string,
         messageId: string,
         emoji: string,
-        options?: AxiosRequestConfig
+        options?: CustomRequestConfig
       ): Promise<ChannelsControllerRemoveReactionResult | DmsControllerRemoveReactionResult> => {
         if (channelId.startsWith('dm-')) {
           return this.raw.dmsControllerRemoveReaction(channelId, messageId, emoji, options) as unknown as DmsControllerRemoveReactionResult;
@@ -1400,7 +1398,7 @@ export class ScrymeSDK {
        * Lists all active direct message conversations for the authenticated user/bot via V3 API.
        * @param options Optional request config override.
        */
-      list: async (options?: AxiosRequestConfig): Promise<DmConversation[]> => {
+      list: async (options?: CustomRequestConfig): Promise<DmConversation[]> => {
         const res = (await this.raw.v3DmsControllerGetDms(options)) as unknown as {
           success: boolean;
           data: { conversations: DmConversation[] };
@@ -1412,7 +1410,7 @@ export class ScrymeSDK {
        * @param data Create direct message details containing target participant IDs.
        * @param options Optional request config override.
        */
-      create: async (data: CreateDmDto | { targetUserId?: string; userId?: string }, options?: AxiosRequestConfig): Promise<DmConversation> => {
+      create: async (data: CreateDmDto | { targetUserId?: string; userId?: string }, options?: CustomRequestConfig): Promise<DmConversation> => {
         const res = (await this.raw.v3DmsControllerCreateDm(data as any, options)) as unknown as {
           success: boolean;
           data: { conversation: DmConversation };
@@ -1424,7 +1422,7 @@ export class ScrymeSDK {
        * @param dmId Unique identifier of the direct message conversation.
        * @param options Optional request config override.
        */
-      get: async (dmId: string, options?: AxiosRequestConfig): Promise<DmConversation> => {
+      get: async (dmId: string, options?: CustomRequestConfig): Promise<DmConversation> => {
         const res = (await this.raw.v3DmsControllerGetDm(dmId, options)) as unknown as {
           success: boolean;
           data: { conversation: DmConversation };
@@ -1436,7 +1434,7 @@ export class ScrymeSDK {
        * @param dmId Unique identifier of the direct message conversation to close.
        * @param options Optional request config override.
        */
-      delete: async (dmId: string, options?: AxiosRequestConfig): Promise<{ success: boolean }> => {
+      delete: async (dmId: string, options?: CustomRequestConfig): Promise<{ success: boolean }> => {
         const res = (await this.raw.v3DmsControllerDeleteDm(dmId, options)) as unknown as {
           success: boolean;
           data?: { success: boolean };
@@ -1456,7 +1454,7 @@ export class ScrymeSDK {
         list: async (
           dmId: string,
           params?: DmsControllerGetMessagesParams,
-          options?: AxiosRequestConfig
+          options?: CustomRequestConfig
         ): Promise<{ messages: ChannelMessage[]; nextCursor?: string }> => {
           const res = (await this.raw.v3DmsControllerGetMessages(dmId, params, options)) as unknown as {
             success: boolean;
@@ -1473,7 +1471,7 @@ export class ScrymeSDK {
         create: async (
           dmId: string,
           data: CreateMessageDto | { content: string } | string,
-          options?: AxiosRequestConfig
+          options?: CustomRequestConfig
         ): Promise<ChannelMessage> => {
           const payload = typeof data === 'string' ? { content: data } : data;
           const mergedConfig = { ...options, data: payload };
@@ -1494,7 +1492,7 @@ export class ScrymeSDK {
           dmId: string,
           messageId: string,
           data: UpdateDmMessageDto,
-          options?: AxiosRequestConfig
+          options?: CustomRequestConfig
         ): Promise<ChannelMessage> => {
           const mergedConfig = { ...options, data };
           const res = (await this.raw.v3DmsControllerUpdateMessage(dmId, messageId, mergedConfig)) as unknown as {
@@ -1512,7 +1510,7 @@ export class ScrymeSDK {
         delete: async (
           dmId: string,
           messageId: string,
-          options?: AxiosRequestConfig
+          options?: CustomRequestConfig
         ): Promise<{ success: boolean }> => {
           const res = (await this.raw.v3DmsControllerDeleteMessage(dmId, messageId, options)) as unknown as {
             success: boolean;
@@ -1531,7 +1529,7 @@ export class ScrymeSDK {
           dmId: string,
           messageId: string,
           data: DmsControllerAddReactionBody,
-          options?: AxiosRequestConfig
+          options?: CustomRequestConfig
         ): Promise<any> => {
           const mergedConfig = { ...options, data };
           const res = (await this.raw.v3DmsControllerAddReaction(dmId, messageId, mergedConfig)) as unknown as {
@@ -1551,7 +1549,7 @@ export class ScrymeSDK {
           dmId: string,
           messageId: string,
           emoji: string,
-          options?: AxiosRequestConfig
+          options?: CustomRequestConfig
         ): Promise<{ success: boolean }> => {
           const res = (await this.raw.v3DmsControllerRemoveReaction(dmId, messageId, emoji, options)) as unknown as {
             success: boolean;
@@ -1574,7 +1572,7 @@ export class ScrymeSDK {
        * @param options Optional request config override.
        * @returns The active user's profile returned exactly from the endpoint.
        */
-      me: async (options?: AxiosRequestConfig): Promise<UserProfile> => {
+      me: async (options?: CustomRequestConfig): Promise<UserProfile> => {
         return this.raw.usersControllerGetMe(options) as unknown as UserProfile;
       },
       /**
@@ -1583,7 +1581,7 @@ export class ScrymeSDK {
        * @param options Optional request config override.
        * @returns Public user profile returned exactly from the endpoint.
        */
-      get: async (userId: string, options?: AxiosRequestConfig): Promise<UserProfile> => {
+      get: async (userId: string, options?: CustomRequestConfig): Promise<UserProfile> => {
         return this.raw.usersControllerGetUser(userId, options) as unknown as UserProfile;
       },
       /**
@@ -1594,7 +1592,7 @@ export class ScrymeSDK {
        */
       search: async (
         params: UsersControllerSearchUsersParams,
-        options?: AxiosRequestConfig
+        options?: CustomRequestConfig
       ): Promise<UserProfile[]> => {
         return this.raw.usersControllerSearchUsers(params, options) as unknown as UserProfile[];
       },
@@ -1610,7 +1608,7 @@ export class ScrymeSDK {
           avatar?: string;
           organizationId?: string;
         },
-        options?: AxiosRequestConfig
+        options?: CustomRequestConfig
       ): Promise<{ success: boolean; data: { user: UserProfile } }> => {
         return customInstance({
           url: '/api/v3/users',
@@ -1633,7 +1631,7 @@ export class ScrymeSDK {
        * @param slug The unique workspace slug.
        * @param options Optional request config override.
        */
-      list: async (slug: string, options?: AxiosRequestConfig): Promise<V3WebhooksControllerGetWebhooksResult> => {
+      list: async (slug: string, options?: CustomRequestConfig): Promise<V3WebhooksControllerGetWebhooksResult> => {
         return this.raw.v3WebhooksControllerGetWebhooks(slug, options) as unknown as V3WebhooksControllerGetWebhooksResult;
       },
       /**
@@ -1642,7 +1640,7 @@ export class ScrymeSDK {
        * @param data Configuration options for the standard webhook.
        * @param options Optional request config override.
        */
-      create: async (slug: string, data: V3CreateWebhookDto, options?: AxiosRequestConfig): Promise<V3WebhooksControllerCreateWebhookResult> => {
+      create: async (slug: string, data: V3CreateWebhookDto, options?: CustomRequestConfig): Promise<V3WebhooksControllerCreateWebhookResult> => {
         return this.raw.v3WebhooksControllerCreateWebhook(slug, data, options) as unknown as V3WebhooksControllerCreateWebhookResult;
       },
       /**
@@ -1651,7 +1649,7 @@ export class ScrymeSDK {
        * @param webhookId The unique webhook identifier.
        * @param options Optional request config override.
        */
-      get: async (slug: string, webhookId: string, options?: AxiosRequestConfig): Promise<V3WebhooksControllerGetWebhookResult> => {
+      get: async (slug: string, webhookId: string, options?: CustomRequestConfig): Promise<V3WebhooksControllerGetWebhookResult> => {
         return this.raw.v3WebhooksControllerGetWebhook(slug, webhookId, options) as unknown as V3WebhooksControllerGetWebhookResult;
       },
       /**
@@ -1665,7 +1663,7 @@ export class ScrymeSDK {
         slug: string,
         webhookId: string,
         data: V3UpdateWebhookDto,
-        options?: AxiosRequestConfig
+        options?: CustomRequestConfig
       ): Promise<V3WebhooksControllerUpdateWebhookResult> => {
         return this.raw.v3WebhooksControllerUpdateWebhook(slug, webhookId, data, options) as unknown as V3WebhooksControllerUpdateWebhookResult;
       },
@@ -1675,7 +1673,7 @@ export class ScrymeSDK {
        * @param webhookId The unique webhook identifier.
        * @param options Optional request config override.
        */
-      delete: async (slug: string, webhookId: string, options?: AxiosRequestConfig): Promise<V3WebhooksControllerDeleteWebhookResult> => {
+      delete: async (slug: string, webhookId: string, options?: CustomRequestConfig): Promise<V3WebhooksControllerDeleteWebhookResult> => {
         return this.raw.v3WebhooksControllerDeleteWebhook(slug, webhookId, options) as unknown as V3WebhooksControllerDeleteWebhookResult;
       },
 
@@ -1689,7 +1687,7 @@ export class ScrymeSDK {
          * @param channelId The unique channel identifier.
          * @param options Optional request config override.
          */
-        list: async (slug: string, channelId: string, options?: AxiosRequestConfig): Promise<V3ChannelIncomingWebhooksControllerGetChannelWebhooksResult> => {
+        list: async (slug: string, channelId: string, options?: CustomRequestConfig): Promise<V3ChannelIncomingWebhooksControllerGetChannelWebhooksResult> => {
           return this.raw.v3ChannelIncomingWebhooksControllerGetChannelWebhooks(slug, channelId, options) as unknown as V3ChannelIncomingWebhooksControllerGetChannelWebhooksResult;
         },
         /**
@@ -1703,7 +1701,7 @@ export class ScrymeSDK {
           slug: string,
           channelId: string,
           data: CreateChannelIncomingWebhookDto,
-          options?: AxiosRequestConfig
+          options?: CustomRequestConfig
         ): Promise<V3ChannelIncomingWebhooksControllerCreateChannelWebhookResult> => {
           return this.raw.v3ChannelIncomingWebhooksControllerCreateChannelWebhook(slug, channelId, data, options) as unknown as V3ChannelIncomingWebhooksControllerCreateChannelWebhookResult;
         },
@@ -1714,7 +1712,7 @@ export class ScrymeSDK {
          * @param webhookId The unique webhook identifier.
          * @param options Optional request config override.
          */
-        get: async (slug: string, channelId: string, webhookId: string, options?: AxiosRequestConfig): Promise<V3ChannelIncomingWebhooksControllerGetChannelWebhookResult> => {
+        get: async (slug: string, channelId: string, webhookId: string, options?: CustomRequestConfig): Promise<V3ChannelIncomingWebhooksControllerGetChannelWebhookResult> => {
           return this.raw.v3ChannelIncomingWebhooksControllerGetChannelWebhook(slug, channelId, webhookId, options) as unknown as V3ChannelIncomingWebhooksControllerGetChannelWebhookResult;
         },
         /**
@@ -1730,7 +1728,7 @@ export class ScrymeSDK {
           channelId: string,
           webhookId: string,
           data: UpdateChannelIncomingWebhookDto,
-          options?: AxiosRequestConfig
+          options?: CustomRequestConfig
         ): Promise<V3ChannelIncomingWebhooksControllerUpdateChannelWebhookResult> => {
           return this.raw.v3ChannelIncomingWebhooksControllerUpdateChannelWebhook(
             slug,
@@ -1751,7 +1749,7 @@ export class ScrymeSDK {
           slug: string,
           channelId: string,
           webhookId: string,
-          options?: AxiosRequestConfig
+          options?: CustomRequestConfig
         ): Promise<V3ChannelIncomingWebhooksControllerDeleteChannelWebhookResult> => {
           return this.raw.v3ChannelIncomingWebhooksControllerDeleteChannelWebhook(slug, channelId, webhookId, options) as unknown as V3ChannelIncomingWebhooksControllerDeleteChannelWebhookResult;
         },
@@ -1764,7 +1762,7 @@ export class ScrymeSDK {
         executeByUrlToken: async (
           token: string,
           data: ExecuteChannelIncomingWebhookDto,
-          options?: AxiosRequestConfig
+          options?: CustomRequestConfig
         ): Promise<V3ChannelIncomingWebhooksControllerExecuteWebhookByUrlTokenResult> => {
           return this.raw.v3ChannelIncomingWebhooksControllerExecuteWebhookByUrlToken(token, data, options) as unknown as V3ChannelIncomingWebhooksControllerExecuteWebhookByUrlTokenResult;
         },
@@ -1779,7 +1777,7 @@ export class ScrymeSDK {
           channelId: string,
           data: ExecuteChannelIncomingWebhookDto,
           params?: V3ChannelIncomingWebhooksControllerExecuteWebhookByChannelIdParams,
-          options?: AxiosRequestConfig
+          options?: CustomRequestConfig
         ): Promise<V3ChannelIncomingWebhooksControllerExecuteWebhookByChannelIdResult> => {
           return this.raw.v3ChannelIncomingWebhooksControllerExecuteWebhookByChannelId(
             channelId,
@@ -1804,7 +1802,7 @@ export class ScrymeSDK {
        */
       createTicket: async (
         data: CreateSupportTicketDto,
-        options?: AxiosRequestConfig
+        options?: CustomRequestConfig
       ): Promise<SupportTicket> => {
         return this.raw.supportControllerCreateTicket({
           ...options,
@@ -1819,7 +1817,7 @@ export class ScrymeSDK {
        */
       getTickets: async (
         workspaceId: string,
-        options?: AxiosRequestConfig
+        options?: CustomRequestConfig
       ): Promise<SupportTicket[]> => {
         return this.raw.supportControllerGetTickets(
           { workspaceId },
@@ -1836,7 +1834,7 @@ export class ScrymeSDK {
       updateStatus: async (
         ticketId: string,
         status: string,
-        options?: AxiosRequestConfig
+        options?: CustomRequestConfig
       ): Promise<SupportTicket> => {
         return this.raw.supportControllerUpdateTicketStatus(ticketId, {
           ...options,
@@ -1853,7 +1851,7 @@ export class ScrymeSDK {
       assignTicket: async (
         ticketId: string,
         assigneeId: string | null,
-        options?: AxiosRequestConfig
+        options?: CustomRequestConfig
       ): Promise<SupportTicket> => {
         return this.raw.supportControllerAssignTicket(ticketId, {
           ...options,
@@ -1872,7 +1870,7 @@ export class ScrymeSDK {
          */
         create: async (
           data: CreateSupportTicketDto,
-          options?: AxiosRequestConfig
+          options?: CustomRequestConfig
         ): Promise<SupportTicket> => {
           return this.support.createTicket(data, options);
         },
@@ -1883,7 +1881,7 @@ export class ScrymeSDK {
          */
         list: async (
           workspaceId: string,
-          options?: AxiosRequestConfig
+          options?: CustomRequestConfig
         ): Promise<SupportTicket[]> => {
           return this.support.getTickets(workspaceId, options);
         },
@@ -1896,7 +1894,7 @@ export class ScrymeSDK {
         updateStatus: async (
           ticketId: string,
           status: string,
-          options?: AxiosRequestConfig
+          options?: CustomRequestConfig
         ): Promise<SupportTicket> => {
           return this.support.updateStatus(ticketId, status, options);
         },
@@ -1909,7 +1907,7 @@ export class ScrymeSDK {
         assign: async (
           ticketId: string,
           assigneeId: string | null,
-          options?: AxiosRequestConfig
+          options?: CustomRequestConfig
         ): Promise<SupportTicket> => {
           return this.support.assignTicket(ticketId, assigneeId, options);
         },
@@ -1926,7 +1924,7 @@ export class ScrymeSDK {
          */
         start: async (
           data: SupportStartLiveChatDto,
-          options?: AxiosRequestConfig
+          options?: CustomRequestConfig
         ): Promise<LiveChatSession> => {
           return this.raw.supportControllerStartLiveChat({
             ...options,
@@ -1940,7 +1938,7 @@ export class ScrymeSDK {
          */
         end: async (
           sessionId: string,
-          options?: AxiosRequestConfig
+          options?: CustomRequestConfig
         ): Promise<LiveChatSession> => {
           return this.raw.supportControllerEndLiveChat(sessionId, options) as unknown as LiveChatSession;
         },
@@ -1957,7 +1955,7 @@ export class ScrymeSDK {
          */
         createProfile: async (
           data: SupportCreateCustomerProfileDto,
-          options?: AxiosRequestConfig
+          options?: CustomRequestConfig
         ): Promise<CustomerProfile> => {
           return this.raw.supportControllerCreateCustomerProfile({
             ...options,
@@ -1971,7 +1969,7 @@ export class ScrymeSDK {
          */
         getProfiles: async (
           workspaceId: string,
-          options?: AxiosRequestConfig
+          options?: CustomRequestConfig
         ): Promise<CustomerProfile[]> => {
           return this.raw.supportControllerGetCustomerProfiles(
             { workspaceId },
@@ -1999,7 +1997,7 @@ export class ScrymeSDK {
          */
         provision: async (
           data: V3ProvisionWorkspaceDto,
-          options?: AxiosRequestConfig
+          options?: CustomRequestConfig
         ): Promise<V3ProvisionWorkspaceResponse> => {
           return this.raw.v3WorkspacesControllerProvisionWorkspace(data, options) as unknown as V3ProvisionWorkspaceResponse;
         },
@@ -2008,14 +2006,14 @@ export class ScrymeSDK {
          * @param slug The unique workspace slug.
          * @param options Optional request config override.
          */
-        get: async (slug: string, options?: AxiosRequestConfig): Promise<V3WorkspaceResponse> => {
+        get: async (slug: string, options?: CustomRequestConfig): Promise<V3WorkspaceResponse> => {
           return this.raw.v3WorkspacesControllerGetWorkspaceBySlug(slug, options) as unknown as V3WorkspaceResponse;
         },
         /**
          * Lists all workspaces under the organization context.
          * @param options Optional request config override.
          */
-        list: async (options?: AxiosRequestConfig): Promise<V3WorkspacesResponse> => {
+        list: async (options?: CustomRequestConfig): Promise<V3WorkspacesResponse> => {
           return this.raw.v3WorkspacesControllerGetWorkspaces(options) as unknown as V3WorkspacesResponse;
         },
         /**
@@ -2027,7 +2025,7 @@ export class ScrymeSDK {
         update: async (
           slug: string,
           data: V3UpdateWorkspaceDto,
-          options?: AxiosRequestConfig
+          options?: CustomRequestConfig
         ): Promise<V3WorkspaceResponse> => {
           return this.raw.v3WorkspacesControllerUpdateWorkspace(slug, data, options) as unknown as V3WorkspaceResponse;
         },
@@ -2036,7 +2034,7 @@ export class ScrymeSDK {
          * @param slug The unique workspace slug.
          * @param options Optional request config override.
          */
-        delete: async (slug: string, options?: AxiosRequestConfig): Promise<V3DeleteWorkspaceResponse> => {
+        delete: async (slug: string, options?: CustomRequestConfig): Promise<V3DeleteWorkspaceResponse> => {
           return this.raw.v3WorkspacesControllerDeleteWorkspace(slug, options) as unknown as V3DeleteWorkspaceResponse;
         },
       },
@@ -2052,7 +2050,7 @@ export class ScrymeSDK {
          */
         list: async (
           slug: string,
-          options?: AxiosRequestConfig
+          options?: CustomRequestConfig
         ): Promise<{ success: boolean; data: { channels: WorkspaceChannel[] } }> => {
           return this.raw.v3WorkspacesControllerGetChannels(slug, options) as unknown as {
             success: boolean;
@@ -2068,7 +2066,7 @@ export class ScrymeSDK {
         create: async (
           slug: string,
           data: V3CreateChannelDto,
-          options?: AxiosRequestConfig
+          options?: CustomRequestConfig
         ): Promise<{ success: boolean; data: { channel: WorkspaceChannel } }> => {
           return this.raw.v3WorkspacesControllerCreateChannel(slug, data, options) as unknown as {
             success: boolean;
@@ -2084,7 +2082,7 @@ export class ScrymeSDK {
         get: async (
           slug: string,
           channelId: string,
-          options?: AxiosRequestConfig
+          options?: CustomRequestConfig
         ): Promise<{ success: boolean; data: { channel: WorkspaceChannel } }> => {
           return this.raw.v3WorkspacesControllerGetChannel(slug, channelId, options) as unknown as {
             success: boolean;
@@ -2102,7 +2100,7 @@ export class ScrymeSDK {
           slug: string,
           channelId: string,
           data: V3UpdateChannelDto,
-          options?: AxiosRequestConfig
+          options?: CustomRequestConfig
         ): Promise<{ success: boolean; data: { channel: WorkspaceChannel } }> => {
           return this.raw.v3WorkspacesControllerUpdateChannel(
             slug,
@@ -2120,7 +2118,7 @@ export class ScrymeSDK {
         delete: async (
           slug: string,
           channelId: string,
-          options?: AxiosRequestConfig
+          options?: CustomRequestConfig
         ): Promise<{ success: boolean; data: { success: boolean } }> => {
           return this.raw.v3WorkspacesControllerDeleteChannel(
             slug,
@@ -2142,7 +2140,7 @@ export class ScrymeSDK {
           list: async (
             slug: string,
             channelId: string,
-            options?: AxiosRequestConfig
+            options?: CustomRequestConfig
           ): Promise<{ success: boolean; data: { members: any[] } }> => {
             return this.raw.v3WorkspacesControllerGetChannelMembers(
               slug,
@@ -2161,7 +2159,7 @@ export class ScrymeSDK {
             slug: string,
             channelId: string,
             data: V3AddChannelMemberDto,
-            options?: AxiosRequestConfig
+            options?: CustomRequestConfig
           ): Promise<{ success: boolean; data: { members: any[] } }> => {
             return this.raw.v3WorkspacesControllerAddChannelMembers(
               slug,
@@ -2183,7 +2181,7 @@ export class ScrymeSDK {
             channelId: string,
             userId: string,
             data: V3UpdateChannelMemberDto,
-            options?: AxiosRequestConfig
+            options?: CustomRequestConfig
           ): Promise<{ success: boolean; data: { member: any } }> => {
             return this.raw.v3WorkspacesControllerUpdateChannelMember(
               slug,
@@ -2204,7 +2202,7 @@ export class ScrymeSDK {
             slug: string,
             channelId: string,
             userId: string,
-            options?: AxiosRequestConfig
+            options?: CustomRequestConfig
           ): Promise<{ success: boolean; data: { success: boolean } }> => {
             return this.raw.v3WorkspacesControllerDeleteChannelMember(
               slug,
@@ -2225,7 +2223,7 @@ export class ScrymeSDK {
          * @param slug The unique workspace slug.
          * @param options Optional request config override.
          */
-        list: async (slug: string, options?: AxiosRequestConfig): Promise<V3WorkspaceMembersResponse> => {
+        list: async (slug: string, options?: CustomRequestConfig): Promise<V3WorkspaceMembersResponse> => {
           return this.raw.v3WorkspacesControllerGetWorkspaceMembers(slug, options) as unknown as V3WorkspaceMembersResponse;
         },
         /**
@@ -2238,7 +2236,7 @@ export class ScrymeSDK {
         add: async (
           slug: string,
           data: V3AddMemberDto,
-          options?: AxiosRequestConfig
+          options?: CustomRequestConfig
         ): Promise<V3AddWorkspaceMemberResponse> => {
           return this.raw.v3WorkspacesControllerAddWorkspaceMember(slug, data, options) as unknown as V3AddWorkspaceMemberResponse;
         },
@@ -2252,7 +2250,7 @@ export class ScrymeSDK {
         get: async (
           slug: string,
           memberId: string,
-          options?: AxiosRequestConfig
+          options?: CustomRequestConfig
         ): Promise<V3GetWorkspaceMemberResponse> => {
           return this.raw.v3WorkspacesControllerGetWorkspaceMember(slug, memberId, options) as unknown as V3GetWorkspaceMemberResponse;
         },
@@ -2268,7 +2266,7 @@ export class ScrymeSDK {
           slug: string,
           memberId: string,
           data: V3UpdateMemberRoleDto,
-          options?: AxiosRequestConfig
+          options?: CustomRequestConfig
         ): Promise<V3UpdateWorkspaceMemberResponse> => {
           return this.raw.v3WorkspacesControllerUpdateWorkspaceMember(slug, memberId, data, options) as unknown as V3UpdateWorkspaceMemberResponse;
         },
@@ -2282,7 +2280,7 @@ export class ScrymeSDK {
         delete: async (
           slug: string,
           memberId: string,
-          options?: AxiosRequestConfig
+          options?: CustomRequestConfig
         ): Promise<V3DeleteWorkspaceMemberResponse> => {
           return this.raw.v3WorkspacesControllerDeleteWorkspaceMember(slug, memberId, options) as unknown as V3DeleteWorkspaceMemberResponse;
         },
@@ -2303,7 +2301,7 @@ export class ScrymeSDK {
               externalId?: string;
             }>;
           },
-          options?: AxiosRequestConfig
+          options?: CustomRequestConfig
         ): Promise<{ success: boolean; data: { importedCount: number; members: any[] } }> => {
           return customInstance({
             url: `/api/v3/workspaces/${encodeURIComponent(slug)}/members/import`,
@@ -2331,7 +2329,7 @@ export class ScrymeSDK {
             avatar?: string;
             organizationId?: string;
           },
-          options?: AxiosRequestConfig
+          options?: CustomRequestConfig
         ): Promise<{ success: boolean; data: { user: UserProfile } }> => {
           return customInstance({
             url: '/api/v3/users',
@@ -2348,7 +2346,7 @@ export class ScrymeSDK {
          */
         get: async (
           userIdOrEmail: string,
-          options?: AxiosRequestConfig
+          options?: CustomRequestConfig
         ): Promise<{ success: boolean; data: { user: UserProfile } }> => {
           if (userIdOrEmail.includes('@')) {
             return customInstance({
@@ -2377,7 +2375,7 @@ export class ScrymeSDK {
          * @param clientSecret The secure M2M Client Secret.
          * @param options Optional request config override.
          */
-        token: async (clientId: string, clientSecret: string, options?: AxiosRequestConfig): Promise<V3OAuthControllerGetTokenResult> => {
+        token: async (clientId: string, clientSecret: string, options?: CustomRequestConfig): Promise<V3OAuthControllerGetTokenResult> => {
           return this.raw.v3OAuthControllerGetToken(
             {
               client_id: clientId,
@@ -2397,3 +2395,5 @@ export class ScrymeSDK {
     };
   }
 }
+
+export type { CustomRequestConfig, RequestConfig, AxiosRequestConfig } from './custom-instance';

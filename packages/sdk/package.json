@@ -37,7 +37,6 @@
   },
   "dependencies": {
     "@tanstack/react-query": "5.96.2",
-    "axios": "^1.7.9",
     "zod": "^3.23.8"
   },
   "peerDependencies": {
