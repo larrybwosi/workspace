@@ -1,27 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import axios from 'axios';
 import { ScrymeSDK } from '../sdk';
-
-vi.mock('axios', async () => {
-  const actual = await vi.importActual<typeof axios>('axios');
-  const instanceFn = vi.fn(async (config) => ({
-    data: { success: true, data: { importedCount: 1, members: [], user: { id: 'usr_123' } } },
-    headers: {},
-  }));
-  (instanceFn as any).interceptors = {
-    request: { use: vi.fn(), eject: vi.fn() },
-    response: { use: vi.fn(), eject: vi.fn() },
-  };
-  (instanceFn as any).defaults = { headers: {} };
-
-  return {
-    default: {
-      ...actual,
-      create: vi.fn(() => instanceFn),
-      post: vi.fn(),
-    },
-  };
-});
+import * as customInstanceModule from '../custom-instance';
 
 // Mock the generated v3-server APIs
 vi.mock('../generated/v3-server', () => {
@@ -242,6 +221,8 @@ vi.mock('../generated/v3-server', () => {
 });
 
 describe('ScrymeSDK', () => {
+  const originalFetch = globalThis.fetch;
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -287,33 +268,46 @@ describe('ScrymeSDK', () => {
         clientSecret: 'sec',
       });
 
-      vi.mocked(axios.post).mockResolvedValueOnce({
-        data: {
-          success: true,
-          data: {
-            access_token: 'fetched-m2m-token',
-            expires_in: 3600,
-          },
-        },
-      });
+      const mockFetch = vi.fn().mockImplementation(() =>
+        Promise.resolve(
+          new Response(
+            JSON.stringify({
+              success: true,
+              data: {
+                access_token: 'fetched-m2m-token',
+                expires_in: 3600,
+              },
+            }),
+            {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' },
+            }
+          )
+        )
+      );
+      globalThis.fetch = mockFetch;
 
       const token1 = await sdk.getOrFetchToken();
       expect(token1).toBe('fetched-m2m-token');
-      expect(axios.post).toHaveBeenCalledTimes(1);
-      expect(axios.post).toHaveBeenCalledWith(
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      expect(mockFetch).toHaveBeenCalledWith(
         'https://api.test.com/api/v3/oauth/token',
-        {
-          client_id: 'id',
-          client_secret: 'sec',
-          grant_type: 'client_credentials',
-        },
-        expect.any(Object)
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({
+            client_id: 'id',
+            client_secret: 'sec',
+            grant_type: 'client_credentials',
+          }),
+        })
       );
 
-      // Second call should return cached token without calling axios again
+      // Second call should return cached token without calling fetch again
       const token2 = await sdk.getOrFetchToken();
       expect(token2).toBe('fetched-m2m-token');
-      expect(axios.post).toHaveBeenCalledTimes(1);
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+
+      globalThis.fetch = originalFetch;
     });
 
     it('should refetch token if expired', async () => {
@@ -323,32 +317,52 @@ describe('ScrymeSDK', () => {
         clientSecret: 'sec',
       });
 
-      vi.mocked(axios.post)
-        .mockResolvedValueOnce({
-          data: {
-            success: true,
-            data: {
-              access_token: 'first-token',
-              expires_in: -10, // Expired immediately
-            },
-          },
-        })
-        .mockResolvedValueOnce({
-          data: {
-            success: true,
-            data: {
-              access_token: 'second-token',
-              expires_in: 3600,
-            },
-          },
-        });
+      const mockFetch = vi
+        .fn()
+        .mockImplementationOnce(() =>
+          Promise.resolve(
+            new Response(
+              JSON.stringify({
+                success: true,
+                data: {
+                  access_token: 'first-token',
+                  expires_in: -10, // Expired immediately
+                },
+              }),
+              {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' },
+              }
+            )
+          )
+        )
+        .mockImplementationOnce(() =>
+          Promise.resolve(
+            new Response(
+              JSON.stringify({
+                success: true,
+                data: {
+                  access_token: 'second-token',
+                  expires_in: 3600,
+                },
+              }),
+              {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' },
+              }
+            )
+          )
+        );
+      globalThis.fetch = mockFetch;
 
       const token1 = await sdk.getOrFetchToken();
       expect(token1).toBe('first-token');
 
       const token2 = await sdk.getOrFetchToken();
       expect(token2).toBe('second-token');
-      expect(axios.post).toHaveBeenCalledTimes(2);
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+
+      globalThis.fetch = originalFetch;
     });
   });
 
@@ -359,7 +373,7 @@ describe('ScrymeSDK', () => {
         token: 'active-token',
       });
 
-      const result = await sdk.raw.v3WorkspacesControllerGetWorkspaces() as any;
+      const result = (await sdk.raw.v3WorkspacesControllerGetWorkspaces()) as any;
       expect(result).toBeDefined();
       expect(result.options).toBeDefined();
       expect(result.options.baseURL).toBe('https://api.test.com');
@@ -373,11 +387,11 @@ describe('ScrymeSDK', () => {
       });
 
       // Passing options as the last parameter (since v3WorkspacesControllerGetWorkspaces has arity 1)
-      const result = await sdk.raw.v3WorkspacesControllerGetWorkspaces({
+      const result = (await sdk.raw.v3WorkspacesControllerGetWorkspaces({
         headers: {
           'X-Custom-Header': 'CustomValue',
         },
-      } as any) as any;
+      } as any)) as any;
 
       expect(result.options.headers.Authorization).toBe('Bearer active-token');
       expect(result.options.headers['X-Custom-Header']).toBe('CustomValue');
@@ -391,16 +405,16 @@ describe('ScrymeSDK', () => {
         token: 'active-token',
       });
 
-      const listRes = await sdk.workspace.list() as any;
+      const listRes = (await sdk.workspace.list()) as any;
       expect(listRes.success).toBe(true);
       expect(listRes.options.baseURL).toBe('https://api.test.com');
 
-      const getRes = await sdk.workspace.get('acme') as any;
+      const getRes = (await sdk.workspace.get('acme')) as any;
       expect(getRes.data.workspace.slug).toBe('acme');
       expect(getRes.options.baseURL).toBe('https://api.test.com');
 
       const provDto = { name: 'Acme', ownerEmail: 'a@acme.com', slug: 'acme' };
-      const createRes = await sdk.workspace.create(provDto) as any;
+      const createRes = (await sdk.workspace.create(provDto)) as any;
       expect(createRes.success).toBe(true);
       expect(createRes.options.baseURL).toBe('https://api.test.com');
       expect(createRes.options.headers.Authorization).toBe('Bearer active-token');
@@ -412,10 +426,10 @@ describe('ScrymeSDK', () => {
         token: 'active-token',
       });
 
-      const channelsRes = await sdk.workspace.channels.list('acme-corp') as any;
+      const channelsRes = (await sdk.workspace.channels.list('acme-corp')) as any;
       expect(channelsRes).toEqual([]);
 
-      const createRes = await sdk.workspace.channels.create('acme-corp', { name: 'general' }) as any;
+      const createRes = (await sdk.workspace.channels.create('acme-corp', { name: 'general' })) as any;
       expect(createRes).toEqual({ name: 'general' });
     });
 
@@ -426,26 +440,26 @@ describe('ScrymeSDK', () => {
       });
 
       // Channel CRUD
-      const getChan = await sdk.channel.get('acme-corp', 'chan_123') as any;
+      const getChan = (await sdk.channel.get('acme-corp', 'chan_123')) as any;
       expect(getChan.id).toBe('chan_123');
 
-      const updateChan = await sdk.channel.update('acme-corp', 'chan_123', { name: 'general-updated' }) as any;
+      const updateChan = (await sdk.channel.update('acme-corp', 'chan_123', { name: 'general-updated' })) as any;
       expect(updateChan.id).toBe('chan_123');
 
-      const deleteChan = await sdk.channel.delete('acme-corp', 'chan_123') as any;
+      const deleteChan = (await sdk.channel.delete('acme-corp', 'chan_123')) as any;
       expect(deleteChan.success).toBe(true);
 
       // Channel Members
-      const listMembers = await sdk.channel.members.list('acme-corp', 'chan_123') as any;
+      const listMembers = (await sdk.channel.members.list('acme-corp', 'chan_123')) as any;
       expect(listMembers).toEqual([]);
 
-      const addMembers = await sdk.channel.members.add('acme-corp', 'chan_123', { userIds: ['usr_1'] }) as any;
+      const addMembers = (await sdk.channel.members.add('acme-corp', 'chan_123', { userIds: ['usr_1'] })) as any;
       expect(addMembers).toEqual([]);
 
-      const updateMember = await sdk.channel.members.update('acme-corp', 'chan_123', 'usr_1', { role: 'admin' }) as any;
+      const updateMember = (await sdk.channel.members.update('acme-corp', 'chan_123', 'usr_1', { role: 'admin' })) as any;
       expect(updateMember).toEqual({ userId: 'usr_1', role: 'admin' });
 
-      const removeMember = await sdk.channel.members.remove('acme-corp', 'chan_123', 'usr_1') as any;
+      const removeMember = (await sdk.channel.members.remove('acme-corp', 'chan_123', 'usr_1')) as any;
       expect(removeMember).toEqual({ success: true });
     });
 
@@ -455,15 +469,15 @@ describe('ScrymeSDK', () => {
         token: 'active-token',
       });
 
-      const messagesRes = await sdk.channel.message.list('acme-corp', 'chan_123', { limit: '10' }) as any;
+      const messagesRes = (await sdk.channel.message.list('acme-corp', 'chan_123', { limit: '10' })) as any;
       expect(messagesRes.messages).toBeDefined();
 
       // Channel message create (with string)
-      const createMsgStrRes = await sdk.channel.message.create('acme-corp', 'chan_123', 'Hello') as any;
+      const createMsgStrRes = (await sdk.channel.message.create('acme-corp', 'chan_123', 'Hello')) as any;
       expect(createMsgStrRes.content).toBe('Hello');
 
       // Channel message create (with object)
-      const createMsgObjRes = await sdk.channel.message.create('acme-corp', 'chan_123', { content: 'Hello World' }) as any;
+      const createMsgObjRes = (await sdk.channel.message.create('acme-corp', 'chan_123', { content: 'Hello World' })) as any;
       expect(createMsgObjRes.content).toBe('Hello World');
     });
 
@@ -474,23 +488,23 @@ describe('ScrymeSDK', () => {
       });
 
       // DM list
-      const listDmsRes = await sdk.dm.list() as any;
+      const listDmsRes = (await sdk.dm.list()) as any;
       expect(listDmsRes).toBeDefined();
 
       // DM create
-      const createDmRes = await sdk.dm.create({ userId: 'user_123' }) as any;
+      const createDmRes = (await sdk.dm.create({ userId: 'user_123' })) as any;
       expect(createDmRes).toBeDefined();
 
       // DM message list
-      const messagesRes = await sdk.dm.message.list('dm_123', { limit: '5' }) as any;
+      const messagesRes = (await sdk.dm.message.list('dm_123', { limit: '5' })) as any;
       expect(messagesRes.messages).toBeDefined();
 
       // DM message create (with string)
-      const createMsgStrRes = await sdk.dm.message.create('dm_123', 'Hello DM') as any;
+      const createMsgStrRes = (await sdk.dm.message.create('dm_123', 'Hello DM')) as any;
       expect(createMsgStrRes.content).toBe('Hello DM');
 
       // DM message create (with object)
-      const createMsgObjRes = await sdk.dm.message.create('dm_123', { content: 'Hello DM Object' }) as any;
+      const createMsgObjRes = (await sdk.dm.message.create('dm_123', { content: 'Hello DM Object' })) as any;
       expect(createMsgObjRes.content).toBe('Hello DM Object');
     });
 
@@ -501,29 +515,29 @@ describe('ScrymeSDK', () => {
       });
 
       // Standard Channel message update
-      const chanUpdate = await sdk.message.update('chan_123', 'msg_1', { content: 'updated content' }) as any;
+      const chanUpdate = (await sdk.message.update('chan_123', 'msg_1', { content: 'updated content' })) as any;
       expect(chanUpdate.type).toBe('channel');
       expect(chanUpdate.action).toBe('update');
 
       // DM message update
-      const dmUpdate = await sdk.message.update('dm-123', 'msg_1', { content: 'updated content' }) as any;
+      const dmUpdate = (await sdk.message.update('dm-123', 'msg_1', { content: 'updated content' })) as any;
       expect(dmUpdate.type).toBe('dm');
       expect(dmUpdate.action).toBe('update');
 
       // Standard Channel message delete
-      const chanDelete = await sdk.message.delete('chan_123', 'msg_1') as any;
+      const chanDelete = (await sdk.message.delete('chan_123', 'msg_1')) as any;
       expect(chanDelete.type).toBe('channel');
 
       // DM message delete
-      const dmDelete = await sdk.message.delete('dm-123', 'msg_1') as any;
+      const dmDelete = (await sdk.message.delete('dm-123', 'msg_1')) as any;
       expect(dmDelete.type).toBe('dm');
 
       // Standard Channel message addReaction
-      const chanAddReaction = await sdk.message.addReaction('chan_123', 'msg_1', { emoji: '👍' }) as any;
+      const chanAddReaction = (await sdk.message.addReaction('chan_123', 'msg_1', { emoji: '👍' })) as any;
       expect(chanAddReaction.type).toBe('channel');
 
       // DM message addReaction
-      const dmAddReaction = await sdk.message.addReaction('dm-123', 'msg_1', { emoji: '👍' }) as any;
+      const dmAddReaction = (await sdk.message.addReaction('dm-123', 'msg_1', { emoji: '👍' })) as any;
       expect(dmAddReaction.type).toBe('dm');
     });
 
@@ -534,15 +548,15 @@ describe('ScrymeSDK', () => {
       });
 
       // Standard Webhooks
-      const createWh = await sdk.webhooks.create('acme', { name: 'wh1', url: 'http://wh', events: ['*'] }) as any;
+      const createWh = (await sdk.webhooks.create('acme', { name: 'wh1', url: 'http://wh', events: ['*'] })) as any;
       expect(createWh.slug).toBe('acme');
       expect(createWh.data.name).toBe('wh1');
 
-      const listWh = await sdk.webhooks.list('acme') as any;
+      const listWh = (await sdk.webhooks.list('acme')) as any;
       expect(listWh.slug).toBe('acme');
 
       // Incoming Webhooks
-      const createInWh = await sdk.webhooks.incoming.create('acme', 'chan_123', { name: 'incoming_wh' }) as any;
+      const createInWh = (await sdk.webhooks.incoming.create('acme', 'chan_123', { name: 'incoming_wh' })) as any;
       expect(createInWh.slug).toBe('acme');
       expect(createInWh.channelId).toBe('chan_123');
       expect(createInWh.data.name).toBe('incoming_wh');
@@ -555,28 +569,28 @@ describe('ScrymeSDK', () => {
       });
 
       // m2m.workspace.provision
-      const provRes = await sdk.m2m.workspace.provision({ name: 'Acme', ownerEmail: 'a@acme.com', slug: 'acme' }) as any;
+      const provRes = (await sdk.m2m.workspace.provision({ name: 'Acme', ownerEmail: 'a@acme.com', slug: 'acme' })) as any;
       expect(provRes.data.name).toBe('Acme');
       expect(provRes.options.baseURL).toBe('https://api.test.com');
       expect(provRes.options.headers.Authorization).toBe('Bearer active-token');
 
       // m2m.member.add
-      const addMem = await sdk.m2m.member.add('acme', { email: 'user@acme.com', role: 'admin' }) as any;
+      const addMem = (await sdk.m2m.member.add('acme', { email: 'user@acme.com', role: 'admin' })) as any;
       expect(addMem.slug).toBe('acme');
       expect(addMem.data.email).toBe('user@acme.com');
 
       // m2m.auth.token
-      const tokenRes = await sdk.m2m.auth.token('cid', 'sec') as any;
+      const tokenRes = (await sdk.m2m.auth.token('cid', 'sec')) as any;
       expect(tokenRes.data.client_id).toBe('cid');
 
       // m2m.channel
-      const m2mChanList = await sdk.m2m.channel.list('acme') as any;
+      const m2mChanList = (await sdk.m2m.channel.list('acme')) as any;
       expect(m2mChanList.slug).toBe('acme');
 
-      const m2mChanCreate = await sdk.m2m.channel.create('acme', { name: 'tech', type: 'private' }) as any;
+      const m2mChanCreate = (await sdk.m2m.channel.create('acme', { name: 'tech', type: 'private' })) as any;
       expect(m2mChanCreate.data.channel.name).toBe('tech');
 
-      const m2mMemUpdate = await sdk.m2m.channel.member.update('acme', 'ch-1', 'usr-1', { role: 'admin', permissions: '2048' }) as any;
+      const m2mMemUpdate = (await sdk.m2m.channel.member.update('acme', 'ch-1', 'usr-1', { role: 'admin', permissions: '2048' })) as any;
       expect(m2mMemUpdate.data.member.role).toBe('admin');
     });
 
@@ -588,53 +602,53 @@ describe('ScrymeSDK', () => {
 
       // support.createTicket
       const ticketDto = { workspaceId: 'ws-123', subject: 'Billing Issue', initialMessage: 'Need help with invoice' };
-      const createRes = await sdk.support.createTicket(ticketDto) as any;
+      const createRes = (await sdk.support.createTicket(ticketDto)) as any;
       expect(createRes.success).toBe(true);
       expect(createRes.ticket).toEqual(ticketDto);
 
       // support.getTickets
-      const getRes = await sdk.support.getTickets('ws-123') as any;
+      const getRes = (await sdk.support.getTickets('ws-123')) as any;
       expect(getRes.success).toBe(true);
       expect(getRes.workspaceId).toBe('ws-123');
 
       // support.updateStatus
-      const statusRes = await sdk.support.updateStatus('t-1', 'RESOLVED') as any;
+      const statusRes = (await sdk.support.updateStatus('t-1', 'RESOLVED')) as any;
       expect(statusRes.success).toBe(true);
       expect(statusRes.ticketId).toBe('t-1');
       expect(statusRes.status).toBe('RESOLVED');
 
       // support.assignTicket
-      const assignRes = await sdk.support.assignTicket('t-1', 'agent-99') as any;
+      const assignRes = (await sdk.support.assignTicket('t-1', 'agent-99')) as any;
       expect(assignRes.success).toBe(true);
       expect(assignRes.ticketId).toBe('t-1');
       expect(assignRes.assigneeId).toBe('agent-99');
 
       // support.tickets sub-namespace
-      const ticketSubCreate = await sdk.support.tickets.create(ticketDto) as any;
+      const ticketSubCreate = (await sdk.support.tickets.create(ticketDto)) as any;
       expect(ticketSubCreate.ticket).toEqual(ticketDto);
 
-      const ticketSubList = await sdk.support.tickets.list('ws-123') as any;
+      const ticketSubList = (await sdk.support.tickets.list('ws-123')) as any;
       expect(ticketSubList.workspaceId).toBe('ws-123');
 
-      const ticketSubStatus = await sdk.support.tickets.updateStatus('t-2', 'CLOSED') as any;
+      const ticketSubStatus = (await sdk.support.tickets.updateStatus('t-2', 'CLOSED')) as any;
       expect(ticketSubStatus.status).toBe('CLOSED');
 
-      const ticketSubAssign = await sdk.support.tickets.assign('t-2', null) as any;
+      const ticketSubAssign = (await sdk.support.tickets.assign('t-2', null)) as any;
       expect(ticketSubAssign.assigneeId).toBeNull();
 
       // support.liveChat sub-namespace
-      const liveChatStart = await sdk.support.liveChat.start({ workspaceId: 'ws-123', metadata: { source: 'web' } }) as any;
+      const liveChatStart = (await sdk.support.liveChat.start({ workspaceId: 'ws-123', metadata: { source: 'web' } })) as any;
       expect(liveChatStart.session.workspaceId).toBe('ws-123');
 
-      const liveChatEnd = await sdk.support.liveChat.end('session-789') as any;
+      const liveChatEnd = (await sdk.support.liveChat.end('session-789')) as any;
       expect(liveChatEnd.sessionId).toBe('session-789');
 
       // support.customer sub-namespace
       const custDto = { workspaceId: 'ws-123', userId: 'usr-1', company: 'Acme Corp' };
-      const custCreate = await sdk.support.customer.createProfile(custDto) as any;
+      const custCreate = (await sdk.support.customer.createProfile(custDto)) as any;
       expect(custCreate.profile).toEqual(custDto);
 
-      const custGet = await sdk.support.customer.getProfiles('ws-123') as any;
+      const custGet = (await sdk.support.customer.getProfiles('ws-123')) as any;
       expect(custGet.workspaceId).toBe('ws-123');
     });
 
@@ -644,21 +658,39 @@ describe('ScrymeSDK', () => {
         token: 'active-token',
       });
 
+      const mockFetch = vi.fn().mockImplementation(() =>
+        Promise.resolve(
+          new Response(
+            JSON.stringify({
+              success: true,
+              data: { importedCount: 1, members: [], user: { id: 'usr_123' } },
+            }),
+            {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' },
+            }
+          )
+        )
+      );
+      globalThis.fetch = mockFetch;
+
       const importRes = await sdk.workspace.members.import('acme-corp', {
         members: [{ email: 'alice@acme.com', name: 'Alice' }, { email: 'bob@acme.com', name: 'Bob' }],
       });
-      expect(importRes).toBeDefined();
+      expect(importRes.success).toBe(true);
 
       const createRes = await sdk.user.create({ email: 'charlie@acme.com', name: 'Charlie' });
-      expect(createRes).toBeDefined();
+      expect(createRes.success).toBe(true);
 
       const m2mImportRes = await sdk.m2m.member.import('acme-corp', {
         members: [{ email: 'david@acme.com', name: 'David' }],
       });
-      expect(m2mImportRes).toBeDefined();
+      expect(m2mImportRes.success).toBe(true);
 
       const m2mCreateRes = await sdk.m2m.user.create({ email: 'eve@acme.com', name: 'Eve' });
-      expect(m2mCreateRes).toBeDefined();
+      expect(m2mCreateRes.success).toBe(true);
+
+      globalThis.fetch = originalFetch;
     });
   });
 });

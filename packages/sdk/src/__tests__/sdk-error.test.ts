@@ -1,6 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import axios, { AxiosError } from 'axios';
-import { ScrymeSDKError, ScrymeError, parseSDKError } from '../custom-instance';
+import { ScrymeSDKError, ScrymeError, HttpError, parseSDKError, customInstance } from '../custom-instance';
 import { ScrymeSDK } from '../sdk';
 
 describe('ScrymeSDKError & parseSDKError', () => {
@@ -31,29 +30,21 @@ describe('ScrymeSDKError & parseSDKError', () => {
   });
 
   it('should parse NestJS validation error arrays into joined message', () => {
-    const axiosError = new AxiosError(
-      'Request failed with status code 400',
-      'ERR_BAD_REQUEST',
-      undefined,
-      {},
+    const httpError = new HttpError(
+      400,
+      'Bad Request',
       {
-        status: 400,
-        statusText: 'Bad Request',
-        headers: {},
-        config: {} as any,
-        data: {
-          statusCode: 400,
-          error: 'Bad Request',
-          message: ['email must be an email', 'password is too short'],
-        },
-      }
+        statusCode: 400,
+        error: 'Bad Request',
+        message: ['email must be an email', 'password is too short'],
+      },
+      new Headers()
     );
 
-    const parsed = parseSDKError(axiosError);
+    const parsed = parseSDKError(httpError);
     expect(parsed).toBeInstanceOf(ScrymeSDKError);
     expect(parsed.message).toBe('email must be an email; password is too short');
     expect(parsed.status).toBe(400);
-    expect(parsed.code).toBe('ERR_BAD_REQUEST');
     expect(parsed.data).toEqual({
       statusCode: 400,
       error: 'Bad Request',
@@ -62,131 +53,93 @@ describe('ScrymeSDKError & parseSDKError', () => {
   });
 
   it('should parse standard NestJS error response with string message', () => {
-    const axiosError = new AxiosError(
-      'Request failed with status code 404',
-      'ERR_BAD_REQUEST',
-      undefined,
-      {},
+    const httpError = new HttpError(
+      404,
+      'Not Found',
       {
-        status: 404,
-        statusText: 'Not Found',
-        headers: {},
-        config: {} as any,
-        data: {
-          statusCode: 404,
-          error: 'Not Found',
-          message: "Workspace 'acme' not found",
-        },
-      }
+        statusCode: 404,
+        error: 'Not Found',
+        message: "Workspace 'acme' not found",
+      },
+      new Headers()
     );
 
-    const parsed = parseSDKError(axiosError);
+    const parsed = parseSDKError(httpError);
     expect(parsed.message).toBe("Workspace 'acme' not found");
     expect(parsed.status).toBe(404);
   });
 
   it('should parse error object format { error: "Unauthorized" }', () => {
-    const axiosError = new AxiosError(
-      'Request failed with status code 401',
-      'ERR_BAD_REQUEST',
-      undefined,
-      {},
+    const httpError = new HttpError(
+      401,
+      'Unauthorized',
       {
-        status: 401,
-        statusText: 'Unauthorized',
-        headers: {},
-        config: {} as any,
-        data: {
-          error: 'Invalid session token',
-        },
-      }
+        error: 'Invalid session token',
+      },
+      new Headers()
     );
 
-    const parsed = parseSDKError(axiosError);
+    const parsed = parseSDKError(httpError);
     expect(parsed.message).toBe('Invalid session token');
     expect(parsed.status).toBe(401);
   });
 
   it('should parse nested error object format { error: { message: "Token expired" } }', () => {
-    const axiosError = new AxiosError(
-      'Request failed with status code 401',
-      'ERR_BAD_REQUEST',
-      undefined,
-      {},
+    const httpError = new HttpError(
+      401,
+      'Unauthorized',
       {
-        status: 401,
-        statusText: 'Unauthorized',
-        headers: {},
-        config: {} as any,
-        data: {
-          error: {
-            message: 'Token expired',
-            code: 'TOKEN_EXPIRED',
-          },
+        error: {
+          message: 'Token expired',
+          code: 'TOKEN_EXPIRED',
         },
-      }
+      },
+      new Headers()
     );
 
-    const parsed = parseSDKError(axiosError);
+    const parsed = parseSDKError(httpError);
     expect(parsed.message).toBe('Token expired');
     expect(parsed.status).toBe(401);
   });
 
   it('should parse string response data', () => {
-    const axiosError = new AxiosError(
-      'Request failed with status code 502',
-      'ERR_BAD_GATEWAY',
-      undefined,
-      {},
-      {
-        status: 502,
-        statusText: 'Bad Gateway',
-        headers: {},
-        config: {} as any,
-        data: 'Bad Gateway Error from Upstream',
-      }
+    const httpError = new HttpError(
+      502,
+      'Bad Gateway',
+      'Bad Gateway Error from Upstream',
+      new Headers()
     );
 
-    const parsed = parseSDKError(axiosError);
+    const parsed = parseSDKError(httpError);
     expect(parsed.message).toBe('Bad Gateway Error from Upstream');
     expect(parsed.status).toBe(502);
   });
 
   it('should handle network errors without response object', () => {
-    const axiosError = new AxiosError(
-      'Network Error',
-      'ERR_NETWORK',
-      undefined,
-      {},
-      undefined
-    );
+    const fetchError = new TypeError('Failed to fetch');
+    const parsed = parseSDKError(fetchError);
 
-    const parsed = parseSDKError(axiosError);
-    expect(parsed.message).toBe('Network Error');
+    expect(parsed).toBeInstanceOf(ScrymeSDKError);
+    expect(parsed.message).toBe('Failed to fetch');
     expect(parsed.status).toBeUndefined();
-    expect(parsed.code).toBe('ERR_NETWORK');
   });
 
-  it('should handle timeout errors without response object', () => {
-    const axiosError = new AxiosError(
-      'timeout of 10000ms exceeded',
-      'ECONNABORTED',
-      undefined,
-      {},
-      undefined
-    );
+  it('should handle timeout errors', () => {
+    const timeoutError = new Error('timeout of 10000ms exceeded');
+    timeoutError.name = 'TimeoutError';
+    (timeoutError as any).code = 'ECONNABORTED';
 
-    const parsed = parseSDKError(axiosError);
+    const parsed = parseSDKError(timeoutError);
     expect(parsed.message).toBe('timeout of 10000ms exceeded');
     expect(parsed.code).toBe('ECONNABORTED');
   });
 
-  it('should handle standard non-Axios Error objects', () => {
-    const standardError = new TypeError('Failed to fetch');
+  it('should handle standard non-Http Error objects', () => {
+    const standardError = new Error('Something broke');
     const parsed = parseSDKError(standardError);
 
     expect(parsed).toBeInstanceOf(ScrymeSDKError);
-    expect(parsed.message).toBe('Failed to fetch');
+    expect(parsed.message).toBe('Something broke');
   });
 
   it('should handle primitive string errors', () => {
@@ -203,15 +156,18 @@ describe('ScrymeSDKError & parseSDKError', () => {
       clientSecret: 'invalid-secret',
     });
 
-    // Mock axios post failure
-    const postSpy = vi.spyOn(axios, 'post').mockRejectedValue(
-      new AxiosError('Request failed with status code 401', 'ERR_BAD_REQUEST', undefined, {}, {
-        status: 401,
-        statusText: 'Unauthorized',
-        headers: {},
-        config: {} as any,
-        data: { message: 'Invalid M2M client credentials' },
-      })
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = vi.fn().mockImplementation(() =>
+      Promise.resolve(
+        new Response(
+          JSON.stringify({ message: 'Invalid M2M client credentials' }),
+          {
+            status: 401,
+            statusText: 'Unauthorized',
+            headers: { 'Content-Type': 'application/json' },
+          }
+        )
+      )
     );
 
     await expect(sdk.getOrFetchToken()).rejects.toThrow(ScrymeSDKError);
@@ -224,6 +180,70 @@ describe('ScrymeSDKError & parseSDKError', () => {
       expect(err.status).toBe(401);
     }
 
-    postSpy.mockRestore();
+    globalThis.fetch = originalFetch;
+  });
+
+  describe('customInstance fetch features', () => {
+    const originalFetch = globalThis.fetch;
+
+    it('should correctly build query parameters', async () => {
+      const mockFetch = vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ ok: true }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      );
+      globalThis.fetch = mockFetch;
+
+      const res = await customInstance<{ ok: boolean }>({
+        url: '/api/test',
+        baseURL: 'https://api.example.com',
+        params: {
+          q: 'search term',
+          filter: ['a', 'b'],
+          limit: 10,
+        },
+      });
+
+      expect(res).toEqual({ ok: true });
+      expect(mockFetch).toHaveBeenCalledWith(
+        'https://api.example.com/api/test?q=search+term&filter=a&filter=b&limit=10',
+        expect.objectContaining({
+          method: 'GET',
+          credentials: 'include',
+        })
+      );
+
+      globalThis.fetch = originalFetch;
+    });
+
+    it('should support cancellation via promise.cancel()', async () => {
+      let aborted = false;
+      const mockFetch = vi.fn().mockImplementation((_url, options) => {
+        options?.signal?.addEventListener('abort', () => {
+          aborted = true;
+        });
+        return new Promise((_resolve, reject) => {
+          options?.signal?.addEventListener('abort', () => {
+            const err = new Error('The operation was aborted');
+            err.name = 'AbortError';
+            reject(err);
+          });
+        });
+      });
+      globalThis.fetch = mockFetch;
+
+      const promise = customInstance({
+        url: '/api/long-running',
+        baseURL: 'https://api.example.com',
+      });
+
+      promise.cancel();
+
+      await expect(promise).rejects.toThrow();
+      expect(aborted).toBe(true);
+
+      globalThis.fetch = originalFetch;
+    });
   });
 });
