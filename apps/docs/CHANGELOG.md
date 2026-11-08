@@ -1,5 +1,11 @@
 # docs
 
+## 3.2.0
+
+### Minor Changes
+
+- 22537a8: Update
+
 ## 3.1.0
 
 ### Minor Changes

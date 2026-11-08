@@ -1,5 +1,11 @@
 # desktop
 
+## 2.2.0
+
+### Minor Changes
+
+- 22537a8: Update
+
 ## 2.1.0
 
 ### Minor Changes
@@ -13,18 +19,18 @@
 - dd44d92: update
 - a2f0b57: Update
 - 223975c: update
-- 7ca8600: Minor release 
-- 38e9412: update 
+- 7ca8600: Minor release
+- 38e9412: update
 
-## 2.1.0-dev.31  
+## 2.1.0-dev.31
 
-### Minor Changes 
+### Minor Changes
 
-- Automatic minor release for branch dev 
+- Automatic minor release for branch dev
 
 ### Patch Changes
 
-- Updated dependencies 
+- Updated dependencies
   - @repo/api-client@0.1.0-dev.31
   - @repo/types@0.1.0-dev.31
   - @repo/ui@0.1.0-dev.31
